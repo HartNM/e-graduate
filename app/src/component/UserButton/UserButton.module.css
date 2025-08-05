@@ -1,0 +1,12 @@
+.user {
+	display: block;
+	width: 100%;
+	color: light-dark(black, white);
+	padding: 0.5rem;
+	border-bottom: 1px solid var(--app-shell-border-color);
+}
+
+.user:hover {
+	background-color: light-dark(#e9ecef, #333333);
+	color: light-dark(black, white);
+}

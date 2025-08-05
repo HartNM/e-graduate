@@ -1,0 +1,347 @@
+//ตารางคำร้องขอ
+import { useState, useEffect } from "react";
+import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group } from "@mantine/core";
+
+import ModalApprove from "../component/Modal/ModalApprove";
+import ModalInfo from "../component/Modal/ModalInfo";
+import ModalAddCancel from "../component/Modal/ModalAddCancel";
+import ModalAdd from "../component/Modal/ModalAdd";
+import ModalCheck from "../component/Modal/ModalCheck";
+import ModalPay from "../component/Modal/ModalPay";
+import ModalInform from "../component/Modal/ModalInform";
+
+const RequestList = () => {
+	// Modal states
+	const [openInform, setOpenInform] = useState(false);
+	const [openInfo, setOpenInfo] = useState(false);
+	const [openAdd, setOpenAdd] = useState(false);
+	const [openApprove, setOpenApprove] = useState(false);
+	const [openApproveState, setOpenApproveState] = useState(false);
+	const [openAddCancel, setOpenAddCancel] = useState(false);
+	const [openPay, setOpenPay] = useState(false);
+	const [openCheck, setOpenCheck] = useState(false);
+
+	// Form states
+	const [formData, setFormData] = useState({});
+	const [selectedRow, setSelectedRow] = useState(null);
+	const [selected, setSelected] = useState("approve");
+	const [comment, setComment] = useState("");
+	const [reason, setReason] = useState("");
+	const [error, setError] = useState("");
+
+	// System states
+	const [user, setUser] = useState({});
+	//student //advisor //chairpersons //officer_registrar //dean
+	const [requestExam, setRequestExam] = useState([]);
+	const [search, setSearch] = useState("");
+	const [reloadTable, setReloadTable] = useState(false);
+	const token = localStorage.getItem("token");
+	const [informMessage, setInformMessage] = useState("");
+	const [informtype, setInformtype] = useState("");
+
+	useEffect(() => {
+		const fetchProfile = async () => {
+			try {
+				const profileRes = await fetch("http://localhost:8080/api/profile", {
+					method: "GET",
+					headers: { Authorization: `Bearer ${token}` },
+				});
+				const profileData = await profileRes.json();
+				setUser(profileData);
+				console.log(profileData);
+				if(!profileData.ok){
+					
+				}
+			} catch (err) {
+				console.error("Error fetching profile:", err);
+			}
+		};
+		fetchProfile();
+	}, []);
+	useEffect(() => {
+		const fetchRequestExam = async () => {
+			if (!user) return;
+			try {
+				const requestRes = await fetch("http://localhost:8080/api/requestExamAll", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+					body: JSON.stringify({ role: user.role, id: user.id }),
+				});
+				const requestData = await requestRes.json();
+				setRequestExam(requestData);
+				console.log(requestData);
+			} catch (err) {
+				console.error("Error fetching requestExamAll:", err);
+			}
+			setReloadTable(false);
+		};
+		fetchRequestExam();
+	}, [user, reloadTable]);
+
+	const handleOpenAdd = async () => {
+		try {
+			const requestRes = await fetch("http://localhost:8080/api/studentInfo", {
+				method: "GET",
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			const requestData = await requestRes.json();
+			setFormData(requestData);
+		} catch (err) {
+			console.error("Error fetching studentInfo:", err);
+		}
+		setOpenAdd(true);
+	};
+
+	const handleAdd = async () => {
+		let requestData;
+		try {
+			const requestRes = await fetch("http://localhost:8080/api/addRequestExam", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				body: JSON.stringify(formData),
+			});
+			requestData = await requestRes.json();
+			if (requestRes.ok) {
+				setInformtype("success");
+			} else {
+				setInformtype("error");
+			}
+		} catch (err) {
+			setInformtype("error");
+			console.error("Error fetching addRequestExam:", err);
+		}
+		setInformMessage(requestData.message || "ไม่สามารถส่งคำร้องได้");
+		setOpenInform(true);
+		setOpenAdd(false);
+		setReloadTable(true);
+	};
+
+	const handleApprove = async (item) => {
+		if (selected === "noapprove" && comment.trim() === "") {
+			setError("กรุณาระบุเหตุผล");
+			return;
+		}
+		try {
+			const requestRes = await fetch("http://localhost:8080/api/approveRequestExam", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				body: JSON.stringify({
+					request_exam_id: item.request_exam_id,
+					name: user.name,
+					role: user.role,
+					selected: selected,
+					comment: comment,
+				}),
+			});
+			setSelected("approve");
+			setComment("");
+			setOpenApprove(false);
+			setReloadTable(true);
+		} catch (err) {
+			console.error("Error fetching approveRequestExam:", err);
+		}
+	};
+
+	const handlePay = async (item) => {
+		try {
+			const requestRes = await fetch("http://localhost:8080/api/payRequestExam", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				body: JSON.stringify({
+					request_exam_id: item.request_exam_id,
+					receipt_vol_No: "10/54",
+				}),
+			});
+			setOpenPay(false);
+			setReloadTable(true);
+		} catch (err) {
+			console.error("Error fetching payRequestExam:", err);
+		}
+	};
+
+	const handleAddCancel = async (item) => {
+		if (!reason.trim()) {
+			setError("กรุณากรอกเหตุผล");
+			return;
+		}
+		try {
+			const requestRes = await fetch("http://localhost:8080/api/cancelRequestExam", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				body: JSON.stringify({
+					request_exam_id: item.request_exam_id,
+					reason: reason,
+				}),
+			});
+			setReason("");
+			setOpenAddCancel(false);
+			setReloadTable(true);
+		} catch (err) {
+			console.error("Error fetching cancelRequestExam:", err);
+		}
+	};
+
+	const handleCancel = async (item) => {
+		if (selected === "noapprove" && comment.trim() === "") {
+			setError("กรุณาระบุเหตุผล");
+			return;
+		}
+		try {
+			const requestRes = await fetch("http://localhost:8080/api/cancelApproveRequestExam", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				body: JSON.stringify({
+					request_cancel_exam_id: item.cancel_list[0].request_cancel_exam_id,
+					request_exam_id: item.request_exam_id,
+					name: user.name,
+					role: user.role,
+					selected: selected,
+					comment_cancel: comment,
+				}),
+			});
+			setSelected("approve");
+			setComment("");
+			setOpenApprove(false);
+			setReloadTable(true);
+		} catch (err) {
+			console.error("Error fetching cancelApproveRequestExam:", err);
+		}
+	};
+
+	const filteredData = requestExam.filter((p) => [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase()));
+	const rows = filteredData.map((item) => (
+		<Table.Tr key={item.request_exam_id}>
+			<Table.Td>{item.request_exam_id}</Table.Td>
+			<Table.Td>{item.request_date}</Table.Td>
+			<Table.Td>{item.student_name}</Table.Td>
+			<Table.Td>{item.request_type}</Table.Td>
+			<Table.Td>{item.status_text}</Table.Td>
+			<Table.Td>
+				<Group>
+					<Button
+						size="xs"
+						color="gray"
+						onClick={() => {
+							setSelectedRow(item);
+							setOpenInfo(true);
+						}}
+					>
+						ข้อมูล
+					</Button>
+					{user.role === "student" && (
+						<>
+							{item.status === "4" && (
+								<Button
+									size="xs"
+									color="green"
+									onClick={() => {
+										setSelectedRow(item);
+										setOpenPay(true);
+									}}
+								>
+									ชำระค่าธรรมเนียม
+								</Button>
+							)}
+							{item.status === "5" && (
+								<Button
+									size="xs"
+									color="red"
+									onClick={() => {
+										setSelectedRow(item);
+										setOpenAddCancel(true);
+									}}
+								>
+									ขอยกเลิก
+								</Button>
+							)}
+						</>
+					)}
+					{((user.role === "advisor" && item.status === "1") || (user.role === "chairpersons" && item.status === "2") || (user.role === "officer_registrar" && item.status === "3")) && (
+						<Button
+							size="xs"
+							color="green"
+							onClick={() => {
+								setSelectedRow(item);
+								setOpenApproveState("add");
+								setOpenApprove(true);
+							}}
+						>
+							ลงความเห็น
+						</Button>
+					)}
+					{((user.role === "advisor" && item.status === "7") || (user.role === "chairpersons" && item.status === "8") || (user.role === "dean" && item.status === "9")) && (
+						<Button
+							size="xs"
+							color="green"
+							onClick={() => {
+								setSelectedRow(item);
+								setOpenApproveState("cancel");
+								setOpenApprove(true);
+							}}
+						>
+							ลงความเห็น
+						</Button>
+					)}
+				</Group>
+			</Table.Td>
+		</Table.Tr>
+	));
+
+	return (
+		<Box>
+			<ModalInform opened={openInform} onClose={() => setOpenInform(false)} message={informMessage} type={informtype} />
+			<ModalApprove
+				opened={openApprove}
+				onClose={() => setOpenApprove(false)}
+				selectedRow={selectedRow}
+				selected={selected}
+				setSelected={setSelected}
+				comment={comment}
+				setComment={setComment}
+				error={error}
+				openApproveState={openApproveState}
+				handleApprove={handleApprove}
+				handleCancel={handleCancel}
+			/>
+			<ModalInfo opened={openInfo} onClose={() => setOpenInfo(false)} selectedRow={selectedRow} />
+			<ModalAddCancel opened={openAddCancel} onClose={() => setOpenAddCancel(false)} selectedRow={selectedRow} reason={reason} setReason={setReason} error={error} handleAddCancel={handleAddCancel} />
+			<ModalAdd opened={openAdd} onClose={() => setOpenAdd(false)} formData={formData} handleAdd={handleAdd} />
+			<ModalCheck opened={openCheck} onClose={() => setOpenCheck(false)} selected={selected} setSelected={setSelected} comment={comment} setComment={setComment} error={error} />
+			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} />
+
+			<Text size="1.5rem" fw={900} mb="md">
+				คำร้องขอสอบ{user.education_level}
+			</Text>
+			<Group justify="space-between">
+				<Box>
+					<TextInput
+						placeholder="ค้นหา"
+						value={search}
+						onChange={(e) => {
+							setSearch(e.target.value);
+						}}
+					/>
+				</Box>
+				<Box>{user.role === "student" && <Button onClick={() => handleOpenAdd()}>เพิ่มคำร้อง</Button>}</Box>
+			</Group>
+			<Space h="md" />
+			<ScrollArea type="scroll" offsetScrollbars styles={{ viewport: { padding: 0 } }} style={{ borderRadius: "8px", border: "1px solid #e0e0e0" }}>
+				<Table horizontalSpacing="sm" verticalSpacing="sm" highlightOnHover>
+					<Table.Thead>
+						<Table.Tr>
+							<Table.Th>#</Table.Th>
+							<Table.Th>วันที่</Table.Th>
+							<Table.Th>ชื่อ</Table.Th>
+							<Table.Th>เรื่อง</Table.Th>
+							<Table.Th>สถานะ</Table.Th>
+							<Table.Th>การดำเนินการ</Table.Th>
+						</Table.Tr>
+					</Table.Thead>
+					<Table.Tbody>{rows}</Table.Tbody>
+				</Table>
+			</ScrollArea>
+		</Box>
+	);
+};
+
+export default RequestList;
