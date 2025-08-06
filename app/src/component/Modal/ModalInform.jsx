@@ -22,6 +22,7 @@ const ModalInform = ({ opened, onClose, message, type = "success", timeout = 300
 			withCloseButton={false}
 			centered
 			size="auto"
+			zIndex={9999}
 			styles={{
 				content: {
 					width: "400px",

@@ -16,6 +16,10 @@ router.post("/login", async (req, res) => {
 			if (result.student_name === "undefined undefined" || (result.education_level !== "ปริญญาโท" && result.education_level !== "ปริญญาเอก")) {
 				return res.status(401).json({ message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" });
 			}
+			/* console.log(result);
+			if (result.BDATE !== password) {
+				return res.status(401).json({ message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" });
+			} */
 			const token = jwt.sign({ reference_id: username, role: "student" }, SECRET_KEY, { expiresIn: "1h" });
 			console.log(token);
 			res.status(200).json({ message: "เข้าสู่ระบบสำเร็จ", token, role: "student" });
@@ -28,8 +32,11 @@ router.post("/login", async (req, res) => {
 			const pool = await poolPromise;
 			const result = await pool.request().input("username", username).query("SELECT * FROM user_account WHERE username = @username");
 			const user = result.recordset[0];
+			if (!user) {
+				return res.status(401).json({ message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" });
+			}
 			const isMatch = await bcrypt.compare(password, user.password);
-			if (!user || !isMatch) {
+			if (!isMatch) {
 				return res.status(401).json({ message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" });
 			}
 			const token = jwt.sign({ reference_id: user.reference_id, role: user.role }, SECRET_KEY, { expiresIn: "1h" });

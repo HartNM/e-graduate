@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Box, Text, ScrollArea, Table, Button, Modal, Group, Flex, Space } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
+import ModalInform from "../../component/Modal/ModalInform";
 
 const ExamScheduleSetupPage = () => {
 	const [reloadTable, setReloadTable] = useState(false);
@@ -19,6 +20,10 @@ const ExamScheduleSetupPage = () => {
 	const [closeError, setCloseError] = useState("");
 	const [examError, setExamError] = useState("");
 
+	const [openInform, setOpenInform] = useState(false);
+	const [informMessage, setInformMessage] = useState("");
+	const [informtype, setInformtype] = useState("");
+
 	useEffect(() => {
 		const fetchRequestExamInfoAll = async () => {
 			try {
@@ -30,40 +35,15 @@ const ExamScheduleSetupPage = () => {
 				setRequestExamInfo(requestData);
 				console.log(requestData);
 			} catch (err) {
+				setInformtype("error");
+				setInformMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+				setOpenInform(true);
 				console.error("Error fetch requestExamInfoAll:", err);
 			}
 			setReloadTable(false);
 		};
 		fetchRequestExamInfoAll();
 	}, [reloadTable]);
-
-	const Rows = requestExamInfo.map((item) => (
-		<Table.Tr key={item.request_exam_info_id}>
-			<Table.Td>{item.open_date}</Table.Td>
-			<Table.Td>{item.close_date}</Table.Td>
-			<Table.Td>{item.exam_date}</Table.Td>
-			<Table.Td>
-				<Group>
-					<Button
-						size="xs"
-						onClick={() => {
-							setSelectedRow(item);
-							setOpenPickDate(true);
-							setModalType("Edit");
-							setOpen_date(new Date(item.open_date));
-							setClose_date(new Date(item.close_date));
-							setExam_date(new Date(item.exam_date));
-							setOpenError("");
-							setCloseError("");
-							setExamError("");
-						}}
-					>
-						แก้ไข
-					</Button>
-				</Group>
-			</Table.Td>
-		</Table.Tr>
-	));
 
 	const handleAddInfo = async () => {
 		setOpenError("");
@@ -95,9 +75,20 @@ const ExamScheduleSetupPage = () => {
 					exam_date: exam_date,
 				}),
 			});
+			const requestData = await requestRes.json();
+			if (requestRes.ok) {
+				setInformtype("success");
+			} else {
+				setInformtype("error");
+			}
+			setInformMessage(requestData.message);
+			setOpenInform(true);
 			setReloadTable(true);
 			setOpenPickDate(false);
 		} catch (err) {
+			setInformtype("error");
+			setInformMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+			setOpenInform(true);
 			console.error("Error fetch addRequestExamInfo:", err);
 		}
 	};
@@ -127,68 +118,76 @@ const ExamScheduleSetupPage = () => {
 					request_exam_info_id: selectedRow.request_exam_info_id,
 				}),
 			});
+			const requestData = await requestRes.json();
+			if (requestRes.ok) {
+				setInformtype("success");
+			} else {
+				setInformtype("error");
+			}
+			setInformMessage(requestData.message);
+			setOpenInform(true);
 			setReloadTable(true);
 			setOpenPickDate(false);
 		} catch (err) {
+			setInformtype("error");
+			setInformMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+			setOpenInform(true);
 			console.error("Error fetch addRequestExamInfo:", err);
 		}
 	};
 
+	const Rows = requestExamInfo.map((item) => (
+		<Table.Tr key={item.request_exam_info_id}>
+			<Table.Td>{item.open_date}</Table.Td>
+			<Table.Td>{item.close_date}</Table.Td>
+			<Table.Td>{item.exam_date}</Table.Td>
+			<Table.Td>
+				<Group>
+					<Button
+						size="xs"
+						onClick={() => {
+							setSelectedRow(item);
+							setOpenPickDate(true);
+							setModalType("Edit");
+							setOpen_date(new Date(item.open_date));
+							setClose_date(new Date(item.close_date));
+							setExam_date(new Date(item.exam_date));
+							setOpenError("");
+							setCloseError("");
+							setExamError("");
+						}}
+					>
+						แก้ไข
+					</Button>
+				</Group>
+			</Table.Td>
+		</Table.Tr>
+	));
 	return (
 		<Box>
-			<Modal
-				opened={openedPickDate}
-				onClose={() => setOpenPickDate(false)}
-				title={modalType === "Add" ? "กำหนดวันสอบประมวลความรู้/สอบวัดคุณสมบัต" : "แก้ไขวันสอบประมวลความรู้/สอบวัดคุณสมบัต"}
-				centered
-			>
+			<ModalInform opened={openInform} onClose={() => setOpenInform(false)} message={informMessage} type={informtype} />
+			<Modal opened={openedPickDate} onClose={() => setOpenPickDate(false)} title={modalType === "Add" ? "กำหนดวันสอบประมวลความรู้/สอบวัดคุณสมบัต" : "แก้ไขวันสอบประมวลความรู้/สอบวัดคุณสมบัต"} centered>
 				<Box>
-					<DatePickerInput
-						label="เลือกวันเปิดการยื่นคำร้อง"
-						placeholder="เลือกวัน"
-						firstDayOfWeek={0}
-						valueFormat="DD MMMM YYYY"
-						value={open_date}
-						onChange={setOpen_date}
-						error={openError}
-						withAsterisk
-					/>
-					<DatePickerInput
-						label="เลือกวันปิดการยื่นคำร้อง"
-						placeholder="เลือกวัน"
-						firstDayOfWeek={0}
-						valueFormat="DD MMMM YYYY"
-						value={close_date}
-						onChange={setClose_date}
-						minDate={open_date}
-						disabled={open_date ? false : true}
-						error={closeError}
-						withAsterisk
-					/>
-					<DatePickerInput
-						label="เลื่อกวันสอบ"
-						placeholder="เลื่อกวัน"
-						firstDayOfWeek={0}
-						valueFormat="DD MMMM YYYY"
-						value={exam_date}
-						onChange={setExam_date}
-						minDate={close_date}
-						disabled={close_date ? false : true}
-						error={examError}
-						withAsterisk
-					/>
+					<DatePickerInput label="เลือกวันเปิดการยื่นคำร้อง" placeholder="เลือกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" value={open_date} onChange={setOpen_date} error={openError} withAsterisk />
+					<DatePickerInput label="เลือกวันปิดการยื่นคำร้อง" placeholder="เลือกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" value={close_date} onChange={setClose_date} minDate={open_date} disabled={open_date ? false : true} error={closeError} withAsterisk />
+					<DatePickerInput label="เลื่อกวันสอบ" placeholder="เลื่อกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" value={exam_date} onChange={setExam_date} minDate={close_date} disabled={close_date ? false : true} error={examError} withAsterisk />
 				</Box>
-				<Button
-					onClick={() => {
-						if (modalType === "Add") {
-							handleAddInfo();
-						} else {
-							handleEditInfo();
-						}
-					}}
-				>
-					บันทึก
-				</Button>
+				<Space h="sm" />
+				<Flex justify="flex-end">
+					<Button
+						size="xs"
+						color="green"
+						onClick={() => {
+							if (modalType === "Add") {
+								handleAddInfo();
+							} else {
+								handleEditInfo();
+							}
+						}}
+					>
+						บันทึก
+					</Button>
+				</Flex>
 			</Modal>
 
 			<Text size="1.5rem" fw={900} mb="md">

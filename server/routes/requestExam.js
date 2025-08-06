@@ -7,7 +7,7 @@ const axios = require("axios");
 router.post("/cancelApproveRequestExam", authenticateToken, async (req, res) => {
 	const { request_cancel_exam_id, request_exam_id, name, role, selected, comment_cancel } = req.body;
 	if (!["advisor", "chairpersons", "dean"].includes(role)) {
-		return res.status(400).json({ message: "Invalid role" });
+		return res.status(400).json({ message: "สิทธิ์ในการเข้าถึงไม่ถูกต้อง" });
 	}
 	try {
 		let statusValue = "";
@@ -57,10 +57,10 @@ router.post("/cancelApproveRequestExam", authenticateToken, async (req, res) => 
 			SET status = @status
 			WHERE request_exam_id = @request_exam_id
 		`);
-		res.status(200).json({ message: "บันทึกข้อมูลเรียบร้อยแล้ว" });
+		res.status(200).json({ message: "บันทึกผลการอนุมัติคำร้องขอยกเลิกเรียบร้อยแล้ว" });
 	} catch (err) {
 		console.error("cancelApproveRequestExam:", err);
-		res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
+		res.status(500).json({ message: "เกิดข้อผิดพลาดในการประมวลผล" });
 	}
 });
 
@@ -88,10 +88,10 @@ router.post("/cancelRequestExam", authenticateToken, async (req, res) => {
 			WHERE request_exam_id = @request_exam_id
 		`);
 
-		res.status(201).json({ message: "บันทึกคำร้องขอสอบเรียบร้อยแล้ว" });
+		res.status(200).json({ message: "บันทึกคำร้องขอยกเลิกการสอบเรียบร้อยแล้ว" });
 	} catch (err) {
 		console.error("SQL Error:", err);
-		res.status(500).json({ error: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
+		res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกคำร้อง" });
 	}
 });
 
@@ -106,17 +106,17 @@ router.post("/payRequestExam", authenticateToken, async (req, res) => {
           status = @status
       WHERE request_exam_id = @request_exam_id
       `);
-		res.status(201).json({ message: "บันทึกคำร้องขอสอบเรียบร้อยแล้ว" });
+		res.status(200).json({ message: "บันทึกข้อมูลการชำระเงินเรียบร้อยแล้ว" });
 	} catch (err) {
 		console.error("SQL Error:", err);
-		res.status(500).json({ error: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
+		res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกการชำระเงิน" });
 	}
 });
 
 router.post("/approveRequestExam", authenticateToken, async (req, res) => {
 	const { request_exam_id, name, role, selected, comment } = req.body;
 	if (!["advisor", "chairpersons", "officer_registrar"].includes(role)) {
-		return res.status(400).json({ message: "Invalid role" });
+		return res.status(400).json({ message: "สิทธิ์ในการเข้าถึงไม่ถูกต้อง" });
 	}
 	try {
 		let statusValue = "";
@@ -166,10 +166,10 @@ router.post("/approveRequestExam", authenticateToken, async (req, res) => {
       WHERE request_exam_id = @request_exam_id
     `;
 		await request.query(query);
-		res.status(200).json({ message: "Request approved successfully" });
+		res.status(200).json({ message: "บันทึกผลการอนุมัติคำร้องขอสอบเรียบร้อยแล้ว" });
 	} catch (err) {
 		console.error("Error approving request:", err);
-		res.status(500).json({ message: "Internal server error" });
+		res.status(500).json({ message: "เกิดข้อผิดพลาดในการประมวลผลการอนุมัติ" });
 	}
 });
 
@@ -256,7 +256,7 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 		res.status(200).json(sortedData);
 	} catch (err) {
 		console.error("requestExamAll:", err);
-		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
+		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลคำร้อง" });
 	}
 });
 
@@ -287,10 +287,10 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 				@request_exam_date,
 				@status
 			)`);
-		res.status(201).json({ message: "บันทึกคำร้องขอสอบเรียบร้อยแล้ว" });
+		res.status(200).json({ message: "บันทึกคำร้องขอสอบเรียบร้อยแล้ว" });
 	} catch (err) {
 		console.error("addRequestExam:", err);
-		res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
+		res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกคำร้องขอสอบ" });
 	}
 });
 

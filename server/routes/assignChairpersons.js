@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const authenticateToken = require("../middleware/authenticateToken");
 const { poolPromise } = require("../db");
-const axios = require("axios");
+const bcrypt = require("bcrypt");
 
 router.post("/editAssignChairpersons", authenticateToken, async (req, res) => {
 	const { chairpersons_id, chairpersons_name, major_id } = req.body;
@@ -13,10 +13,10 @@ router.post("/editAssignChairpersons", authenticateToken, async (req, res) => {
 			SET chairpersons_name = @chairpersons_name, 
 				major_id = @major_id
 			WHERE chairpersons_id = @chairpersons_id`);
-		res.status(200).json({ message: "บันทึกข้อมูลเรียบร้อยแล้ว" });
+		res.status(200).json({ message: "แก้ไขข้อมูลเรียบร้อยแล้ว" });
 	} catch (err) {
 		console.error("requestExamInfoAll:", err);
-		res.status(500).json({ error: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
+		res.status(500).json({ message: "เกิดข้อผิดพลาดในการแก้ไขข้อมูล" });
 	}
 });
 

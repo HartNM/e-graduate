@@ -1,4 +1,3 @@
-import React from "react";
 import { Modal, Box, Flex, Button } from "@mantine/core";
 
 const ModalPay = (props) => (

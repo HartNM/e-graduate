@@ -11,11 +11,13 @@
 	color: black;
 	padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
 	font-weight: 500;
+
 }
 
 .link:hover {
 	background-color: #e9ecef;
 }
+
 
 .linkIcon {
 	margin-right: var(--mantine-spacing-sm);

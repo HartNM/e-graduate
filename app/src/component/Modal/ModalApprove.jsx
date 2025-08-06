@@ -1,4 +1,3 @@
-import React from "react";
 import { Modal, Box, Text, TextInput, Checkbox, Stack, Space, Flex, Button } from "@mantine/core";
 
 const ModalApprove = (props) => (

@@ -1,6 +1,7 @@
 //แต่งตั้งเจ้าหน้าที่ประจำคณะ
 import { useState, useEffect } from "react";
-import { Box, Text, TextInput, Table, Button, Modal, Space, ScrollArea, PasswordInput, Group, Select } from "@mantine/core";
+import { Box, Text, TextInput, Table, Button, Modal, Space, ScrollArea, PasswordInput, Group, Select, Flex } from "@mantine/core";
+import ModalInform from "../../component/Modal/ModalInform";
 
 const AssignFacultyOfficer = () => {
 	const [reloadTable, setReloadTable] = useState(false);
@@ -9,6 +10,10 @@ const AssignFacultyOfficer = () => {
 	const [openModal, setOpenModal] = useState(false);
 	const [modalType, setModalType] = useState(false);
 	const [faculty, setFaculty] = useState(["คณะครุศาสตร์", "คณะวิทยาการจัดการ", "คณะเทคโนโลยีอุตสาหกรรม", "คณะวิทยาศาสตร์และเทคโนโลยี", "คณะมนุษยศาสตร์และสังคมศาสตร์", "คณะพยาบาลศาสตร์"]);
+
+	const [openInform, setOpenInform] = useState(false);
+	const [informMessage, setInformMessage] = useState("");
+	const [informtype, setInformtype] = useState("");
 
 	const [formData, setFormData] = useState({});
 	const [errors, setErrors] = useState({});
@@ -24,10 +29,16 @@ const AssignFacultyOfficer = () => {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
+				if (!requestRes.ok) {
+					throw new Error(data.message);
+				}
 				const requestData = await requestRes.json();
 				setAssignFacultyOfficer(requestData);
 				console.log(requestData);
-			} catch (err) {
+			} catch (error) {
+				setInformtype("error");
+				setInformMessage(error.message);
+				setOpenInform(true);
 				console.error("Error fetch requestExamInfoAll:", err);
 			}
 		};
@@ -71,7 +82,7 @@ const AssignFacultyOfficer = () => {
 			return;
 		}
 		try {
-			await fetch("http://localhost:8080/api/addAssignFacultyOfficer", {
+			const requestRes = await fetch("http://localhost:8080/api/addAssignFacultyOfficer", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify({
@@ -81,10 +92,20 @@ const AssignFacultyOfficer = () => {
 					password: formData.password,
 				}),
 			});
+			const requestData = await requestRes.json();
+			if (!requestRes.ok) {
+				throw new Error(requestData.message);
+			}
+			setInformMessage(requestData.message);
+			setInformtype("success");
 			setReloadTable(true);
 			setOpenModal(false);
 		} catch (err) {
 			console.error("Error fetch addAssignFacultyOfficer:", err);
+			setInformtype("error");
+			setInformMessage(err.message);
+		} finally {
+			setOpenInform(true);
 		}
 	};
 
@@ -105,7 +126,7 @@ const AssignFacultyOfficer = () => {
 			return;
 		}
 		try {
-			await fetch("http://localhost:8080/api/editAssignFacultyOfficer", {
+			const requestRes = await fetch("http://localhost:8080/api/editAssignFacultyOfficer", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify({
@@ -114,38 +135,45 @@ const AssignFacultyOfficer = () => {
 					officer_faculty_name: formData.officer_faculty_name,
 				}),
 			});
+			const requestData = await requestRes.json();
+			if (!requestRes.ok) {
+				throw new Error(requestData.message);
+			}
+			setInformMessage(requestData.message);
+			setInformtype("success");
 			setReloadTable(true);
 			setOpenModal(false);
 		} catch (err) {
 			console.error("Error fetch addAssignFacultyOfficer:", err);
+			setInformtype("error");
+			setInformMessage(err.message);
+		} finally {
+			setOpenInform(true);
 		}
 	};
 	return (
 		<Box>
+			<ModalInform opened={openInform} onClose={() => setOpenInform(false)} message={informMessage} type={informtype} />
 			<Modal opened={openModal} onClose={() => setOpenModal(false)} title="แต่งตั้งเจ้าหน้าที่ประจำคณะ" centered>
 				<Box>
 					<Select label="เลือกคณะ" data={faculty} value={formData.faculty_name || ""} onChange={(value) => handleChange("faculty_name", value)} error={errors.faculty_name}></Select>
-					<TextInput
-						label="รหัสบัตร"
-						value={formData.officer_faculty_id || ""}
-						onChange={(e) => handleChange("officer_faculty_id", e.currentTarget.value)}
-						error={errors.officer_faculty_id}
-						disabled={modalType === "add" ? false : true}
-						styles={{ input: { color: "#000" } }}
-					/>
+					<TextInput label="รหัสบัตร" value={formData.officer_faculty_id || ""} onChange={(e) => handleChange("officer_faculty_id", e.currentTarget.value)} error={errors.officer_faculty_id} disabled={modalType === "add" ? false : true} styles={{ input: { color: "#000" } }} />
 					<TextInput label="ชื่อ" value={formData.officer_faculty_name || ""} onChange={(e) => handleChange("officer_faculty_name", e.currentTarget.value)} error={errors.officer_faculty_name} />
 					{modalType === "add" && <PasswordInput label="รหัสผ่าน" value={formData.password || ""} onChange={(e) => handleChange("password", e.currentTarget.value)} error={errors.password} />}
-					<Space h="md" />
-					<Button
-						variant="filled"
-						color="green"
-						size="xs"
-						onClick={() => {
-							modalType === "add" ? handleAddFacultyOfficer() : handleEditFacultyOfficer();
-						}}
-					>
-						บันทึก
-					</Button>
+					<Space h="xl" />
+					<Box>
+						<Flex justify="flex-end">
+							<Button
+								vsize="xs"
+								color="green"
+								onClick={() => {
+									modalType === "add" ? handleAddFacultyOfficer() : handleEditFacultyOfficer();
+								}}
+							>
+								บันทึก
+							</Button>
+						</Flex>
+					</Box>
 				</Box>
 			</Modal>
 

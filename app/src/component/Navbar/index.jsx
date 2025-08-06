@@ -11,14 +11,14 @@ export function NavbarNested(menu) {
 	const navigate = useNavigate();
 
 	return (
-		<nav style={{ msFlexDirection: "column" }}>
-			<Box style={{ paddingBottom: 0, display: "flex", flexDirection: "column" }}>
+		<nav>
+			<Box>
 				<Box>
 					<UserButton />
 				</Box>
 			</Box>
 
-			<ScrollArea style={{ flex: 1, height: "calc(100vh - 115px - 100px" }}>
+			<ScrollArea style={{ height: "calc(100vh - 115px - 80px" }}>
 				<Box>{links}</Box>
 			</ScrollArea>
 

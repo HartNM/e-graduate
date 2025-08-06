@@ -1,4 +1,3 @@
-import React from "react";
 import { Modal, Box, Stack, Checkbox, Space, TextInput, Flex, Button } from "@mantine/core";
 
 const ModalCheck = (props) => (

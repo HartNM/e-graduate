@@ -49,10 +49,10 @@ const RequestList = () => {
 				const profileData = await profileRes.json();
 				setUser(profileData);
 				console.log(profileData);
-				if(!profileData.ok){
-					
-				}
 			} catch (err) {
+				setInformtype("error");
+				setInformMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+				setOpenInform(true);
 				console.error("Error fetching profile:", err);
 			}
 		};
@@ -70,10 +70,14 @@ const RequestList = () => {
 				const requestData = await requestRes.json();
 				setRequestExam(requestData);
 				console.log(requestData);
+				setReloadTable(false);
 			} catch (err) {
+				setInformtype("error");
+				setInformMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+				setOpenInform(true);
 				console.error("Error fetching requestExamAll:", err);
+				setReloadTable(false);
 			}
-			setReloadTable(false);
 		};
 		fetchRequestExam();
 	}, [user, reloadTable]);
@@ -86,34 +90,38 @@ const RequestList = () => {
 			});
 			const requestData = await requestRes.json();
 			setFormData(requestData);
+			setOpenAdd(true);
 		} catch (err) {
+			setInformtype("error");
+			setInformMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+			setOpenInform(true);
 			console.error("Error fetching studentInfo:", err);
 		}
-		setOpenAdd(true);
 	};
 
 	const handleAdd = async () => {
-		let requestData;
 		try {
 			const requestRes = await fetch("http://localhost:8080/api/addRequestExam", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify(formData),
 			});
-			requestData = await requestRes.json();
+			const requestData = await requestRes.json();
 			if (requestRes.ok) {
 				setInformtype("success");
 			} else {
 				setInformtype("error");
 			}
+			setInformMessage(requestData.message);
+			setOpenInform(true);
+			setOpenAdd(false);
+			setReloadTable(true);
 		} catch (err) {
 			setInformtype("error");
+			setInformMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+			setOpenInform(true);
 			console.error("Error fetching addRequestExam:", err);
 		}
-		setInformMessage(requestData.message || "ไม่สามารถส่งคำร้องได้");
-		setOpenInform(true);
-		setOpenAdd(false);
-		setReloadTable(true);
 	};
 
 	const handleApprove = async (item) => {
@@ -133,11 +141,22 @@ const RequestList = () => {
 					comment: comment,
 				}),
 			});
+			const requestData = await requestRes.json();
+			if (requestRes.ok) {
+				setInformtype("success");
+			} else {
+				setInformtype("error");
+			}
+			setInformMessage(requestData.message);
+			setOpenInform(true);
 			setSelected("approve");
 			setComment("");
 			setOpenApprove(false);
 			setReloadTable(true);
 		} catch (err) {
+			setInformtype("error");
+			setInformMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+			setOpenInform(true);
 			console.error("Error fetching approveRequestExam:", err);
 		}
 	};
@@ -152,9 +171,20 @@ const RequestList = () => {
 					receipt_vol_No: "10/54",
 				}),
 			});
+			const requestData = await requestRes.json();
+			if (requestRes.ok) {
+				setInformtype("success");
+			} else {
+				setInformtype("error");
+			}
+			setInformMessage(requestData.message);
+			setOpenInform(true);
 			setOpenPay(false);
 			setReloadTable(true);
 		} catch (err) {
+			setInformtype("error");
+			setInformMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+			setOpenInform(true);
 			console.error("Error fetching payRequestExam:", err);
 		}
 	};
@@ -173,10 +203,21 @@ const RequestList = () => {
 					reason: reason,
 				}),
 			});
+			const requestData = await requestRes.json();
+			if (requestRes.ok) {
+				setInformtype("success");
+			} else {
+				setInformtype("error");
+			}
+			setInformMessage(requestData.message);
+			setOpenInform(true);
 			setReason("");
 			setOpenAddCancel(false);
 			setReloadTable(true);
 		} catch (err) {
+			setInformtype("error");
+			setInformMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+			setOpenInform(true);
 			console.error("Error fetching cancelRequestExam:", err);
 		}
 	};
@@ -199,11 +240,22 @@ const RequestList = () => {
 					comment_cancel: comment,
 				}),
 			});
+			const requestData = await requestRes.json();
+			if (requestRes.ok) {
+				setInformtype("success");
+			} else {
+				setInformtype("error");
+			}
 			setSelected("approve");
+			setInformMessage(requestData.message);
+			setOpenInform(true);
 			setComment("");
 			setOpenApprove(false);
 			setReloadTable(true);
 		} catch (err) {
+			setInformtype("error");
+			setInformMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+			setOpenInform(true);
 			console.error("Error fetching cancelApproveRequestExam:", err);
 		}
 	};
@@ -314,13 +366,7 @@ const RequestList = () => {
 			</Text>
 			<Group justify="space-between">
 				<Box>
-					<TextInput
-						placeholder="ค้นหา"
-						value={search}
-						onChange={(e) => {
-							setSearch(e.target.value);
-						}}
-					/>
+					<TextInput placeholder="ค้นหา" value={search} onChange={(e) => setSearch(e.target.value)} />
 				</Box>
 				<Box>{user.role === "student" && <Button onClick={() => handleOpenAdd()}>เพิ่มคำร้อง</Button>}</Box>
 			</Group>

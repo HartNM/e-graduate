@@ -1,4 +1,3 @@
-import React from "react";
 import { Modal, Box, TextInput, Textarea, Flex, Button } from "@mantine/core";
 
 const ModalAddCancel = (props) => (
