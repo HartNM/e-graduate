@@ -1,6 +1,7 @@
 //แต่งตั้งเจ้าหน้าที่ประจำคณะ
 import { useState, useEffect } from "react";
 import { Box, Text, TextInput, Table, Button, Modal, Space, ScrollArea, PasswordInput, Group, Select, Flex } from "@mantine/core";
+import { useForm } from "@mantine/form";
 import ModalInform from "../../component/Modal/ModalInform";
 
 const AssignFacultyOfficer = () => {
@@ -15,12 +16,20 @@ const AssignFacultyOfficer = () => {
 	const [informMessage, setInformMessage] = useState("");
 	const [informtype, setInformtype] = useState("");
 
-	const [formData, setFormData] = useState({});
-	const [errors, setErrors] = useState({});
-	const handleChange = (field, value) => {
-		setErrors((prev) => ({ ...prev, [field]: "" }));
-		setFormData((prev) => ({ ...prev, [field]: value }));
-	};
+	const Form = useForm({
+		initialValues: {
+			officer_faculty_id: "",
+			officer_faculty_name: "",
+			faculty_name: "",
+			password: "",
+		},
+		validate: {
+			officer_faculty_id: (value) => (value.trim().length > 0 ? null : "กรุณากรอกรหัสบัตร"),
+			officer_faculty_name: (value) => (value.trim().length > 0 ? null : "กรุณากรอกชื่อ"),
+			faculty_name: (value) => (value.trim().length > 0 ? null : "กรุณาเลือกคณะ"),
+			password: (value) => (value.trim().length > 0 ? null : "กรุณากรอกรหัสผ่าน"),
+		},
+	});
 
 	useEffect(() => {
 		const fetchRequestExamInfoAll = async () => {
@@ -29,10 +38,10 @@ const AssignFacultyOfficer = () => {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
-				if (!requestRes.ok) {
-					throw new Error(data.message);
-				}
 				const requestData = await requestRes.json();
+				if (!requestRes.ok) {
+					throw new Error(requestData.message);
+				}
 				setAssignFacultyOfficer(requestData);
 				console.log(requestData);
 			} catch (error) {
@@ -41,77 +50,24 @@ const AssignFacultyOfficer = () => {
 				setOpenInform(true);
 				console.error("Error fetch requestExamInfoAll:", err);
 			}
+			setReloadTable(false);
 		};
 		fetchRequestExamInfoAll();
-		setReloadTable(false);
 	}, [reloadTable]);
 
-	const classRows = assignFacultyOfficer.map((item) => (
-		<Table.Tr key={item.officer_faculty_id}>
-			<Table.Td>{item.faculty_name}</Table.Td>
-			<Table.Td>{item.officer_faculty_name}</Table.Td>
-			<Table.Td>
-				<Button variant="filled" color="indigo" size="xs" onClick={() => handleOpenEdit(item)}>
-					แก้ไข
-				</Button>
-			</Table.Td>
-		</Table.Tr>
-	));
-
 	const handleOpenAdd = () => {
-		setErrors({});
-		setFormData({});
+		Form.setValues({
+			officer_faculty_id: "",
+			officer_faculty_name: "",
+			faculty_name: "",
+			password: "",
+		});
 		setModalType("add");
 		setOpenModal(true);
 	};
 
-	const handleAddFacultyOfficer = async () => {
-		if (!formData.faculty_name || !formData.officer_faculty_id || !formData.officer_faculty_name || !formData.password) {
-			if (!formData.faculty_name) {
-				setErrors((prev) => ({ ...prev, faculty_name: "กรุณาเลือกคณะ" }));
-			}
-			if (!formData.officer_faculty_id) {
-				setErrors((prev) => ({ ...prev, officer_faculty_id: "กรุณากรอกรหัสบัตร" }));
-			}
-			if (!formData.officer_faculty_name) {
-				setErrors((prev) => ({ ...prev, officer_faculty_name: "กรุณากรอกชื่อ" }));
-			}
-			if (!formData.password) {
-				setErrors((prev) => ({ ...prev, password: "กรุณากรอกรหัสผ่าน" }));
-			}
-			return;
-		}
-		try {
-			const requestRes = await fetch("http://localhost:8080/api/addAssignFacultyOfficer", {
-				method: "POST",
-				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({
-					faculty_name: formData.faculty_name,
-					officer_faculty_id: formData.officer_faculty_id,
-					officer_faculty_name: formData.officer_faculty_name,
-					password: formData.password,
-				}),
-			});
-			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
-			setInformMessage(requestData.message);
-			setInformtype("success");
-			setReloadTable(true);
-			setOpenModal(false);
-		} catch (err) {
-			console.error("Error fetch addAssignFacultyOfficer:", err);
-			setInformtype("error");
-			setInformMessage(err.message);
-		} finally {
-			setOpenInform(true);
-		}
-	};
-
 	const handleOpenEdit = (item) => {
-		setErrors({});
-		setFormData({
+		Form.setValues({
 			officer_faculty_id: item.officer_faculty_id,
 			officer_faculty_name: item.officer_faculty_name,
 			faculty_name: item.faculty_name,
@@ -120,20 +76,47 @@ const AssignFacultyOfficer = () => {
 		setOpenModal(true);
 	};
 
-	const handleEditFacultyOfficer = async () => {
-		if (!formData.officer_faculty_name) {
-			setErrors((prev) => ({ ...prev, officer_faculty_name: "กรุณากรอกชื่อ" }));
-			return;
+	const handleOpenDelete = (item) => {
+		Form.setValues({
+			officer_faculty_id: item.officer_faculty_id,
+			officer_faculty_name: item.officer_faculty_name,
+			faculty_name: item.faculty_name,
+		});
+		setModalType("delete");
+		setOpenModal(true);
+	};
+
+	const handleAddFacultyOfficer = async () => {
+		try {
+			const requestRes = await fetch("http://localhost:8080/api/addAssignFacultyOfficer", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				body: JSON.stringify(Form.values),
+			});
+			const requestData = await requestRes.json();
+			if (!requestRes.ok) {
+				throw new Error(requestData.message);
+			}
+			setInformtype("success");
+			setInformMessage(requestData.message);
+
+			setReloadTable(true);
+			setOpenModal(false);
+			setOpenInform(true);
+		} catch (err) {
+			setInformtype("error");
+			setInformMessage(err.message);
+			setOpenInform(true);
+			console.error("Error fetch addAssignFacultyOfficer:", err);
 		}
+	};
+
+	const handleEditFacultyOfficer = async () => {
 		try {
 			const requestRes = await fetch("http://localhost:8080/api/editAssignFacultyOfficer", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({
-					faculty_name: formData.faculty_name,
-					officer_faculty_id: formData.officer_faculty_id,
-					officer_faculty_name: formData.officer_faculty_name,
-				}),
+				body: JSON.stringify(Form.values),
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) {
@@ -143,46 +126,86 @@ const AssignFacultyOfficer = () => {
 			setInformtype("success");
 			setReloadTable(true);
 			setOpenModal(false);
+			setOpenInform(true);
 		} catch (err) {
 			console.error("Error fetch addAssignFacultyOfficer:", err);
 			setInformtype("error");
 			setInformMessage(err.message);
-		} finally {
 			setOpenInform(true);
 		}
 	};
+
+	const handleDeleteFacultyOfficer = async () => {
+		console.log("asd");
+		try {
+			const requestRes = await fetch("http://localhost:8080/api/deleteAssignFacultyOfficer", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				body: JSON.stringify(Form.values),
+			});
+			const requestData = await requestRes.json();
+			if (!requestRes.ok) {
+				throw new Error(requestData.message);
+			}
+			setInformtype("success");
+			setInformMessage(requestData.message);
+			setOpenInform(true);
+			setReloadTable(true);
+			setOpenModal(false);
+		} catch (err) {
+			setInformtype("error");
+			setInformMessage(err.message);
+			setOpenInform(true);
+			console.error("Error fetch deleteAssignChairpersons:", err);
+		}
+	};
+
+	const classRows = assignFacultyOfficer.map((item) => (
+		<Table.Tr key={item.officer_faculty_id}>
+			<Table.Td>{item.faculty_name}</Table.Td>
+			<Table.Td>{item.officer_faculty_name}</Table.Td>
+			<Table.Td>
+				<Group>
+					<Button color="yellow" size="xs" onClick={() => handleOpenEdit(item)}>
+						แก้ไข
+					</Button>
+					<Button color="red" size="xs" onClick={() => handleOpenDelete(item)}>
+						ลบ
+					</Button>
+				</Group>
+			</Table.Td>
+		</Table.Tr>
+	));
+
+	const handleSubmit = () => {		
+		if (modalType === "add") return Form.onSubmit(handleAddFacultyOfficer);
+		if (modalType === "edit") return Form.onSubmit(handleEditFacultyOfficer);
+		if (modalType === "delete") return Form.onSubmit(handleDeleteFacultyOfficer);
+		return (e) => e.preventDefault();
+	};
+
 	return (
 		<Box>
 			<ModalInform opened={openInform} onClose={() => setOpenInform(false)} message={informMessage} type={informtype} />
 			<Modal opened={openModal} onClose={() => setOpenModal(false)} title="แต่งตั้งเจ้าหน้าที่ประจำคณะ" centered>
 				<Box>
-					<Select label="เลือกคณะ" data={faculty} value={formData.faculty_name || ""} onChange={(value) => handleChange("faculty_name", value)} error={errors.faculty_name}></Select>
-					<TextInput label="รหัสบัตร" value={formData.officer_faculty_id || ""} onChange={(e) => handleChange("officer_faculty_id", e.currentTarget.value)} error={errors.officer_faculty_id} disabled={modalType === "add" ? false : true} styles={{ input: { color: "#000" } }} />
-					<TextInput label="ชื่อ" value={formData.officer_faculty_name || ""} onChange={(e) => handleChange("officer_faculty_name", e.currentTarget.value)} error={errors.officer_faculty_name} />
-					{modalType === "add" && <PasswordInput label="รหัสผ่าน" value={formData.password || ""} onChange={(e) => handleChange("password", e.currentTarget.value)} error={errors.password} />}
-					<Space h="xl" />
-					<Box>
-						<Flex justify="flex-end">
-							<Button
-								vsize="xs"
-								color="green"
-								onClick={() => {
-									modalType === "add" ? handleAddFacultyOfficer() : handleEditFacultyOfficer();
-								}}
-							>
-								บันทึก
-							</Button>
-						</Flex>
-					</Box>
+					<form onSubmit={handleSubmit()}>
+						<Select label="เลือกคณะ" data={faculty} {...Form.getInputProps("faculty_name")} disabled={modalType === "delete" ? true : false}></Select>
+						<TextInput label="รหัสบัตร" {...Form.getInputProps("officer_faculty_id")} disabled={modalType === "add" ? false : true} />
+						<TextInput label="ชื่อ" {...Form.getInputProps("officer_faculty_name")} disabled={modalType === "delete" ? true : false} />
+						{modalType === "add" && <PasswordInput label="รหัสผ่าน" {...Form.getInputProps("password")} />}
+						<Space h="md" />
+						<Button color={modalType === "delete" ? "red" : "green"} type="submit" fullWidth>
+							{modalType === "delete" ? "ลบ" : "บันทึก"}
+						</Button>
+					</form>
 				</Box>
 			</Modal>
 
 			<Text size="1.5rem" fw={900} mb="md">
 				แต่งตั้งเจ้าหน้าที่ประจำสาขา
 			</Text>
-
 			<Space h="xl" />
-
 			<Group justify="space-between">
 				<Box></Box>
 				<Box>
@@ -191,10 +214,8 @@ const AssignFacultyOfficer = () => {
 					</Button>
 				</Box>
 			</Group>
-
 			<Space h="xl" />
-
-			<ScrollArea type="scroll" offsetScrollbars styles={{ viewport: { padding: 0 } }} style={{ borderRadius: "8px", border: "1px solid #e0e0e0" }}>
+			<ScrollArea type="scroll" offsetScrollbars style={{ borderRadius: "8px", border: "1px solid #e0e0e0" }}>
 				<Table horizontalSpacing="sm" verticalSpacing="sm" highlightOnHover>
 					<Table.Thead>
 						<Table.Tr>

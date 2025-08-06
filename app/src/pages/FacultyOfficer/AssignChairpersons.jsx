@@ -1,32 +1,42 @@
 //แต่งตั้งประธานกรรมการบัณฑิตศึกษาประจำสาขา
 import { useState, useEffect } from "react";
 import { Box, Text, TextInput, Table, Button, Modal, Space, ScrollArea, PasswordInput, Group, Select } from "@mantine/core";
+import { useForm } from "@mantine/form";
+import ModalInform from "../../component/Modal/ModalInform";
 
 const AssignChairpersons = () => {
-	const [reloadTable, setReloadTable] = useState(false);
-	const token = localStorage.getItem("token");
-	const [assignFacultyOfficer, setAssignFacultyOfficer] = useState([]);
 	const [openModal, setOpenModal] = useState(false);
 	const [modalType, setModalType] = useState(false);
-	const [faculty, setFaculty] = useState([
+
+	const [openInform, setOpenInform] = useState(false);
+	const [informMessage, setInformMessage] = useState("");
+	const [informtype, setInformtype] = useState("");
+
+	const [reloadTable, setReloadTable] = useState(false);
+	const token = localStorage.getItem("token");
+
+	const [assignChairpersons, setAssignChairpersons] = useState([]);
+	const [major, setMajor] = useState([
 		{ value: "14", label: "การบริหารการศึกษา" },
 		{ value: "00", label: "ยุทธศาสตร์การบริหารและการพัฒนา" },
 		{ value: "k2", label: "การจัดการสมัยใหม่" },
 		{ value: "70", label: "รัฐประศาสนศาสตร์" },
 		{ value: "ไม่รู้1", label: "วิทยาศาสตร์ศึกษา" },
 	]);
-
-	const [formData, setFormData] = useState({});
-	const [errors, setErrors] = useState({
-		chairpersons_id: "",
-		chairpersons_name: "",
-		major_id: "",
-		password: "",
+	const Form = useForm({
+		initialValues: {
+			chairpersons_id: "",
+			chairpersons_name: "",
+			major_id: "",
+			password: "",
+		},
+		validate: {
+			chairpersons_id: (value) => (value.trim().length > 0 ? null : "กรุณากรอกรหัสบัตร"),
+			chairpersons_name: (value) => (value.trim().length > 0 ? null : "กรุณากรอกชื่อ"),
+			major_id: (value) => (value.trim().length > 0 ? null : "กรุณาเลือกคณะ"),
+			password: (value) => (value.trim().length > 0 ? null : "กรุณากรอกรหัสผ่าน"),
+		},
 	});
-	const handleChange = (field, value) => {
-		setErrors((prev) => ({ ...prev, [field]: "" }));
-		setFormData((prev) => ({ ...prev, [field]: value }));
-	};
 
 	useEffect(() => {
 		const fetchRequestExamInfoAll = async () => {
@@ -36,79 +46,35 @@ const AssignChairpersons = () => {
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
 				const requestData = await requestRes.json();
-				setAssignFacultyOfficer(requestData);
+				if (!requestRes.ok) {
+					throw new Error(requestData.message);
+				}
+				setAssignChairpersons(requestData);
 				console.log(requestData);
 			} catch (err) {
+				setInformtype("error");
+				setInformMessage(err.message);
+				setOpenInform(true);
 				console.error("Error fetch allAssignChairpersons:", err);
 			}
+			setReloadTable(false);
 		};
 		fetchRequestExamInfoAll();
-		setReloadTable(false);
 	}, [reloadTable]);
 
-	const majorMap = {
-		14: "วิชาการบริหารการศึกษา",
-		"00": "วิชายุทธศาสตร์การบริหารและการพัฒนา",
-	};
-
-	const classRows = assignFacultyOfficer.map((item) => (
-		<Table.Tr key={item.chairpersons_id}>
-			<Table.Td>{majorMap[item.major_id] || item.major_id}</Table.Td>
-			<Table.Td>{item.chairpersons_name}</Table.Td>
-			<Table.Td>
-				<Button variant="filled" color="indigo" size="xs" onClick={() => handleOpenEdit(item)}>
-					แก้ไข
-				</Button>
-			</Table.Td>
-		</Table.Tr>
-	));
-
 	const handleOpenAdd = () => {
-		setErrors({});
-		setFormData({});
+		Form.setValues({
+			chairpersons_id: "",
+			chairpersons_name: "",
+			major_id: "",
+			password: "",
+		});
 		setModalType("add");
 		setOpenModal(true);
 	};
 
-	const handleAddFacultyOfficer = async () => {
-		if (!formData.chairpersons_id || !formData.chairpersons_name || !formData.major_id || !formData.password) {
-			if (!formData.chairpersons_id) {
-				setErrors((prev) => ({ ...prev, chairpersons_id: "กรุณากรอกรหัสบัตร" }));
-			}
-			if (!formData.chairpersons_name) {
-				setErrors((prev) => ({ ...prev, chairpersons_name: "กรุณากรอกชื่อ" }));
-			}
-			if (!formData.major_id) {
-				setErrors((prev) => ({ ...prev, major_id: "กรุณาเลือกคณะ" }));
-			}
-			if (!formData.password) {
-				setErrors((prev) => ({ ...prev, password: "กรุณากรอกรหัสผ่าน" }));
-			}
-			return;
-		}
-		console.log(formData.chairpersons_id, formData.chairpersons_name, formData.major_id, formData.password);
-
-		try {
-			await fetch("http://localhost:8080/api/addAssignChairpersons", {
-				method: "POST",
-				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({
-					chairpersons_id: formData.chairpersons_id,
-					chairpersons_name: formData.chairpersons_name,
-					major_id: formData.major_id,
-					password: formData.password,
-				}),
-			});
-			setReloadTable(true);
-			setOpenModal(false);
-		} catch (err) {
-			console.error("Error fetch addAssignChairpersons:", err);
-		}
-	};
-
 	const handleOpenEdit = (item) => {
-		setErrors({});
-		setFormData({
+		Form.setValues({
 			chairpersons_id: item.chairpersons_id,
 			chairpersons_name: item.chairpersons_name,
 			major_id: item.major_id,
@@ -117,62 +83,134 @@ const AssignChairpersons = () => {
 		setOpenModal(true);
 	};
 
-	const handleEditFacultyOfficer = async () => {
-		if (!formData.chairpersons_name) {
-			setErrors((prev) => ({ ...prev, chairpersons_name: "กรุณากรอกชื่อ" }));
-			return;
-		}
+	const handleOpenDelete = (item) => {
+		Form.setValues({
+			chairpersons_id: item.chairpersons_id,
+			chairpersons_name: item.chairpersons_name,
+			major_id: item.major_id,
+		});
+		setModalType("delete");
+		setOpenModal(true);
+	};
+
+	const handleAddChairpersons = async () => {
 		try {
-			await fetch("http://localhost:8080/api/editAssignChairpersons", {
+			const requestRes = await fetch("http://localhost:8080/api/addAssignChairpersons", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({
-					chairpersons_id: formData.chairpersons_id,
-					chairpersons_name: formData.chairpersons_name,
-					major_id: formData.major_id,
-				}),
+				body: JSON.stringify(Form.values),
 			});
+			const requestData = await requestRes.json();
+			if (!requestRes.ok) {
+				throw new Error(requestData.message);
+			}
+			setInformtype("success");
+			setInformMessage(requestData.message);
+			setOpenInform(true);
 			setReloadTable(true);
 			setOpenModal(false);
 		} catch (err) {
+			setInformtype("error");
+			setInformMessage(err.message);
+			setOpenInform(true);
+			console.error("Error fetch addAssignChairpersons:", err);
+		}
+	};
+
+	const handleEditChairpersons = async () => {
+		try {
+			const requestRes = await fetch("http://localhost:8080/api/editAssignChairpersons", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				body: JSON.stringify(Form.values),
+			});
+			const requestData = await requestRes.json();
+			if (!requestRes.ok) {
+				throw new Error(requestData.message);
+			}
+			setInformtype("success");
+			setInformMessage(requestData.message);
+			setOpenInform(true);
+			setReloadTable(true);
+			setOpenModal(false);
+		} catch (err) {
+			setInformtype("error");
+			setInformMessage(err.message);
+			setOpenInform(true);
 			console.error("Error fetch editAssignChairpersons:", err);
 		}
 	};
+
+	const handleDeleteChairpersons = async () => {
+		try {
+			const requestRes = await fetch("http://localhost:8080/api/deleteAssignChairpersons", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				body: JSON.stringify(Form.values),
+			});
+			const requestData = await requestRes.json();
+			if (!requestRes.ok) {
+				throw new Error(requestData.message);
+			}
+			setInformtype("success");
+			setInformMessage(requestData.message);
+			setOpenInform(true);
+			setReloadTable(true);
+			setOpenModal(false);
+		} catch (err) {
+			setInformtype("error");
+			setInformMessage(err.message);
+			setOpenInform(true);
+			console.error("Error fetch deleteAssignChairpersons:", err);
+		}
+	};
+
+	const classRows = assignChairpersons.map((item) => (
+		<Table.Tr key={item.chairpersons_id}>
+			<Table.Td>{major.find((f) => f.value === item.major_id)?.label}</Table.Td>
+			<Table.Td>{item.chairpersons_name}</Table.Td>
+			<Table.Td>
+				<Group>
+					<Button color="yellow" size="xs" onClick={() => handleOpenEdit(item)}>
+						แก้ไข
+					</Button>
+					<Button color="red" size="xs" onClick={() => handleOpenDelete(item)}>
+						ลบ
+					</Button>
+				</Group>
+			</Table.Td>
+		</Table.Tr>
+	));
+
+	const handleSubmit = () => {
+		if (modalType === "add") return Form.onSubmit(handleAddChairpersons);
+		if (modalType === "edit") return Form.onSubmit(handleEditChairpersons);
+		if (modalType === "delete") return Form.onSubmit(handleDeleteChairpersons);
+		return (e) => e.preventDefault();
+	};
+
 	return (
 		<Box>
+			<ModalInform opened={openInform} onClose={() => setOpenInform(false)} message={informMessage} type={informtype} />
 			<Modal opened={openModal} onClose={() => setOpenModal(false)} title="แต่งตั้งประธานกรรมการบัณฑิตศึกษาประจำสาขา" centered>
 				<Box>
-					<Select label="เลือกคณะ" data={faculty} value={formData.major_id || ""} onChange={(value) => handleChange("major_id", value)} error={errors.major_id}></Select>
-					<TextInput
-						label="รหัสบัตร"
-						value={formData.chairpersons_id || ""}
-						onChange={(e) => handleChange("chairpersons_id", e.currentTarget.value)}
-						error={errors.chairpersons_id}
-						disabled={modalType === "add" ? false : true}
-						styles={{ input: { color: "#000" } }}
-					/>
-					<TextInput label="ชื่อ" value={formData.chairpersons_name || ""} onChange={(e) => handleChange("chairpersons_name", e.currentTarget.value)} error={errors.chairpersons_name} />
-					{modalType === "add" && <PasswordInput label="รหัสผ่าน" value={formData.password || ""} onChange={(e) => handleChange("password", e.currentTarget.value)} error={errors.password} />}
-					<Space h="md" />
-					<Button
-						variant="filled"
-						color="green"
-						size="xs"
-						onClick={() => {
-							modalType === "add" ? handleAddFacultyOfficer() : handleEditFacultyOfficer();
-						}}
-					>
-						บันทึก
-					</Button>
+					<form onSubmit={handleSubmit()}>
+						<Select label="เลือกสาขา" data={major} {...Form.getInputProps("major_id")} disabled={modalType === "delete" ? true : false}></Select>
+						<TextInput label="รหัสบัตร" {...Form.getInputProps("chairpersons_id")} disabled={modalType === "add" ? false : true} />
+						<TextInput label="ชื่อ" {...Form.getInputProps("chairpersons_name")} disabled={modalType === "delete" ? true : false} />
+						{modalType === "add" && <PasswordInput label="รหัสผ่าน" {...Form.getInputProps("password")} />}
+						<Space h="md" />
+						<Button color={modalType === "delete" ? "red" : "green"} type="submit" fullWidth>
+							{modalType === "delete" ? "ลบ" : "บันทึก"}
+						</Button>
+					</form>
 				</Box>
 			</Modal>
 
 			<Text size="1.5rem" fw={900} mb="md">
 				แต่งตั้งประธานกรรมการบัณฑิตศึกษา
 			</Text>
-
 			<Space h="xl" />
-
 			<Group justify="space-between">
 				<Box></Box>
 				<Box>
@@ -181,10 +219,8 @@ const AssignChairpersons = () => {
 					</Button>
 				</Box>
 			</Group>
-
 			<Space h="xl" />
-
-			<ScrollArea type="scroll" offsetScrollbars styles={{ viewport: { padding: 0 } }} style={{ borderRadius: "8px", border: "1px solid #e0e0e0" }}>
+			<ScrollArea type="scroll" offsetScrollbars style={{ borderRadius: "8px", border: "1px solid #e0e0e0" }}>
 				<Table horizontalSpacing="sm" verticalSpacing="sm" highlightOnHover>
 					<Table.Thead>
 						<Table.Tr>

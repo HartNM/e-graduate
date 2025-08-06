@@ -1,8 +1,9 @@
 //กำหนดวันสอบประมวลความรู้/สอบวัดคุณสมบัต
 import { useState, useEffect } from "react";
-import { Box, Text, ScrollArea, Table, Button, Modal, Group, Flex, Space } from "@mantine/core";
+import { Box, Text, ScrollArea, Table, Button, Modal, Group, Flex, Space, TextInput } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import ModalInform from "../../component/Modal/ModalInform";
+import { useForm } from "@mantine/form";
 
 const ExamScheduleSetupPage = () => {
 	const [reloadTable, setReloadTable] = useState(false);
@@ -23,6 +24,21 @@ const ExamScheduleSetupPage = () => {
 	const [openInform, setOpenInform] = useState(false);
 	const [informMessage, setInformMessage] = useState("");
 	const [informtype, setInformtype] = useState("");
+
+	const Form = useForm({
+		initialValues: {
+			term_year: "",
+			open_date: null,
+			close_date: null,
+			exam_date: null,
+		},
+		validate: {
+			term_year: (value) => (value.trim().length > 0 ? null : "กรุณาระบุปีการศึกษา"),
+			open_date: (value) => (!value ? null : "กรุณาระบุวันที่"),
+			close_date: (value) => (!value ? null : "กรุณาระบุวันที่"),
+			exam_date: (value) => (!value ? null : "กรุณาระบุวันที่"),
+		},
+	});
 
 	useEffect(() => {
 		const fetchRequestExamInfoAll = async () => {
@@ -138,6 +154,7 @@ const ExamScheduleSetupPage = () => {
 
 	const Rows = requestExamInfo.map((item) => (
 		<Table.Tr key={item.request_exam_info_id}>
+			<Table.Td>{item.term_year}</Table.Td>
 			<Table.Td>{item.open_date}</Table.Td>
 			<Table.Td>{item.close_date}</Table.Td>
 			<Table.Td>{item.exam_date}</Table.Td>
@@ -146,15 +163,14 @@ const ExamScheduleSetupPage = () => {
 					<Button
 						size="xs"
 						onClick={() => {
-							setSelectedRow(item);
+							Form.setValues({
+								term_year: item.term_year,
+								open_date: item.open_date,
+								close_date: item.close_date,
+								exam_date: item.exam_date,
+							});
 							setOpenPickDate(true);
 							setModalType("Edit");
-							setOpen_date(new Date(item.open_date));
-							setClose_date(new Date(item.close_date));
-							setExam_date(new Date(item.exam_date));
-							setOpenError("");
-							setCloseError("");
-							setExamError("");
 						}}
 					>
 						แก้ไข
@@ -167,7 +183,7 @@ const ExamScheduleSetupPage = () => {
 		<Box>
 			<ModalInform opened={openInform} onClose={() => setOpenInform(false)} message={informMessage} type={informtype} />
 			<Modal opened={openedPickDate} onClose={() => setOpenPickDate(false)} title={modalType === "Add" ? "กำหนดวันสอบประมวลความรู้/สอบวัดคุณสมบัต" : "แก้ไขวันสอบประมวลความรู้/สอบวัดคุณสมบัต"} centered>
-				<Box>
+				{/* <Box>
 					<DatePickerInput label="เลือกวันเปิดการยื่นคำร้อง" placeholder="เลือกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" value={open_date} onChange={setOpen_date} error={openError} withAsterisk />
 					<DatePickerInput label="เลือกวันปิดการยื่นคำร้อง" placeholder="เลือกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" value={close_date} onChange={setClose_date} minDate={open_date} disabled={open_date ? false : true} error={closeError} withAsterisk />
 					<DatePickerInput label="เลื่อกวันสอบ" placeholder="เลื่อกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" value={exam_date} onChange={setExam_date} minDate={close_date} disabled={close_date ? false : true} error={examError} withAsterisk />
@@ -187,7 +203,17 @@ const ExamScheduleSetupPage = () => {
 					>
 						บันทึก
 					</Button>
-				</Flex>
+				</Flex> */}
+				<form onSubmit={modalType === "Add" ? handleAddInfo : handleEditInfo}>
+					<TextInput label="ระบุปีการศึกษา" placeholder="กรอกปีการศึกษา" withAsterisk {...Form.getInputProps("term_year")} />
+					<DatePickerInput label="เลือกวันเปิดการยื่นคำร้อง" placeholder="เลือกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" withAsterisk {...Form.getInputProps("open_date")} />
+					<DatePickerInput label="เลือกวันปิดการยื่นคำร้อง" placeholder="เลือกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" minDate={Form.values.open_date} disabled={Form.values.open_date ? false : true} withAsterisk {...Form.getInputProps("close_date")} />
+					<DatePickerInput label="เลื่อกวันสอบ" placeholder="เลื่อกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" minDate={Form.values.close_date} disabled={Form.values.close_date ? false : true} withAsterisk {...Form.getInputProps("exam_date")} />
+					<Space h="md" />
+					<Button color={modalType === "delete" ? "red" : "green"} type="submit" fullWidth>
+						{modalType === "delete" ? "ลบ" : "บันทึก"}
+					</Button>
+				</form>
 			</Modal>
 
 			<Text size="1.5rem" fw={900} mb="md">
@@ -199,14 +225,14 @@ const ExamScheduleSetupPage = () => {
 					<Button
 						size="xs"
 						onClick={() => {
+							Form.setValues({
+								term_year: "",
+								open_date: null,
+								close_date: null,
+								exam_date: null,
+							});
 							setOpenPickDate(true);
 							setModalType("Add");
-							setOpen_date(null);
-							setClose_date(null);
-							setExam_date(null);
-							setOpenError("");
-							setCloseError("");
-							setExamError("");
 						}}
 					>
 						กรอกข้อมูล
@@ -218,6 +244,7 @@ const ExamScheduleSetupPage = () => {
 				<Table horizontalSpacing="sm" verticalSpacing="sm" highlightOnHover>
 					<Table.Thead>
 						<Table.Tr>
+							<Table.Th>ปีการศึกษา</Table.Th>
 							<Table.Th>วันเปิดการยื่นคำร้อง</Table.Th>
 							<Table.Th>วันปิดการยื่นคำร้อง</Table.Th>
 							<Table.Th>วันสอบ</Table.Th>

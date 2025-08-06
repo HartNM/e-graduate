@@ -28,8 +28,8 @@ export function LinksGroup({ icon: Icon, label, initiallyOpened, links }) {
 						{hasLinks && <IconChevronRight className={classes.chevron} stroke={1.5} size={16} style={{ transform: opened ? "rotate(-90deg)" : "none" }} />}
 					</Group>
 				) : (
-					<Group justify="space-between" gap={0} component={Link} to={links} className={classes.mainlink}>
-						<Box style={{ display: "flex", alignItems: "center" }}>
+					<Group justify="space-between" gap={0} className={classes.mainlink} component={Link} to={links}>
+						<Box style={{ display: "flex", alignItems: "center" ,flex: 1}}>
 							<ThemeIcon variant="light" size={30}>
 								<Icon size={18} />
 							</ThemeIcon>

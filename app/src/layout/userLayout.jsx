@@ -17,6 +17,12 @@ const UserLayout = (item) => {
 		toggle(false);
 	}, [location]);
 
+	const token = localStorage.getItem("token");
+	if (!token) {
+		navigate("/login");
+		return;
+	}
+	
 	const { setColorScheme } = useMantineColorScheme();
 	const computedColorScheme = useComputedColorScheme("light", { getInitialValueInEffect: true });
 

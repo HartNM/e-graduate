@@ -4,6 +4,21 @@ const authenticateToken = require("../middleware/authenticateToken");
 const { poolPromise } = require("../db");
 const bcrypt = require("bcrypt");
 
+router.post("/deleteAssignFacultyOfficer", authenticateToken, async (req, res) => {
+	const { officer_faculty_id } = req.body;
+	try {
+		const pool = await poolPromise;
+		// ลบข้อมูลจาก user_account ก่อน (เพราะมี foreign key ผูกกันหรือความสัมพันธ์ทางตรรกะ)
+		await pool.request().input("reference_id", officer_faculty_id).query("DELETE FROM user_account WHERE reference_id = @reference_id");
+		// ลบข้อมูลจาก chairpersons
+		await pool.request().input("officer_faculty_id", officer_faculty_id).query("DELETE FROM officer_faculty WHERE officer_faculty_id = @officer_faculty_id");
+		res.status(200).json({ message: "ลบข้อมูลเรียบร้อยแล้ว" });
+	} catch (err) {
+		console.error("deleteAssignChairpersons:", err);
+		res.status(500).json({ message: "เกิดข้อผิดพลาดในการลบข้อมูล" });
+	}
+});
+
 router.post("/editAssignFacultyOfficer", authenticateToken, async (req, res) => {
 	const { faculty_name, officer_faculty_id, officer_faculty_name } = req.body;
 	try {

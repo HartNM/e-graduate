@@ -9,10 +9,6 @@ export function UserButton() {
 
 	const token = localStorage.getItem("token");
 	useEffect(() => {
-		if (!token) {
-			navigate("/login");
-			return;
-		}
 		fetch("http://localhost:8080/api/profile", {
 			method: "GET",
 			headers: { Authorization: `Bearer ${token}` },
