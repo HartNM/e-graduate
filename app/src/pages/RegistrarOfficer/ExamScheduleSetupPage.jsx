@@ -7,19 +7,11 @@ import { useForm } from "@mantine/form";
 
 const ExamScheduleSetupPage = () => {
 	const [reloadTable, setReloadTable] = useState(false);
-	const [selectedRow, setSelectedRow] = useState(null);
 	const [modalType, setModalType] = useState("");
 	const [openedPickDate, setOpenPickDate] = useState(false);
 
 	const token = localStorage.getItem("token");
 	const [requestExamInfo, setRequestExamInfo] = useState([]);
-	const [open_date, setOpen_date] = useState(null);
-	const [close_date, setClose_date] = useState(null);
-	const [exam_date, setExam_date] = useState(null);
-
-	const [openError, setOpenError] = useState("");
-	const [closeError, setCloseError] = useState("");
-	const [examError, setExamError] = useState("");
 
 	const [openInform, setOpenInform] = useState(false);
 	const [informMessage, setInformMessage] = useState("");
@@ -34,16 +26,28 @@ const ExamScheduleSetupPage = () => {
 		},
 		validate: {
 			term_year: (value) => (value.trim().length > 0 ? null : "กรุณาระบุปีการศึกษา"),
-			open_date: (value) => (!value ? null : "กรุณาระบุวันที่"),
-			close_date: (value) => (!value ? null : "กรุณาระบุวันที่"),
-			exam_date: (value) => (!value ? null : "กรุณาระบุวันที่"),
+			open_date: (value) => (value ? null : "กรุณาระบุวันที่เปิด"),
+			close_date: (value) => {
+				if (!value) return "กรุณาระบุวันที่ปิด";
+				if (Form.values.open_date && value < Form.values.open_date) {
+					return "วันที่ปิดต้องไม่น้อยกว่าวันเปิด";
+				}
+				return null;
+			},
+			exam_date: (value) => {
+				if (!value) return "กรุณาระบุวันที่สอบ";
+				if (Form.values.close_date && value < Form.values.close_date) {
+					return "วันที่สอบต้องไม่น้อยกว่าวันปิดรับ";
+				}
+				return null;
+			},
 		},
 	});
 
 	useEffect(() => {
 		const fetchRequestExamInfoAll = async () => {
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/requestExamInfoAll", {
+				const requestRes = await fetch("http://localhost:8080/api/allRequestExamInfo", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
@@ -61,92 +65,32 @@ const ExamScheduleSetupPage = () => {
 		fetchRequestExamInfoAll();
 	}, [reloadTable]);
 
-	const handleAddInfo = async () => {
-		setOpenError("");
-		setCloseError("");
-		setExamError("");
-		if (!open_date || !close_date || !exam_date) {
-			if (!open_date) setOpenError("กรุณาระบุวันที่");
-			if (!close_date) setCloseError("กรุณาระบุวันที่");
-			if (!exam_date) setExamError("กรุณาระบุวันที่");
-			return;
-		}
-		if (open_date > close_date) {
-			setOpenError("วันเปิดต้องน้อยกว่าวันปิด");
-			setCloseError("วันปิดต้องมากกว่าวันเปิด");
-			return;
-		}
-		if (close_date > exam_date) {
-			setCloseError("วันปิดต้องน้อยกว่าวันสอบ");
-			setExamError("วันสอบต้องมากกว่าวันปิด");
-			return;
-		}
+	const handleSubmit = async () => {
+		const url = {
+			add: "http://localhost:8080/api/addRequestExamInfo",
+			edit: "http://localhost:8080/api/editRequestExamInfo",
+			delete: "http://localhost:8080/api/deleteRequestExamInfo",
+		};
+		console.log(url[modalType]);
+		console.log(Form.values);
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/addRequestExamInfo", {
+			const requestRes = await fetch(url[modalType], {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({
-					open_date: open_date,
-					close_date: close_date,
-					exam_date: exam_date,
-				}),
+				body: JSON.stringify(Form.values),
 			});
 			const requestData = await requestRes.json();
-			if (requestRes.ok) {
-				setInformtype("success");
-			} else {
-				setInformtype("error");
+			if (!requestRes.ok) {
+				throw new Error(requestData.message);
 			}
+			setInformtype("success");
 			setInformMessage(requestData.message);
 			setOpenInform(true);
 			setReloadTable(true);
 			setOpenPickDate(false);
 		} catch (err) {
 			setInformtype("error");
-			setInformMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-			setOpenInform(true);
-			console.error("Error fetch addRequestExamInfo:", err);
-		}
-	};
-
-	const handleEditInfo = async () => {
-		setOpenError("");
-		setCloseError("");
-		setExamError("");
-		if (open_date > close_date) {
-			setOpenError("วันเปิดต้องน้อยกว่าวันปิด");
-			setCloseError("วันปิดต้องมากกว่าวันเปิด");
-			return;
-		}
-		if (close_date > exam_date) {
-			setCloseError("วันปิดต้องน้อยกว่าวันสอบ");
-			setExamError("วันสอบต้องมากกว่าวันปิด");
-			return;
-		}
-		try {
-			const requestRes = await fetch("http://localhost:8080/api/requestExamInfoEdit", {
-				method: "POST",
-				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({
-					open_date: open_date,
-					close_date: close_date,
-					exam_date: exam_date,
-					request_exam_info_id: selectedRow.request_exam_info_id,
-				}),
-			});
-			const requestData = await requestRes.json();
-			if (requestRes.ok) {
-				setInformtype("success");
-			} else {
-				setInformtype("error");
-			}
-			setInformMessage(requestData.message);
-			setOpenInform(true);
-			setReloadTable(true);
-			setOpenPickDate(false);
-		} catch (err) {
-			setInformtype("error");
-			setInformMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+			setInformMessage(err.message);
 			setOpenInform(true);
 			console.error("Error fetch addRequestExamInfo:", err);
 		}
@@ -162,53 +106,40 @@ const ExamScheduleSetupPage = () => {
 				<Group>
 					<Button
 						size="xs"
+						color="yellow"
 						onClick={() => {
-							Form.setValues({
-								term_year: item.term_year,
-								open_date: item.open_date,
-								close_date: item.close_date,
-								exam_date: item.exam_date,
-							});
+							Form.setValues(item);
 							setOpenPickDate(true);
-							setModalType("Edit");
+							setModalType("edit");
 						}}
 					>
 						แก้ไข
+					</Button>
+					<Button
+						size="xs"
+						color="red"
+						onClick={() => {
+							Form.setValues(item);
+							setOpenPickDate(true);
+							setModalType("delete");
+						}}
+					>
+						ลบ
 					</Button>
 				</Group>
 			</Table.Td>
 		</Table.Tr>
 	));
+
 	return (
 		<Box>
 			<ModalInform opened={openInform} onClose={() => setOpenInform(false)} message={informMessage} type={informtype} />
-			<Modal opened={openedPickDate} onClose={() => setOpenPickDate(false)} title={modalType === "Add" ? "กำหนดวันสอบประมวลความรู้/สอบวัดคุณสมบัต" : "แก้ไขวันสอบประมวลความรู้/สอบวัดคุณสมบัต"} centered>
-				{/* <Box>
-					<DatePickerInput label="เลือกวันเปิดการยื่นคำร้อง" placeholder="เลือกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" value={open_date} onChange={setOpen_date} error={openError} withAsterisk />
-					<DatePickerInput label="เลือกวันปิดการยื่นคำร้อง" placeholder="เลือกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" value={close_date} onChange={setClose_date} minDate={open_date} disabled={open_date ? false : true} error={closeError} withAsterisk />
-					<DatePickerInput label="เลื่อกวันสอบ" placeholder="เลื่อกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" value={exam_date} onChange={setExam_date} minDate={close_date} disabled={close_date ? false : true} error={examError} withAsterisk />
-				</Box>
-				<Space h="sm" />
-				<Flex justify="flex-end">
-					<Button
-						size="xs"
-						color="green"
-						onClick={() => {
-							if (modalType === "Add") {
-								handleAddInfo();
-							} else {
-								handleEditInfo();
-							}
-						}}
-					>
-						บันทึก
-					</Button>
-				</Flex> */}
-				<form onSubmit={modalType === "Add" ? handleAddInfo : handleEditInfo}>
-					<TextInput label="ระบุปีการศึกษา" placeholder="กรอกปีการศึกษา" withAsterisk {...Form.getInputProps("term_year")} />
-					<DatePickerInput label="เลือกวันเปิดการยื่นคำร้อง" placeholder="เลือกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" withAsterisk {...Form.getInputProps("open_date")} />
-					<DatePickerInput label="เลือกวันปิดการยื่นคำร้อง" placeholder="เลือกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" minDate={Form.values.open_date} disabled={Form.values.open_date ? false : true} withAsterisk {...Form.getInputProps("close_date")} />
-					<DatePickerInput label="เลื่อกวันสอบ" placeholder="เลื่อกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" minDate={Form.values.close_date} disabled={Form.values.close_date ? false : true} withAsterisk {...Form.getInputProps("exam_date")} />
+			<Modal opened={openedPickDate} onClose={() => setOpenPickDate(false)} title={modalType === "delete" ? "ลบวันสอบประมวลความรู้/สอบวัดคุณสมบัต" : "กำหนดวันสอบประมวลความรู้/สอบวัดคุณสมบัต"} centered>
+				<form onSubmit={Form.onSubmit(handleSubmit)}>
+					<TextInput label="ปีการศึกษา" placeholder="กรอกปีการศึกษา" withAsterisk {...Form.getInputProps("term_year")} />
+					<DatePickerInput label="วันเปิดการยื่นคำร้อง" placeholder="เลือกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" withAsterisk {...Form.getInputProps("open_date")} />
+					<DatePickerInput label="วันปิดการยื่นคำร้อง" placeholder="เลือกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" withAsterisk minDate={Form.values.open_date} disabled={Form.values.open_date ? false : true} {...Form.getInputProps("close_date")} />
+					<DatePickerInput label="วันสอบ" placeholder="เลื่อกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" withAsterisk minDate={Form.values.close_date} disabled={Form.values.close_date ? false : true} {...Form.getInputProps("exam_date")} />
 					<Space h="md" />
 					<Button color={modalType === "delete" ? "red" : "green"} type="submit" fullWidth>
 						{modalType === "delete" ? "ลบ" : "บันทึก"}
@@ -225,14 +156,9 @@ const ExamScheduleSetupPage = () => {
 					<Button
 						size="xs"
 						onClick={() => {
-							Form.setValues({
-								term_year: "",
-								open_date: null,
-								close_date: null,
-								exam_date: null,
-							});
+							Form.reset();
 							setOpenPickDate(true);
-							setModalType("Add");
+							setModalType("add");
 						}}
 					>
 						กรอกข้อมูล

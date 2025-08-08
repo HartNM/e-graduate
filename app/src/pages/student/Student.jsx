@@ -6,6 +6,7 @@ import UserLayout from "../../layout/userLayout.jsx";
 const Student = () => {
 	const [menu, setMenu] = useState([]);
 	const token = localStorage.getItem("token");
+
 	useEffect(() => {
 		const fetchEducationLevel = async () => {
 			try {
@@ -14,6 +15,7 @@ const Student = () => {
 					headers: { Authorization: `Bearer ${token}` },
 				});
 				const eduData = await eduRes.json();
+
 				const menuItem = { label: `คำร้องขอสอบ${eduData.request_type}`, icon: IconGauge, links: "/student/requestList" };
 				setMenu([menuItem]);
 			} catch (err) {

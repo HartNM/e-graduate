@@ -63,87 +63,31 @@ const AssignChairpersons = () => {
 	}, [reloadTable]);
 
 	const handleOpenAdd = () => {
-		Form.setValues({
-			chairpersons_id: "",
-			chairpersons_name: "",
-			major_id: "",
-			password: "",
-		});
+		Form.reset();
 		setModalType("add");
 		setOpenModal(true);
 	};
 
 	const handleOpenEdit = (item) => {
-		Form.setValues({
-			chairpersons_id: item.chairpersons_id,
-			chairpersons_name: item.chairpersons_name,
-			major_id: item.major_id,
-		});
+		Form.setValues(item);
 		setModalType("edit");
 		setOpenModal(true);
 	};
 
 	const handleOpenDelete = (item) => {
-		Form.setValues({
-			chairpersons_id: item.chairpersons_id,
-			chairpersons_name: item.chairpersons_name,
-			major_id: item.major_id,
-		});
+		Form.setValues(item);
 		setModalType("delete");
 		setOpenModal(true);
 	};
 
-	const handleAddChairpersons = async () => {
+	const handleSubmit = async () => {
+		const url = {
+			add: "http://localhost:8080/api/addAssignChairpersons",
+			edit: "http://localhost:8080/api/editAssignChairpersons",
+			delete: "http://localhost:8080/api/deleteAssignChairpersons",
+		};
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/addAssignChairpersons", {
-				method: "POST",
-				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify(Form.values),
-			});
-			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
-			setInformtype("success");
-			setInformMessage(requestData.message);
-			setOpenInform(true);
-			setReloadTable(true);
-			setOpenModal(false);
-		} catch (err) {
-			setInformtype("error");
-			setInformMessage(err.message);
-			setOpenInform(true);
-			console.error("Error fetch addAssignChairpersons:", err);
-		}
-	};
-
-	const handleEditChairpersons = async () => {
-		try {
-			const requestRes = await fetch("http://localhost:8080/api/editAssignChairpersons", {
-				method: "POST",
-				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify(Form.values),
-			});
-			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
-			setInformtype("success");
-			setInformMessage(requestData.message);
-			setOpenInform(true);
-			setReloadTable(true);
-			setOpenModal(false);
-		} catch (err) {
-			setInformtype("error");
-			setInformMessage(err.message);
-			setOpenInform(true);
-			console.error("Error fetch editAssignChairpersons:", err);
-		}
-	};
-
-	const handleDeleteChairpersons = async () => {
-		try {
-			const requestRes = await fetch("http://localhost:8080/api/deleteAssignChairpersons", {
+			const requestRes = await fetch(url[modalType], {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify(Form.values),
@@ -182,19 +126,12 @@ const AssignChairpersons = () => {
 		</Table.Tr>
 	));
 
-	const handleSubmit = () => {
-		if (modalType === "add") return Form.onSubmit(handleAddChairpersons);
-		if (modalType === "edit") return Form.onSubmit(handleEditChairpersons);
-		if (modalType === "delete") return Form.onSubmit(handleDeleteChairpersons);
-		return (e) => e.preventDefault();
-	};
-
 	return (
 		<Box>
 			<ModalInform opened={openInform} onClose={() => setOpenInform(false)} message={informMessage} type={informtype} />
 			<Modal opened={openModal} onClose={() => setOpenModal(false)} title="แต่งตั้งประธานกรรมการบัณฑิตศึกษาประจำสาขา" centered>
 				<Box>
-					<form onSubmit={handleSubmit()}>
+					<form onSubmit={Form.onSubmit(handleSubmit)}>
 						<Select label="เลือกสาขา" data={major} {...Form.getInputProps("major_id")} disabled={modalType === "delete" ? true : false}></Select>
 						<TextInput label="รหัสบัตร" {...Form.getInputProps("chairpersons_id")} disabled={modalType === "add" ? false : true} />
 						<TextInput label="ชื่อ" {...Form.getInputProps("chairpersons_name")} disabled={modalType === "delete" ? true : false} />

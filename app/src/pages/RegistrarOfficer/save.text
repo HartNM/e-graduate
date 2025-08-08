@@ -1,0 +1,165 @@
+/* 	const handleAddInfo = async () => {
+		try {
+			const requestRes = await fetch("http://localhost:8080/api/addRequestExamInfo", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				body: JSON.stringify(Form.values),
+			});
+			const requestData = await requestRes.json();
+			if (!requestRes.ok) {
+				throw new Error(requestData.message);
+			}
+			setInformtype("success");
+			setInformMessage(requestData.message);
+			setOpenInform(true);
+			setReloadTable(true);
+			setOpenPickDate(false);
+		} catch (err) {
+			setInformtype("error");
+			setInformMessage(err.message);
+			setOpenInform(true);
+			console.error("Error fetch addRequestExamInfo:", err);
+		}
+	};
+
+	const handleEditInfo = async () => {
+		try {
+			const requestRes = await fetch("http://localhost:8080/api/editRequestExamInfo", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				body: JSON.stringify(Form.values),
+			});
+			const requestData = await requestRes.json();
+			if (!requestRes.ok) {
+				throw new Error(requestData.message);
+			}
+			setInformtype("success");
+			setInformMessage(requestData.message);
+			setOpenInform(true);
+			setReloadTable(true);
+			setOpenPickDate(false);
+		} catch (err) {
+			setInformtype("error");
+			setInformMessage(err.message);
+			setOpenInform(true);
+			console.error("Error fetch addRequestExamInfo:", err);
+		}
+	};
+
+	const handleDeleteInfo = async () => {
+		try {
+			const requestRes = await fetch("http://localhost:8080/api/deleteRequestExamInfo", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				body: JSON.stringify(Form.values),
+			});
+			const requestData = await requestRes.json();
+			if (!requestRes.ok) {
+				throw new Error(requestData.message);
+			}
+			setInformtype("success");
+			setInformMessage(requestData.message);
+			setOpenInform(true);
+			setReloadTable(true);
+			setOpenPickDate(false);
+		} catch (err) {
+			setInformtype("error");
+			setInformMessage(err.message);
+			setOpenInform(true);
+			console.error("Error fetch addRequestExamInfo:", err);
+		}
+	};
+
+	const handleSubmit = () => {
+		if (modalType === "add") return Form.onSubmit(handleAddInfo);
+		if (modalType === "edit") return Form.onSubmit(handleEditInfo);
+		if (modalType === "delete") return Form.onSubmit(handleDeleteInfo);
+		return (e) => e.preventDefault();
+	}; */
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+
+    	/* const handleAddFacultyOfficer = async () => {
+		try {
+			const requestRes = await fetch("http://localhost:8080/api/addAssignFacultyOfficer", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				body: JSON.stringify(Form.values),
+			});
+			const requestData = await requestRes.json();
+			if (!requestRes.ok) {
+				throw new Error(requestData.message);
+			}
+			setInformtype("success");
+			setInformMessage(requestData.message);
+
+			setReloadTable(true);
+			setOpenModal(false);
+			setOpenInform(true);
+		} catch (err) {
+			setInformtype("error");
+			setInformMessage(err.message);
+			setOpenInform(true);
+			console.error("Error fetch addAssignFacultyOfficer:", err);
+		}
+	};
+
+	const handleEditFacultyOfficer = async () => {
+		try {
+			const requestRes = await fetch("http://localhost:8080/api/editAssignFacultyOfficer", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				body: JSON.stringify(Form.values),
+			});
+			const requestData = await requestRes.json();
+			if (!requestRes.ok) {
+				throw new Error(requestData.message);
+			}
+			setInformtype("success");
+			setInformMessage(requestData.message);
+			setOpenInform(true);
+			setReloadTable(true);
+			setOpenModal(false);
+		} catch (err) {
+			setInformtype("error");
+			setInformMessage(err.message);
+			setOpenInform(true);
+			console.error("Error fetch addAssignFacultyOfficer:", err);
+		}
+	};
+
+	const handleDeleteFacultyOfficer = async () => {
+		console.log("asd");
+		try {
+			const requestRes = await fetch("http://localhost:8080/api/deleteAssignFacultyOfficer", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				body: JSON.stringify(Form.values),
+			});
+			const requestData = await requestRes.json();
+			if (!requestRes.ok) {
+				throw new Error(requestData.message);
+			}
+			setInformtype("success");
+			setInformMessage(requestData.message);
+			setOpenInform(true);
+			setReloadTable(true);
+			setOpenModal(false);
+		} catch (err) {
+			setInformtype("error");
+			setInformMessage(err.message);
+			setOpenInform(true);
+			console.error("Error fetch deleteAssignChairpersons:", err);
+		}
+	};
+
+	const handleSubmit = () => {
+		if (modalType === "add") return Form.onSubmit(handleAddFacultyOfficer);
+		if (modalType === "edit") return Form.onSubmit(handleEditFacultyOfficer);
+		if (modalType === "delete") return Form.onSubmit(handleDeleteFacultyOfficer);
+		return (e) => e.preventDefault();
+	}; */
+
+    

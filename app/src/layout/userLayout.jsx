@@ -1,28 +1,30 @@
 import { useEffect } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { AppShell, Box, Burger, Text, Image, Space } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { NavbarNested } from "../component/Navbar";
 import myImage from "../assets/logo.png";
 import { Suspense } from "react";
 import LoadingScreen from "../component/LoadingScreen.jsx";
-
 import { ActionIcon, useMantineColorScheme, useComputedColorScheme } from "@mantine/core";
 import { IconSun, IconMoon } from "@tabler/icons-react";
 
 const UserLayout = (item) => {
+	const navigate = useNavigate();
 	const [opened, { toggle }] = useDisclosure();
 	const location = useLocation();
+
 	useEffect(() => {
 		toggle(false);
 	}, [location]);
 
-	const token = localStorage.getItem("token");
-	if (!token) {
-		navigate("/login");
-		return;
-	}
-	
+	useEffect(() => {
+		const token = localStorage.getItem("token");
+		if (!token) {
+			navigate("/login");
+		}
+	}, [navigate]);
+
 	const { setColorScheme } = useMantineColorScheme();
 	const computedColorScheme = useComputedColorScheme("light", { getInitialValueInEffect: true });
 

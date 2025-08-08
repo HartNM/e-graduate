@@ -56,89 +56,33 @@ const AssignFacultyOfficer = () => {
 	}, [reloadTable]);
 
 	const handleOpenAdd = () => {
-		Form.setValues({
-			officer_faculty_id: "",
-			officer_faculty_name: "",
-			faculty_name: "",
-			password: "",
-		});
+		Form.reset();
 		setModalType("add");
 		setOpenModal(true);
 	};
 
 	const handleOpenEdit = (item) => {
-		Form.setValues({
-			officer_faculty_id: item.officer_faculty_id,
-			officer_faculty_name: item.officer_faculty_name,
-			faculty_name: item.faculty_name,
-		});
+		Form.setValues(item);
 		setModalType("edit");
 		setOpenModal(true);
 	};
 
 	const handleOpenDelete = (item) => {
-		Form.setValues({
-			officer_faculty_id: item.officer_faculty_id,
-			officer_faculty_name: item.officer_faculty_name,
-			faculty_name: item.faculty_name,
-		});
+		Form.setValues(item);
 		setModalType("delete");
 		setOpenModal(true);
 	};
 
-	const handleAddFacultyOfficer = async () => {
+	const handleSubmit = async () => {
+		const url = {
+			add: "http://localhost:8080/api/addAssignFacultyOfficer",
+			edit: "http://localhost:8080/api/editAssignFacultyOfficer",
+			delete: "http://localhost:8080/api/deleteAssignFacultyOfficer",
+		};
+		console.log(url[modalType]);
+		console.log(Form.values);
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/addAssignFacultyOfficer", {
-				method: "POST",
-				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify(Form.values),
-			});
-			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
-			setInformtype("success");
-			setInformMessage(requestData.message);
-
-			setReloadTable(true);
-			setOpenModal(false);
-			setOpenInform(true);
-		} catch (err) {
-			setInformtype("error");
-			setInformMessage(err.message);
-			setOpenInform(true);
-			console.error("Error fetch addAssignFacultyOfficer:", err);
-		}
-	};
-
-	const handleEditFacultyOfficer = async () => {
-		try {
-			const requestRes = await fetch("http://localhost:8080/api/editAssignFacultyOfficer", {
-				method: "POST",
-				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify(Form.values),
-			});
-			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
-			setInformMessage(requestData.message);
-			setInformtype("success");
-			setReloadTable(true);
-			setOpenModal(false);
-			setOpenInform(true);
-		} catch (err) {
-			console.error("Error fetch addAssignFacultyOfficer:", err);
-			setInformtype("error");
-			setInformMessage(err.message);
-			setOpenInform(true);
-		}
-	};
-
-	const handleDeleteFacultyOfficer = async () => {
-		console.log("asd");
-		try {
-			const requestRes = await fetch("http://localhost:8080/api/deleteAssignFacultyOfficer", {
+			const requestRes = await fetch(url[modalType], {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify(Form.values),
@@ -177,19 +121,12 @@ const AssignFacultyOfficer = () => {
 		</Table.Tr>
 	));
 
-	const handleSubmit = () => {		
-		if (modalType === "add") return Form.onSubmit(handleAddFacultyOfficer);
-		if (modalType === "edit") return Form.onSubmit(handleEditFacultyOfficer);
-		if (modalType === "delete") return Form.onSubmit(handleDeleteFacultyOfficer);
-		return (e) => e.preventDefault();
-	};
-
 	return (
 		<Box>
 			<ModalInform opened={openInform} onClose={() => setOpenInform(false)} message={informMessage} type={informtype} />
 			<Modal opened={openModal} onClose={() => setOpenModal(false)} title="แต่งตั้งเจ้าหน้าที่ประจำคณะ" centered>
 				<Box>
-					<form onSubmit={handleSubmit()}>
+					<form onSubmit={Form.onSubmit(handleSubmit)}>
 						<Select label="เลือกคณะ" data={faculty} {...Form.getInputProps("faculty_name")} disabled={modalType === "delete" ? true : false}></Select>
 						<TextInput label="รหัสบัตร" {...Form.getInputProps("officer_faculty_id")} disabled={modalType === "add" ? false : true} />
 						<TextInput label="ชื่อ" {...Form.getInputProps("officer_faculty_name")} disabled={modalType === "delete" ? true : false} />

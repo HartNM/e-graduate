@@ -1,0 +1,78 @@
+	/* const handleAddChairpersons = async () => {
+		try {
+			const requestRes = await fetch("http://localhost:8080/api/addAssignChairpersons", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				body: JSON.stringify(Form.values),
+			});
+			const requestData = await requestRes.json();
+			if (!requestRes.ok) {
+				throw new Error(requestData.message);
+			}
+			setInformtype("success");
+			setInformMessage(requestData.message);
+			setOpenInform(true);
+			setReloadTable(true);
+			setOpenModal(false);
+		} catch (err) {
+			setInformtype("error");
+			setInformMessage(err.message);
+			setOpenInform(true);
+			console.error("Error fetch addAssignChairpersons:", err);
+		}
+	};
+
+	const handleEditChairpersons = async () => {
+		try {
+			const requestRes = await fetch("http://localhost:8080/api/editAssignChairpersons", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				body: JSON.stringify(Form.values),
+			});
+			const requestData = await requestRes.json();
+			if (!requestRes.ok) {
+				throw new Error(requestData.message);
+			}
+			setInformtype("success");
+			setInformMessage(requestData.message);
+			setOpenInform(true);
+			setReloadTable(true);
+			setOpenModal(false);
+		} catch (err) {
+			setInformtype("error");
+			setInformMessage(err.message);
+			setOpenInform(true);
+			console.error("Error fetch editAssignChairpersons:", err);
+		}
+	};
+
+	const handleDeleteChairpersons = async () => {
+		try {
+			const requestRes = await fetch("http://localhost:8080/api/deleteAssignChairpersons", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				body: JSON.stringify(Form.values),
+			});
+			const requestData = await requestRes.json();
+			if (!requestRes.ok) {
+				throw new Error(requestData.message);
+			}
+			setInformtype("success");
+			setInformMessage(requestData.message);
+			setOpenInform(true);
+			setReloadTable(true);
+			setOpenModal(false);
+		} catch (err) {
+			setInformtype("error");
+			setInformMessage(err.message);
+			setOpenInform(true);
+			console.error("Error fetch deleteAssignChairpersons:", err);
+		}
+	};
+
+	const handleSubmit = () => {
+		if (modalType === "add") return Form.onSubmit(handleAddChairpersons);
+		if (modalType === "edit") return Form.onSubmit(handleEditChairpersons);
+		if (modalType === "delete") return Form.onSubmit(handleDeleteChairpersons);
+		return (e) => e.preventDefault();
+	}; */
