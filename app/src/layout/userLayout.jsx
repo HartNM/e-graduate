@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate, Navigate } from "react-router-dom";
 import { AppShell, Box, Burger, Text, Image, Space } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { NavbarNested } from "../component/Navbar";
@@ -8,6 +8,7 @@ import { Suspense } from "react";
 import LoadingScreen from "../component/LoadingScreen.jsx";
 import { ActionIcon, useMantineColorScheme, useComputedColorScheme } from "@mantine/core";
 import { IconSun, IconMoon } from "@tabler/icons-react";
+
 
 const UserLayout = (item) => {
 	const navigate = useNavigate();
@@ -18,12 +19,11 @@ const UserLayout = (item) => {
 		toggle(false);
 	}, [location]);
 
-	useEffect(() => {
-		const token = localStorage.getItem("token");
-		if (!token) {
-			navigate("/login");
-		}
-	}, [navigate]);
+	const token = localStorage.getItem("token");
+	if (!token) {
+		// ถ้าไม่มี token, redirect ไป /login โดยไม่เก็บตำแหน่งเดิม
+		return <Navigate to="/login" replace />;
+	}
 
 	const { setColorScheme } = useMantineColorScheme();
 	const computedColorScheme = useComputedColorScheme("light", { getInitialValueInEffect: true });

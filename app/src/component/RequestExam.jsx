@@ -9,6 +9,7 @@ import ModalAdd from "../component/Modal/ModalAdd";
 import ModalCheck from "../component/Modal/ModalCheck";
 import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
+import Pdfg01 from "../component/PDF/pdfg01"
 
 const RequestList = () => {
 	// Modal states
@@ -270,7 +271,7 @@ const RequestList = () => {
 			<Table.Td>{item.status_text}</Table.Td>
 			<Table.Td>
 				<Group>
-					<Button
+					{/* <Button
 						size="xs"
 						color="gray"
 						onClick={() => {
@@ -279,7 +280,8 @@ const RequestList = () => {
 						}}
 					>
 						ข้อมูล
-					</Button>
+					</Button> */}
+					<Pdfg01 data={item} />
 					{user.role === "student" && (
 						<>
 							{item.status === "4" && (

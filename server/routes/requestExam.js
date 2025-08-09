@@ -4,6 +4,11 @@ const authenticateToken = require("../middleware/authenticateToken");
 const { poolPromise } = require("../db");
 const axios = require("axios");
 
+const now = new Date();
+const buddhistYear = now.getFullYear() + 543;
+const buddhistDate = new Date(now);
+buddhistDate.setFullYear(buddhistYear);
+
 router.post("/cancelApproveRequestExam", authenticateToken, async (req, res) => {
 	const { request_cancel_exam_id, request_exam_id, name, role, selected, comment_cancel } = req.body;
 	if (!["advisor", "chairpersons", "dean"].includes(role)) {
@@ -45,7 +50,7 @@ router.post("/cancelApproveRequestExam", authenticateToken, async (req, res) => 
 			.input("request_cancel_exam_id", request_cancel_exam_id)
 			.input("name", name)
 			.input("approve", selected === "approve" ? 1 : 0)
-			.input("date", new Date())
+			.input("date", buddhistDate)
 			.input("comment", comment_cancel).query(`
 				UPDATE request_cancel_exam
 				SET ${roleFields[role]}
@@ -69,7 +74,7 @@ router.post("/cancelRequestExam", authenticateToken, async (req, res) => {
 	try {
 		const pool = await poolPromise;
 		const request = pool.request();
-		await request.input("request_exam_id", request_exam_id).input("reason", reason).input("request_cancel_exam_date", new Date()).query(`
+		await request.input("request_exam_id", request_exam_id).input("reason", reason).input("request_cancel_exam_date", buddhistDate).query(`
 			INSERT INTO request_cancel_exam (
 			request_exam_id,
 			reason,
@@ -99,7 +104,7 @@ router.post("/payRequestExam", authenticateToken, async (req, res) => {
 	const { request_exam_id, receipt_vol_No } = req.body;
 	try {
 		const pool = await poolPromise;
-		await pool.request().input("request_exam_id", request_exam_id).input("receipt_vol_No", receipt_vol_No).input("receipt_pay_date", new Date()).input("status", "5").query(`
+		await pool.request().input("request_exam_id", request_exam_id).input("receipt_vol_No", receipt_vol_No).input("receipt_pay_date", buddhistDate).input("status", "5").query(`
       UPDATE request_exam
       SET receipt_vol_No = @receipt_vol_No ,
           receipt_pay_date = @receipt_pay_date,
@@ -138,7 +143,7 @@ router.post("/approveRequestExam", authenticateToken, async (req, res) => {
 			.input("status", statusValue)
 			.input("name", name)
 			.input("approve", selected === "approve" ? 1 : 0)
-			.input("date", new Date())
+			.input("date", buddhistDate)
 			.input("comment", comment);
 		// สร้าง query ตาม role
 		const roleFields = {
@@ -270,7 +275,7 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 			.input("study_group_id", study_group_id)
 			.input("major_id", major_id)
 			.input("faculty_name", faculty_name)
-			.input("request_exam_date", new Date())
+			.input("request_exam_date", buddhistDate)
 			.input("status", "1").query(`
 			INSERT INTO request_exam (
 				student_id,

@@ -19,7 +19,7 @@ export function LinksGroup({ icon: Icon, label, initiallyOpened, links }) {
 			<UnstyledButton onClick={() => setOpened((o) => !o)} className={classes.control}>
 				{hasLinks ? (
 					<Group justify="space-between" gap={0} className={classes.mainlink}>
-						<Box style={{ display: "flex", alignItems: "center" ,flex: 1}}>
+						<Box style={{ display: "flex", alignItems: "center", flex: 1 }}>
 							<ThemeIcon variant="light" size={30}>
 								<Icon size={18} />
 							</ThemeIcon>
@@ -29,7 +29,7 @@ export function LinksGroup({ icon: Icon, label, initiallyOpened, links }) {
 					</Group>
 				) : (
 					<Group justify="space-between" gap={0} className={classes.mainlink} component={Link} to={links}>
-						<Box style={{ display: "flex", alignItems: "center" ,flex: 1}}>
+						<Box style={{ display: "flex", alignItems: "center", flex: 1 }}>
 							<ThemeIcon variant="light" size={30}>
 								<Icon size={18} />
 							</ThemeIcon>
