@@ -1,47 +1,43 @@
-//แต่งตั้งประธานกรรมการบัณฑิตศึกษาประจำสาขา
+//แต่งตั้งเจ้าหน้าที่ประจำคณะ
 import { useState, useEffect } from "react";
-import { Box, Text, TextInput, Table, Button, Modal, Space, ScrollArea, PasswordInput, Group, Select } from "@mantine/core";
+import { Box, Text, TextInput, Table, Button, Modal, Space, ScrollArea, PasswordInput, Group, Select, Flex } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import ModalInform from "../../component/Modal/ModalInform";
 
-const AssignChairpersons = () => {
+const AssignMajorOfficer = () => {
+	const [reloadTable, setReloadTable] = useState(false);
+	const token = localStorage.getItem("token");
+	const [assignMajorOfficer, setAssignMajorOfficer] = useState([]);
 	const [openModal, setOpenModal] = useState(false);
 	const [modalType, setModalType] = useState(false);
-
+	const [major, setMajor] = useState(["การบริหารการศึกษา", "ยุทธศาสตร์การบริหารและการพัฒนา", "การจัดการสมัยใหม่", "รัฐประศาสนศาสตร์", "วิทยาศาสตร์ศึกษา"]);
+	
 	const [openInform, setOpenInform] = useState(false);
 	const [informMessage, setInformMessage] = useState("");
 	const [informtype, setInformtype] = useState("");
 
-	const [reloadTable, setReloadTable] = useState(false);
-	const token = localStorage.getItem("token");
-
-	const [assignChairpersons, setAssignChairpersons] = useState([]);
-	const [major, setMajor] = useState([
-		{ value: "14", label: "การบริหารการศึกษา" },
-		{ value: "00", label: "ยุทธศาสตร์การบริหารและการพัฒนา" },
-		{ value: "k2", label: "การจัดการสมัยใหม่" },
-		{ value: "70", label: "รัฐประศาสนศาสตร์" },
-		{ value: "ไม่รู้1", label: "วิทยาศาสตร์ศึกษา" },
-	]);
 	const Form = useForm({
 		initialValues: {
-			chairpersons_id: "",
-			chairpersons_name: "",
-			major_id: "",
+			officer_major_id: "",
+			officer_major_name: "",
+			major_name: "",
 			password: "",
 		},
 		validate: {
-			chairpersons_id: (value) => (value.trim().length > 0 ? null : "กรุณากรอกรหัสบัตร"),
-			chairpersons_name: (value) => (value.trim().length > 0 ? null : "กรุณากรอกชื่อ"),
-			major_id: (value) => (value.trim().length > 0 ? null : "กรุณาเลือกคณะ"),
-			password: (value) => (value.trim().length > 0 ? null : "กรุณากรอกรหัสผ่าน"),
+			officer_major_id: (value) => (value.trim().length > 0 ? null : "กรุณากรอกรหัสบัตร"),
+			officer_major_name: (value) => (value.trim().length > 0 ? null : "กรุณากรอกชื่อ"),
+			major_name: (value) => (value.trim().length > 0 ? null : "กรุณาเลือกสาขา"),
+			password: (value) => {
+				if (modalType === "delete" || modalType === "edit") return null;
+				return value.trim().length > 0 ? null : "กรุณากรอกรหัสผ่าน";
+			},
 		},
 	});
 
 	useEffect(() => {
 		const fetchRequestExamInfoAll = async () => {
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/allAssignChairpersons", {
+				const requestRes = await fetch("http://localhost:8080/api/allAssignMajorOfficer", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
@@ -49,13 +45,13 @@ const AssignChairpersons = () => {
 				if (!requestRes.ok) {
 					throw new Error(requestData.message);
 				}
-				setAssignChairpersons(requestData);
+				setAssignMajorOfficer(requestData);
 				console.log(requestData);
-			} catch (err) {
+			} catch (error) {
 				setInformtype("error");
-				setInformMessage(err.message);
+				setInformMessage(error.message);
 				setOpenInform(true);
-				console.error("Error fetch allAssignChairpersons:", err);
+				console.error("Error fetch requestExamInfoAll:", err);
 			}
 			setReloadTable(false);
 		};
@@ -82,10 +78,12 @@ const AssignChairpersons = () => {
 
 	const handleSubmit = async () => {
 		const url = {
-			add: "http://localhost:8080/api/addAssignChairpersons",
-			edit: "http://localhost:8080/api/editAssignChairpersons",
-			delete: "http://localhost:8080/api/deleteAssignChairpersons",
+			add: "http://localhost:8080/api/addAssignMajorOfficer",
+			edit: "http://localhost:8080/api/editAssignMajorOfficer",
+			delete: "http://localhost:8080/api/deleteAssignMajorOfficer",
 		};
+		console.log(url[modalType]);
+		console.log(Form.values);
 		try {
 			const requestRes = await fetch(url[modalType], {
 				method: "POST",
@@ -109,10 +107,10 @@ const AssignChairpersons = () => {
 		}
 	};
 
-	const classRows = assignChairpersons.map((item) => (
-		<Table.Tr key={item.chairpersons_id}>
-			<Table.Td>{major.find((f) => f.value === item.major_id)?.label}</Table.Td>
-			<Table.Td>{item.chairpersons_name}</Table.Td>
+	const classRows = assignMajorOfficer.map((item) => (
+		<Table.Tr key={item.officer_major_id}>
+			<Table.Td>{item.major_name}</Table.Td>
+			<Table.Td>{item.officer_major_name}</Table.Td>
 			<Table.Td>
 				<Group>
 					<Button color="yellow" size="xs" onClick={() => handleOpenEdit(item)}>
@@ -129,12 +127,12 @@ const AssignChairpersons = () => {
 	return (
 		<Box>
 			<ModalInform opened={openInform} onClose={() => setOpenInform(false)} message={informMessage} type={informtype} />
-			<Modal opened={openModal} onClose={() => setOpenModal(false)} title="แต่งตั้งประธานกรรมการบัณฑิตศึกษาประจำสาขา" centered>
+			<Modal opened={openModal} onClose={() => setOpenModal(false)} title="แต่งตั้งเจ้าหน้าที่ประจำสาขา" centered>
 				<Box>
 					<form onSubmit={Form.onSubmit(handleSubmit)}>
-						<Select label="เลือกสาขา" data={major} {...Form.getInputProps("major_id")} disabled={modalType === "delete" ? true : false}></Select>
-						<TextInput label="รหัสบัตร" {...Form.getInputProps("chairpersons_id")} disabled={modalType === "add" ? false : true} />
-						<TextInput label="ชื่อ" {...Form.getInputProps("chairpersons_name")} disabled={modalType === "delete" ? true : false} />
+						<Select label="เลือกสาขา" data={major} {...Form.getInputProps("major_name")} disabled={modalType === "delete" ? true : false}></Select>
+						<TextInput label="รหัสบัตร" {...Form.getInputProps("officer_major_id")} disabled={modalType === "add" ? false : true} />
+						<TextInput label="ชื่อ" {...Form.getInputProps("officer_major_name")} disabled={modalType === "delete" ? true : false} />
 						{modalType === "add" && <PasswordInput label="รหัสผ่าน" {...Form.getInputProps("password")} />}
 						<Space h="md" />
 						<Button color={modalType === "delete" ? "red" : "green"} type="submit" fullWidth>
@@ -145,7 +143,7 @@ const AssignChairpersons = () => {
 			</Modal>
 
 			<Text size="1.5rem" fw={900} mb="md">
-				แต่งตั้งประธานกรรมการบัณฑิตศึกษา
+				แต่งตั้งเจ้าหน้าที่ประจำสาขา
 			</Text>
 			<Space h="xl" />
 			<Group justify="space-between">
@@ -173,4 +171,4 @@ const AssignChairpersons = () => {
 	);
 };
 
-export default AssignChairpersons;
+export default AssignMajorOfficer;

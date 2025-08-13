@@ -49,10 +49,15 @@ router.get("/profile", authenticateToken, async (req, res) => {
 				idCol: "officer_registrar_id",
 				nameCol: "officer_registrar_name",
 			},
-			officer_faculty: {
+			/* officer_faculty: {
 				table: "officer_faculty",
 				idCol: "officer_faculty_id",
 				nameCol: "officer_faculty_name",
+			}, */
+			officer_major: {
+				table: "officer_major",
+				idCol: "officer_major_id",
+				nameCol: "officer_major_name",
 			},
 		};
 

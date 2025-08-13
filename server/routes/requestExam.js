@@ -4,10 +4,13 @@ const authenticateToken = require("../middleware/authenticateToken");
 const { poolPromise } = require("../db");
 const axios = require("axios");
 
+const fs = require("fs");
+const { PDFDocument } = require("pdf-lib");
+const fontkit = require("@pdf-lib/fontkit");
+
 const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
 const timezone = require("dayjs/plugin/timezone");
-
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -207,16 +210,18 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 	try {
 		// 1. ดึงข้อมูลทั้งหมดจาก request_exam
 		const pool = await poolPromise;
-		const request = pool.request().input("id", id);
+		const request = pool.request().input("id", id).input("ever_cancel", 1);
 		let query = "SELECT * FROM request_exam";
 		if (role === "student") {
 			query += " WHERE student_id = @id";
 		} else if (role === "advisor") {
-			query += " WHERE study_group_id = @id";
+			query += " WHERE study_group_id = @id ORDER BY CASE WHEN status IN (1, 7) THEN 0 ELSE 1 END, status";
 		} else if (role === "chairpersons") {
-			query += " WHERE major_id = @id";
+			query += " WHERE major_id = @id ORDER BY CASE WHEN status IN (2, 8) THEN 0 ELSE 1 END, status";
 		} else if (role === "dean") {
-			query += " WHERE faculty_name = @id";
+			query += " WHERE faculty_name = @id AND ever_cancel = @ever_cancel ORDER BY CASE WHEN status = 9 THEN 0 ELSE 1 END, status";
+		} else if (role === "officer_registrar") {
+			query += " ORDER BY CASE WHEN status = 3 THEN 0 ELSE 1 END, status";
 		}
 		const result = await request.query(query);
 		// 2. ดึงข้อมูลนักศึกษาจาก API ทีละคน
@@ -253,6 +258,7 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 					request_exam_date: formatDate(item.request_exam_date) || null,
 					request_date: formatDate(item.status > 6 ? cancelInfo[0]?.request_cancel_exam_date : item.request_exam_date) || null,
 					status_text: statusMap[item.status?.toString()] || null,
+					receipt_pay_date: formatDate(item.receipt_pay_date) || null,
 					/* request_type: studentInfo?.request_type || null, */
 					request_type: item.status > 6 ? `ขอยกเลิกการเข้าสอบ${studentInfo?.request_type}` : `ขอสอบ${studentInfo?.request_type}` || null,
 					/* major_id: studentInfo?.major_id || null,
@@ -278,7 +284,7 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 });
 
 router.post("/addRequestExam", authenticateToken, async (req, res) => {
-	const { student_id, study_group_id, major_id, faculty_name } = req.body;
+	const { student_id, study_group_id, major_name, faculty_name } = req.body;
 	console.log(formatThaiBuddhistDate());
 
 	try {
@@ -287,7 +293,7 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 			.request()
 			.input("student_id", student_id)
 			.input("study_group_id", study_group_id)
-			.input("major_id", major_id)
+			.input("major_id", major_name)
 			.input("faculty_name", faculty_name)
 			.input("request_exam_date", formatThaiBuddhistDate())
 			.input("status", "1").query(`

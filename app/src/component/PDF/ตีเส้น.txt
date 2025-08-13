@@ -1,0 +1,28 @@
+	/* // ขนาดหน้ากระดาษ (ประมาณ) เพื่อกำหนดขอบเขตตีเส้น
+	const pageWidth = firstPage.getWidth();
+	const pageHeight = firstPage.getHeight();
+
+	// ตีเส้นแกน X (แนวนอน) ทุก 10 หน่วย
+	for (let x = 0; x <= pageWidth; x += 10) {
+		firstPage.drawLine({
+			start: { x: x, y: 0 },
+			end: { x: x, y: pageHeight },
+			thickness: 0.3,
+			color: rgb(0.8, 0.8, 0.8),
+		});
+
+		firstPage.drawText(`${x}`, { x: x + 1, y: 5, size: 6, color: rgb(1, 0, 0) });
+	}
+
+	// ตีเส้นแกน Y (แนวตั้ง) ทุก 10 หน่วย
+	for (let y = 0; y <= pageHeight; y += 10) {
+		firstPage.drawLine({
+			start: { x: 0, y: y },
+			end: { x: pageWidth, y: y },
+			thickness: 0.3,
+			color: rgb(0.8, 0.8, 0.8),
+		});
+
+		firstPage.drawText(`${y}`, { x: 2, y: y + 1, size: 6, color: rgb(0, 0, 1) });
+	}
+ */

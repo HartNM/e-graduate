@@ -1,6 +1,6 @@
 //ตารางคำร้องขอ
 import { useState, useEffect } from "react";
-import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group } from "@mantine/core";
+import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex } from "@mantine/core";
 
 import ModalApprove from "../component/Modal/ModalApprove";
 import ModalInfo from "../component/Modal/ModalInfo";
@@ -262,13 +262,33 @@ const RequestList = () => {
 		}
 	};
 
-	const filteredData = requestExam.filter((p) => [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase()));
+	const handleInfo = async (item) => {
+		console.log(item);
+		try {
+			const res = await fetch("http://localhost:8080/api/pdfRequestExam", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				body: JSON.stringify({ item }),
+			});
+			const blob = await res.blob();
+			const url = URL.createObjectURL(blob);
+			window.open(url, "_blank");
+		} catch (err) {
+			console.error("Error fetching pdfRequestExam:", err);
+		}
+	};
+	const [selectedType, setSelectedType] = useState("");
+	const filteredData = requestExam.filter((p) => {
+		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
+		const matchesType = selectedType ? p.request_type === selectedType : true;
+		return matchesSearch && matchesType;
+	});
 	const rows = filteredData.map((item) => (
 		<Table.Tr key={item.request_exam_id}>
-			<Table.Td>{item.request_exam_id}</Table.Td>
-			<Table.Td>{item.request_date}</Table.Td>
+			{/* <Table.Td>{item.request_exam_id}</Table.Td>
+			<Table.Td>{item.request_date}</Table.Td> */}
 			<Table.Td>{item.student_name}</Table.Td>
-			<Table.Td>{item.request_type}</Table.Td>
+			{(user.role === "advisor" || user.role === "officer_registrar" || user.role === "chairpersons" || user.role === "dean") && <Table.Td>{item.request_type}</Table.Td>}
 			<Table.Td>{item.status_text}</Table.Td>
 			<Table.Td>
 				<Group>
@@ -276,8 +296,7 @@ const RequestList = () => {
 						size="xs"
 						color="gray"
 						onClick={() => {
-							setSelectedRow(item);
-							setOpenInfo(true);
+							handleInfo(item);
 						}}
 					>
 						ข้อมูล
@@ -369,19 +388,29 @@ const RequestList = () => {
 			</Text>
 			<Group justify="space-between">
 				<Box>
-					<TextInput placeholder="ค้นหา" value={search} onChange={(e) => setSearch(e.target.value)} />
+					<Flex align="flex-end" gap="sm">
+						<TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />
+						{(user.role === "officer_registrar" || user.role === "chairpersons" || user.role === "dean") && (
+							<Select
+								placeholder="ชนิดคำขอ"
+								data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]}
+								value={selectedType} // default selection
+								onChange={setSelectedType}
+							/>
+						)}
+					</Flex>
 				</Box>
 				<Box>{user.role === "student" && <Button onClick={() => handleOpenAdd()}>เพิ่มคำร้อง</Button>}</Box>
 			</Group>
 			<Space h="md" />
-			<ScrollArea type="scroll" offsetScrollbars styles={{ viewport: { padding: 0 } }} style={{ borderRadius: "8px", border: "1px solid #e0e0e0" }}>
+			<ScrollArea type="scroll" offsetScrollbars  style={{ borderRadius: "8px", border: "1px solid #e0e0e0" }}>
 				<Table horizontalSpacing="sm" verticalSpacing="sm" highlightOnHover>
 					<Table.Thead>
 						<Table.Tr>
-							<Table.Th>#</Table.Th>
-							<Table.Th>วันที่</Table.Th>
+							{/* <Table.Th>#</Table.Th>
+							<Table.Th>วันที่</Table.Th> */}
 							<Table.Th>ชื่อ</Table.Th>
-							<Table.Th>เรื่อง</Table.Th>
+							{(user.role === "advisor" || user.role === "officer_registrar" || user.role === "chairpersons" || user.role === "dean") && <Table.Th>เรื่อง</Table.Th>}
 							<Table.Th>สถานะ</Table.Th>
 							<Table.Th>การดำเนินการ</Table.Th>
 						</Table.Tr>

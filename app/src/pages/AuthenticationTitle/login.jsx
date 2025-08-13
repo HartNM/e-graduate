@@ -42,7 +42,7 @@ const AuthenticationForm = () => {
 				const routeMap = {
 					student: "/student",
 					dean: "/dean",
-					officer_faculty: "/faculty-officer",
+					officer_major: "/major-officer",
 					chairpersons: "/graduate-committee-chair",
 					officer_registrar: "/registrar-officer",
 					advisor: "/advisor",

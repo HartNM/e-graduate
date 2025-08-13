@@ -8,10 +8,11 @@ const AuthenticationForm = lazy(() => import("./pages/AuthenticationTitle/login.
 const GraduateCommitteeChair = lazy(() => import("./pages/GraduateCommitteeChair/GraduateCommitteeChair.jsx"));
 
 const Advisor = lazy(() => import("./pages/Advisor/Advisor.jsx"));
+const ExamResults = lazy(() => import("./pages/Advisor/ExamResults.jsx"));
 
 const RegistrarOfficer = lazy(() => import("./pages/RegistrarOfficer/RegistrarOfficer.jsx"));
 const ExamScheduleSetupPage = lazy(() => import("./pages/RegistrarOfficer/ExamScheduleSetupPage.jsx"));
-const AssignFacultyOfficer = lazy(() => import("./pages/RegistrarOfficer/AssignFacultyOfficer.jsx"));
+const AssignMajorOfficer = lazy(() => import("./pages/RegistrarOfficer/AssignMajorOfficer.jsx"));
 
 const Student = lazy(() => import("./pages/student/Student.jsx"));
 
@@ -19,9 +20,9 @@ const RequestList = lazy(() => import("./component/RequestExam.jsx"));
 
 const Dean = lazy(() => import("./pages/dean/dean.jsx"));
 
-const FacultyOfficer = lazy(() => import("./pages/FacultyOfficer/FacultyOfficer.jsx"));
-const AssignChairpersons = lazy(() => import("./pages/FacultyOfficer/AssignChairpersons.jsx"));
-const CourseRegistration = lazy(() => import("./pages/FacultyOfficer/CourseRegistration.jsx"));
+const MajorOfficer = lazy(() => import("./pages/MajorOfficer/MajorOfficer.jsx"));
+const AssignChairpersons = lazy(() => import("./pages/MajorOfficer/AssignChairpersons.jsx"));
+const CourseRegistration = lazy(() => import("./pages/MajorOfficer/CourseRegistration.jsx"));
 
 function AppRoutes() {
 	return (
@@ -34,7 +35,7 @@ function AppRoutes() {
 					<Route path="/registrar-officer" element={<RegistrarOfficer />}>
 						<Route path="requestList" element={<RequestList />} />
 						<Route path="ExamScheduleSetupPage" element={<ExamScheduleSetupPage />} />
-						<Route path="assign-faculty-officer" element={<AssignFacultyOfficer />} />
+						<Route path="assign-major-officer" element={<AssignMajorOfficer />} />
 					</Route>
 
 					<Route path="/student" element={<Student />}>
@@ -43,6 +44,7 @@ function AppRoutes() {
 
 					<Route path="/advisor" element={<Advisor />}>
 						<Route path="requestList" element={<RequestList />} />
+						<Route path="examResults" element={<ExamResults />} />
 					</Route>
 
 					<Route path="/graduate-committee-chair" element={<GraduateCommitteeChair />}>
@@ -53,10 +55,10 @@ function AppRoutes() {
 						<Route path="requestList" element={<RequestList />} />
 					</Route>
 
-					<Route path="/faculty-officer" element={<FacultyOfficer />}>
+					<Route path="/major-officer" element={<MajorOfficer />}>
 						<Route path="CourseRegistration" element={<CourseRegistration />} />
 						<Route path="AssignChairpersons" element={<AssignChairpersons />} />
-					</Route> 
+					</Route>
 				</Routes>
 			</Suspense>
 		</BrowserRouter>

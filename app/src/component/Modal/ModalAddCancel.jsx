@@ -7,7 +7,7 @@ const ModalAddCancel = (props) => (
 				<TextInput label="ชื่อ" disabled value={props.selectedRow.student_name} />
 				<TextInput label="รหัสประจำตัว" disabled value={props.selectedRow.student_id} />
 				<TextInput label="ระดับ" disabled value={props.selectedRow.education_level} />
-				<TextInput label="หลักสูตร" disabled value={props.selectedRow.Program} />
+				<TextInput label="หลักสูตร" disabled value={props.selectedRow.program} />
 				<TextInput label="สาขา" disabled value={props.selectedRow.major_name} />
 				<TextInput label="คณะ" disabled value={props.selectedRow.faculty_name} />
 				<TextInput label="คำร้อง" disabled value={props.selectedRow.request_type} />
