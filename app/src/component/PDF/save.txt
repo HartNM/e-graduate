@@ -1,0 +1,215 @@
+/* ----------------------------------------------------------------------- */
+	
+	function drawTextWithFont(page, text, x, y, size = 14) {
+		page.drawText(text || "", {
+			x,
+			y,
+			size,
+			font: customFont, // ตั้งฟอนต์กลางไว้ที่นี่
+		});
+	}
+	/* ------------------------------------------------------------------------------------------ */
+	const [request_exam_date_year, request_exam_date_month, request_exam_date_day] = data?.request_exam_date.split("-");
+
+	
+	firstPage.drawText(request_exam_date_day || "", {
+		x: 360,
+		y: 720,
+		size: 14,
+		font: customFont,
+	});
+	firstPage.drawText(request_exam_date_month || "", {
+		x: 430,
+		y: 720,
+		size: 14,
+		font: customFont,
+	});
+	firstPage.drawText(request_exam_date_year || "", {
+		x: 510,
+		y: 720,
+		size: 14,
+		font: customFont,
+	});
+
+	firstPage.drawText(data?.major_name || "", {
+		x: 300,
+		y: 671,
+		size: 14,
+		font: customFont,
+	});
+
+	firstPage.drawText(data?.student_name || "", {
+		x: 220,
+		y: 637,
+		size: 14,
+		font: customFont,
+	});
+
+	firstPage.drawText(data?.student_id || "", {
+		x: 460,
+		y: 637,
+		size: 14,
+		font: customFont,
+	});
+
+	if (data?.education_level === "ปริญญาโท") {
+		firstPage.drawText("✓" || "", {
+			x: 88,
+			y: 615,
+			size: 14,
+			font: customFontNoto,
+		});
+	} else {
+		firstPage.drawText("✓" || "", {
+			x: 145,
+			y: 615,
+			size: 14,
+			font: customFontNoto,
+		});
+	}
+
+	firstPage.drawText(data?.program || "", {
+		x: 250,
+		y: 618,
+		size: 14,
+		font: customFont,
+	});
+
+	firstPage.drawText(data?.major_name || "", {
+		x: 420,
+		y: 618,
+		size: 14,
+		font: customFont,
+	});
+
+	firstPage.drawText(data?.faculty_name || "", {
+		x: 90,
+		y: 600,
+		size: 14,
+		font: customFont,
+	});
+
+	if (data?.education_level === "ปริญญาโท") {
+		firstPage.drawText("✓" || "", {
+			x: 348,
+			y: 596,
+			size: 14,
+			font: customFontNoto,
+		});
+	} else {
+		firstPage.drawText("✓" || "", {
+			x: 450,
+			y: 596,
+			size: 14,
+			font: customFontNoto,
+		});
+	}
+
+	firstPage.drawText("day" || "", {
+		x: 280,
+		y: 580,
+		size: 14,
+		font: customFont,
+	});
+	firstPage.drawText("month" || "", {
+		x: 330,
+		y: 580,
+		size: 14,
+		font: customFont,
+	});
+	firstPage.drawText("year" || "", {
+		x: 430,
+		y: 580,
+		size: 14,
+		font: customFont,
+	});
+
+	firstPage.drawText(data?.student_name || "", {
+		x: 370,
+		y: 500,
+		size: 14,
+		font: customFont,
+	});
+
+	firstPage.drawText(data?.student_name || "", {
+		x: 370,
+		y: 481,
+		size: 14,
+		font: customFont,
+	});
+
+	firstPage.drawText(request_exam_date_day || "", {
+		x: 360,
+		y: 463,
+		size: 14,
+		font: customFont,
+	});
+	firstPage.drawText(request_exam_date_month || "", {
+		x: 420,
+		y: 463,
+		size: 14,
+		font: customFont,
+	});
+	firstPage.drawText(request_exam_date_year || "", {
+		x: 470,
+		y: 463,
+		size: 14,
+		font: customFont,
+	});
+	/* ------------------------------------------------------------------------------------------------------------- */
+	if (data?.advisor_approvals) {
+		firstPage.drawText("✓" || "", {
+			x: 76,
+			y: 403,
+			size: 14,
+			font: customFontNoto,
+		});
+	} else {
+		firstPage.drawText("✓" || "", {
+			x: 76,
+			y: 383,
+			size: 14,
+			font: customFontNoto,
+		});
+		firstPage.drawText(data?.comment || "", {
+			x: 80,
+			y: 369,
+			size: 14,
+			font: customFont,
+		});
+	}
+
+	firstPage.drawText(data?.advisor_approvals_name || "", {
+		x: 110,
+		y: 350,
+		size: 14,
+		font: customFont,
+	});
+
+	firstPage.drawText(data?.advisor_approvals_name || "", {
+		x: 110,
+		y: 330,
+		size: 14,
+		font: customFont,
+	});
+	const [advisor_approvals_date_year, advisor_approvals_date_month, advisor_approvals_date_day] = data?.advisor_approvals_date.split("-");
+
+	firstPage.drawText(advisor_approvals_date_day || "", {
+		x: 110,
+		y: 311,
+		size: 14,
+		font: customFont,
+	});
+	firstPage.drawText(advisor_approvals_date_month || "", {
+		x: 145,
+		y: 311,
+		size: 14,
+		font: customFont,
+	});
+	firstPage.drawText(advisor_approvals_date_year || "", {
+		x: 180,
+		y: 311,
+		size: 14,
+		font: customFont,
+	});
+	/* ------------------------------------------------------------------------------------------------- */

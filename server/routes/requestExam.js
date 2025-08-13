@@ -4,10 +4,18 @@ const authenticateToken = require("../middleware/authenticateToken");
 const { poolPromise } = require("../db");
 const axios = require("axios");
 
-const now = new Date();
-const buddhistYear = now.getFullYear() + 543;
-const buddhistDate = new Date(now);
-buddhistDate.setFullYear(buddhistYear);
+const dayjs = require("dayjs");
+const utc = require("dayjs/plugin/utc");
+const timezone = require("dayjs/plugin/timezone");
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+function formatThaiBuddhistDate() {
+	const d = dayjs().tz("Asia/Bangkok");
+	const buddhistYear = d.year() + 543;
+	return `${buddhistYear}-${d.month() + 1}-${d.date()} ${d.format("HH:mm:ss")}`;
+}
 
 router.post("/cancelApproveRequestExam", authenticateToken, async (req, res) => {
 	const { request_cancel_exam_id, request_exam_id, name, role, selected, comment_cancel } = req.body;
@@ -50,7 +58,7 @@ router.post("/cancelApproveRequestExam", authenticateToken, async (req, res) => 
 			.input("request_cancel_exam_id", request_cancel_exam_id)
 			.input("name", name)
 			.input("approve", selected === "approve" ? 1 : 0)
-			.input("date", buddhistDate)
+			.input("date", formatThaiBuddhistDate())
 			.input("comment", comment_cancel).query(`
 				UPDATE request_cancel_exam
 				SET ${roleFields[role]}
@@ -74,7 +82,7 @@ router.post("/cancelRequestExam", authenticateToken, async (req, res) => {
 	try {
 		const pool = await poolPromise;
 		const request = pool.request();
-		await request.input("request_exam_id", request_exam_id).input("reason", reason).input("request_cancel_exam_date", buddhistDate).query(`
+		await request.input("request_exam_id", request_exam_id).input("reason", reason).input("request_cancel_exam_date", formatThaiBuddhistDate()).query(`
 			INSERT INTO request_cancel_exam (
 			request_exam_id,
 			reason,
@@ -104,7 +112,7 @@ router.post("/payRequestExam", authenticateToken, async (req, res) => {
 	const { request_exam_id, receipt_vol_No } = req.body;
 	try {
 		const pool = await poolPromise;
-		await pool.request().input("request_exam_id", request_exam_id).input("receipt_vol_No", receipt_vol_No).input("receipt_pay_date", buddhistDate).input("status", "5").query(`
+		await pool.request().input("request_exam_id", request_exam_id).input("receipt_vol_No", receipt_vol_No).input("receipt_pay_date", formatThaiBuddhistDate()).input("status", "5").query(`
       UPDATE request_exam
       SET receipt_vol_No = @receipt_vol_No ,
           receipt_pay_date = @receipt_pay_date,
@@ -143,7 +151,7 @@ router.post("/approveRequestExam", authenticateToken, async (req, res) => {
 			.input("status", statusValue)
 			.input("name", name)
 			.input("approve", selected === "approve" ? 1 : 0)
-			.input("date", buddhistDate)
+			.input("date", formatThaiBuddhistDate())
 			.input("comment", comment);
 		// สร้าง query ตาม role
 		const roleFields = {
@@ -235,17 +243,21 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 				}
 				return {
 					...item,
-					student_name: studentInfo?.student_name || null,
+					...studentInfo,
+					/* student_name: studentInfo?.student_name || null,
 					education_level: studentInfo?.education_level || null,
-					Program: studentInfo?.program || null,
+					Program: studentInfo?.program || null, */
+					advisor_approvals_date: formatDate(item.advisor_approvals_date) || null,
+					chairpersons_approvals_date: formatDate(item.chairpersons_approvals_date) || null,
+					registrar_approvals_date: formatDate(item.registrar_approvals_date) || null,
 					request_exam_date: formatDate(item.request_exam_date) || null,
 					request_date: formatDate(item.status > 6 ? cancelInfo[0]?.request_cancel_exam_date : item.request_exam_date) || null,
 					status_text: statusMap[item.status?.toString()] || null,
 					/* request_type: studentInfo?.request_type || null, */
 					request_type: item.status > 6 ? `ขอยกเลิกการเข้าสอบ${studentInfo?.request_type}` : `ขอสอบ${studentInfo?.request_type}` || null,
-					major_id: studentInfo?.major_id || null,
+					/* major_id: studentInfo?.major_id || null,
 					major_name: studentInfo?.major_name || null,
-					faculty_name: studentInfo?.faculty_name || null,
+					faculty_name: studentInfo?.faculty_name || null, */
 
 					...(item.ever_cancel && {
 						cancel_list: cancelInfo || [],
@@ -267,6 +279,8 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 
 router.post("/addRequestExam", authenticateToken, async (req, res) => {
 	const { student_id, study_group_id, major_id, faculty_name } = req.body;
+	console.log(formatThaiBuddhistDate());
+
 	try {
 		const pool = await poolPromise;
 		await pool
@@ -275,7 +289,7 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 			.input("study_group_id", study_group_id)
 			.input("major_id", major_id)
 			.input("faculty_name", faculty_name)
-			.input("request_exam_date", buddhistDate)
+			.input("request_exam_date", formatThaiBuddhistDate())
 			.input("status", "1").query(`
 			INSERT INTO request_exam (
 				student_id,

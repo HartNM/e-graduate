@@ -11,6 +11,8 @@ router.get("/student/:student_id", async (req, res) => {
     const item = response.data[0];
     const transformedData = {
       student_id: item.OLDID,
+      PNAME: item.PNAME,
+      NAME: item.NAME,
       student_name: `${item.name} ${item.lname}`,
       education_level: item.level_type,
       program: `${item.level_name_long} (${item.level_name})`,

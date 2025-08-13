@@ -9,7 +9,7 @@ import ModalAdd from "../component/Modal/ModalAdd";
 import ModalCheck from "../component/Modal/ModalCheck";
 import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
-import Pdfg01 from "../component/PDF/pdfg01"
+import Pdfg01 from "../component/PDF/pdfg01";
 
 const RequestList = () => {
 	// Modal states
@@ -31,7 +31,7 @@ const RequestList = () => {
 	const [error, setError] = useState("");
 
 	// System states
-	const [user, setUser] = useState({});
+	const [user, setUser] = useState("");
 	//student //advisor //chairpersons //officer_registrar //dean
 	const [requestExam, setRequestExam] = useState([]);
 	const [search, setSearch] = useState("");
@@ -59,9 +59,10 @@ const RequestList = () => {
 		};
 		fetchProfile();
 	}, []);
+
 	useEffect(() => {
+		if (!user) return;
 		const fetchRequestExam = async () => {
-			if (!user) return;
 			try {
 				const requestRes = await fetch("http://localhost:8080/api/requestExamAll", {
 					method: "POST",
@@ -71,12 +72,12 @@ const RequestList = () => {
 				const requestData = await requestRes.json();
 				setRequestExam(requestData);
 				console.log(requestData);
-				setReloadTable(false);
 			} catch (err) {
 				setInformtype("error");
 				setInformMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 				setOpenInform(true);
 				console.error("Error fetching requestExamAll:", err);
+			} finally {
 				setReloadTable(false);
 			}
 		};

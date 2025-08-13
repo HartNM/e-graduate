@@ -13,152 +13,83 @@ async function fillPdf(templateUrl, data) {
 	const pages = pdfDoc.getPages();
 	const firstPage = pages[0];
 
-	const [request_exam_date_year, request_exam_date_month, request_exam_date_day] = data?.request_exam_date.split("-");
+	// helper function สำหรับ drawText
+	const draw = (text, x, y, font = customFont, size = 14) => {
+		if (text !== undefined && text !== null) {
+			firstPage.drawText(String(text), { x, y, size, font });
+		}
+	};
 
-	firstPage.drawText(request_exam_date_day || "", {
-		x: 360,
-		y: 720,
-		size: 14,
-		font: customFont,
-	});
-	firstPage.drawText(request_exam_date_month || "", {
-		x: 430,
-		y: 720,
-		size: 14,
-		font: customFont,
-	});
-	firstPage.drawText(request_exam_date_year || "", {
-		x: 510,
-		y: 720,
-		size: 14,
-		font: customFont,
-	});
+	const splitDate = (str) => (str ? str.split("-") : [null, null, null]);
 
-	firstPage.drawText(data?.major_name || "", {
-		x: 300,
-		y: 670,
-		size: 14,
-		font: customFont,
-	});
+	const [request_exam_date_year, request_exam_date_month, request_exam_date_day] = splitDate(data?.request_exam_date);
+	const [advisor_approvals_date_year, advisor_approvals_date_month, advisor_approvals_date_day] = splitDate(data?.advisor_approvals_date);
+	const [chairpersons_approvals_date_year, chairpersons_approvals_date_month, chairpersons_approvals_date_day] = splitDate(data?.chairpersons_approvals_date);
+	const [registrar_approvals_date_year, registrar_approvals_date_month, registrar_approvals_date_day] = splitDate(data?.registrar_approvals_date);
 
-	firstPage.drawText(data?.student_name || "", {
-		x: 220,
-		y: 637,
-		size: 14,
-		font: customFont,
-	});
+	const drawItems = [
+		{ text: request_exam_date_day, x: 360, y: 720 },
+		{ text: request_exam_date_month, x: 430, y: 720 },
+		{ text: request_exam_date_year, x: 510, y: 720 },
 
-	firstPage.drawText(data?.student_id || "", {
-		x: 460,
-		y: 637,
-		size: 14,
-		font: customFont,
-	});
+		{ text: data?.major_name, x: 300, y: 671 },
+		{ text: data?.student_name, x: 220, y: 637 },
+		{ text: data?.student_id, x: 460, y: 637 },
 
-	if (data?.education_level === "ปริญญาโท") {
-		firstPage.drawText("✓" || "", {
-			x: 88,
-			y: 615,
-			size: 14,
-			font: customFontNoto,
-		});
-	} else {
-		firstPage.drawText("✓" || "", {
-			x: 145,
-			y: 615,
-			size: 14,
-			font: customFontNoto,
-		});
-	}
+		{ text: "✓", x: data?.education_level === "ปริญญาโท" ? 88 : 145, y: 615, font: customFontNoto },
 
-	firstPage.drawText(data?.Program || "", {
-		x: 250,
-		y: 615,
-		size: 14,
-		font: customFont,
-	});
+		{ text: data?.program, x: 250, y: 618 },
+		{ text: data?.major_name, x: 420, y: 618 },
+		{ text: data?.faculty_name, x: 90, y: 600 },
 
-	firstPage.drawText(data?.major_name || "", {
-		x: 420,
-		y: 618,
-		size: 14,
-		font: customFont,
-	});
+		{ text: "✓", x: data?.education_level === "ปริญญาโท" ? 348 : 450, y: 596, font: customFontNoto },
 
-	firstPage.drawText(data?.faculty_name || "", {
-		x: 90,
-		y: 600,
-		size: 14,
-		font: customFont,
-	});
+		{ text: "day", x: 280, y: 580 },
+		{ text: "month", x: 330, y: 580 },
+		{ text: "year", x: 430, y: 580 },
 
-	if (data?.education_level === "ปริญญาโท") {
-		firstPage.drawText("✓" || "", {
-			x: 348,
-			y: 596,
-			size: 14,
-			font: customFontNoto,
-		});
-	} else {
-		firstPage.drawText("✓" || "", {
-			x: 450,
-			y: 596,
-			size: 14,
-			font: customFontNoto,
-		});
-	}
+		{ text: data?.student_name, x: 370, y: 500 },
+		{ text: data?.student_name, x: 370, y: 481 },
 
-	firstPage.drawText("day" || "", {
-		x: 280,
-		y: 580,
-		size: 14,
-		font: customFont,
-	});
-	firstPage.drawText("month" || "", {
-		x: 330,
-		y: 580,
-		size: 14,
-		font: customFont,
-	});
-	firstPage.drawText("year" || "", {
-		x: 430,
-		y: 580,
-		size: 14,
-		font: customFont,
-	});
+		{ text: request_exam_date_day, x: 360, y: 463 },
+		{ text: request_exam_date_month, x: 420, y: 463 },
+		{ text: request_exam_date_year, x: 470, y: 463 },
+		/* ----------------------------------------------------------------------------- */
+		{ text: "✓", x: 76, y: data?.advisor_approvals ? 403 : 383, font: customFontNoto, show: typeof data?.chairpersons_approvals === "boolean" },
+		{ text: data?.comment, x: 80, y: 369, show: typeof data?.chairpersons_approvals === "boolean" && !data.chairpersons_approvals },
 
-	firstPage.drawText(data?.student_name || "", {
-		x: 370,
-		y: 500,
-		size: 14,
-		font: customFont,
-	});
+		{ text: data?.advisor_approvals_name, x: 110, y: 350 },
+		{ text: data?.advisor_approvals_name, x: 110, y: 330 },
 
-	firstPage.drawText(data?.student_name || "", {
-		x: 370,
-		y: 481,
-		size: 14,
-		font: customFont,
-	});
+		{ text: advisor_approvals_date_day, x: 110, y: 311 },
+		{ text: advisor_approvals_date_month, x: 145, y: 311 },
+		{ text: advisor_approvals_date_year, x: 180, y: 311 },
+		/* ----------------------------------------------------------------------------- */
+		{ text: "✓", x: data?.chairpersons_approvals ? 342 : 389, y: 403, font: customFontNoto, show: typeof data?.chairpersons_approvals === "boolean" },
+		{ text: data?.comment, x: 360, y: 386, show: typeof data?.chairpersons_approvals === "boolean" && !data.chairpersons_approvals },
 
-	firstPage.drawText(request_exam_date_day || "", {
-		x: 360,
-		y: 463,
-		size: 14,
-		font: customFont,
-	});
-	firstPage.drawText(request_exam_date_month || "", {
-		x: 420,
-		y: 463,
-		size: 14,
-		font: customFont,
-	});
-	firstPage.drawText(request_exam_date_year || "", {
-		x: 470,
-		y: 463,
-		size: 14,
-		font: customFont,
-	});
+		{ text: data?.chairpersons_approvals_name, x: 390, y: 370 },
+		{ text: data?.chairpersons_approvals_name, x: 390, y: 350 },
+
+		{ text: chairpersons_approvals_date_day, x: 410, y: 311 },
+		{ text: chairpersons_approvals_date_month, x: 440, y: 311 },
+		{ text: chairpersons_approvals_date_year, x: 480, y: 311 },
+		/* ----------------------------------------------------------------------------- */
+		{ text: "✓", x: 80, y: data?.registrar_approvals ? 270 : 210, font: customFontNoto, show: typeof data?.registrar_approvals === "boolean" },
+		{ text: "✓", x: 80, y: data?.registrar_approvals ? 250 : 210, font: customFontNoto, show: typeof data?.registrar_approvals === "boolean" },
+		{ text: data?.comment, x: 160, y: 220, show: typeof data?.registrar_approvals === "boolean" && !data.registrar_approvals },
+
+		{ text: data?.registrar_approvals_name, x: 110, y: 180 },
+		{ text: data?.registrar_approvals_name, x: 110, y: 160 },
+
+		/* 		{ text: registrar_approvals_date_day, x: 410, y: 311 },
+		{ text: registrar_approvals_date_month, x: 440, y: 311 },
+		{ text: registrar_approvals_date_year, x: 480, y: 311 }, */
+	];
+
+	// loop วาด
+	drawItems.filter((item) => item.show !== false).forEach((item) => draw(item.text, item.x, item.y, item.font, item.size));
+
 	// ขนาดหน้ากระดาษ (ประมาณ) เพื่อกำหนดขอบเขตตีเส้น
 	const pageWidth = firstPage.getWidth();
 	const pageHeight = firstPage.getHeight();
