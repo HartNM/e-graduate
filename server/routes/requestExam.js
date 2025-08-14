@@ -191,6 +191,8 @@ router.post("/approveRequestExam", authenticateToken, async (req, res) => {
 
 router.post("/requestExamAll", authenticateToken, async (req, res) => {
 	const { role, id } = req.body;
+	console.log(role, id);
+
 	const statusMap = {
 		0: "ยกเลิก",
 		1: "รออาจารย์อนุมัติ",
@@ -249,9 +251,6 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 				return {
 					...item,
 					...studentInfo,
-					/* student_name: studentInfo?.student_name || null,
-					education_level: studentInfo?.education_level || null,
-					Program: studentInfo?.program || null, */
 					advisor_approvals_date: formatDate(item.advisor_approvals_date) || null,
 					chairpersons_approvals_date: formatDate(item.chairpersons_approvals_date) || null,
 					registrar_approvals_date: formatDate(item.registrar_approvals_date) || null,
@@ -259,24 +258,20 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 					request_date: formatDate(item.status > 6 ? cancelInfo[0]?.request_cancel_exam_date : item.request_exam_date) || null,
 					status_text: statusMap[item.status?.toString()] || null,
 					receipt_pay_date: formatDate(item.receipt_pay_date) || null,
-					/* request_type: studentInfo?.request_type || null, */
 					request_type: item.status > 6 ? `ขอยกเลิกการเข้าสอบ${studentInfo?.request_type}` : `ขอสอบ${studentInfo?.request_type}` || null,
-					/* major_id: studentInfo?.major_id || null,
-					major_name: studentInfo?.major_name || null,
-					faculty_name: studentInfo?.faculty_name || null, */
-
 					...(item.ever_cancel && {
 						cancel_list: cancelInfo || [],
 					}),
 				};
 			})
 		);
-		const sortedData = enrichedData.sort((a, b) => {
+		res.status(200).json(enrichedData);
+		/* const sortedData = enrichedData.sort((a, b) => {
 			const dateA = new Date(a.request_date || a.request_date);
 			const dateB = new Date(b.request_date || b.request_date);
 			return dateB - dateA;
 		});
-		res.status(200).json(sortedData);
+		res.status(200).json(sortedData); */
 	} catch (err) {
 		console.error("requestExamAll:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลคำร้อง" });

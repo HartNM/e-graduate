@@ -1,6 +1,6 @@
 //ตารางคำร้องขอ
 import { useState, useEffect } from "react";
-import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex } from "@mantine/core";
+import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
 
 import ModalApprove from "../component/Modal/ModalApprove";
 import ModalInfo from "../component/Modal/ModalInfo";
@@ -289,7 +289,19 @@ const RequestList = () => {
 			<Table.Td>{item.request_date}</Table.Td> */}
 			<Table.Td>{item.student_name}</Table.Td>
 			{(user.role === "advisor" || user.role === "officer_registrar" || user.role === "chairpersons" || user.role === "dean") && <Table.Td>{item.request_type}</Table.Td>}
-			<Table.Td>{item.status_text}</Table.Td>
+			<Table.Td style={{ textAlign: "center" }}>
+				{item.status <= 4 && (
+					<Stepper active={item.status - 1} iconSize={16} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
+						<Stepper.Step></Stepper.Step>	
+						<Stepper.Step></Stepper.Step>
+						<Stepper.Step></Stepper.Step>
+						<Stepper.Step></Stepper.Step>
+					</Stepper>
+				)}
+				{item.status == 5 && <Pill color="red" variant="filled">{item.status_text}</Pill>}
+				{item.status == 6 && <Pill color="teal" variant="filled">{item.status_text}</Pill>}
+				{item.status > 6 && <Pill>{item.status_text}</Pill>}
+			</Table.Td>
 			<Table.Td>
 				<Group>
 					{/* <Button
@@ -403,7 +415,7 @@ const RequestList = () => {
 				<Box>{user.role === "student" && <Button onClick={() => handleOpenAdd()}>เพิ่มคำร้อง</Button>}</Box>
 			</Group>
 			<Space h="md" />
-			<ScrollArea type="scroll" offsetScrollbars  style={{ borderRadius: "8px", border: "1px solid #e0e0e0" }}>
+			<ScrollArea type="scroll" offsetScrollbars style={{ borderRadius: "8px", border: "1px solid #e0e0e0" }}>
 				<Table horizontalSpacing="sm" verticalSpacing="sm" highlightOnHover>
 					<Table.Thead>
 						<Table.Tr>

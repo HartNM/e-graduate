@@ -36,9 +36,13 @@ router.post("/editAssignChairpersons", authenticateToken, async (req, res) => {
 });
 
 router.post("/allAssignChairpersons", authenticateToken, async (req, res) => {
+	const {id} = req.body
 	try {
 		const pool = await poolPromise;
-		const result = await pool.request().query(`SELECT * FROM chairpersons`);
+		const request = pool.request().input("id", id);
+		let query = "SELECT * FROM chairpersons WHERE major_id = @id";
+		const result = await request.query(query);
+
 		res.status(200).json(result.recordset);
 	} catch (err) {
 		console.error("requestExamInfoAll:", err);

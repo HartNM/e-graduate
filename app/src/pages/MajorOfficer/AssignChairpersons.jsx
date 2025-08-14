@@ -35,12 +35,36 @@ const AssignChairpersons = () => {
 		},
 	});
 
+	const [user, setUser] = useState("");
+
 	useEffect(() => {
+		const fetchProfile = async () => {
+			try {
+				const profileRes = await fetch("http://localhost:8080/api/profile", {
+					method: "GET",
+					headers: { Authorization: `Bearer ${token}` },
+				});
+				const profileData = await profileRes.json();
+				setUser(profileData);
+				console.log(profileData);
+			} catch (err) {
+				setInformtype("error");
+				setInformMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+				setOpenInform(true);
+				console.error("Error fetching profile:", err);
+			}
+		};
+		fetchProfile();
+	}, []);
+
+	useEffect(() => {
+		if (!user) return;
 		const fetchRequestExamInfoAll = async () => {
 			try {
 				const requestRes = await fetch("http://localhost:8080/api/allAssignChairpersons", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+					body: JSON.stringify({ id: user.id }),
 				});
 				const requestData = await requestRes.json();
 				if (!requestRes.ok) {
@@ -57,10 +81,11 @@ const AssignChairpersons = () => {
 			setReloadTable(false);
 		};
 		fetchRequestExamInfoAll();
-	}, [reloadTable]);
+	}, [user, reloadTable]);
 
 	const handleOpenAdd = () => {
 		Form.reset();
+		Form.setValues({ major_id: user.id });
 		setModalType("add");
 		setOpenModal(true);
 	};
@@ -129,18 +154,16 @@ const AssignChairpersons = () => {
 		<Box>
 			<ModalInform opened={openInform} onClose={() => setOpenInform(false)} message={informMessage} type={informtype} />
 			<Modal opened={openModal} onClose={() => setOpenModal(false)} title="แต่งตั้งประธานกรรมการบัณฑิตศึกษาประจำสาขา" centered>
-				<Box>
-					<form onSubmit={Form.onSubmit(handleSubmit)}>
-						<Select label="เลือกสาขา" data={major} {...Form.getInputProps("major_id")} disabled={modalType === "delete" ? true : false}></Select>
-						<TextInput label="รหัสบัตร" {...Form.getInputProps("chairpersons_id")} disabled={modalType === "add" ? false : true} />
-						<TextInput label="ชื่อ" {...Form.getInputProps("chairpersons_name")} disabled={modalType === "delete" ? true : false} />
-						{modalType === "add" && <PasswordInput label="รหัสผ่าน" {...Form.getInputProps("password")} />}
-						<Space h="md" />
-						<Button color={modalType === "delete" ? "red" : "green"} type="submit" fullWidth>
-							{modalType === "delete" ? "ลบ" : "บันทึก"}
-						</Button>
-					</form>
-				</Box>
+				<form onSubmit={Form.onSubmit(handleSubmit)}>
+					<Select label="สาขา" data={major} {...Form.getInputProps("major_id")} disabled></Select>
+					<TextInput label="รหัสบัตร" {...Form.getInputProps("chairpersons_id")} disabled={modalType === "add" ? false : true} />
+					<TextInput label="ชื่อ" {...Form.getInputProps("chairpersons_name")} disabled={modalType === "delete" ? true : false} />
+					{modalType === "add" && <PasswordInput label="รหัสผ่าน" {...Form.getInputProps("password")} />}
+					<Space h="md" />
+					<Button color={modalType === "delete" ? "red" : "green"} type="submit" fullWidth>
+						{modalType === "delete" ? "ลบ" : "บันทึก"}
+					</Button>
+				</form>
 			</Modal>
 
 			<Text size="1.5rem" fw={900} mb="md">

@@ -13,6 +13,7 @@ router.get("/student/:student_id", async (req, res) => {
       student_id: item.OLDID,
       PNAME: item.PNAME,
       NAME: item.NAME,
+      BDATE: item.BDATE,
       student_name: `${item.name} ${item.lname}`,
       education_level: item.level_type,
       program: `${item.level_name_long} (${item.level_name})`,
@@ -20,7 +21,6 @@ router.get("/student/:student_id", async (req, res) => {
       major_id: item.mjcode,
       major_name: item.t_mjname,
       faculty_name: item.faculty_name,
-      BDATE: item.BDATE,
       request_type:
         item.level_type === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ",
     };

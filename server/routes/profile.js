@@ -58,6 +58,7 @@ router.get("/profile", authenticateToken, async (req, res) => {
 				table: "officer_major",
 				idCol: "officer_major_id",
 				nameCol: "officer_major_name",
+				idSea: "major_name",
 			},
 		};
 

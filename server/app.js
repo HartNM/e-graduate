@@ -22,6 +22,8 @@ const assignChairpersonsRouters = require("./routes/assignChairpersons");
 app.use("/api", assignChairpersonsRouters);
 const CourseRegistrationRouters = require("./routes/CourseRegistration");
 app.use("/api", CourseRegistrationRouters);
+const ExamResultsRouters = require("./routes/ExamResults");
+app.use("/api", ExamResultsRouters);
 
 app.listen(PORT, () => {
 	console.log(`Server is running on port ${PORT}`);

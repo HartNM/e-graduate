@@ -8,7 +8,7 @@ const AuthenticationForm = lazy(() => import("./pages/AuthenticationTitle/login.
 const GraduateCommitteeChair = lazy(() => import("./pages/GraduateCommitteeChair/GraduateCommitteeChair.jsx"));
 
 const Advisor = lazy(() => import("./pages/Advisor/Advisor.jsx"));
-const ExamResults = lazy(() => import("./pages/Advisor/ExamResults.jsx"));
+const ExamResults = lazy(() => import("./pages/MajorOfficer/ExamResults.jsx"));
 
 const RegistrarOfficer = lazy(() => import("./pages/RegistrarOfficer/RegistrarOfficer.jsx"));
 const ExamScheduleSetupPage = lazy(() => import("./pages/RegistrarOfficer/ExamScheduleSetupPage.jsx"));
@@ -44,7 +44,6 @@ function AppRoutes() {
 
 					<Route path="/advisor" element={<Advisor />}>
 						<Route path="requestList" element={<RequestList />} />
-						<Route path="examResults" element={<ExamResults />} />
 					</Route>
 
 					<Route path="/graduate-committee-chair" element={<GraduateCommitteeChair />}>
@@ -58,6 +57,7 @@ function AppRoutes() {
 					<Route path="/major-officer" element={<MajorOfficer />}>
 						<Route path="CourseRegistration" element={<CourseRegistration />} />
 						<Route path="AssignChairpersons" element={<AssignChairpersons />} />
+						<Route path="examResults" element={<ExamResults />} />
 					</Route>
 				</Routes>
 			</Suspense>
