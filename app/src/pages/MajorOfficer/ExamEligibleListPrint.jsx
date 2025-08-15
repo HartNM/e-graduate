@@ -4,15 +4,12 @@ import { useState, useEffect } from "react";
 import { useForm } from "@mantine/form";
 import SignatureForm from "../../component/PDF/SignatureForm";
 
-const ExamResults = () => {
-	const [openModal, setOpenModal] = useState(false);
-
-	const form = useForm({
-		initialValues: {},
-	});
-
+const ExamEligibleListPrint = () => {
 	const token = localStorage.getItem("token");
 	const [user, setUser] = useState("");
+	const [reloadTable, setReloadTable] = useState(false);
+	const [group, setGroup] = useState([]);
+
 	useEffect(() => {
 		const fetchProfile = async () => {
 			try {
@@ -29,8 +26,7 @@ const ExamResults = () => {
 		};
 		fetchProfile();
 	}, []);
-	const [reloadTable, setReloadTable] = useState(false);
-	const [group, setGroup] = useState([]);
+
 	useEffect(() => {
 		if (!user) return;
 		const fetchRequestExamInfoAll = async () => {
@@ -59,76 +55,19 @@ const ExamResults = () => {
 	const handleOpenModal = (groupId) => {
 		setSelectedGroupId(groupId);
 
-		const initial = {};
-		group[groupId].forEach((person) => {
-			// ถ้า exam_results undefined ให้ default เป็น false
-			initial[person.id] = person.exam_results ?? false;
-		});
+		const initial = {
+			[groupId]: group[groupId],
+		};
 
-		form.reset();
-		form.setValues(initial); // รีเซ็ตค่าเฉพาะหมู่เรียน
-		setOpenModal(true);
+		
 	};
 
-	const handleSaveExamResults = async () => {
-		console.log("Form values:", form.values);
-		try {
-			const res = await fetch("http://localhost:8080/api/AddExamResults", {
-				method: "POST",
-				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify(form.values),
-			});
-			setOpenModal(false);
-			setReloadTable(true);
-		} catch (err) {
-			console.error("Error fetching AddCourseRegistration:", err);
-		}
-	};
 	return (
 		<Box>
-			<Modal opened={openModal} onClose={() => setOpenModal(false)} title={`รายชื่อหมู่เรียน ${selectedGroupId}`} centered closeOnClickOutside={false}>
-				{selectedGroupId && (
-					<>
-						<Table>
-							<Table.Thead>
-								<Table.Tr>
-									<Table.Th>รหัส</Table.Th>
-									<Table.Th>ชื่อ</Table.Th>
-									<Table.Th>ผ่าน</Table.Th>
-								</Table.Tr>
-							</Table.Thead>
-							<Table.Tbody>
-								{group[selectedGroupId].map((person) => (
-									<Table.Tr key={person.id}>
-										<Table.Td>{person.id}</Table.Td>
-										<Table.Td>{person.name}</Table.Td>
-										<Table.Td style={{ textAlign: "center" }}>
-											<Checkbox {...form.getInputProps(person.id, { type: "checkbox" })} />
-										</Table.Td>
-									</Table.Tr>
-								))}
-							</Table.Tbody>
-						</Table>
-
-						<Group justify="flex-end" mt="md">
-							<Button onClick={() => handleSaveExamResults()} color="green">
-								บันทึก
-							</Button>
-						</Group>
-					</>
-				)}
-			</Modal>
-
 			<Text size="1.5rem" fw={900} mb="md">
 				กรอกผลการสอบ
 			</Text>
-			<Group justify="space-between">
-				<Box>
-					<Flex align="flex-end" gap="sm"></Flex>
-				</Box>
-				<SignatureForm data={group} />
-				{/* <Button>พิมรายชื่อ</Button> */}
-			</Group>
+			<Group justify="space-between"></Group>
 			<Space h="md" />
 			<ScrollArea type="scroll" offsetScrollbars style={{ borderRadius: "8px", border: "1px solid #e0e0e0" }}>
 				<Table horizontalSpacing="sm" verticalSpacing="sm" highlightOnHover>
@@ -144,9 +83,7 @@ const ExamResults = () => {
 								<Table.Td>{groupId}</Table.Td>
 								<Table.Td>
 									<Group>
-										<Button color="yellow" size="xs" onClick={() => handleOpenModal(groupId)}>
-											กรอก
-										</Button>
+										<SignatureForm data={{ [groupId]: group[groupId] }} />
 									</Group>
 								</Table.Td>
 							</Table.Tr>
@@ -158,4 +95,4 @@ const ExamResults = () => {
 	);
 };
 
-export default ExamResults;
+export default ExamEligibleListPrint;

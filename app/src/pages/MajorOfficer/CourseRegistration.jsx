@@ -1,13 +1,7 @@
 import { useState, useEffect } from "react";
 import { Box, Text, ScrollArea, Table, Space, Button, Modal, MultiSelect, Group, Flex, Select, TextInput } from "@mantine/core";
 
-const major_id = [
-	{ value: "14", label: "การบริหารการศึกษา" },
-	{ value: "00", label: "ยุทธศาสตร์การบริหารและการพัฒนา" },
-	{ value: "k2", label: "การจัดการสมัยใหม่" },
-	{ value: "70", label: "รัฐประศาสนศาสตร์" },
-	{ value: "ไม่รู้1", label: "วิทยาศาสตร์ศึกษา" },
-];
+const major_id = ["การบริหารการศึกษา", "ยุทธศาสตร์การบริหารและการพัฒนา", "การจัดการสมัยใหม่", "รัฐประศาสนศาสตร์", "วิทยาศาสตร์ศึกษา"];
 
 const subjectCodes = [
 	{ value: "1012110", label: "1012110 ชื่อวิชา 1" },
@@ -33,12 +27,36 @@ const CourseRegistration = () => {
 	const [reloadTable, setReloadTable] = useState(false);
 	const token = localStorage.getItem("token");
 
+	const [user, setUser] = useState("");
+
 	useEffect(() => {
+		const fetchProfile = async () => {
+			try {
+				const profileRes = await fetch("http://localhost:8080/api/profile", {
+					method: "GET",
+					headers: { Authorization: `Bearer ${token}` },
+				});
+				const profileData = await profileRes.json();
+				setUser(profileData);
+				console.log(profileData);
+			} catch (err) {
+				setInformtype("error");
+				setInformMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+				setOpenInform(true);
+				console.error("Error fetching profile:", err);
+			}
+		};
+		fetchProfile();
+	}, []);
+
+	useEffect(() => {
+		if (!user) return;
 		const fetchProfileAndData = async () => {
 			try {
 				const Data = await fetch("http://localhost:8080/api/AllCourseRegistration", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+					body: JSON.stringify({ id: user.id }),
 				});
 				const resData = await Data.json();
 				setTableData(resData);
@@ -50,7 +68,7 @@ const CourseRegistration = () => {
 		};
 
 		fetchProfileAndData();
-	}, [reloadTable]);
+	}, [user, reloadTable]);
 
 	const handleOpenCoures = (item) => {
 		setSelectedRow(item);
@@ -127,38 +145,9 @@ const CourseRegistration = () => {
 		<Box>
 			<Modal opened={openCoures} onClose={() => setOpenCoures(false)} title="กรอกข้อมูลรายวิชาประจำสาขา" centered closeOnClickOutside={false}>
 				<Box>
-					<Select
-						label="สาขาวิชา"
-						placeholder="เลือกหรือพิมพ์สาขา"
-						searchable
-						nothingFoundMessage="ไม่มีสาขานี้"
-						data={major_id}
-						value={selectedMajor}
-						onChange={setSelectedMajor}
-						disabled={modalType === "Edit" ? true : false}
-					/>
-					{/* <Select
-						label="หมู่เรียน"
-						placeholder="เลือกหรือพิมพ์หมู่เรียน"
-						searchable
-						nothingFoundMessage="ไม่มีหมู่เรียนนี้"
-						data={["6313201", "6313202"]}
-						value={selectedGroup}
-						onChange={setSelectedGroup}
-						disabled={modalType === "Edit" ? true : false}
-					/> */}
+					<Select label="สาขาวิชา" placeholder="เลือกหรือพิมพ์สาขา" searchable nothingFoundMessage="ไม่มีสาขานี้" data={major_id} value={user.id} onChange={setSelectedMajor} disabled />
 					<TextInput label="หมู่เรียน" placeholder="พิมพ์หมู่เรียน" value={selectedGroup} onChange={(e) => setSelectedGroup(e.currentTarget.value)} disabled={modalType === "Edit" ? true : false} />
-					<MultiSelect
-						label="รหัสวิชาที่ต้องเรียน"
-						placeholder="เลือกหรือพิมพ์รหัสวิชา"
-						data={subjectCodes}
-						value={selectedSubjects}
-						onChange={setSelectedSubjects}
-						searchable
-						clearable
-						checkIconPosition="right"
-						nothingFoundMessage="ไม่มีรหัสวิชานี้"
-					/>
+					<MultiSelect label="รหัสวิชาที่ต้องเรียน" placeholder="เลือกหรือพิมพ์รหัสวิชา" data={subjectCodes} value={selectedSubjects} onChange={setSelectedSubjects} searchable clearable checkIconPosition="right" nothingFoundMessage="ไม่มีรหัสวิชานี้" />
 					<Button
 						mt="md"
 						onClick={() => {

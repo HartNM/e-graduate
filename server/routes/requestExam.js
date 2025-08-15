@@ -195,59 +195,74 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 
 	const statusMap = {
 		0: "ยกเลิก",
-		1: "รออาจารย์อนุมัติ",
+		1: "รออาจารย์ที่ปรึกษาอนุมัติ",
 		2: "รอประธานหลักสูตรอนุมัติ",
 		3: "รอเจ้าหน้าที่ทะเบียนตรวจสอบ",
 		4: "รอการชำระค่าธรรมเนียม",
 		5: "อนุมัติ",
 		6: "ไม่อนุมัติ",
-		7: "รออาจารย์อนุมัติ",
+		7: "รออาจารย์ที่ปรึกษาอนุมัติ",
 		8: "รอประธานหลักสูตรอนุมัติ",
 		9: "รอคณบดีอนุมัติ",
 	};
+
 	const formatDate = (date) => {
 		if (!date) return null;
 		return new Date(date).toISOString().split("T")[0];
 	};
+
 	try {
-		// 1. ดึงข้อมูลทั้งหมดจาก request_exam
 		const pool = await poolPromise;
 		const request = pool.request().input("id", id).input("ever_cancel", 1);
+
+		// สร้าง query พื้นฐาน
 		let query = "SELECT * FROM request_exam";
+
+		// กำหนดเงื่อนไข WHERE ตาม role
 		if (role === "student") {
 			query += " WHERE student_id = @id";
 		} else if (role === "advisor") {
-			query += " WHERE study_group_id = @id ORDER BY CASE WHEN status IN (1, 7) THEN 0 ELSE 1 END, status";
+			// เฉพาะคำร้องที่ถึง advisor
+			query += " WHERE study_group_id = @id AND status >= 1 ORDER BY CASE WHEN status IN (1, 7) THEN 0 ELSE 1 END, status";
 		} else if (role === "chairpersons") {
-			query += " WHERE major_id = @id ORDER BY CASE WHEN status IN (2, 8) THEN 0 ELSE 1 END, status";
+			// เฉพาะคำร้องที่ถึง chairpersons
+			query += " WHERE major_id = @id AND status >= 2 ORDER BY CASE WHEN status IN (2, 8) THEN 0 ELSE 1 END, status";
 		} else if (role === "dean") {
-			query += " WHERE faculty_name = @id AND ever_cancel = @ever_cancel ORDER BY CASE WHEN status = 9 THEN 0 ELSE 1 END, status";
+			// เฉพาะคำร้องที่ถึง dean
+			query += " WHERE faculty_name = @id AND ever_cancel = @ever_cancel AND status >= 9 ORDER BY CASE WHEN status = 9 THEN 0 ELSE 1 END, status";
 		} else if (role === "officer_registrar") {
-			query += " ORDER BY CASE WHEN status = 3 THEN 0 ELSE 1 END, status";
+			// เฉพาะคำร้องที่ถึงเจ้าหน้าที่ทะเบียน
+			query += " WHERE status >= 3 ORDER BY CASE WHEN status = 3 THEN 0 ELSE 1 END, status";
 		}
+
 		const result = await request.query(query);
-		// 2. ดึงข้อมูลนักศึกษาจาก API ทีละคน
+
+		// ดึงข้อมูลนักศึกษาและประมวลผล
 		const enrichedData = await Promise.all(
 			result.recordset.map(async (item) => {
 				let studentInfo = null;
+				let cancelInfo = [];
+
 				try {
 					const studentRes = await axios.get(`http://localhost:8080/externalApi/student/${item.student_id}`);
 					studentInfo = studentRes.data;
 				} catch (err) {
 					console.warn(`ไม่สามารถดึงข้อมูลนักศึกษา ${item.student_id}`);
 				}
+
 				if (item.ever_cancel) {
 					try {
 						const cancelRes = await pool.request().query(`
-							SELECT * FROM request_cancel_exam 
-							WHERE request_exam_id = '${item.request_exam_id}'
-							ORDER BY request_cancel_exam_date DESC
-						`);
+              SELECT * FROM request_cancel_exam 
+              WHERE request_exam_id = '${item.request_exam_id}'
+              ORDER BY request_cancel_exam_date DESC
+            `);
 						cancelInfo = cancelRes.recordset;
 					} catch (err) {
 						console.warn(`ไม่สามารถดึงข้อมูลการยกเลิกของ request_exam_id ${item.request_exam_id}`);
 					}
 				}
+
 				return {
 					...item,
 					...studentInfo,
@@ -265,18 +280,13 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 				};
 			})
 		);
+
 		res.status(200).json(enrichedData);
-		/* const sortedData = enrichedData.sort((a, b) => {
-			const dateA = new Date(a.request_date || a.request_date);
-			const dateB = new Date(b.request_date || b.request_date);
-			return dateB - dateA;
-		});
-		res.status(200).json(sortedData); */
 	} catch (err) {
 		console.error("requestExamAll:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลคำร้อง" });
 	}
-});
+});/*  */
 
 router.post("/addRequestExam", authenticateToken, async (req, res) => {
 	const { student_id, study_group_id, major_name, faculty_name } = req.body;

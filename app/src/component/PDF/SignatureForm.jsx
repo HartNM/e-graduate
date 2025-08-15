@@ -71,7 +71,7 @@ async function fillPdf(templateUrl, data) {
 			const [newPage] = await pdfDoc.copyPages(templateDoc, [0]);
 			pdfDoc.addPage(newPage);
 
-			drawGrid(newPage);
+			/* drawGrid(newPage); */
 
 			const start = pageIndex * STUDENTS_PER_PAGE;
 			const end = Math.min(start + STUDENTS_PER_PAGE, students.length);
@@ -82,9 +82,15 @@ async function fillPdf(templateUrl, data) {
 			// วาด student_id
 			let y = 755;
 			for (let i = start; i < end; i++) {
-				drawText(newPage, `${students[i]}`, 98, y, customFont, 14);
-				/* drawText(newPage, `นายณัฐวุฒิ มาตกาง`, 230, y, customFont, 14); */
-                drawCenteredText(newPage, "นายณัฐวุฒิ มาตกาง", 170, y, 220, 14, customFont, 14);
+				drawText(newPage, `${students[i].id}`, 98, y, customFont, 14);
+
+				const nameParts = students[i].name.split(" ");
+				const firstName = nameParts[0] || "";
+				const lastName = nameParts.slice(1).join(" ") || "";
+
+				drawText(newPage, firstName, 200, y, customFont, 14);
+				drawText(newPage, lastName, 300, y, customFont, 14);
+
 				y -= 21.5;
 			}
 

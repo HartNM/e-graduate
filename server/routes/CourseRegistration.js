@@ -20,9 +20,11 @@ router.post("/EditCourseRegistration", authenticateToken, async (req, res) => {
 });
 
 router.post("/AllCourseRegistration", authenticateToken, async (req, res) => {
+	const { id } = req.body;
+
 	try {
 		const pool = await poolPromise;
-		const result = await pool.request().query(`SELECT * FROM course_registration`);
+		const result = await pool.request().input("id", id).query(`SELECT * FROM course_registration WHERE major_id = @id`);
 
 		const formatted = result.recordset.map((row) => ({
 			...row,

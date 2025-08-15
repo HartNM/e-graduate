@@ -1,6 +1,6 @@
 //ตารางคำร้องขอ
 import { useState, useEffect } from "react";
-import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
+import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill, Tooltip } from "@mantine/core";
 
 import ModalApprove from "../component/Modal/ModalApprove";
 import ModalInfo from "../component/Modal/ModalInfo";
@@ -289,33 +289,45 @@ const RequestList = () => {
 			<Table.Td>{item.request_date}</Table.Td> */}
 			<Table.Td>{item.student_name}</Table.Td>
 			{(user.role === "advisor" || user.role === "officer_registrar" || user.role === "chairpersons" || user.role === "dean") && <Table.Td>{item.request_type}</Table.Td>}
+
 			<Table.Td style={{ textAlign: "center" }}>
 				{item.status <= 4 && (
-					<Stepper active={item.status - 1} iconSize={16} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
-						<Stepper.Step></Stepper.Step>	
-						<Stepper.Step></Stepper.Step>
-						<Stepper.Step></Stepper.Step>
-						<Stepper.Step></Stepper.Step>
-					</Stepper>
+					<>
+						{/* <Tooltip label={item.status_text}></Tooltip> */}
+						<Stepper active={item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
+							<Stepper.Step>{item.status_text}</Stepper.Step>
+							<Stepper.Step>{item.status_text}</Stepper.Step>
+							<Stepper.Step>{item.status_text}</Stepper.Step>
+							<Stepper.Step>{item.status_text}</Stepper.Step>
+						</Stepper>
+					</>
 				)}
-				{item.status == 5 && <Pill color="red" variant="filled">{item.status_text}</Pill>}
-				{item.status == 6 && <Pill color="teal" variant="filled">{item.status_text}</Pill>}
+
+				{item.status == 5 && (
+					<Pill variant="filled" style={{ backgroundColor: "#ccffcc", color: "#006600" }}>
+						{item.status_text}
+					</Pill>
+				)}
+				{item.status == 6 && (
+					<>
+						<Pill variant="filled" style={{ backgroundColor: "#ffcccc", color: "#b30000" }}>
+							{item.status_text}
+						</Pill>
+						<br />
+						{!item.advisor_approvals && "อาจารย์ที่ปรึกษา"}
+						{item.advisor_approvals && !item.chairpersons_approvals && "ประธานหลักสูตร"}
+						{item.advisor_approvals && item.chairpersons_approvals && !item.registrar_approvals && "เจ้าหน้าที่ทะเบียน"}
+					</>
+				)}
+
 				{item.status > 6 && <Pill>{item.status_text}</Pill>}
 			</Table.Td>
+
 			<Table.Td>
 				<Group>
-					{/* <Button
-						size="xs"
-						color="gray"
-						onClick={() => {
-							handleInfo(item);
-						}}
-					>
-						ข้อมูล
-					</Button> */}
-					<Pdfg01 data={item} />
 					{user.role === "student" && (
 						<>
+							<Pdfg01 data={item} />
 							{item.status === "4" && (
 								<Button
 									size="xs"
@@ -329,19 +341,25 @@ const RequestList = () => {
 								</Button>
 							)}
 							{item.status === "5" && (
-								<Button
-									size="xs"
-									color="red"
-									onClick={() => {
-										setSelectedRow(item);
-										setOpenAddCancel(true);
-									}}
-								>
-									ขอยกเลิก
-								</Button>
+								<>
+									{/* <Button
+										size="xs"
+										color="red"
+										onClick={() => {
+											setSelectedRow(item);
+											setOpenAddCancel(true);
+										}}
+									>
+										ขอยกเลิก
+									</Button> */}
+									<Button size="xs" color="green">
+										พิมพ์ใบเสร็จ
+									</Button>
+								</>
 							)}
 						</>
 					)}
+					{user.role !== "student" && ((user.role === "advisor" && item.status > "1") || (user.role === "chairpersons" && item.status > "2") || (user.role === "officer_registrar" && item.status > "3") ? <Pdfg01 data={item} /> : <Pdfg01 data={item} showType="view" />)}
 					{((user.role === "advisor" && item.status === "1") || (user.role === "chairpersons" && item.status === "2") || (user.role === "officer_registrar" && item.status === "3")) && (
 						<Button
 							size="xs"
@@ -352,10 +370,10 @@ const RequestList = () => {
 								setOpenApprove(true);
 							}}
 						>
-							ลงความเห็น
+							{user.role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
 						</Button>
 					)}
-					{((user.role === "advisor" && item.status === "7") || (user.role === "chairpersons" && item.status === "8") || (user.role === "dean" && item.status === "9")) && (
+					{/* {((user.role === "advisor" && item.status === "7") || (user.role === "chairpersons" && item.status === "8") || (user.role === "dean" && item.status === "9")) && (
 						<Button
 							size="xs"
 							color="green"
@@ -367,9 +385,10 @@ const RequestList = () => {
 						>
 							ลงความเห็น
 						</Button>
-					)}
+					)} */}
 				</Group>
 			</Table.Td>
+			<Table.Td style={{ textAlign: "center" }}>{item.exam_results === null ? "" : item.exam_results ? "ผ่าน" : "ไม่ผ่าน"}</Table.Td>
 		</Table.Tr>
 	));
 
@@ -388,6 +407,7 @@ const RequestList = () => {
 				openApproveState={openApproveState}
 				handleApprove={handleApprove}
 				handleCancel={handleCancel}
+				role={user.role}
 			/>
 			<ModalInfo opened={openInfo} onClose={() => setOpenInfo(false)} selectedRow={selectedRow} />
 			<ModalAddCancel opened={openAddCancel} onClose={() => setOpenAddCancel(false)} selectedRow={selectedRow} reason={reason} setReason={setReason} error={error} handleAddCancel={handleAddCancel} />
@@ -412,7 +432,13 @@ const RequestList = () => {
 						)}
 					</Flex>
 				</Box>
-				<Box>{user.role === "student" && <Button onClick={() => handleOpenAdd()}>เพิ่มคำร้อง</Button>}</Box>
+				<Box>
+					{user.role === "student" && (
+						<Button onClick={() => handleOpenAdd()} disabled={!requestExam.every((item) => item.status === "6")}>
+							เพิ่มคำร้อง
+						</Button>
+					)}
+				</Box>
 			</Group>
 			<Space h="md" />
 			<ScrollArea type="scroll" offsetScrollbars style={{ borderRadius: "8px", border: "1px solid #e0e0e0" }}>
@@ -421,10 +447,11 @@ const RequestList = () => {
 						<Table.Tr>
 							{/* <Table.Th>#</Table.Th>
 							<Table.Th>วันที่</Table.Th> */}
-							<Table.Th>ชื่อ</Table.Th>
-							{(user.role === "advisor" || user.role === "officer_registrar" || user.role === "chairpersons" || user.role === "dean") && <Table.Th>เรื่อง</Table.Th>}
-							<Table.Th>สถานะ</Table.Th>
-							<Table.Th>การดำเนินการ</Table.Th>
+							<Table.Th style={{ minWidth: 100 }}>ชื่อ</Table.Th>
+							{(user.role === "advisor" || user.role === "officer_registrar" || user.role === "chairpersons" || user.role === "dean") && <Table.Th style={{ minWidth: 100 }}>เรื่อง</Table.Th>}
+							<Table.Th style={{ minWidth: 110 }}>สถานะ</Table.Th>
+							<Table.Th style={{ minWidth: 100 }}>การดำเนินการ</Table.Th>
+							{requestExam.some((item) => item.exam_results !== null) && <Table.Th style={{ minWidth: 110 }}>ผลสอบ</Table.Th>}
 						</Table.Tr>
 					</Table.Thead>
 					<Table.Tbody>{rows}</Table.Tbody>

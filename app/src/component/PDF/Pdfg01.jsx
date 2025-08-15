@@ -25,7 +25,7 @@ async function fillPdf(templateUrl, data, secondPdfUrl) {
 
 	const pages = pdfDoc.getPages();
 	const firstPage = pages[0];
-	const secondPage  = pages[1];
+	const secondPage = pages[1];
 
 	const splitDate = (str) => (str ? str.split("-") : [null, null, null]);
 
@@ -94,7 +94,7 @@ async function fillPdf(templateUrl, data, secondPdfUrl) {
 		{ text: "25", x: 490, y: 236, show: data?.receipt_vol_No !== null },
 		{ text: `${receipt_pay_date_day}/${receipt_pay_date_month}/${receipt_pay_date_year}`, x: 380, y: 217, show: data?.receipt_vol_No !== null },
 		{ text: "นายณัฐวุฒิ มาตกาง", x: 400, y: 180, show: data?.receipt_vol_No !== null },
-		{ text: "นายณัฐวุฒิ มาตกาง", x: 400, y: 161, show: data?.receipt_vol_No !== null  },
+		{ text: "นายณัฐวุฒิ มาตกาง", x: 400, y: 161, show: data?.receipt_vol_No !== null },
 	];
 
 	// loop วาด
@@ -109,16 +109,36 @@ async function fillPdf(templateUrl, data, secondPdfUrl) {
 	return new Blob([pdfBytes], { type: "application/pdf" });
 }
 
-export default function Pdfg01({ data }) {
-	const handleClick = async () => {
-		const blob = await fillPdf("/pdf/g01.pdf", data/* , "/pdf/g07.pdf" */);
+export default function Pdfg01({ data, showType }) {
+	const handleOpen = async () => {
+		const blob = await fillPdf("/pdf/g01.pdf", data);
 		const url = URL.createObjectURL(blob);
 		window.open(url, "_blank");
 	};
 
+	const handlePrint = async () => {
+		const blob = await fillPdf("/pdf/g01.pdf", data);
+		const url = URL.createObjectURL(blob);
+
+		const iframe = document.createElement("iframe");
+		iframe.style.display = "none";
+		iframe.src = url;
+		document.body.appendChild(iframe);
+		iframe.onload = () => {
+			iframe.contentWindow.print();
+		};
+	};
 	return (
-		<Button size="xs" color="gray" onClick={handleClick}>
-			ข้อมูล
-		</Button>
+		<>
+			{showType === "view" ? (
+				<Button size="xs" color="gray" onClick={handleOpen}>
+					ข้อมูล
+				</Button>
+			) : (
+				<Button size="xs" color="blue" onClick={handlePrint}>
+					พิมพ์
+				</Button>
+			)}
+		</>
 	);
 }

@@ -4,8 +4,9 @@ import UserLayout from "../../layout/userLayout.jsx";
 
 const menu = [
 	{ label: "คำร้องขอสอบ", icon: IconGauge, links: "/registrar-officer/requestList" },
+	{ label: "คำร้องขอสอบวัด", icon: IconGauge, links: "/registrar-officer/requestList" },
 	{ label: "กำหนดวันสอบประมวลความรู้/สอบวัดคุณสมบัต", icon: IconGauge, links: "/registrar-officer/ExamScheduleSetupPage" },
-	{ label: "แต่งตั้งเจ้าหน้าที่ประจำสาขา", icon: IconGauge, links: "/registrar-officer/assign-major-officer" },
+	{ label: "กรอกข้อมูลเจ้าหน้าที่ประจำสาขาวิชา", icon: IconGauge, links: "/registrar-officer/assign-major-officer" },
 ];
 
 const RegistrarOfficer = () => {

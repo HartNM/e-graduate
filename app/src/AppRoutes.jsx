@@ -23,6 +23,7 @@ const Dean = lazy(() => import("./pages/dean/dean.jsx"));
 const MajorOfficer = lazy(() => import("./pages/MajorOfficer/MajorOfficer.jsx"));
 const AssignChairpersons = lazy(() => import("./pages/MajorOfficer/AssignChairpersons.jsx"));
 const CourseRegistration = lazy(() => import("./pages/MajorOfficer/CourseRegistration.jsx"));
+const ExamEligibleListPrint = lazy(() => import("./pages/MajorOfficer/ExamEligibleListPrint.jsx"));
 
 function AppRoutes() {
 	return (
@@ -58,6 +59,7 @@ function AppRoutes() {
 						<Route path="CourseRegistration" element={<CourseRegistration />} />
 						<Route path="AssignChairpersons" element={<AssignChairpersons />} />
 						<Route path="examResults" element={<ExamResults />} />
+						<Route path="ExamEligibleListPrint" element={<ExamEligibleListPrint />} />
 					</Route>
 				</Routes>
 			</Suspense>
