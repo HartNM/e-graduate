@@ -31,7 +31,11 @@ router.post("/AllExamResults", authenticateToken, async (req, res) => {
 	try {
 		const pool = await poolPromise;
 		const request = pool.request().input("id", id);
-		let query = `SELECT study_group_id, student_id, exam_results FROM request_exam WHERE major_id = @id AND status = 5`;
+		let query = `
+			SELECT study_group_id, student_id, exam_results, term 
+			FROM request_exam 
+			WHERE major_id = @id AND status = 5
+		`;
 		const result = await request.query(query);
 
 		const output = {};
@@ -40,6 +44,7 @@ router.post("/AllExamResults", authenticateToken, async (req, res) => {
 			output[row.study_group_id].push({
 				student_id: row.student_id,
 				exam_results: row.exam_results,
+				term: row.term,
 			});
 		});
 
@@ -56,10 +61,11 @@ router.post("/AllExamResults", authenticateToken, async (req, res) => {
 
 		const finalOutput = {};
 		Object.entries(output).forEach(([groupId, students]) => {
-			finalOutput[groupId] = students.map(({ student_id, exam_results }) => ({
+			finalOutput[groupId] = students.map(({ student_id, exam_results, term }) => ({
 				id: student_id,
 				name: studentMap[student_id]?.student_name || "",
 				exam_results,
+				term,
 			}));
 		});
 

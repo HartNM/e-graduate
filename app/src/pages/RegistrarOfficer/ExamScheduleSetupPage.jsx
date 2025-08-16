@@ -19,13 +19,13 @@ const ExamScheduleSetupPage = () => {
 
 	const Form = useForm({
 		initialValues: {
-			term_year: "",
+			term: "",
 			open_date: null,
 			close_date: null,
 			exam_date: null,
 		},
 		validate: {
-			term_year: (value) => (value.trim().length > 0 ? null : "กรุณาระบุปีการศึกษา"),
+			term: (value) => (value.trim().length > 0 ? null : "กรุณาระบุปีการศึกษา"),
 			open_date: (value) => (value ? null : "กรุณาระบุวันที่เปิด"),
 			close_date: (value) => {
 				if (!value) return "กรุณาระบุวันที่ปิด";
@@ -98,7 +98,7 @@ const ExamScheduleSetupPage = () => {
 
 	const Rows = requestExamInfo.map((item) => (
 		<Table.Tr key={item.request_exam_info_id}>
-			<Table.Td>{item.term_year}</Table.Td>
+			<Table.Td>{item.term}</Table.Td>
 			<Table.Td>{item.open_date}</Table.Td>
 			<Table.Td>{item.close_date}</Table.Td>
 			<Table.Td>{item.exam_date}</Table.Td>
@@ -136,7 +136,7 @@ const ExamScheduleSetupPage = () => {
 			<ModalInform opened={openInform} onClose={() => setOpenInform(false)} message={informMessage} type={informtype} />
 			<Modal opened={openedPickDate} onClose={() => setOpenPickDate(false)} title={modalType === "delete" ? "ลบวันสอบประมวลความรู้/สอบวัดคุณสมบัต" : "กำหนดวันสอบประมวลความรู้/สอบวัดคุณสมบัต"} centered>
 				<form onSubmit={Form.onSubmit(handleSubmit)}>
-					<TextInput label="ปีการศึกษา" placeholder="กรอกปีการศึกษา" withAsterisk {...Form.getInputProps("term_year")} />
+					<TextInput label="ปีการศึกษา" placeholder="กรอกปีการศึกษา" withAsterisk {...Form.getInputProps("term")} />
 					<DatePickerInput label="วันเปิดการยื่นคำร้อง" placeholder="เลือกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" withAsterisk {...Form.getInputProps("open_date")} />
 					<DatePickerInput label="วันปิดการยื่นคำร้อง" placeholder="เลือกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" withAsterisk minDate={Form.values.open_date} disabled={Form.values.open_date ? false : true} {...Form.getInputProps("close_date")} />
 					<DatePickerInput label="วันสอบ" placeholder="เลื่อกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" withAsterisk minDate={Form.values.close_date} disabled={Form.values.close_date ? false : true} {...Form.getInputProps("exam_date")} />

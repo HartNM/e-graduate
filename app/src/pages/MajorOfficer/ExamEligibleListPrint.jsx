@@ -1,5 +1,5 @@
 //กรอกผลการสอบ
-import { Box, Text, ScrollArea, Table, Flex, Group, Button, Space, Modal, Checkbox, TextInput } from "@mantine/core";
+import { Box, Text, ScrollArea, Table, Flex, Group, Button, Space, Modal, Checkbox, TextInput, Select } from "@mantine/core";
 import { useState, useEffect } from "react";
 import { useForm } from "@mantine/form";
 import SignatureForm from "../../component/PDF/SignatureForm";
@@ -50,26 +50,28 @@ const ExamEligibleListPrint = () => {
 		fetchRequestExamInfoAll();
 	}, [user, reloadTable]);
 
-	const [selectedGroupId, setSelectedGroupId] = useState(null);
+	const [selectedTerm, setSelectedTerm] = useState("");
+	const [selectedType, setSelectedType] = useState("");
 
-	const handleOpenModal = (groupId) => {
-		setSelectedGroupId(groupId);
-
-		const initial = {
-			[groupId]: group[groupId],
-		};
-
-		
-	};
+	// ก่อน return ของ component
+	const filteredGroup = selectedType && selectedTerm ? Object.fromEntries(Object.entries(group).map(([groupId, students]) => [groupId, students.filter((student) => student.term === selectedTerm)])) : group;
 
 	return (
 		<Box>
 			<Text size="1.5rem" fw={900} mb="md">
-				กรอกผลการสอบ
+				พิมพ์ใบรายชื่อผู้มีสิทธิสอบ
 			</Text>
-			<Group justify="space-between"></Group>
+			<Group justify="space-between">
+				<Group>
+					<Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />
+					<Select placeholder="เทอมการศึกษา" data={["1/68", "2/68", "3/68"]} value={selectedTerm} onChange={setSelectedTerm} />
+				</Group>
+				<Box>
+					<SignatureForm data={group} />
+				</Box>
+			</Group>
 			<Space h="md" />
-			<ScrollArea type="scroll" offsetScrollbars style={{ borderRadius: "8px", border: "1px solid #e0e0e0" }}>
+			{/* <ScrollArea type="scroll" offsetScrollbars style={{ borderRadius: "8px", border: "1px solid #e0e0e0" }}>
 				<Table horizontalSpacing="sm" verticalSpacing="sm" highlightOnHover>
 					<Table.Thead>
 						<Table.Tr>
@@ -88,6 +90,28 @@ const ExamEligibleListPrint = () => {
 								</Table.Td>
 							</Table.Tr>
 						))}
+					</Table.Tbody>
+				</Table>
+			</ScrollArea> */}
+
+			<ScrollArea type="scroll" offsetScrollbars style={{ borderRadius: "8px", border: "1px solid #e0e0e0" }}>
+				<Table horizontalSpacing="sm" verticalSpacing="sm" highlightOnHover>
+					<Table.Thead>
+						<Table.Tr>
+							<Table.Th>ชื่อ</Table.Th>
+							{/* <Table.Th>จัดการ</Table.Th> */}
+						</Table.Tr>
+					</Table.Thead>
+					<Table.Tbody>
+						{selectedType &&
+							selectedTerm &&
+							Object.entries(group).map(([groupId, students]) =>
+								students.map((student) => (
+									<Table.Tr key={student.id}>
+										<Table.Td>{student.name}</Table.Td>
+									</Table.Tr>
+								))
+							)}
 					</Table.Tbody>
 				</Table>
 			</ScrollArea>

@@ -286,7 +286,7 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 		console.error("requestExamAll:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลคำร้อง" });
 	}
-});/*  */
+}); /*  */
 
 router.post("/addRequestExam", authenticateToken, async (req, res) => {
 	const { student_id, study_group_id, major_name, faculty_name } = req.body;
@@ -294,12 +294,14 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 
 	try {
 		const pool = await poolPromise;
+		const infoRes = await pool.request().query(`SELECT TOP 1 term FROM request_exam_info ORDER BY request_exam_info_id DESC`);
 		await pool
 			.request()
 			.input("student_id", student_id)
 			.input("study_group_id", study_group_id)
 			.input("major_id", major_name)
 			.input("faculty_name", faculty_name)
+			.input("term", infoRes.recordset[0].term)
 			.input("request_exam_date", formatThaiBuddhistDate())
 			.input("status", "1").query(`
 			INSERT INTO request_exam (
@@ -307,6 +309,7 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 				study_group_id,
 				major_id,
 				faculty_name,
+				term,
 				request_exam_date,
 				status
 			) VALUES (
@@ -314,6 +317,7 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 				@study_group_id,
 				@major_id,
 				@faculty_name,
+				@term,
 				@request_exam_date,
 				@status
 			)`);

@@ -16,13 +16,13 @@ router.post("/deleteRequestExamInfo", authenticateToken, async (req, res) => {
 });
 
 router.post("/editRequestExamInfo", authenticateToken, async (req, res) => {
-	const { exam_date, open_date, close_date, request_exam_info_id, term_year } = req.body;
+	const { exam_date, open_date, close_date, request_exam_info_id, term } = req.body;
 	try {
 		const pool = await poolPromise;
-		await pool.request().input("term_year", term_year).input("exam_date", exam_date).input("open_date", open_date).input("close_date", close_date).input("request_exam_info_id", request_exam_info_id)
+		await pool.request().input("term", term).input("exam_date", exam_date).input("open_date", open_date).input("close_date", close_date).input("request_exam_info_id", request_exam_info_id)
 			.query(`
 				UPDATE request_exam_info 
-				SET term_year = @term_year,
+				SET term = @term,
 					exam_date = @exam_date, 
 					open_date = @open_date, 
 					close_date = @close_date 
@@ -42,7 +42,7 @@ router.post("/allRequestExamInfo", authenticateToken, async (req, res) => {
 	};
 	try {
 		const pool = await poolPromise;
-		const result = await pool.request().query("SELECT * FROM request_exam_info");
+		const result = await pool.request().query("SELECT TOP 1 * FROM request_exam_info ORDER BY request_exam_info_id DESC");
 		const formattedData = result.recordset.map((item) => ({
 			...item,
 			open_date: formatDate(item.open_date),
@@ -57,20 +57,20 @@ router.post("/allRequestExamInfo", authenticateToken, async (req, res) => {
 });
 
 router.post("/addRequestExamInfo", authenticateToken, async (req, res) => {
-	const { open_date, close_date, exam_date, term_year } = req.body;
+	const { open_date, close_date, exam_date, term } = req.body;
 	const { reference_id } = req.user;
 	try {
 		const pool = await poolPromise;
 		await pool
 			.request()
-			.input("term_year", term_year)
+			.input("term", term)
 			.input("open_date", open_date)
 			.input("close_date", close_date)
 			.input("exam_date", exam_date)
 			.input("officer_registrar_id", reference_id)
 			.input("info_exam_date", new Date()).query(`
 				INSERT INTO request_exam_info (
-					term_year,
+					term,
 					open_date, 
 					close_date, 
 					exam_date, 
@@ -78,7 +78,7 @@ router.post("/addRequestExamInfo", authenticateToken, async (req, res) => {
 					info_exam_date 
 				)
 				VALUES ( 
-					@term_year,
+					@term,
 					@open_date, 
 					@close_date, 
 					@exam_date, 
