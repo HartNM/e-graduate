@@ -23,6 +23,9 @@ async function fillPdf(templateUrl, data) {
 			page.drawText(String(text), { x, y, size, font });
 		}
 	};
+	const drawRect = (page, x, y, w, h, lineW = 1) => {
+		page.drawRectangle({ x, y, width: w, height: h, borderWidth: lineW, color: rgb(1, 1, 1), borderColor: rgb(0, 0, 0) });
+	};
 	const drawCenteredText = (page, text, x, y, width, height, font, size = 14) => {
 		const textWidth = font.widthOfTextAtSize(text, size);
 		const textHeight = size; // ความสูงประมาณ size
@@ -71,10 +74,11 @@ async function fillPdf(templateUrl, data) {
 			const [newPage] = await pdfDoc.copyPages(templateDoc, [0]);
 			pdfDoc.addPage(newPage);
 
-			/* drawGrid(newPage); */
+			drawGrid(newPage);
 
 			const start = pageIndex * STUDENTS_PER_PAGE;
 			const end = Math.min(start + STUDENTS_PER_PAGE, students.length);
+			console.log(start, end);
 
 			// เขียนชื่อ study group
 			drawText(newPage, `Study Group: ${groupId}`, 67, 810, customFont, 16);
@@ -82,6 +86,9 @@ async function fillPdf(templateUrl, data) {
 			// วาด student_id
 			let y = 755;
 			for (let i = start; i < end; i++) {
+				drawRect(newPage, 67, y - 6, 400, 21.5);
+				drawText(newPage, i + 1, 70, y, customFont, 14);
+
 				drawText(newPage, `${students[i].id}`, 98, y, customFont, 14);
 
 				const nameParts = students[i].name.split(" ");
@@ -91,6 +98,7 @@ async function fillPdf(templateUrl, data) {
 				drawText(newPage, firstName, 200, y, customFont, 14);
 				drawText(newPage, lastName, 300, y, customFont, 14);
 
+				drawText(newPage, students[i].exam_results ? "ผ่าน" : "ไม่ผ่าน", 445, y, customFont, 14);
 				y -= 21.5;
 			}
 

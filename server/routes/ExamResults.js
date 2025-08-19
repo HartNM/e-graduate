@@ -32,7 +32,7 @@ router.post("/AllExamResults", authenticateToken, async (req, res) => {
 		const pool = await poolPromise;
 		const request = pool.request().input("id", id);
 		let query = `
-			SELECT study_group_id, student_id, exam_results, term 
+			SELECT study_group_id, student_id, exam_results, term, request_type
 			FROM request_exam 
 			WHERE major_id = @id AND status = 5
 		`;
@@ -45,12 +45,17 @@ router.post("/AllExamResults", authenticateToken, async (req, res) => {
 				student_id: row.student_id,
 				exam_results: row.exam_results,
 				term: row.term,
+				request_type: row.request_type,
 			});
 		});
 
-		const allStudentIds = Object.values(output).flatMap((group) => group.map((s) => s.student_id));
+		const allStudentIds = Object.values(output).flatMap((group) =>
+			group.map((s) => s.student_id)
+		);
 
-		const promises = allStudentIds.map((studentId) => axios.get(`http://localhost:8080/externalApi/student/${studentId}`));
+		const promises = allStudentIds.map((studentId) =>
+			axios.get(`http://localhost:8080/externalApi/student/${studentId}`)
+		);
 		const studentResults = await Promise.all(promises);
 
 		const studentMap = {};
@@ -61,12 +66,15 @@ router.post("/AllExamResults", authenticateToken, async (req, res) => {
 
 		const finalOutput = {};
 		Object.entries(output).forEach(([groupId, students]) => {
-			finalOutput[groupId] = students.map(({ student_id, exam_results, term }) => ({
-				id: student_id,
-				name: studentMap[student_id]?.student_name || "",
-				exam_results,
-				term,
-			}));
+			finalOutput[groupId] = students.map(
+				({ student_id, exam_results, term, request_type }) => ({
+					id: student_id,
+					name: studentMap[student_id]?.student_name || "",
+					exam_results,
+					term,
+					request_type,
+				})
+			);
 		});
 
 		res.status(200).json(finalOutput);
@@ -75,5 +83,6 @@ router.post("/AllExamResults", authenticateToken, async (req, res) => {
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
 	}
 });
+
 
 module.exports = router;

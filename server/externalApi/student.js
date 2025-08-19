@@ -1,8 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const axios = require("axios");
+const { poolPromise, sql } = require("../db");
 
-router.get("/student/:student_id", async (req, res) => {
+/* router.get("/student/:student_id", async (req, res) => {
   const studentid = req.params.student_id;
   try {
     const response = await axios.get(
@@ -29,6 +30,43 @@ router.get("/student/:student_id", async (req, res) => {
     console.error("API call error:", err);
     res.status(500).json({ error: "Internal server error" });
   }
+}); */
+
+router.get("/student/:student_id", async (req, res) => {
+	const studentid = req.params.student_id;
+
+	try {
+		const pool = await poolPromise;
+		const result = await pool.request().input("id", sql.BigInt, studentid).query(`
+        SELECT TOP 1
+          id AS student_id,
+          pname AS PNAME,
+          name_th AS NAME,
+          bdate AS BDATE,
+          CONCAT(short_name, ' ', lname) AS student_name,
+          level_type AS education_level,
+          CONCAT(level_name_long, ' (', level_name, ')') AS program,
+          group_no AS study_group_id,
+          mjcode AS major_id,
+          t_mjname AS major_name,
+          faculty_name,
+          CASE 
+            WHEN level_type = N'ปริญญาโท' THEN N'ประมวลความรู้'
+            ELSE N'วัดคุณสมบัติ'
+          END AS request_type
+        FROM Api_students
+        WHERE id = @id
+      `);
+
+		if (result.recordset.length > 0) {
+			res.json(result.recordset[0]);
+		} else {
+			res.status(404).json({ error: "Student not found" });
+		}
+	} catch (err) {
+		console.error("DB query error:", err);
+		res.status(500).json({ error: "Internal server error" });
+	}
 });
 
 module.exports = router;

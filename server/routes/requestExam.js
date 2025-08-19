@@ -253,10 +253,10 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 				if (item.ever_cancel) {
 					try {
 						const cancelRes = await pool.request().query(`
-              SELECT * FROM request_cancel_exam 
-              WHERE request_exam_id = '${item.request_exam_id}'
-              ORDER BY request_cancel_exam_date DESC
-            `);
+							SELECT * FROM request_cancel_exam 
+							WHERE request_exam_id = '${item.request_exam_id}'
+							ORDER BY request_cancel_exam_date DESC
+						`);
 						cancelInfo = cancelRes.recordset;
 					} catch (err) {
 						console.warn(`ไม่สามารถดึงข้อมูลการยกเลิกของ request_exam_id ${item.request_exam_id}`);
@@ -273,7 +273,8 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 					request_date: formatDate(item.status > 6 ? cancelInfo[0]?.request_cancel_exam_date : item.request_exam_date) || null,
 					status_text: statusMap[item.status?.toString()] || null,
 					receipt_pay_date: formatDate(item.receipt_pay_date) || null,
-					request_type: item.status > 6 ? `ขอยกเลิกการเข้าสอบ${studentInfo?.request_type}` : `ขอสอบ${studentInfo?.request_type}` || null,
+					/* request_type: item.status > 6 ? `ขอยกเลิกการเข้าสอบ${studentInfo?.request_type}` : `ขอสอบ${studentInfo?.request_type}` || null, */
+					request_type: item.status > 6 ? `ขอยกเลิกการเข้าสอบ${studentInfo?.request_type}` : item.request_type || null,
 					...(item.ever_cancel && {
 						cancel_list: cancelInfo || [],
 					}),
@@ -289,8 +290,8 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 }); /*  */
 
 router.post("/addRequestExam", authenticateToken, async (req, res) => {
-	const { student_id, study_group_id, major_name, faculty_name } = req.body;
-	console.log(formatThaiBuddhistDate());
+	const { student_id, study_group_id, major_name, faculty_name, request_type } = req.body;
+	/* console.log(student_id, study_group_id, major_name, faculty_name ,`ขอสอบ${request_type}`); */
 
 	try {
 		const pool = await poolPromise;
@@ -301,6 +302,7 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 			.input("study_group_id", study_group_id)
 			.input("major_id", major_name)
 			.input("faculty_name", faculty_name)
+			.input("request_type", `ขอสอบ${request_type}`)
 			.input("term", infoRes.recordset[0].term)
 			.input("request_exam_date", formatThaiBuddhistDate())
 			.input("status", "1").query(`
@@ -309,6 +311,7 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 				study_group_id,
 				major_id,
 				faculty_name,
+				request_type,
 				term,
 				request_exam_date,
 				status
@@ -317,6 +320,7 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 				@study_group_id,
 				@major_id,
 				@faculty_name,
+				@request_type,
 				@term,
 				@request_exam_date,
 				@status

@@ -2,17 +2,27 @@
 import { Box, Text, ScrollArea, Table, Flex, Group, Button, Space, Modal, Checkbox, TextInput } from "@mantine/core";
 import { useState, useEffect } from "react";
 import { useForm } from "@mantine/form";
-import SignatureForm from "../../component/PDF/SignatureForm";
 
 const ExamResults = () => {
 	const [openModal, setOpenModal] = useState(false);
+	const token = localStorage.getItem("token");
+	const [user, setUser] = useState("");
 
 	const form = useForm({
 		initialValues: {},
+		validate: (values) => {
+			const errors = {};
+			Object.entries(selectedGroupId).forEach(([groupId, students]) => {
+				students.forEach((s) => {
+					if (values[s.id] === null || values[s.id] === undefined) {
+						errors[s.id] = "กรุณาเลือกผลสอบ";
+					}
+				});
+			});
+			return errors;
+		},
 	});
 
-	const token = localStorage.getItem("token");
-	const [user, setUser] = useState("");
 	useEffect(() => {
 		const fetchProfile = async () => {
 			try {
@@ -29,8 +39,10 @@ const ExamResults = () => {
 		};
 		fetchProfile();
 	}, []);
+
 	const [reloadTable, setReloadTable] = useState(false);
 	const [group, setGroup] = useState([]);
+
 	useEffect(() => {
 		if (!user) return;
 		const fetchRequestExamInfoAll = async () => {
@@ -46,6 +58,8 @@ const ExamResults = () => {
 				}
 				setGroup(requestData);
 				console.log(requestData);
+
+				form.setValues(Object.fromEntries(Object.entries(requestData).flatMap(([groupId, students]) => students.map((s) => [s.id, s.exam_results ?? null]))));
 			} catch (err) {
 				console.error("Error fetch AllExamResults:", err);
 			}
@@ -54,20 +68,14 @@ const ExamResults = () => {
 		fetchRequestExamInfoAll();
 	}, [user, reloadTable]);
 
-	const [selectedGroupId, setSelectedGroupId] = useState(null);
-
 	const handleOpenModal = (groupId) => {
-		setSelectedGroupId(groupId);
-
+		setSelectedGroupId({ [groupId]: group[groupId] });
 		const initial = {};
-		group[groupId].forEach((person) => {
-			// ถ้า exam_results undefined ให้ default เป็น false
-			initial[person.id] = person.exam_results ?? false;
+		group[groupId].forEach((student) => {
+			initial[student.id] = student.exam_results;
 		});
-
 		form.reset();
-		form.setValues(initial); // รีเซ็ตค่าเฉพาะหมู่เรียน
-		setOpenModal(true);
+		form.setValues(initial);
 	};
 
 	const handleSaveExamResults = async () => {
@@ -80,80 +88,131 @@ const ExamResults = () => {
 			});
 			setOpenModal(false);
 			setReloadTable(true);
+			setSelectedGroupId("");
 		} catch (err) {
 			console.error("Error fetching AddCourseRegistration:", err);
 		}
 	};
+
+	const [selectedGroupId, setSelectedGroupId] = useState("");
 	return (
 		<Box>
-			<Modal opened={openModal} onClose={() => setOpenModal(false)} title={`รายชื่อหมู่เรียน ${selectedGroupId}`} centered closeOnClickOutside={false}>
-				{selectedGroupId && (
-					<>
-						<Table>
+			{!selectedGroupId ? (
+				<Box>
+					<Text size="1.5rem" fw={900} mb="md">
+						กรอกผลการสอบ
+					</Text>
+					<ScrollArea type="scroll" offsetScrollbars style={{ borderRadius: "8px", border: "1px solid #e0e0e0" }}>
+						<Table horizontalSpacing="sm" verticalSpacing="sm" highlightOnHover>
 							<Table.Thead>
 								<Table.Tr>
-									<Table.Th>รหัส</Table.Th>
-									<Table.Th>ชื่อ</Table.Th>
-									<Table.Th>ผ่าน</Table.Th>
+									<Table.Th>รหัสหมู่เรียน</Table.Th>
+									<Table.Th>ดำเนินการ</Table.Th>
 								</Table.Tr>
 							</Table.Thead>
 							<Table.Tbody>
-								{group[selectedGroupId].map((person) => (
-									<Table.Tr key={person.id}>
-										<Table.Td>{person.id}</Table.Td>
-										<Table.Td>{person.name}</Table.Td>
-										<Table.Td style={{ textAlign: "center" }}>
-											<Checkbox {...form.getInputProps(person.id, { type: "checkbox" })} />
-										</Table.Td>
-									</Table.Tr>
-								))}
+								{Object.entries(group).map(([groupId, students]) => {
+									const allFilled = students.every((student) => student.exam_results !== null);
+									return (
+										<Table.Tr key={groupId}>
+											<Table.Td>{groupId}</Table.Td>
+											<Table.Td>
+												<Button size="xs" color={allFilled && "yellow"} onClick={() => handleOpenModal(groupId)}>
+													{allFilled ? "แก้ไข" : "กรอก"}
+												</Button>
+											</Table.Td>
+										</Table.Tr>
+									);
+								})}
 							</Table.Tbody>
 						</Table>
-
-						<Group justify="flex-end" mt="md">
-							<Button onClick={() => handleSaveExamResults()} color="green">
+					</ScrollArea>
+				</Box>
+			) : (
+				<form onSubmit={form.onSubmit(() => setOpenModal(true))}>
+					<Text size="1.5rem" fw={900} mb="md">
+						กรอกผลการสอบ
+					</Text>
+					<Group justify="space-between">
+						<Box></Box>
+						<Group>
+							<Button color="red" onClick={() => setSelectedGroupId("")}>
+								ยกเลิก
+							</Button>
+							<Button type="submit" color="green">
 								บันทึก
 							</Button>
 						</Group>
-					</>
-				)}
-			</Modal>
+					</Group>
+					<Space h="md" />
+					<ScrollArea type="scroll" offsetScrollbars style={{ borderRadius: "8px", border: "1px solid #e0e0e0" }}>
+						<Table horizontalSpacing="sm" verticalSpacing="sm" highlightOnHover>
+							<Table.Thead>
+								<Table.Tr>
+									<Table.Th>รหัสนักศึกษา</Table.Th>
+									<Table.Th>ชื่อ</Table.Th>
+									<Table.Th>ผลสอบ</Table.Th>
+								</Table.Tr>
+							</Table.Thead>
+							<Table.Tbody>
+								{Object.entries(selectedGroupId).map(([groupId, students]) =>
+									students.map((student) => (
+										<Table.Tr key={student.id}>
+											<Table.Td>{student.id}</Table.Td>
+											<Table.Td>{student.name}</Table.Td>
+											<Table.Td>
+												<Group justify="center" align="center">
+													<Checkbox color="green" checked={form.values[student.id] === true} onChange={() => form.setFieldValue(student.id, true)} label="ผ่าน" />
+													<Checkbox color="red" checked={form.values[student.id] === false} onChange={() => form.setFieldValue(student.id, false)} label="ไม่ผ่าน" />
+												</Group>
+												{form.errors[student.id] && (
+													<Box justify="center" align="center" style={{ color: "red", fontSize: 12 }}>
+														{form.errors[student.id]}
+													</Box>
+												)}
+											</Table.Td>
+										</Table.Tr>
+									))
+								)}
+							</Table.Tbody>
+						</Table>
+					</ScrollArea>
+				</form>
+			)}
 
-			<Text size="1.5rem" fw={900} mb="md">
-				กรอกผลการสอบ
-			</Text>
-			<Group justify="space-between">
-				<Box>
-					<Flex align="flex-end" gap="sm"></Flex>
-				</Box>
-				<SignatureForm data={group} />
-				{/* <Button>พิมรายชื่อ</Button> */}
-			</Group>
-			<Space h="md" />
-			<ScrollArea type="scroll" offsetScrollbars style={{ borderRadius: "8px", border: "1px solid #e0e0e0" }}>
-				<Table horizontalSpacing="sm" verticalSpacing="sm" highlightOnHover>
+			<Modal opened={openModal} onClose={() => setOpenModal(false)} title={`รายชื่อนักเรียน`} centered closeOnClickOutside={false}>
+				<Table>
 					<Table.Thead>
 						<Table.Tr>
-							<Table.Th>รหัสหมู่เรียน</Table.Th>
-							<Table.Th>จัดการ</Table.Th>
+							<Table.Th>รหัสนักเรียน</Table.Th>
+							<Table.Th>ชื่อ-สกุล</Table.Th>
+							<Table.Th style={{ textAlign: "center" }}>ผลสอบ</Table.Th>
 						</Table.Tr>
 					</Table.Thead>
 					<Table.Tbody>
-						{Object.keys(group).map((groupId) => (
-							<Table.Tr key={groupId}>
-								<Table.Td>{groupId}</Table.Td>
-								<Table.Td>
-									<Group>
-										<Button color="yellow" size="xs" onClick={() => handleOpenModal(groupId)}>
-											กรอก
-										</Button>
-									</Group>
-								</Table.Td>
-							</Table.Tr>
-						))}
+						{Object.entries(selectedGroupId).map(([groupId, students]) =>
+							students.map((student) => (
+								<Table.Tr key={student.id}>
+									<Table.Td>{student.id}</Table.Td>
+									<Table.Td>{student.name}</Table.Td>
+									<Table.Td style={{ textAlign: "center" }}>
+										{form.values[student.id] === true && <Text c="green">ผ่าน</Text>}
+										{form.values[student.id] === false && <Text c="red">ไม่ผ่าน</Text>}
+									</Table.Td>
+								</Table.Tr>
+							))
+						)}
 					</Table.Tbody>
 				</Table>
-			</ScrollArea>
+				<Group grow>
+					<Button color="yellow" onClick={() => setOpenModal(false)}>
+						แก้ไข
+					</Button>
+					<Button color="green" onClick={() => (setOpenModal(false), handleSaveExamResults())}>
+						บันทึก
+					</Button>
+				</Group>
+			</Modal>
 		</Box>
 	);
 };

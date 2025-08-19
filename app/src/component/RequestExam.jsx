@@ -10,6 +10,7 @@ import ModalCheck from "../component/Modal/ModalCheck";
 import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
 import Pdfg01 from "../component/PDF/pdfg01";
+import { useSearchParams } from "react-router-dom";
 
 const RequestList = () => {
 	// Modal states
@@ -39,6 +40,8 @@ const RequestList = () => {
 	const token = localStorage.getItem("token");
 	const [informMessage, setInformMessage] = useState("");
 	const [informtype, setInformtype] = useState("");
+	const [searchParams] = useSearchParams();
+	const type = searchParams.get("type");
 
 	useEffect(() => {
 		const fetchProfile = async () => {
@@ -114,10 +117,15 @@ const RequestList = () => {
 			} else {
 				setInformtype("error");
 			}
+
+			setRequestExam([...requestExam
+				,{formData}
+			]);
+
 			setInformMessage(requestData.message);
 			setOpenInform(true);
 			setOpenAdd(false);
-			setReloadTable(true);
+			/* setReloadTable(true); */
 		} catch (err) {
 			setInformtype("error");
 			setInformMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
@@ -280,9 +288,10 @@ const RequestList = () => {
 	const [selectedType, setSelectedType] = useState("");
 	const filteredData = requestExam.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
-		const matchesType = selectedType ? p.request_type === selectedType : true;
+		const matchesType = type ? p.request_type === type : true;
 		return matchesSearch && matchesType;
 	});
+
 	const rows = filteredData.map((item) => (
 		<Table.Tr key={item.request_exam_id}>
 			{/* <Table.Td>{item.request_exam_id}</Table.Td>
@@ -388,7 +397,10 @@ const RequestList = () => {
 					)} */}
 				</Group>
 			</Table.Td>
-			<Table.Td style={{ textAlign: "center" }}>{item.exam_results === null ? "" : item.exam_results ? "ผ่าน" : "ไม่ผ่าน"}</Table.Td>
+			<Table.Td style={{ textAlign: "center" }}>
+				{item.exam_results === true && <Text c="green">ผ่าน</Text>}
+				{item.exam_results === false && <Text c="red">ไม่ผ่าน</Text>}
+			</Table.Td>
 		</Table.Tr>
 	));
 
@@ -422,7 +434,7 @@ const RequestList = () => {
 				<Box>
 					<Flex align="flex-end" gap="sm">
 						<TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />
-						{(user.role === "officer_registrar" || user.role === "chairpersons" || user.role === "dean") && (
+						{(user.role === "chairpersons" || user.role === "dean") && (
 							<Select
 								placeholder="ชนิดคำขอ"
 								data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]}
@@ -434,7 +446,7 @@ const RequestList = () => {
 				</Box>
 				<Box>
 					{user.role === "student" && (
-						<Button onClick={() => handleOpenAdd()} disabled={!requestExam.every((item) => item.status === "6")}>
+						<Button onClick={() => handleOpenAdd()} disabled={!requestExam.every((item) => item.status === "6") && !requestExam.some((item) => item.exam_results === false)}>
 							เพิ่มคำร้อง
 						</Button>
 					)}

@@ -3,37 +3,18 @@ import { Box, Text, ScrollArea, Table, Group, Space, Select } from "@mantine/cor
 import { useState, useEffect } from "react";
 import SignatureForm from "../../component/PDF/SignatureForm";
 
-const ExamEligibleListPrint = () => {
+const ExamResultsPrint = () => {
 	const token = localStorage.getItem("token");
 	const [user, setUser] = useState("");
 	const [reloadTable, setReloadTable] = useState(false);
 	const [group, setGroup] = useState([]);
 
 	useEffect(() => {
-		const fetchProfile = async () => {
-			try {
-				const profileRes = await fetch("http://localhost:8080/api/profile", {
-					method: "GET",
-					headers: { Authorization: `Bearer ${token}` },
-				});
-				const profileData = await profileRes.json();
-				setUser(profileData);
-				console.log(profileData);
-			} catch (err) {
-				console.error("Error fetching profile:", err);
-			}
-		};
-		fetchProfile();
-	}, []);
-
-	useEffect(() => {
-		if (!user) return;
 		const fetchRequestExamInfoAll = async () => {
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/AllExamResults", {
+				const requestRes = await fetch("http://localhost:8080/api/AllExamResultsPrint", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-					body: JSON.stringify({ id: user.id }),
 				});
 				const requestData = await requestRes.json();
 				if (!requestRes.ok) {
@@ -47,7 +28,7 @@ const ExamEligibleListPrint = () => {
 			setReloadTable(false);
 		};
 		fetchRequestExamInfoAll();
-	}, [user, reloadTable]);
+	}, [ reloadTable]);
 
 	const [selectedTerm, setSelectedTerm] = useState("");
 	const [selectedType, setSelectedType] = useState("");
@@ -90,19 +71,15 @@ const ExamEligibleListPrint = () => {
 						</Table.Tr>
 					</Table.Thead>
 					<Table.Tbody>
-						{
-							/* selectedType && selectedTerm
-							? */ Object.entries(filteredGroup).map(([groupId, students]) =>
-								students.map((student) => (
-									<Table.Tr key={student.id}>
-										<Table.Td>{student.term}</Table.Td>
-										<Table.Td>{student.name}</Table.Td>
-										<Table.Td>{student.request_type}</Table.Td>
-									</Table.Tr>
-								))
-							)
-							/* : null */
-						}
+						{Object.entries(filteredGroup).map(([groupId, students]) =>
+							students.map((student) => (
+								<Table.Tr key={student.id}>
+									<Table.Td>{student.term}</Table.Td>
+									<Table.Td>{student.name}</Table.Td>
+									<Table.Td>{student.request_type}</Table.Td>
+								</Table.Tr>
+							))
+						)}
 					</Table.Tbody>
 				</Table>
 			</ScrollArea>
@@ -110,4 +87,4 @@ const ExamEligibleListPrint = () => {
 	);
 };
 
-export default ExamEligibleListPrint;
+export default ExamResultsPrint;
