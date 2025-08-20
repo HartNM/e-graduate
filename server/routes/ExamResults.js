@@ -49,13 +49,9 @@ router.post("/AllExamResults", authenticateToken, async (req, res) => {
 			});
 		});
 
-		const allStudentIds = Object.values(output).flatMap((group) =>
-			group.map((s) => s.student_id)
-		);
+		const allStudentIds = Object.values(output).flatMap((group) => group.map((s) => s.student_id));
 
-		const promises = allStudentIds.map((studentId) =>
-			axios.get(`http://localhost:8080/externalApi/student/${studentId}`)
-		);
+		const promises = allStudentIds.map((studentId) => axios.get(`http://localhost:8080/externalApi/student/${studentId}`));
 		const studentResults = await Promise.all(promises);
 
 		const studentMap = {};
@@ -63,18 +59,17 @@ router.post("/AllExamResults", authenticateToken, async (req, res) => {
 			const student = res.data;
 			studentMap[student.student_id] = student;
 		});
-
+		
 		const finalOutput = {};
 		Object.entries(output).forEach(([groupId, students]) => {
-			finalOutput[groupId] = students.map(
-				({ student_id, exam_results, term, request_type }) => ({
-					id: student_id,
-					name: studentMap[student_id]?.student_name || "",
-					exam_results,
-					term,
-					request_type,
-				})
-			);
+			finalOutput[groupId] = students.map(({ student_id, exam_results, term, request_type }) => ({
+				id: student_id,
+				name: studentMap[student_id]?.student_name || "",
+				exam_results,
+				term,
+				request_type,
+				major_name: studentMap[student_id]?.major_name,
+			}));
 		});
 
 		res.status(200).json(finalOutput);
@@ -83,6 +78,5 @@ router.post("/AllExamResults", authenticateToken, async (req, res) => {
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
 	}
 });
-
 
 module.exports = router;

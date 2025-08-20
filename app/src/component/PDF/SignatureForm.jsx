@@ -3,14 +3,11 @@ import { Button } from "@mantine/core";
 import { PDFDocument, rgb } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 
-const STUDENTS_PER_PAGE = 20;
-
 async function fillPdf(templateUrl, data) {
 	// โหลด template PDF ใหม่สำหรับ copy
 	const templateBytes = await fetch(templateUrl).then((res) => res.arrayBuffer());
 	const templateDoc = await PDFDocument.load(templateBytes);
 	templateDoc.registerFontkit(fontkit);
-
 	// สร้าง pdf ใหม่
 	const pdfDoc = await PDFDocument.create();
 	pdfDoc.registerFontkit(fontkit);
@@ -18,23 +15,46 @@ async function fillPdf(templateUrl, data) {
 	const fontBytes = await fetch("/fonts/THSarabunNew.ttf").then((res) => res.arrayBuffer());
 	const customFont = await pdfDoc.embedFont(fontBytes);
 
+	const logoBytes = await fetch("/icons/KPRU-LOGO-line2.png").then((res) => res.arrayBuffer());
+	const logoImage = await pdfDoc.embedPng(logoBytes);
+	const pngDims = logoImage.scale(0.125);
+
 	const drawText = (page, text, x, y, font = customFont, size = 14) => {
 		if (text !== undefined && text !== null) {
 			page.drawText(String(text), { x, y, size, font });
 		}
 	};
 	const drawRect = (page, x, y, w, h, lineW = 1) => {
-		page.drawRectangle({ x, y, width: w, height: h, borderWidth: lineW, color: rgb(1, 1, 1), borderColor: rgb(0, 0, 0) });
+		page.drawRectangle({ x, y, width: w, height: h, borderWidth: lineW, borderColor: rgb(0, 0, 0) });
 	};
+	const drawLine = (page, x1, y1, x2, y2, w = 1) => page.drawLine({ start: { x: x1, y: y1 }, end: { x: x2, y: y2 }, thickness: w, color: rgb(0, 0, 0) });
+
 	const drawCenteredText = (page, text, x, y, width, height, font, size = 14) => {
 		const textWidth = font.widthOfTextAtSize(text, size);
-		const textHeight = size; // ความสูงประมาณ size
+		const textHeight = size; // approximate
 
 		const centerX = x + (width - textWidth) / 2;
-		const centerY = y + (height - textHeight) / 2;
+		// ปรับ y ให้ baseline อยู่กลางกล่อง
+		const centerY = y + (height - textHeight) / 2 + size * 0.3;
 
 		page.drawText(text, { x: centerX, y: centerY, size, font });
 	};
+
+	const drawMiddleText = (page, text, x, y, height, font, size = 14) => {
+		if (!text) return;
+		const textHeight = size; // ประมาณความสูงฟอนต์
+		const centerY = y + (height - textHeight) / 2 + size * 0.3; // baseline ให้อยู่กลาง
+		page.drawText(text, { x, y: centerY, size, font });
+	};
+
+	const drawCenterXText = (page, text, y, font, size = 14) => {
+		if (!text) return;
+		const pageWidth = page.getWidth();
+		const textWidth = font.widthOfTextAtSize(text, size);
+		const x = (pageWidth - textWidth) / 2;
+		page.drawText(text, { x, y, size, font });
+	};
+
 	/* ------------------------------------------ลบ------------------------------------------ */
 	const drawGrid = (page) => {
 		const width = page.getWidth();
@@ -63,45 +83,65 @@ async function fillPdf(templateUrl, data) {
 		}
 	};
 	/* -------------------------------------------------------------------------------------- */
-	const STUDENTS_PER_PAGE = 20;
+	const STUDENTS_PER_PAGE = 25;
+
+	const ROW_HEIGHT = 20;
 
 	for (const groupId in data) {
 		const students = data[groupId];
 		let pageIndex = 0;
 
 		while (pageIndex * STUDENTS_PER_PAGE < students.length) {
-			// copy template page จาก templateDoc
 			const [newPage] = await pdfDoc.copyPages(templateDoc, [0]);
 			pdfDoc.addPage(newPage);
-
-			drawGrid(newPage);
-
 			const start = pageIndex * STUDENTS_PER_PAGE;
 			const end = Math.min(start + STUDENTS_PER_PAGE, students.length);
-			console.log(start, end);
 
-			// เขียนชื่อ study group
-			drawText(newPage, `Study Group: ${groupId}`, 67, 810, customFont, 16);
-
-			// วาด student_id
-			let y = 755;
-			for (let i = start; i < end; i++) {
-				drawRect(newPage, 67, y - 6, 400, 21.5);
-				drawText(newPage, i + 1, 70, y, customFont, 14);
-
-				drawText(newPage, `${students[i].id}`, 98, y, customFont, 14);
-
-				const nameParts = students[i].name.split(" ");
-				const firstName = nameParts[0] || "";
-				const lastName = nameParts.slice(1).join(" ") || "";
-
-				drawText(newPage, firstName, 200, y, customFont, 14);
-				drawText(newPage, lastName, 300, y, customFont, 14);
-
-				drawText(newPage, students[i].exam_results ? "ผ่าน" : "ไม่ผ่าน", 445, y, customFont, 14);
-				y -= 21.5;
+			const centerX = (newPage.getWidth() - pngDims.width) / 2;
+			newPage.drawImage(logoImage, {
+				x: centerX,
+				y: 700,
+				width: pngDims.width,
+				height: pngDims.height,
+			});
+			const type = students[0].request_type.split("ขอ")[1];
+			let y;
+			if (type === "สอบประมวลความรู้") {
+				drawCenterXText(newPage, `รายชื่อผู้เข้า${type}`, 680, customFont, 16);
+				drawCenterXText(newPage, `ประจำภาคเรียนที่.................`, 660, customFont, 16);
+				drawCenterXText(newPage, `หมวด..........................................`, 640, customFont, 16);
+				drawCenterXText(newPage, `สอบวันที่...............................เวลา............................`, 620, customFont, 16);
+				y = 580;
+			} else {
+				drawCenterXText(newPage, `รายชื่อผู้เข้า${type}`, 680, customFont, 16);
+				drawCenterXText(newPage, `ด้าน..................................................`, 660, customFont, 16);
+				drawCenterXText(newPage, `ปรัชญาดุษฎีบัณฑิต สาขาวิชา${students[0].major_name} รุ่นที่ ${students[0].id.split("4")[0] - 57}`, 640, customFont, 16);
+				drawCenterXText(newPage, `มหาวิทยาลัยราชภัฏกําแพงเพชร`, 620, customFont, 16);
+				drawCenterXText(newPage, `สอบวันที่...............................เวลา............................`, 600, customFont, 16);
+				y = 560;
 			}
 
+			/* drawGrid(newPage); */
+			drawRect(newPage, 60, y, 490, ROW_HEIGHT);
+			const tableHeight = (end - start) * ROW_HEIGHT;
+			const bottomY = y - tableHeight;
+			drawLine(newPage, 100, y + ROW_HEIGHT, 100, bottomY);
+			drawLine(newPage, 170, y + ROW_HEIGHT, 170, bottomY);
+			drawLine(newPage, 370, y + ROW_HEIGHT, 370, bottomY);
+			drawLine(newPage, 470, y + ROW_HEIGHT, 470, bottomY);
+			drawCenteredText(newPage, "ลำดับ", 60, y, 40, ROW_HEIGHT, customFont, 14);
+			drawCenteredText(newPage, "รหัสนักศึกษา", 100, y, 70, ROW_HEIGHT, customFont, 14);
+			drawCenteredText(newPage, "ชื่อ - นามสกุล", 170, y, 200, ROW_HEIGHT, customFont, 14);
+			drawCenteredText(newPage, "ลายมือชื่อ", 370, y, 100, ROW_HEIGHT, customFont, 14);
+			drawCenteredText(newPage, "หมายเหตุ", 470, y, 80, ROW_HEIGHT, customFont, 14);
+			for (let i = start; i < end; i++) {
+				y -= ROW_HEIGHT;
+				drawRect(newPage, 60, y, 490, ROW_HEIGHT);
+				drawCenteredText(newPage, `${i + 1}`, 60, y, 40, ROW_HEIGHT, customFont, 14);
+				drawCenteredText(newPage, `${students[i].id}`, 100, y, 70, ROW_HEIGHT, customFont, 14);
+				drawMiddleText(newPage, students[i].name.split(" ")[0], 190, y, ROW_HEIGHT, customFont, 14);
+				drawMiddleText(newPage, students[i].name.split(" ").slice(1).join(" "), 290, y, ROW_HEIGHT, customFont, 14);
+			}
 			pageIndex++;
 		}
 	}
@@ -112,7 +152,7 @@ async function fillPdf(templateUrl, data) {
 
 export default function SignatureForm({ data }) {
 	const handleClick = async () => {
-		const blob = await fillPdf("/pdf/SignatureForm.pdf", data);
+		const blob = await fillPdf("/pdf/blank.pdf", data);
 		const url = URL.createObjectURL(blob);
 		window.open(url, "_blank");
 	};

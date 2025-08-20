@@ -42,7 +42,7 @@ router.post("/allRequestExamInfo", authenticateToken, async (req, res) => {
 	};
 	try {
 		const pool = await poolPromise;
-		const result = await pool.request().query("SELECT TOP 1 * FROM request_exam_info ORDER BY request_exam_info_id DESC");
+		const result = await pool.request().query("SELECT * FROM request_exam_info ORDER BY request_exam_info_id DESC");
 		const formattedData = result.recordset.map((item) => ({
 			...item,
 			open_date: formatDate(item.open_date),

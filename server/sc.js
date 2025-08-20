@@ -4,10 +4,10 @@ const sql = require("mssql");
 
 async function main() {
 	const config = {
-		user: process.env.USER,
-		password: process.env.PASSWORD,
-		server: process.env.SERVER,
-		database: process.env.DATABASE,
+		user: "sa",
+		password: "060668@min",
+		server: "localhost",
+		database: "request_submission",
 		options: {
 			encrypt: false,
 			trustServerCertificate: true,

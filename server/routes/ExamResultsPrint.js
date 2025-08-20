@@ -5,8 +5,6 @@ const { poolPromise } = require("../db");
 const axios = require("axios");
 
 router.post("/AllExamResultsPrint", authenticateToken, async (req, res) => {
-	console.log(req.body);
-
 	try {
 		const pool = await poolPromise;
 		const request = pool.request();
