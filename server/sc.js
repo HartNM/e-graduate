@@ -17,8 +17,8 @@ async function main() {
 	try {
 		let pool = await sql.connect(config);
 
-		const startId = 684270201;
-		const endId = 684270220;
+		const startId = 684840101;
+		const endId = 684840113;
 
 		for (let id = startId; id <= endId; id++) {
 			try {

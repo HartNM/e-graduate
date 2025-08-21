@@ -9,7 +9,7 @@ import ModalAdd from "../component/Modal/ModalAdd";
 import ModalCheck from "../component/Modal/ModalCheck";
 import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
-import Pdfg01 from "../component/PDF/pdfg01";
+import Pdfg01 from "../component/PDF/Pdfg01";
 import { useSearchParams } from "react-router-dom";
 
 const RequestList = () => {
@@ -42,6 +42,26 @@ const RequestList = () => {
 	const [informtype, setInformtype] = useState("");
 	const [searchParams] = useSearchParams();
 	const type = searchParams.get("type");
+	const [dateExam, setDateExam] = useState("");
+	useEffect(() => {
+		const fetchProfile = async () => {
+			try {
+				const requestRes = await fetch("http://localhost:8080/api/allRequestExamInfo", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				});
+				const requestData = await requestRes.json();
+				if (!requestRes.ok) {
+					throw new Error(requestData.message);
+				}
+				setDateExam(requestData[0].exam_date);
+				/* console.log(requestData[0].exam_date); */
+			} catch (err) {
+				console.error("Error fetch allRequestExamInfo:", err);
+			}
+		};
+		fetchProfile();
+	}, []);
 
 	useEffect(() => {
 		const fetchProfile = async () => {
@@ -65,6 +85,8 @@ const RequestList = () => {
 
 	useEffect(() => {
 		if (!user) return;
+		console.log(dateExam);
+
 		const fetchRequestExam = async () => {
 			try {
 				const requestRes = await fetch("http://localhost:8080/api/requestExamAll", {
@@ -117,15 +139,10 @@ const RequestList = () => {
 			} else {
 				setInformtype("error");
 			}
-
-			setRequestExam([...requestExam
-				,{formData}
-			]);
-
 			setInformMessage(requestData.message);
 			setOpenInform(true);
 			setOpenAdd(false);
-			/* setReloadTable(true); */
+			setReloadTable(true);
 		} catch (err) {
 			setInformtype("error");
 			setInformMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
@@ -292,66 +309,76 @@ const RequestList = () => {
 		return matchesSearch && matchesType;
 	});
 
-	const rows = filteredData.map((item) => (
-		<Table.Tr key={item.request_exam_id}>
-			{/* <Table.Td>{item.request_exam_id}</Table.Td>
+	const rows = filteredData
+		.filter((item) => {
+			return (
+				item.status !== "6" ||
+				(item.status === "6" &&
+					((user.role === "advisor" && (!item.advisor_approvals || !item.chairpersons_approvals || !item.registrar_approvals)) ||
+						(user.role === "chairpersons" && item.advisor_approvals && (!item.chairpersons_approvals || !item.registrar_approvals)) ||
+						(user.role === "officer_registrar" && item.advisor_approvals && item.chairpersons_approvals && !item.registrar_approvals)))
+			);
+		})
+		.map((item) => (
+			<Table.Tr key={item.request_exam_id}>
+				{/* <Table.Td>{item.request_exam_id}</Table.Td>
 			<Table.Td>{item.request_date}</Table.Td> */}
-			<Table.Td>{item.student_name}</Table.Td>
-			{(user.role === "advisor" || user.role === "officer_registrar" || user.role === "chairpersons" || user.role === "dean") && <Table.Td>{item.request_type}</Table.Td>}
+				<Table.Td>{item.student_name}</Table.Td>
+				{(user.role === "advisor" || user.role === "officer_registrar" || user.role === "chairpersons" || user.role === "dean") && <Table.Td>{item.request_type}</Table.Td>}
 
-			<Table.Td style={{ textAlign: "center" }}>
-				{item.status <= 4 && (
-					<>
-						{/* <Tooltip label={item.status_text}></Tooltip> */}
-						<Stepper active={item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
-							<Stepper.Step>{item.status_text}</Stepper.Step>
-							<Stepper.Step>{item.status_text}</Stepper.Step>
-							<Stepper.Step>{item.status_text}</Stepper.Step>
-							<Stepper.Step>{item.status_text}</Stepper.Step>
-						</Stepper>
-					</>
-				)}
+				<Table.Td style={{ textAlign: "center" }}>
+					{item.status <= 4 && (
+						<>
+							{/* <Tooltip label={item.status_text}></Tooltip> */}
+							<Stepper active={item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
+								<Stepper.Step>{item.status_text}</Stepper.Step>
+								<Stepper.Step>{item.status_text}</Stepper.Step>
+								<Stepper.Step>{item.status_text}</Stepper.Step>
+								<Stepper.Step>{item.status_text}</Stepper.Step>
+							</Stepper>
+						</>
+					)}
 
-				{item.status == 5 && (
-					<Pill variant="filled" style={{ backgroundColor: "#ccffcc", color: "#006600" }}>
-						{item.status_text}
-					</Pill>
-				)}
-				{item.status == 6 && (
-					<>
-						<Pill variant="filled" style={{ backgroundColor: "#ffcccc", color: "#b30000" }}>
+					{item.status == 5 && (
+						<Pill variant="filled" style={{ backgroundColor: "#ccffcc", color: "#006600" }}>
 							{item.status_text}
 						</Pill>
-						<br />
-						{!item.advisor_approvals && "อาจารย์ที่ปรึกษา"}
-						{item.advisor_approvals && !item.chairpersons_approvals && "ประธานหลักสูตร"}
-						{item.advisor_approvals && item.chairpersons_approvals && !item.registrar_approvals && "เจ้าหน้าที่ทะเบียน"}
-					</>
-				)}
-
-				{item.status > 6 && <Pill>{item.status_text}</Pill>}
-			</Table.Td>
-
-			<Table.Td>
-				<Group>
-					{user.role === "student" && (
+					)}
+					{item.status == 6 && (
 						<>
-							<Pdfg01 data={item} />
-							{item.status === "4" && (
-								<Button
-									size="xs"
-									color="green"
-									onClick={() => {
-										setSelectedRow(item);
-										setOpenPay(true);
-									}}
-								>
-									ชำระค่าธรรมเนียม
-								</Button>
-							)}
-							{item.status === "5" && (
-								<>
-									{/* <Button
+							<Pill variant="filled" style={{ backgroundColor: "#ffcccc", color: "#b30000" }}>
+								{item.status_text}
+							</Pill>
+							<br />
+							{!item.advisor_approvals && "อาจารย์ที่ปรึกษา"}
+							{item.advisor_approvals && !item.chairpersons_approvals && "ประธานหลักสูตร"}
+							{item.advisor_approvals && item.chairpersons_approvals && !item.registrar_approvals && "เจ้าหน้าที่ทะเบียน"}
+						</>
+					)}
+
+					{item.status > 6 && <Pill>{item.status_text}</Pill>}
+				</Table.Td>
+
+				<Table.Td>
+					<Group>
+						{user.role === "student" && (
+							<>
+								<Pdfg01 data={item} exam_date={dateExam} />
+								{item.status === "4" && (
+									<Button
+										size="xs"
+										color="green"
+										onClick={() => {
+											setSelectedRow(item);
+											setOpenPay(true);
+										}}
+									>
+										ชำระค่าธรรมเนียม
+									</Button>
+								)}
+								{item.status === "5" && (
+									<>
+										{/* <Button
 										size="xs"
 										color="red"
 										onClick={() => {
@@ -361,28 +388,29 @@ const RequestList = () => {
 									>
 										ขอยกเลิก
 									</Button> */}
-									<Button size="xs" color="green">
-										พิมพ์ใบเสร็จ
-									</Button>
-								</>
-							)}
-						</>
-					)}
-					{user.role !== "student" && ((user.role === "advisor" && item.status > "1") || (user.role === "chairpersons" && item.status > "2") || (user.role === "officer_registrar" && item.status > "3") ? <Pdfg01 data={item} /> : <Pdfg01 data={item} showType="view" />)}
-					{((user.role === "advisor" && item.status === "1") || (user.role === "chairpersons" && item.status === "2") || (user.role === "officer_registrar" && item.status === "3")) && (
-						<Button
-							size="xs"
-							color="green"
-							onClick={() => {
-								setSelectedRow(item);
-								setOpenApproveState("add");
-								setOpenApprove(true);
-							}}
-						>
-							{user.role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
-						</Button>
-					)}
-					{/* {((user.role === "advisor" && item.status === "7") || (user.role === "chairpersons" && item.status === "8") || (user.role === "dean" && item.status === "9")) && (
+										<Button size="xs" color="green">
+											พิมพ์ใบเสร็จ
+										</Button>
+									</>
+								)}
+							</>
+						)}
+						{user.role !== "student" &&
+							((user.role === "advisor" && item.status > "1") || (user.role === "chairpersons" && item.status > "2") || (user.role === "officer_registrar" && item.status > "3") ? <Pdfg01 data={item} exam_date={dateExam} /> : <Pdfg01 data={item} showType="view" exam_date={dateExam} />)}
+						{((user.role === "advisor" && item.status === "1") || (user.role === "chairpersons" && item.status === "2") || (user.role === "officer_registrar" && item.status === "3")) && (
+							<Button
+								size="xs"
+								color="green"
+								onClick={() => {
+									setSelectedRow(item);
+									setOpenApproveState("add");
+									setOpenApprove(true);
+								}}
+							>
+								{user.role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
+							</Button>
+						)}
+						{/* {((user.role === "advisor" && item.status === "7") || (user.role === "chairpersons" && item.status === "8") || (user.role === "dean" && item.status === "9")) && (
 						<Button
 							size="xs"
 							color="green"
@@ -395,14 +423,14 @@ const RequestList = () => {
 							ลงความเห็น
 						</Button>
 					)} */}
-				</Group>
-			</Table.Td>
-			<Table.Td style={{ textAlign: "center" }}>
-				{item.exam_results === true && <Text c="green">ผ่าน</Text>}
-				{item.exam_results === false && <Text c="red">ไม่ผ่าน</Text>}
-			</Table.Td>
-		</Table.Tr>
-	));
+					</Group>
+				</Table.Td>
+				<Table.Td style={{ textAlign: "center" }}>
+					{item.exam_results === true && <Text c="green">ผ่าน</Text>}
+					{item.exam_results === false && <Text c="red">ไม่ผ่าน</Text>}
+				</Table.Td>
+			</Table.Tr>
+		));
 
 	return (
 		<Box>

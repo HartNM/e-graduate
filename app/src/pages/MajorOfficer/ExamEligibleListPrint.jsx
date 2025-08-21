@@ -8,6 +8,8 @@ const ExamEligibleListPrint = () => {
 	const [user, setUser] = useState("");
 	const [reloadTable, setReloadTable] = useState(false);
 	const [group, setGroup] = useState([]);
+	const [term, setTerm] = useState([]);
+	const [dateExam, setDateExam] = useState([]);
 
 	useEffect(() => {
 		const fetchProfile = async () => {
@@ -21,6 +23,23 @@ const ExamEligibleListPrint = () => {
 				console.log(profileData);
 			} catch (err) {
 				console.error("Error fetching profile:", err);
+			}
+
+			try {
+				const requestRes = await fetch("http://localhost:8080/api/allRequestExamInfo", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				});
+				const requestData = await requestRes.json();
+				if (!requestRes.ok) {
+					throw new Error(requestData.message);
+				}
+				const terms = requestData.map((item) => item.term);
+				setTerm(terms);
+				setDateExam(requestData[0].exam_date);
+				setSelectedTerm(terms[0]);
+			} catch (err) {
+				console.error("Error fetch allRequestExamInfo:", err);
 			}
 		};
 		fetchProfile();
@@ -72,10 +91,10 @@ const ExamEligibleListPrint = () => {
 			<Group justify="space-between">
 				<Group>
 					<Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />
-					<Select placeholder="เทอมการศึกษา" data={["1/68", "2/68", "3/68"]} value={selectedTerm} onChange={setSelectedTerm} />
+					<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} allowDeselect={false} onChange={setSelectedTerm} />
 				</Group>
 				<Box>
-					<SignatureForm data={filteredGroup} />
+					<SignatureForm data={filteredGroup} exam_date={dateExam} />
 				</Box>
 			</Group>
 			<Space h="md" />

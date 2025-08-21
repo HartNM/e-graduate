@@ -3,7 +3,7 @@ import { Button } from "@mantine/core";
 import { PDFDocument, rgb } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 
-async function fillPdf(templateUrl, data) {
+async function fillPdf(templateUrl, data, exam_date) {
 	// โหลด template PDF ใหม่สำหรับ copy
 	const templateBytes = await fetch(templateUrl).then((res) => res.arrayBuffer());
 	const templateDoc = await PDFDocument.load(templateBytes);
@@ -108,16 +108,16 @@ async function fillPdf(templateUrl, data) {
 			let y;
 			if (type === "สอบประมวลความรู้") {
 				drawCenterXText(newPage, `รายชื่อผู้เข้า${type}`, 680, customFont, 16);
-				drawCenterXText(newPage, `ประจำภาคเรียนที่.................`, 660, customFont, 16);
+				drawCenterXText(newPage, `ประจำภาคเรียนที่ ${students[0].term}`, 660, customFont, 16);
 				drawCenterXText(newPage, `หมวด..........................................`, 640, customFont, 16);
-				drawCenterXText(newPage, `สอบวันที่...............................เวลา............................`, 620, customFont, 16);
+				drawCenterXText(newPage, `สอบวันที่ ${exam_date} เวลา............................`, 620, customFont, 16);
 				y = 580;
 			} else {
 				drawCenterXText(newPage, `รายชื่อผู้เข้า${type}`, 680, customFont, 16);
 				drawCenterXText(newPage, `ด้าน..................................................`, 660, customFont, 16);
-				drawCenterXText(newPage, `ปรัชญาดุษฎีบัณฑิต สาขาวิชา${students[0].major_name} รุ่นที่ ${students[0].id.split("4")[0] - 57}`, 640, customFont, 16);
+				drawCenterXText(newPage, `ปรัชญาดุษฎีบัณฑิต สาขาวิชา${students[0].major_name} รุ่นที่ ${parseInt(students[0].id.slice(0, 2), 10) - 57}`, 640, customFont, 16);
 				drawCenterXText(newPage, `มหาวิทยาลัยราชภัฏกําแพงเพชร`, 620, customFont, 16);
-				drawCenterXText(newPage, `สอบวันที่...............................เวลา............................`, 600, customFont, 16);
+				drawCenterXText(newPage, `สอบวันที่ ${exam_date} เวลา............................`, 600, customFont, 16);
 				y = 560;
 			}
 
@@ -150,9 +150,19 @@ async function fillPdf(templateUrl, data) {
 	return new Blob([pdfBytes], { type: "application/pdf" });
 }
 
-export default function SignatureForm({ data }) {
+export default function SignatureForm({ data, exam_date }) {
+	function formatThaiDate(dateStr) {
+		const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+
+		const [year, month, day] = dateStr.split("-").map(Number);
+		const buddhistYear = year + 543;
+		const thaiMonth = months[month - 1];
+
+		return `${day} ${thaiMonth} ${buddhistYear}`;
+	}
+
 	const handleClick = async () => {
-		const blob = await fillPdf("/pdf/blank.pdf", data);
+		const blob = await fillPdf("/pdf/blank.pdf", data, formatThaiDate(exam_date));
 		const url = URL.createObjectURL(blob);
 		window.open(url, "_blank");
 	};

@@ -45,6 +45,7 @@ router.post("/AllExamResultsPrint", authenticateToken, async (req, res) => {
 				exam_results,
 				term,
 				request_type,
+				major_name: studentMap[student_id]?.major_name,
 			}));
 		});
 

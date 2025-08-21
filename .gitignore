@@ -31,3 +31,5 @@ Thumbs.db
 
 # Optional: If using dist/ for backend builds
 server/dist/
+server/sc.js
+server/scaddrq.js

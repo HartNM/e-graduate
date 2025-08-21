@@ -222,16 +222,16 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 		if (role === "student") {
 			query += " WHERE student_id = @id";
 		} else if (role === "advisor") {
-			// เฉพาะคำร้องที่ถึง advisor
+			// เฉพาะคำร้องที่ถึง advisor 1 2 3 4 5   7 8 9
 			query += " WHERE study_group_id = @id AND status >= 1 ORDER BY CASE WHEN status IN (1, 7) THEN 0 ELSE 1 END, status";
 		} else if (role === "chairpersons") {
-			// เฉพาะคำร้องที่ถึง chairpersons
+			// เฉพาะคำร้องที่ถึง chairpersons 1 2 3 4 5     8 9
 			query += " WHERE major_id = @id AND status >= 2 ORDER BY CASE WHEN status IN (2, 8) THEN 0 ELSE 1 END, status";
 		} else if (role === "dean") {
-			// เฉพาะคำร้องที่ถึง dean
+			// เฉพาะคำร้องที่ถึง dean 9
 			query += " WHERE faculty_name = @id AND ever_cancel = @ever_cancel AND status >= 9 ORDER BY CASE WHEN status = 9 THEN 0 ELSE 1 END, status";
 		} else if (role === "officer_registrar") {
-			// เฉพาะคำร้องที่ถึงเจ้าหน้าที่ทะเบียน
+			// เฉพาะคำร้องที่ถึงเจ้าหน้าที่ทะเบียน 1 2 3 4 5
 			query += " WHERE status >= 3 ORDER BY CASE WHEN status = 3 THEN 0 ELSE 1 END, status";
 		}
 
