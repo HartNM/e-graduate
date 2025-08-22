@@ -1,7 +1,7 @@
 //ตารางคำร้องขอ
 import { useState, useEffect } from "react";
-import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill, Tooltip } from "@mantine/core";
-
+import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
+import { useParams } from "react-router-dom";
 import ModalApprove from "../component/Modal/ModalApprove";
 import ModalInfo from "../component/Modal/ModalInfo";
 import ModalAddCancel from "../component/Modal/ModalAddCancel";
@@ -10,11 +10,13 @@ import ModalCheck from "../component/Modal/ModalCheck";
 import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
 import Pdfg01 from "../component/PDF/Pdfg01";
-import { useSearchParams } from "react-router-dom";
 
 const RequestList = () => {
+	// Modal Info
+	const [inform, setInform] = useState({ open: false, type: "", message: "" });
+	const notify = (type, message) => setInform({ open: true, type, message });
+	const close = () => setInform((s) => ({ ...s, open: false }));
 	// Modal states
-	const [openInform, setOpenInform] = useState(false);
 	const [openInfo, setOpenInfo] = useState(false);
 	const [openAdd, setOpenAdd] = useState(false);
 	const [openApprove, setOpenApprove] = useState(false);
@@ -22,7 +24,6 @@ const RequestList = () => {
 	const [openAddCancel, setOpenAddCancel] = useState(false);
 	const [openPay, setOpenPay] = useState(false);
 	const [openCheck, setOpenCheck] = useState(false);
-
 	// Form states
 	const [formData, setFormData] = useState({});
 	const [selectedRow, setSelectedRow] = useState(null);
@@ -30,7 +31,6 @@ const RequestList = () => {
 	const [comment, setComment] = useState("");
 	const [reason, setReason] = useState("");
 	const [error, setError] = useState("");
-
 	// System states
 	const [user, setUser] = useState("");
 	//student //advisor //chairpersons //officer_registrar //dean
@@ -38,13 +38,11 @@ const RequestList = () => {
 	const [search, setSearch] = useState("");
 	const [reloadTable, setReloadTable] = useState(false);
 	const token = localStorage.getItem("token");
-	const [informMessage, setInformMessage] = useState("");
-	const [informtype, setInformtype] = useState("");
-	const [searchParams] = useSearchParams();
-	const type = searchParams.get("type");
+	const { type } = useParams();
 	const [dateExam, setDateExam] = useState("");
+
 	useEffect(() => {
-		const fetchProfile = async () => {
+		const fetchExam_date = async () => {
 			try {
 				const requestRes = await fetch("http://localhost:8080/api/allRequestExamInfo", {
 					method: "POST",
@@ -55,38 +53,38 @@ const RequestList = () => {
 					throw new Error(requestData.message);
 				}
 				setDateExam(requestData[0].exam_date);
-				/* console.log(requestData[0].exam_date); */
-			} catch (err) {
-				console.error("Error fetch allRequestExamInfo:", err);
+				console.log(requestData[0].exam_date);
+			} catch (e) {
+				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+				console.error("Error fetch allRequestExamInfo:", e);
 			}
 		};
-		fetchProfile();
-	}, []);
+		fetchExam_date();
+	}, [token]);
 
 	useEffect(() => {
 		const fetchProfile = async () => {
 			try {
-				const profileRes = await fetch("http://localhost:8080/api/profile", {
+				const requestRes = await fetch("http://localhost:8080/api/profile", {
 					method: "GET",
 					headers: { Authorization: `Bearer ${token}` },
 				});
-				const profileData = await profileRes.json();
-				setUser(profileData);
-				console.log(profileData);
-			} catch (err) {
-				setInformtype("error");
-				setInformMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-				setOpenInform(true);
-				console.error("Error fetching profile:", err);
+				const requestData = await requestRes.json();
+				if (!requestRes.ok) {
+					throw new Error(requestData.message);
+				}
+				setUser(requestData);
+				console.log(requestData);
+			} catch (e) {
+				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+				console.error("Error fetching profile:", e);
 			}
 		};
 		fetchProfile();
-	}, []);
+	}, [token]);
 
 	useEffect(() => {
 		if (!user) return;
-		console.log(dateExam);
-
 		const fetchRequestExam = async () => {
 			try {
 				const requestRes = await fetch("http://localhost:8080/api/requestExamAll", {
@@ -95,13 +93,14 @@ const RequestList = () => {
 					body: JSON.stringify({ role: user.role, id: user.id }),
 				});
 				const requestData = await requestRes.json();
+				if (!requestRes.ok) {
+					throw new Error(requestData.message);
+				}
 				setRequestExam(requestData);
 				console.log(requestData);
-			} catch (err) {
-				setInformtype("error");
-				setInformMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-				setOpenInform(true);
-				console.error("Error fetching requestExamAll:", err);
+			} catch (e) {
+				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+				console.error("Error fetching requestExamAll:", e);
 			} finally {
 				setReloadTable(false);
 			}
@@ -116,13 +115,14 @@ const RequestList = () => {
 				headers: { Authorization: `Bearer ${token}` },
 			});
 			const requestData = await requestRes.json();
+			if (!requestRes.ok) {
+				throw new Error(requestData.message);
+			}
 			setFormData(requestData);
 			setOpenAdd(true);
-		} catch (err) {
-			setInformtype("error");
-			setInformMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-			setOpenInform(true);
-			console.error("Error fetching studentInfo:", err);
+		} catch (e) {
+			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+			console.error("Error fetching studentInfo:", e);
 		}
 	};
 
@@ -134,20 +134,15 @@ const RequestList = () => {
 				body: JSON.stringify(formData),
 			});
 			const requestData = await requestRes.json();
-			if (requestRes.ok) {
-				setInformtype("success");
-			} else {
-				setInformtype("error");
+			if (!requestRes.ok) {
+				throw new Error(requestData.message);
 			}
-			setInformMessage(requestData.message);
-			setOpenInform(true);
+			notify("success", requestData.message || "สำเร็จ");
 			setOpenAdd(false);
 			setReloadTable(true);
-		} catch (err) {
-			setInformtype("error");
-			setInformMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-			setOpenInform(true);
-			console.error("Error fetching addRequestExam:", err);
+		} catch (e) {
+			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+			console.error("Error fetching addRequestExam:", e);
 		}
 	};
 
@@ -160,31 +155,20 @@ const RequestList = () => {
 			const requestRes = await fetch("http://localhost:8080/api/approveRequestExam", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({
-					request_exam_id: item.request_exam_id,
-					name: user.name,
-					role: user.role,
-					selected: selected,
-					comment: comment,
-				}),
+				body: JSON.stringify({ request_exam_id: item.request_exam_id, name: user.name, role: user.role, selected: selected, comment: comment }),
 			});
 			const requestData = await requestRes.json();
-			if (requestRes.ok) {
-				setInformtype("success");
-			} else {
-				setInformtype("error");
+			if (!requestRes.ok) {
+				throw new Error(requestData.message);
 			}
-			setInformMessage(requestData.message);
-			setOpenInform(true);
+			notify("success", requestData.message || "สำเร็จ");
 			setSelected("approve");
 			setComment("");
 			setOpenApprove(false);
 			setReloadTable(true);
-		} catch (err) {
-			setInformtype("error");
-			setInformMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-			setOpenInform(true);
-			console.error("Error fetching approveRequestExam:", err);
+		} catch (e) {
+			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+			console.error("Error fetching approveRequestExam:", e);
 		}
 	};
 
@@ -193,26 +177,18 @@ const RequestList = () => {
 			const requestRes = await fetch("http://localhost:8080/api/payRequestExam", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({
-					request_exam_id: item.request_exam_id,
-					receipt_vol_No: "10/54",
-				}),
+				body: JSON.stringify({ request_exam_id: item.request_exam_id, receipt_vol_No: "10/54" }),
 			});
 			const requestData = await requestRes.json();
-			if (requestRes.ok) {
-				setInformtype("success");
-			} else {
-				setInformtype("error");
+			if (!requestRes.ok) {
+				throw new Error(requestData.message);
 			}
-			setInformMessage(requestData.message);
-			setOpenInform(true);
+			notify("success", requestData.message || "สำเร็จ");
 			setOpenPay(false);
 			setReloadTable(true);
-		} catch (err) {
-			setInformtype("error");
-			setInformMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-			setOpenInform(true);
-			console.error("Error fetching payRequestExam:", err);
+		} catch (e) {
+			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+			console.error("Error fetching payRequestExam:", e);
 		}
 	};
 
@@ -225,27 +201,19 @@ const RequestList = () => {
 			const requestRes = await fetch("http://localhost:8080/api/cancelRequestExam", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({
-					request_exam_id: item.request_exam_id,
-					reason: reason,
-				}),
+				body: JSON.stringify({ request_exam_id: item.request_exam_id, reason: reason }),
 			});
 			const requestData = await requestRes.json();
-			if (requestRes.ok) {
-				setInformtype("success");
-			} else {
-				setInformtype("error");
+			if (!requestRes.ok) {
+				throw new Error(requestData.message);
 			}
-			setInformMessage(requestData.message);
-			setOpenInform(true);
+			notify("success", requestData.message || "สำเร็จ");
 			setReason("");
 			setOpenAddCancel(false);
 			setReloadTable(true);
-		} catch (err) {
-			setInformtype("error");
-			setInformMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-			setOpenInform(true);
-			console.error("Error fetching cancelRequestExam:", err);
+		} catch (e) {
+			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+			console.error("Error fetching cancelRequestExam:", e);
 		}
 	};
 
@@ -268,40 +236,20 @@ const RequestList = () => {
 				}),
 			});
 			const requestData = await requestRes.json();
-			if (requestRes.ok) {
-				setInformtype("success");
-			} else {
-				setInformtype("error");
+			if (!requestRes.ok) {
+				throw new Error(requestData.message);
 			}
+			notify("success", requestData.message || "สำเร็จ");
 			setSelected("approve");
-			setInformMessage(requestData.message);
-			setOpenInform(true);
 			setComment("");
 			setOpenApprove(false);
 			setReloadTable(true);
-		} catch (err) {
-			setInformtype("error");
-			setInformMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-			setOpenInform(true);
-			console.error("Error fetching cancelApproveRequestExam:", err);
+		} catch (e) {
+			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+			console.error("Error fetching cancelApproveRequestExam:", e);
 		}
 	};
 
-	const handleInfo = async (item) => {
-		console.log(item);
-		try {
-			const res = await fetch("http://localhost:8080/api/pdfRequestExam", {
-				method: "POST",
-				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ item }),
-			});
-			const blob = await res.blob();
-			const url = URL.createObjectURL(blob);
-			window.open(url, "_blank");
-		} catch (err) {
-			console.error("Error fetching pdfRequestExam:", err);
-		}
-	};
 	const [selectedType, setSelectedType] = useState("");
 	const filteredData = requestExam.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
@@ -321,20 +269,15 @@ const RequestList = () => {
 		})
 		.map((item) => (
 			<Table.Tr key={item.request_exam_id}>
-				{/* <Table.Td>{item.request_exam_id}</Table.Td>
-			<Table.Td>{item.request_date}</Table.Td> */}
 				<Table.Td>{item.student_name}</Table.Td>
-				{(user.role === "advisor" || user.role === "officer_registrar" || user.role === "chairpersons" || user.role === "dean") && <Table.Td>{item.request_type}</Table.Td>}
-
+				{["advisor", "officer_registrar", "chairpersons", "dean"].includes(user?.role) && <Table.Td>{item.request_type}</Table.Td>}
 				<Table.Td style={{ textAlign: "center" }}>
 					{item.status <= 4 && (
 						<>
-							{/* <Tooltip label={item.status_text}></Tooltip> */}
 							<Stepper active={item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
-								<Stepper.Step>{item.status_text}</Stepper.Step>
-								<Stepper.Step>{item.status_text}</Stepper.Step>
-								<Stepper.Step>{item.status_text}</Stepper.Step>
-								<Stepper.Step>{item.status_text}</Stepper.Step>
+								{[...Array(4)].map((_, i) => (
+									<Stepper.Step key={i}>{item.status_text}</Stepper.Step>
+								))}
 							</Stepper>
 						</>
 					)}
@@ -363,7 +306,6 @@ const RequestList = () => {
 					<Group>
 						{user.role === "student" && (
 							<>
-								<Pdfg01 data={item} exam_date={dateExam} />
 								{item.status === "4" && (
 									<Button
 										size="xs"
@@ -378,7 +320,7 @@ const RequestList = () => {
 								)}
 								{item.status === "5" && (
 									<>
-										{/* <Button
+										<Button
 										size="xs"
 										color="red"
 										onClick={() => {
@@ -387,7 +329,7 @@ const RequestList = () => {
 										}}
 									>
 										ขอยกเลิก
-									</Button> */}
+									</Button>
 										<Button size="xs" color="green">
 											พิมพ์ใบเสร็จ
 										</Button>
@@ -395,8 +337,7 @@ const RequestList = () => {
 								)}
 							</>
 						)}
-						{user.role !== "student" &&
-							((user.role === "advisor" && item.status > "1") || (user.role === "chairpersons" && item.status > "2") || (user.role === "officer_registrar" && item.status > "3") ? <Pdfg01 data={item} exam_date={dateExam} /> : <Pdfg01 data={item} showType="view" exam_date={dateExam} />)}
+						<Pdfg01 data={item} exam_date={dateExam} showType={(user.role === "advisor" && item.status <= 1) || (user.role === "chairpersons" && item.status <= 2) || (user.role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
 						{((user.role === "advisor" && item.status === "1") || (user.role === "chairpersons" && item.status === "2") || (user.role === "officer_registrar" && item.status === "3")) && (
 							<Button
 								size="xs"
@@ -410,7 +351,7 @@ const RequestList = () => {
 								{user.role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
 							</Button>
 						)}
-						{/* {((user.role === "advisor" && item.status === "7") || (user.role === "chairpersons" && item.status === "8") || (user.role === "dean" && item.status === "9")) && (
+						{((user.role === "advisor" && item.status === "7") || (user.role === "chairpersons" && item.status === "8") || (user.role === "dean" && item.status === "9")) && (
 						<Button
 							size="xs"
 							color="green"
@@ -422,7 +363,7 @@ const RequestList = () => {
 						>
 							ลงความเห็น
 						</Button>
-					)} */}
+					)}
 					</Group>
 				</Table.Td>
 				<Table.Td style={{ textAlign: "center" }}>
@@ -434,7 +375,7 @@ const RequestList = () => {
 
 	return (
 		<Box>
-			<ModalInform opened={openInform} onClose={() => setOpenInform(false)} message={informMessage} type={informtype} />
+			<ModalInform opened={inform.open} onClose={close} message={inform.message} type={inform.type} />
 			<ModalApprove
 				opened={openApprove}
 				onClose={() => setOpenApprove(false)}
@@ -456,20 +397,13 @@ const RequestList = () => {
 			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} />
 
 			<Text size="1.5rem" fw={900} mb="md">
-				คำร้องขอสอบ{user.education_level}
+				คำร้องขอสอบ{user?.education_level}
 			</Text>
 			<Group justify="space-between">
 				<Box>
 					<Flex align="flex-end" gap="sm">
 						<TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />
-						{(user.role === "chairpersons" || user.role === "dean") && (
-							<Select
-								placeholder="ชนิดคำขอ"
-								data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]}
-								value={selectedType} // default selection
-								onChange={setSelectedType}
-							/>
-						)}
+						{(user.role === "chairpersons" || user.role === "dean") && <Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
 					</Flex>
 				</Box>
 				<Box>
@@ -485,13 +419,11 @@ const RequestList = () => {
 				<Table horizontalSpacing="sm" verticalSpacing="sm" highlightOnHover>
 					<Table.Thead>
 						<Table.Tr>
-							{/* <Table.Th>#</Table.Th>
-							<Table.Th>วันที่</Table.Th> */}
 							<Table.Th style={{ minWidth: 100 }}>ชื่อ</Table.Th>
-							{(user.role === "advisor" || user.role === "officer_registrar" || user.role === "chairpersons" || user.role === "dean") && <Table.Th style={{ minWidth: 100 }}>เรื่อง</Table.Th>}
+							{["advisor", "officer_registrar", "chairpersons", "dean"].includes(user?.role) && <Table.Th style={{ minWidth: 100 }}>เรื่อง</Table.Th>}
 							<Table.Th style={{ minWidth: 110 }}>สถานะ</Table.Th>
 							<Table.Th style={{ minWidth: 100 }}>การดำเนินการ</Table.Th>
-							{requestExam.some((item) => item.exam_results !== null) && <Table.Th style={{ minWidth: 110 }}>ผลสอบ</Table.Th>}
+							{requestExam.some((it) => it.exam_results !== null) && <Table.Th style={{ minWidth: 110 }}>ผลสอบ</Table.Th>}
 						</Table.Tr>
 					</Table.Thead>
 					<Table.Tbody>{rows}</Table.Tbody>

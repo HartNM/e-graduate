@@ -11,16 +11,16 @@ import ModalAdd from "../component/Modal/ModalAdd";
 import ModalCheck from "../component/Modal/ModalCheck";
 import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
-import Pdfg01 from "../component/PDF/pdfg01";
+import Pdfg01 from "../component/PDF/Pdfg01";
 
 // ---------- constants & utils ----------
-const API_BASE = "http://localhost:8080/api";
+const API_BASE = "";
 const MSG = {
 	NETWORK_ERROR: "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ",
 };
 
 const api = async (path, { method = "GET", token, body } = {}) => {
-	const res = await fetch(`${API_BASE}${path}`, {
+	const res = await fetch(`http://localhost:8080/api${path}`, {
 		method,
 		headers: {
 			...(body ? { "Content-Type": "application/json" } : {}),

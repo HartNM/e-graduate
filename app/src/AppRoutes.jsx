@@ -35,7 +35,7 @@ function AppRoutes() {
 					<Route path="/login" element={<AuthenticationForm />} />
 
 					<Route path="/registrar-officer" element={<RegistrarOfficer />}>
-						<Route path="requestList" element={<RequestList />} />
+						<Route path="requestList/:type" element={<RequestList />} />
 						<Route path="ExamScheduleSetupPage" element={<ExamScheduleSetupPage />} />
 						<Route path="assign-major-officer" element={<AssignMajorOfficer />} />
 						<Route path="exam-results-print" element={<ExamResultsPrint />} />

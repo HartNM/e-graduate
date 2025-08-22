@@ -95,38 +95,48 @@ const ExamScheduleSetupPage = () => {
 			console.error("Error fetch addRequestExamInfo:", err);
 		}
 	};
+	const formatThaiDate = (dateStr) => {
+		if (!dateStr) return "";
+		const date = new Date(dateStr);
+		const day = String(date.getDate()).padStart(2, "0");
+		const month = String(date.getMonth() + 1).padStart(2, "0");
+		const year = date.getFullYear()+543;
+		return `${day}/${month}/${year}`;
+	};
 
-	const Rows = requestExamInfo.map((item) => (
+	const Rows = requestExamInfo.map((item, index) => (
 		<Table.Tr key={item.request_exam_info_id}>
 			<Table.Td>{item.term}</Table.Td>
-			<Table.Td>{item.open_date}</Table.Td>
-			<Table.Td>{item.close_date}</Table.Td>
-			<Table.Td>{item.exam_date}</Table.Td>
+			<Table.Td>{formatThaiDate(item.open_date)}</Table.Td>
+			<Table.Td>{formatThaiDate(item.close_date)}</Table.Td>
+			<Table.Td>{formatThaiDate(item.exam_date)}</Table.Td>
 			<Table.Td>
-				<Group>
-					<Button
-						size="xs"
-						color="yellow"
-						onClick={() => {
-							Form.setValues(item);
-							setOpenPickDate(true);
-							setModalType("edit");
-						}}
-					>
-						แก้ไข
-					</Button>
-					<Button
-						size="xs"
-						color="red"
-						onClick={() => {
-							Form.setValues(item);
-							setOpenPickDate(true);
-							setModalType("delete");
-						}}
-					>
-						ลบ
-					</Button>
-				</Group>
+				{index === 0 && (
+					<Group>
+						<Button
+							size="xs"
+							color="yellow"
+							onClick={() => {
+								Form.setValues(item);
+								setOpenPickDate(true);
+								setModalType("edit");
+							}}
+						>
+							แก้ไข
+						</Button>
+						<Button
+							size="xs"
+							color="red"
+							onClick={() => {
+								Form.setValues(item);
+								setOpenPickDate(true);
+								setModalType("delete");
+							}}
+						>
+							ลบ
+						</Button>
+					</Group>
+				)}
 			</Table.Td>
 		</Table.Tr>
 	));
@@ -166,7 +176,7 @@ const ExamScheduleSetupPage = () => {
 				</Flex>
 			</Box>
 			<Space h="xl" />
-			<ScrollArea type="scroll" offsetScrollbars  style={{ borderRadius: "8px", border: "1px solid #e0e0e0" }}>
+			<ScrollArea type="scroll" offsetScrollbars style={{ borderRadius: "8px", border: "1px solid #e0e0e0" }}>
 				<Table horizontalSpacing="sm" verticalSpacing="sm" highlightOnHover>
 					<Table.Thead>
 						<Table.Tr>
