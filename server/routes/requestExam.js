@@ -222,17 +222,17 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 		if (role === "student") {
 			query += " WHERE student_id = @id";
 		} else if (role === "advisor") {
-			// เฉพาะคำร้องที่ถึง advisor 1 2 3 4 5   7 8 9
-			query += " WHERE study_group_id = @id AND status >= 1 ORDER BY CASE WHEN status IN (1, 7) THEN 0 ELSE 1 END, status";
+			// เฉพาะคำร้องที่ถึง advisor 1 2 3 4 5 6 7 8 9 0 AND status IN >= 1
+			query += " WHERE study_group_id = @id ORDER BY CASE WHEN status IN (1, 7) THEN 0 WHEN status = 0 THEN 2 ELSE 1 END, status";
 		} else if (role === "chairpersons") {
-			// เฉพาะคำร้องที่ถึง chairpersons 1 2 3 4 5     8 9
-			query += " WHERE major_id = @id AND status >= 2 ORDER BY CASE WHEN status IN (2, 8) THEN 0 ELSE 1 END, status";
+			// เฉพาะคำร้องที่ถึง chairpersons 2 3 4 5 6   8 9 0 >= 2
+			query += " WHERE major_id = @id AND status IN (2, 3, 4, 5, 6, 8, 9, 0) ORDER BY CASE WHEN status IN (2, 8) THEN 0 WHEN status = 0 THEN 2 ELSE 1 END, status";
 		} else if (role === "dean") {
-			// เฉพาะคำร้องที่ถึง dean 9
-			query += " WHERE faculty_name = @id AND ever_cancel = @ever_cancel AND status >= 9 ORDER BY CASE WHEN status = 9 THEN 0 ELSE 1 END, status";
+			// เฉพาะคำร้องที่ถึง dean 9 0 AND ever_cancel = @ever_cancel 
+			query += " WHERE faculty_name = @id AND status IN (9, 0) ORDER BY CASE WHEN status = 9 THEN 0 WHEN status = 0 THEN 2 ELSE 1 END, status";
 		} else if (role === "officer_registrar") {
-			// เฉพาะคำร้องที่ถึงเจ้าหน้าที่ทะเบียน 1 2 3 4 5
-			query += " WHERE status >= 3 ORDER BY CASE WHEN status = 3 THEN 0 ELSE 1 END, status";
+			// เฉพาะคำร้องที่ถึงเจ้าหน้าที่ทะเบียน 3 4 5 6 >= 3
+			query += " WHERE status IN (3, 4, 5, 6) ORDER BY CASE WHEN status = 3 THEN 0 ELSE 1 END, status";
 		}
 
 		const result = await request.query(query);
@@ -255,7 +255,6 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 						const cancelRes = await pool.request().query(`
 							SELECT * FROM request_cancel_exam 
 							WHERE request_exam_id = '${item.request_exam_id}'
-							ORDER BY request_cancel_exam_date DESC
 						`);
 						cancelInfo = cancelRes.recordset;
 					} catch (err) {
@@ -276,7 +275,13 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 					/* request_type: item.status > 6 ? `ขอยกเลิกการเข้าสอบ${studentInfo?.request_type}` : `ขอสอบ${studentInfo?.request_type}` || null, */
 					request_type: item.status > 6 ? `ขอยกเลิกการเข้าสอบ${studentInfo?.request_type}` : item.request_type || null,
 					...(item.ever_cancel && {
-						cancel_list: cancelInfo || [],
+						cancel_list: (cancelInfo || []).map((c) => ({
+							...c,
+							request_cancel_exam_date: formatDate(c.request_cancel_exam_date),
+							advisor_cancel_date: formatDate(c.advisor_cancel_date),
+							chairpersons_cancel_date: formatDate(c.chairpersons_cancel_date),
+							dean_cancel_date: formatDate(c.dean_cancel_date),
+						})),
 					}),
 				};
 			})

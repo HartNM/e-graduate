@@ -40,6 +40,7 @@ const RequestList = () => {
 	const token = localStorage.getItem("token");
 	const { type } = useParams();
 	const [dateExam, setDateExam] = useState("");
+	const [selectedType, setSelectedType] = useState("");
 
 	useEffect(() => {
 		const fetchExam_date = async () => {
@@ -60,9 +61,6 @@ const RequestList = () => {
 			}
 		};
 		fetchExam_date();
-	}, [token]);
-
-	useEffect(() => {
 		const fetchProfile = async () => {
 			try {
 				const requestRes = await fetch("http://localhost:8080/api/profile", {
@@ -82,6 +80,10 @@ const RequestList = () => {
 		};
 		fetchProfile();
 	}, [token]);
+
+	useEffect(() => {
+		setSelectedType(type);
+	}, [type]);
 
 	useEffect(() => {
 		if (!user) return;
@@ -250,10 +252,9 @@ const RequestList = () => {
 		}
 	};
 
-	const [selectedType, setSelectedType] = useState("");
 	const filteredData = requestExam.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
-		const matchesType = type ? p.request_type === type : true;
+		const matchesType = selectedType ? p.request_type === selectedType : true;
 		return matchesSearch && matchesType;
 	});
 
@@ -261,27 +262,31 @@ const RequestList = () => {
 		.filter((item) => {
 			return (
 				item.status !== "6" ||
-				(item.status === "6" &&
-					((user.role === "advisor" && (!item.advisor_approvals || !item.chairpersons_approvals || !item.registrar_approvals)) ||
-						(user.role === "chairpersons" && item.advisor_approvals && (!item.chairpersons_approvals || !item.registrar_approvals)) ||
-						(user.role === "officer_registrar" && item.advisor_approvals && item.chairpersons_approvals && !item.registrar_approvals)))
+				(item.status === "6" /* (user.role === "advisor" && (!item.advisor_approvals || !item.chairpersons_approvals || !item.registrar_approvals)) || */ &&
+					((user.role === "chairpersons" && item.advisor_approvals && (!item.chairpersons_approvals || !item.registrar_approvals)) || (user.role === "officer_registrar" && item.advisor_approvals && item.chairpersons_approvals && !item.registrar_approvals)))
 			);
 		})
 		.map((item) => (
 			<Table.Tr key={item.request_exam_id}>
 				<Table.Td>{item.student_name}</Table.Td>
-				{["advisor", "officer_registrar", "chairpersons", "dean"].includes(user?.role) && <Table.Td>{item.request_type}</Table.Td>}
+				{["advisor", "officer_registrar", "chairpersons", "dean"].includes(user?.role) && <Table.Td>{user?.role === "dean" ? `ขอยกเลิก${item.request_type.replace("ขอ", "")}` : item.request_type}</Table.Td>}
 				<Table.Td style={{ textAlign: "center" }}>
-					{item.status <= 4 && (
+					{item.status <= 4 && item.status > 0 && (
 						<>
 							<Stepper active={item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
 								{[...Array(4)].map((_, i) => (
-									<Stepper.Step key={i}>{item.status_text}</Stepper.Step>
+									<Stepper.Step key={i}>
+										<Pill>{item.status_text}</Pill>
+									</Stepper.Step>
 								))}
 							</Stepper>
 						</>
 					)}
-
+					{item.status == 0 && (
+						<Pill variant="filled" style={{ backgroundColor: "#ffcccc", color: "#b30000" }}>
+							{item.status_text}
+						</Pill>
+					)}
 					{item.status == 5 && (
 						<Pill variant="filled" style={{ backgroundColor: "#ccffcc", color: "#006600" }}>
 							{item.status_text}
@@ -299,10 +304,10 @@ const RequestList = () => {
 						</>
 					)}
 
-					{item.status > 6 && <Pill>{item.status_text}</Pill>}
+					{item.status > 6 && <Text>{item.status_text}</Text>}
 				</Table.Td>
 
-				<Table.Td>
+				<Table.Td style={{ maxWidth: "150px" }}>
 					<Group>
 						{user.role === "student" && (
 							<>
@@ -321,15 +326,15 @@ const RequestList = () => {
 								{item.status === "5" && (
 									<>
 										<Button
-										size="xs"
-										color="red"
-										onClick={() => {
-											setSelectedRow(item);
-											setOpenAddCancel(true);
-										}}
-									>
-										ขอยกเลิก
-									</Button>
+											size="xs"
+											color="red"
+											onClick={() => {
+												setSelectedRow(item);
+												setOpenAddCancel(true);
+											}}
+										>
+											ขอยกเลิก
+										</Button>
 										<Button size="xs" color="green">
 											พิมพ์ใบเสร็จ
 										</Button>
@@ -337,7 +342,7 @@ const RequestList = () => {
 								)}
 							</>
 						)}
-						<Pdfg01 data={item} exam_date={dateExam} showType={(user.role === "advisor" && item.status <= 1) || (user.role === "chairpersons" && item.status <= 2) || (user.role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
+						<Pdfg01 data={item} exam_date={dateExam} showType={item.status == 0 ? undefined : (user.role === "advisor" && item.status <= 1) || (user.role === "chairpersons" && item.status <= 2) || (user.role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
 						{((user.role === "advisor" && item.status === "1") || (user.role === "chairpersons" && item.status === "2") || (user.role === "officer_registrar" && item.status === "3")) && (
 							<Button
 								size="xs"
@@ -352,24 +357,26 @@ const RequestList = () => {
 							</Button>
 						)}
 						{((user.role === "advisor" && item.status === "7") || (user.role === "chairpersons" && item.status === "8") || (user.role === "dean" && item.status === "9")) && (
-						<Button
-							size="xs"
-							color="green"
-							onClick={() => {
-								setSelectedRow(item);
-								setOpenApproveState("cancel");
-								setOpenApprove(true);
-							}}
-						>
-							ลงความเห็น
-						</Button>
-					)}
+							<Button
+								size="xs"
+								color="green"
+								onClick={() => {
+									setSelectedRow(item);
+									setOpenApproveState("cancel");
+									setOpenApprove(true);
+								}}
+							>
+								ลงความเห็น
+							</Button>
+						)}
 					</Group>
 				</Table.Td>
-				<Table.Td style={{ textAlign: "center" }}>
-					{item.exam_results === true && <Text c="green">ผ่าน</Text>}
-					{item.exam_results === false && <Text c="red">ไม่ผ่าน</Text>}
-				</Table.Td>
+				{item.exam_results !== null && (
+					<Table.Td style={{ textAlign: "center" }}>
+						{item.exam_results === true && <Text c="green">ผ่าน</Text>}
+						{item.exam_results === false && <Text c="red">ไม่ผ่าน</Text>}
+					</Table.Td>
+				)}
 			</Table.Tr>
 		));
 
@@ -397,18 +404,18 @@ const RequestList = () => {
 			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} />
 
 			<Text size="1.5rem" fw={900} mb="md">
-				คำร้องขอสอบ{user?.education_level}
+				{user.role === "dean" ? "คำร้องขอยกเลิกสอบ" : `คำร้องขอสอบ${user?.education_level ?? ""}`}
 			</Text>
 			<Group justify="space-between">
 				<Box>
 					<Flex align="flex-end" gap="sm">
 						<TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />
-						{(user.role === "chairpersons" || user.role === "dean") && <Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
+						{user.role === "chairpersons" && <Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
 					</Flex>
 				</Box>
 				<Box>
 					{user.role === "student" && (
-						<Button onClick={() => handleOpenAdd()} disabled={!requestExam.every((item) => item.status === "6") && !requestExam.some((item) => item.exam_results === false)}>
+						<Button onClick={() => handleOpenAdd()} disabled={!requestExam.some((item) => item.status === "0") && !requestExam.every((item) => item.status === "6") && !requestExam.some((item) => item.exam_results === false)}>
 							เพิ่มคำร้อง
 						</Button>
 					)}
@@ -422,7 +429,7 @@ const RequestList = () => {
 							<Table.Th style={{ minWidth: 100 }}>ชื่อ</Table.Th>
 							{["advisor", "officer_registrar", "chairpersons", "dean"].includes(user?.role) && <Table.Th style={{ minWidth: 100 }}>เรื่อง</Table.Th>}
 							<Table.Th style={{ minWidth: 110 }}>สถานะ</Table.Th>
-							<Table.Th style={{ minWidth: 100 }}>การดำเนินการ</Table.Th>
+							<Table.Th>การดำเนินการ</Table.Th>
 							{requestExam.some((it) => it.exam_results !== null) && <Table.Th style={{ minWidth: 110 }}>ผลสอบ</Table.Th>}
 						</Table.Tr>
 					</Table.Thead>

@@ -25,7 +25,7 @@ const ExamScheduleSetupPage = () => {
 			exam_date: null,
 		},
 		validate: {
-			term: (value) => (value.trim().length > 0 ? null : "กรุณาระบุปีการศึกษา"),
+			term: (value) => (/^\d+\/\d+$/.test(value.trim()) ? null : "กรุณากรอกในรูปแบบ เช่น 1/68"),
 			open_date: (value) => (value ? null : "กรุณาระบุวันที่เปิด"),
 			close_date: (value) => {
 				if (!value) return "กรุณาระบุวันที่ปิด";
@@ -100,7 +100,7 @@ const ExamScheduleSetupPage = () => {
 		const date = new Date(dateStr);
 		const day = String(date.getDate()).padStart(2, "0");
 		const month = String(date.getMonth() + 1).padStart(2, "0");
-		const year = date.getFullYear()+543;
+		const year = date.getFullYear() + 543;
 		return `${day}/${month}/${year}`;
 	};
 
