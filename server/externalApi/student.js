@@ -3,6 +3,8 @@ const router = express.Router();
 const axios = require("axios");
 const { poolPromise, sql } = require("../db");
 
+
+      /* major_name: item.mjcode, */
 /* router.get("/student/:student_id", async (req, res) => {
   const studentid = req.params.student_id;
   try {
@@ -19,7 +21,7 @@ const { poolPromise, sql } = require("../db");
       education_level: item.level_type,
       program: `${item.level_name_long} (${item.level_name})`,
       study_group_id: item.GROUP_NO,
-      major_id: item.mjcode,
+
       major_name: item.t_mjname,
       faculty_name: item.faculty_name,
       request_type:
@@ -34,7 +36,7 @@ const { poolPromise, sql } = require("../db");
 
 router.get("/student/:student_id", async (req, res) => {
 	const studentid = req.params.student_id;
-
+          /* mjcode AS major_id */
 	try {
 		const pool = await poolPromise;
 		const result = await pool.request().input("id", sql.BigInt, studentid).query(`
@@ -47,7 +49,6 @@ router.get("/student/:student_id", async (req, res) => {
           level_type AS education_level,
           CONCAT(level_name_long, ' (', level_name, ')') AS program,
           group_no AS study_group_id,
-          mjcode AS major_id,
           t_mjname AS major_name,
           faculty_name,
           CASE 

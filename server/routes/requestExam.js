@@ -4,10 +4,6 @@ const authenticateToken = require("../middleware/authenticateToken");
 const { poolPromise } = require("../db");
 const axios = require("axios");
 
-const fs = require("fs");
-const { PDFDocument } = require("pdf-lib");
-const fontkit = require("@pdf-lib/fontkit");
-
 const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
 const timezone = require("dayjs/plugin/timezone");
@@ -97,10 +93,9 @@ router.post("/cancelRequestExam", authenticateToken, async (req, res) => {
 			@request_cancel_exam_date
 			)
 		`);
-		await request.input("status", "7").input("ever_cancel", 1).query(`
+		await request.input("status", "7").query(`
 			UPDATE request_exam
-			SET status = @status,
-				ever_cancel = @ever_cancel
+			SET status = @status
 			WHERE request_exam_id = @request_exam_id
 		`);
 
@@ -159,17 +154,17 @@ router.post("/approveRequestExam", authenticateToken, async (req, res) => {
 		// สร้าง query ตาม role
 		const roleFields = {
 			advisor: `
-        advisor_approvals_name = @name,
+        advisor_approvals_id = @name,
         advisor_approvals = @approve,
         advisor_approvals_date = @date
       `,
 			chairpersons: `
-        chairpersons_approvals_name = @name,
+        chairpersons_approvals_id = @name,
         chairpersons_approvals = @approve,
         chairpersons_approvals_date = @date
       `,
 			officer_registrar: `
-        registrar_approvals_name = @name,
+        registrar_approvals_id = @name,
         registrar_approvals = @approve,
         registrar_approvals_date = @date
       `,
@@ -213,7 +208,7 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 
 	try {
 		const pool = await poolPromise;
-		const request = pool.request().input("id", id).input("ever_cancel", 1);
+		const request = pool.request().input("id", id);
 
 		// สร้าง query พื้นฐาน
 		let query = "SELECT * FROM request_exam";
@@ -226,9 +221,9 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 			query += " WHERE study_group_id = @id ORDER BY CASE WHEN status IN (1, 7) THEN 0 WHEN status = 0 THEN 2 ELSE 1 END, status";
 		} else if (role === "chairpersons") {
 			// เฉพาะคำร้องที่ถึง chairpersons 2 3 4 5 6   8 9 0 >= 2
-			query += " WHERE major_id = @id AND status IN (2, 3, 4, 5, 6, 8, 9, 0) ORDER BY CASE WHEN status IN (2, 8) THEN 0 WHEN status = 0 THEN 2 ELSE 1 END, status";
+			query += " WHERE major_name = @id AND status IN (2, 3, 4, 5, 6, 8, 9, 0) ORDER BY CASE WHEN status IN (2, 8) THEN 0 WHEN status = 0 THEN 2 ELSE 1 END, status";
 		} else if (role === "dean") {
-			// เฉพาะคำร้องที่ถึง dean 9 0 AND ever_cancel = @ever_cancel 
+			// เฉพาะคำร้องที่ถึง dean 9 0
 			query += " WHERE faculty_name = @id AND status IN (9, 0) ORDER BY CASE WHEN status = 9 THEN 0 WHEN status = 0 THEN 2 ELSE 1 END, status";
 		} else if (role === "officer_registrar") {
 			// เฉพาะคำร้องที่ถึงเจ้าหน้าที่ทะเบียน 3 4 5 6 >= 3
@@ -250,16 +245,15 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 					console.warn(`ไม่สามารถดึงข้อมูลนักศึกษา ${item.student_id}`);
 				}
 
-				if (item.ever_cancel) {
-					try {
-						const cancelRes = await pool.request().query(`
+				try {
+					const cancelRes = await pool.request().query(`
 							SELECT * FROM request_cancel_exam 
 							WHERE request_exam_id = '${item.request_exam_id}'
 						`);
-						cancelInfo = cancelRes.recordset;
-					} catch (err) {
-						console.warn(`ไม่สามารถดึงข้อมูลการยกเลิกของ request_exam_id ${item.request_exam_id}`);
-					}
+					cancelInfo = cancelRes.recordset;
+				} catch (err) {
+					console.warn(`ไม่สามารถดึงข้อมูลการยกเลิกของ request_exam_id ${item.request_exam_id}`);
+					cancelInfo = [];
 				}
 
 				return {
@@ -274,8 +268,8 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 					receipt_pay_date: formatDate(item.receipt_pay_date) || null,
 					/* request_type: item.status > 6 ? `ขอยกเลิกการเข้าสอบ${studentInfo?.request_type}` : `ขอสอบ${studentInfo?.request_type}` || null, */
 					request_type: item.status > 6 ? `ขอยกเลิกการเข้าสอบ${studentInfo?.request_type}` : item.request_type || null,
-					...(item.ever_cancel && {
-						cancel_list: (cancelInfo || []).map((c) => ({
+					...(cancelInfo.length > 0 && {
+						cancel_list: cancelInfo.map((c) => ({
 							...c,
 							request_cancel_exam_date: formatDate(c.request_cancel_exam_date),
 							advisor_cancel_date: formatDate(c.advisor_cancel_date),
@@ -305,7 +299,7 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 			.request()
 			.input("student_id", student_id)
 			.input("study_group_id", study_group_id)
-			.input("major_id", major_name)
+			.input("major_name", major_name)
 			.input("faculty_name", faculty_name)
 			.input("request_type", `ขอสอบ${request_type}`)
 			.input("term", infoRes.recordset[0].term)
@@ -314,7 +308,7 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 			INSERT INTO request_exam (
 				student_id,
 				study_group_id,
-				major_id,
+				major_name,
 				faculty_name,
 				request_type,
 				term,
@@ -323,7 +317,7 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 			) VALUES (
 				@student_id,
 				@study_group_id,
-				@major_id,
+				@major_name,
 				@faculty_name,
 				@request_type,
 				@term,

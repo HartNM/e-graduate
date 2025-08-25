@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
 import { useParams } from "react-router-dom";
 import ModalApprove from "../component/Modal/ModalApprove";
-import ModalInfo from "../component/Modal/ModalInfo";
 import ModalAddCancel from "../component/Modal/ModalAddCancel";
 import ModalAdd from "../component/Modal/ModalAdd";
 import ModalCheck from "../component/Modal/ModalCheck";
@@ -397,7 +396,6 @@ const RequestList = () => {
 				handleCancel={handleCancel}
 				role={user.role}
 			/>
-			<ModalInfo opened={openInfo} onClose={() => setOpenInfo(false)} selectedRow={selectedRow} />
 			<ModalAddCancel opened={openAddCancel} onClose={() => setOpenAddCancel(false)} selectedRow={selectedRow} reason={reason} setReason={setReason} error={error} handleAddCancel={handleAddCancel} />
 			<ModalAdd opened={openAdd} onClose={() => setOpenAdd(false)} formData={formData} handleAdd={handleAdd} />
 			<ModalCheck opened={openCheck} onClose={() => setOpenCheck(false)} selected={selected} setSelected={setSelected} comment={comment} setComment={setComment} error={error} />

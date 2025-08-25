@@ -13,6 +13,7 @@ router.post("/login", async (req, res) => {
 		try {
 			const request = await axios.get(`http://localhost:8080/externalApi/student/${username}`);
 			const result = request.data;
+			
 			if (result.student_name === "undefined undefined" || (result.education_level !== "ปริญญาโท" && result.education_level !== "ปริญญาเอก")) {
 				return res.status(401).json({ message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" });
 			}

@@ -21,13 +21,13 @@ const AssignChairpersons = () => {
 		initialValues: {
 			chairpersons_id: "",
 			chairpersons_name: "",
-			major_id: "",
+			major_name: "",
 			password: "",
 		},
 		validate: {
 			chairpersons_id: (value) => (value.trim().length > 0 ? null : "กรุณากรอกรหัสบัตร"),
 			chairpersons_name: (value) => (value.trim().length > 0 ? null : "กรุณากรอกชื่อ"),
-			major_id: (value) => (value.trim().length > 0 ? null : "กรุณาเลือกคณะ"),
+			major_name: (value) => (value.trim().length > 0 ? null : "กรุณาเลือกคณะ"),
 			password: (value) => {
 				if (modalType === "delete" || modalType === "edit") return null;
 				return value.trim().length > 0 ? null : "กรุณากรอกรหัสผ่าน";
@@ -85,7 +85,7 @@ const AssignChairpersons = () => {
 
 	const handleOpenAdd = () => {
 		Form.reset();
-		Form.setValues({ major_id: user.id });
+		Form.setValues({ major_name: user.id });
 		setModalType("add");
 		setOpenModal(true);
 	};
@@ -135,7 +135,7 @@ const AssignChairpersons = () => {
 
 	const classRows = assignChairpersons.map((item) => (
 		<Table.Tr key={item.chairpersons_id}>
-			<Table.Td>{item.major_id}</Table.Td>
+			<Table.Td>{item.major_name}</Table.Td>
 			<Table.Td>{item.chairpersons_name}</Table.Td>
 			<Table.Td>
 				<Group>
@@ -155,7 +155,7 @@ const AssignChairpersons = () => {
 			<ModalInform opened={openInform} onClose={() => setOpenInform(false)} message={informMessage} type={informtype} />
 			<Modal opened={openModal} onClose={() => setOpenModal(false)} title="แต่งตั้งประธานกรรมการบัณฑิตศึกษาประจำสาขา" centered>
 				<form onSubmit={Form.onSubmit(handleSubmit)}>
-					<Select label="สาขา" data={major} {...Form.getInputProps("major_id")} disabled></Select>
+					<Select label="สาขา" data={major} {...Form.getInputProps("major_name")} disabled></Select>
 					<TextInput label="รหัสบัตร" {...Form.getInputProps("chairpersons_id")} disabled={modalType === "add" ? false : true} />
 					<TextInput label="ชื่อ" {...Form.getInputProps("chairpersons_name")} disabled={modalType === "delete" ? true : false} />
 					{modalType === "add" && <PasswordInput label="รหัสผ่าน" {...Form.getInputProps("password")} />}

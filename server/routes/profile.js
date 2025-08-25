@@ -36,7 +36,7 @@ router.get("/profile", authenticateToken, async (req, res) => {
 				table: "chairpersons",
 				idCol: "chairpersons_id",
 				nameCol: "chairpersons_name",
-				idSea: "major_id",
+				idSea: "major_name",
 			},
 			dean: {
 				table: "dean",

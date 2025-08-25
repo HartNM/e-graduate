@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Box, Text, ScrollArea, Table, Space, Button, Modal, MultiSelect, Group, Flex, Select, TextInput } from "@mantine/core";
 
-const major_id = ["การบริหารการศึกษา", "ยุทธศาสตร์การบริหารและการพัฒนา", "การจัดการสมัยใหม่", "รัฐประศาสนศาสตร์", "วิทยาศาสตร์ศึกษา"];
+const major_name = ["การบริหารการศึกษา", "ยุทธศาสตร์การบริหารและการพัฒนา", "การจัดการสมัยใหม่", "รัฐประศาสนศาสตร์", "วิทยาศาสตร์ศึกษา"];
 
 const subjectCodes = [
 	{ value: "1012110", label: "1012110 ชื่อวิชา 1" },
@@ -73,7 +73,7 @@ const CourseRegistration = () => {
 	const handleOpenCoures = (item) => {
 		setSelectedRow(item);
 		setSelectedSubjects(item.course_id || []);
-		setSelectedMajor(item.major_id || null);
+		setSelectedMajor(item.major_name || null);
 		setSelectedGroup(item.study_group_id || "");
 		setOpenCoures(true);
 	};
@@ -117,13 +117,13 @@ const CourseRegistration = () => {
 	};
 
 	const getMajorLabel = (id) => {
-		const found = major_id.find((opt) => opt.value === id);
+		const found = major_name.find((opt) => opt.value === id);
 		return found ? found.label : id;
 	};
 
 	const classRows = tableData.map((item) => (
 		<Table.Tr key={item.id}>
-			<Table.Td>{getMajorLabel(item.major_id)}</Table.Td>
+			<Table.Td>{getMajorLabel(item.major_name)}</Table.Td>
 			<Table.Td>{item.study_group_id}</Table.Td>
 			<Table.Td>
 				<Group>
@@ -145,7 +145,7 @@ const CourseRegistration = () => {
 		<Box>
 			<Modal opened={openCoures} onClose={() => setOpenCoures(false)} title="กรอกข้อมูลรายวิชาประจำสาขา" centered closeOnClickOutside={false}>
 				<Box>
-					<Select label="สาขาวิชา" placeholder="เลือกหรือพิมพ์สาขา" searchable nothingFoundMessage="ไม่มีสาขานี้" data={major_id} value={user.id} onChange={setSelectedMajor} disabled />
+					<Select label="สาขาวิชา" placeholder="เลือกหรือพิมพ์สาขา" searchable nothingFoundMessage="ไม่มีสาขานี้" data={major_name} value={user.id} onChange={setSelectedMajor} disabled />
 					<TextInput label="หมู่เรียน" placeholder="พิมพ์หมู่เรียน" value={selectedGroup} onChange={(e) => setSelectedGroup(e.currentTarget.value)} disabled={modalType === "Edit" ? true : false} />
 					<MultiSelect label="รหัสวิชาที่ต้องเรียน" placeholder="เลือกหรือพิมพ์รหัสวิชา" data={subjectCodes} value={selectedSubjects} onChange={setSelectedSubjects} searchable clearable checkIconPosition="right" nothingFoundMessage="ไม่มีรหัสวิชานี้" />
 					<Button

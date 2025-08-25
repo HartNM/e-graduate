@@ -1,0 +1,11 @@
+@font-face {
+  font-family: "Kanit";
+  src: url("./assets/fonts/Kanit-Regular.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* กำหนดเป็น default ให้ทั้งโปรเจกต์ */
+body {
+  font-family: "Kanit", sans-serif;
+}

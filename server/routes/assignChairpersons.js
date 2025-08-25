@@ -20,13 +20,13 @@ router.post("/deleteAssignChairpersons", authenticateToken, async (req, res) => 
 });
 
 router.post("/editAssignChairpersons", authenticateToken, async (req, res) => {
-	const { chairpersons_id, chairpersons_name, major_id } = req.body;
+	const { chairpersons_id, chairpersons_name, major_name } = req.body;
 	try {
 		const pool = await poolPromise;
-		await pool.request().input("chairpersons_id", chairpersons_id).input("chairpersons_name", chairpersons_name).input("major_id", major_id).query(`
+		await pool.request().input("chairpersons_id", chairpersons_id).input("chairpersons_name", chairpersons_name).input("major_name", major_name).query(`
 			UPDATE chairpersons 
 			SET chairpersons_name = @chairpersons_name, 
-				major_id = @major_id
+				major_name = @major_name
 			WHERE chairpersons_id = @chairpersons_id`);
 		res.status(200).json({ message: "แก้ไขข้อมูลเรียบร้อยแล้ว" });
 	} catch (err) {
@@ -40,7 +40,7 @@ router.post("/allAssignChairpersons", authenticateToken, async (req, res) => {
 	try {
 		const pool = await poolPromise;
 		const request = pool.request().input("id", id);
-		let query = "SELECT * FROM chairpersons WHERE major_id = @id";
+		let query = "SELECT * FROM chairpersons WHERE major_name = @id";
 		const result = await request.query(query);
 
 		res.status(200).json(result.recordset);
@@ -51,7 +51,7 @@ router.post("/allAssignChairpersons", authenticateToken, async (req, res) => {
 });
 
 router.post("/addAssignChairpersons", authenticateToken, async (req, res) => {
-	const { chairpersons_id, chairpersons_name, major_id, password } = req.body;
+	const { chairpersons_id, chairpersons_name, major_name, password } = req.body;
 	try {
 		const pool = await poolPromise;
 		const checkResult = await pool.request().input("chairpersons_id", chairpersons_id).query("SELECT * FROM chairpersons WHERE chairpersons_id = @chairpersons_id");
@@ -60,15 +60,15 @@ router.post("/addAssignChairpersons", authenticateToken, async (req, res) => {
 		}
 		const saltRounds = 10;
 		const hashedPassword = await bcrypt.hash(password, saltRounds);
-		await pool.request().input("chairpersons_id", chairpersons_id).input("chairpersons_name", chairpersons_name).input("major_id", major_id).query(`
+		await pool.request().input("chairpersons_id", chairpersons_id).input("chairpersons_name", chairpersons_name).input("major_name", major_name).query(`
         INSERT INTO chairpersons ( 
             chairpersons_id, 
             chairpersons_name, 
-            major_id
+            major_name
         ) VALUES ( 
             @chairpersons_id, 
             @chairpersons_name, 
-            @major_id
+            @major_name
         )`);
 		await pool.request().input("reference_id", chairpersons_id).input("password", hashedPassword).input("role", "chairpersons").query(`
         INSERT INTO user_account ( 

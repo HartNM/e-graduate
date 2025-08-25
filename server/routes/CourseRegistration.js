@@ -24,7 +24,7 @@ router.post("/AllCourseRegistration", authenticateToken, async (req, res) => {
 
 	try {
 		const pool = await poolPromise;
-		const result = await pool.request().input("id", id).query(`SELECT * FROM course_registration WHERE major_id = @id`);
+		const result = await pool.request().input("id", id).query(`SELECT * FROM course_registration WHERE major_name = @id`);
 
 		const formatted = result.recordset.map((row) => ({
 			...row,
@@ -45,19 +45,19 @@ router.post("/AddCourseRegistration", authenticateToken, async (req, res) => {
 		const pool = await poolPromise;
 		const request = pool.request();
 		await request
-			.input("major_id", selectedMajor)
+			.input("major_name", selectedMajor)
 			.input("study_group_id", selectedGroup)
 			.input("course_id", JSON.stringify(selectedSubjects))
 			.input("officer_faculty_id", reference_id)
 			.input("course_registration_date", new Date()).query(`
         INSERT INTO course_registration ( 
-            major_id, 
+            major_name, 
             study_group_id, 
             course_id,
             officer_faculty_id,
             course_registration_date
         ) VALUES ( 
-            @major_id, 
+            @major_name, 
             @study_group_id, 
             @course_id,
             @officer_faculty_id, 
