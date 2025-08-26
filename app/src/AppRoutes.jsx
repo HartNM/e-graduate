@@ -5,7 +5,10 @@ import LoadingScreen from "./component/LoadingScreen.jsx";
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AuthenticationForm = lazy(() => import("./pages/AuthenticationTitle/login.jsx"));
 
-const GraduateCommitteeChair = lazy(() => import("./pages/GraduateCommitteeChair/GraduateCommitteeChair.jsx"));
+const RequestExam = lazy(() => import("./component/RequestExam.jsx"));
+const RequestEngTest = lazy(() => import("./component/RequestEngTest.jsx"));
+
+const Chairpersons = lazy(() => import("./pages/chairpersons/Chairpersons.jsx"));
 
 const Advisor = lazy(() => import("./pages/Advisor/Advisor.jsx"));
 const ExamResults = lazy(() => import("./pages/MajorOfficer/ExamResults.jsx"));
@@ -16,8 +19,6 @@ const AssignMajorOfficer = lazy(() => import("./pages/RegistrarOfficer/AssignMaj
 const ExamResultsPrint = lazy(() => import("./pages/RegistrarOfficer/ExamResultsPrint.jsx"));
 
 const Student = lazy(() => import("./pages/student/Student.jsx"));
-
-const RequestList = lazy(() => import("./component/RequestExam.jsx"));
 
 const Dean = lazy(() => import("./pages/dean/dean.jsx"));
 
@@ -35,26 +36,30 @@ function AppRoutes() {
 					<Route path="/login" element={<AuthenticationForm />} />
 
 					<Route path="/registrar-officer" element={<RegistrarOfficer />}>
-						<Route path="requestList/:type" element={<RequestList />} />
+						<Route path="RequestExam/:type" element={<RequestExam />} />
+						<Route path="RequestEngTest" element={<RequestEngTest />} />
 						<Route path="ExamScheduleSetupPage" element={<ExamScheduleSetupPage />} />
 						<Route path="assign-major-officer" element={<AssignMajorOfficer />} />
 						<Route path="exam-results-print" element={<ExamResultsPrint />} />
 					</Route>
 
 					<Route path="/student" element={<Student />}>
-						<Route path="requestList" element={<RequestList />} />
+						<Route path="RequestExam" element={<RequestExam />} />
+						<Route path="RequestEngTest" element={<RequestEngTest />} />
 					</Route>
 
 					<Route path="/advisor" element={<Advisor />}>
-						<Route path="requestList" element={<RequestList />} />
+						<Route path="RequestExam" element={<RequestExam />} />
+						<Route path="RequestEngTest" element={<RequestEngTest />} />
 					</Route>
 
-					<Route path="/graduate-committee-chair" element={<GraduateCommitteeChair />}>
-						<Route path="requestList" element={<RequestList />} />
+					<Route path="/chairpersons" element={<Chairpersons />}>
+						<Route path="RequestExam" element={<RequestExam />} />
+						<Route path="RequestEngTest" element={<RequestEngTest />} />
 					</Route>
 
 					<Route path="/dean" element={<Dean />}>
-						<Route path="requestList" element={<RequestList />} />
+						<Route path="RequestExam" element={<RequestExam />} />
 					</Route>
 
 					<Route path="/major-officer" element={<MajorOfficer />}>

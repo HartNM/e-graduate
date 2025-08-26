@@ -1,7 +1,7 @@
 import { Modal, Box, TextInput, Flex, Button, Space } from "@mantine/core";
 
 const ModalAdd = (props) => (
-	<Modal opened={props.opened} onClose={props.onClose} title={`เพิ่มคำร้องขอสอบ${props.formData.request_type}`} centered>
+	<Modal opened={props.opened} onClose={props.onClose} title={props.title} centered>
 		<Box>
 			<TextInput label="ชื่อ-นามสกุล" disabled value={props.formData.student_name} />
 			<TextInput label="รหัสประจำตัว" disabled value={props.formData.student_id} />

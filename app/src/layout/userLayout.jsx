@@ -9,7 +9,6 @@ import LoadingScreen from "../component/LoadingScreen.jsx";
 import { ActionIcon, useMantineColorScheme, useComputedColorScheme } from "@mantine/core";
 import { IconSun, IconMoon } from "@tabler/icons-react";
 
-
 const UserLayout = (item) => {
 	const navigate = useNavigate();
 	const [opened, { toggle }] = useDisclosure();
@@ -25,6 +24,22 @@ const UserLayout = (item) => {
 		return <Navigate to="/login" replace />;
 	}
 
+	try {
+		// แยก payload ออกมา (Base64 -> JSON)
+		const payload = JSON.parse(atob(token.split(".")[1]));
+		const now = Date.now() / 1000; // วินาทีปัจจุบัน
+
+		if (payload.exp && payload.exp < now) {
+			// ถ้า token หมดอายุ
+			localStorage.removeItem("token"); // ลบออกไปด้วย
+			return <Navigate to="/login" replace />;
+		}
+	} catch (e) {
+		// token ไม่ถูกต้อง
+		localStorage.removeItem("token");
+		return <Navigate to="/login" replace />;
+	}
+	
 	const { setColorScheme } = useMantineColorScheme();
 	const computedColorScheme = useComputedColorScheme("light", { getInitialValueInEffect: true });
 

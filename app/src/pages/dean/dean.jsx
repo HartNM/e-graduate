@@ -1,8 +1,8 @@
 //คณบดี
-import { IconGauge } from "@tabler/icons-react";
+import { IconClipboardX  } from "@tabler/icons-react";
 import UserLayout from "../../layout/userLayout.jsx";
 
-const menu = [{ label: "คำร้องขอยกเลิกสอบ", icon: IconGauge, links: "/dean/requestList" }];
+const menu = [{ label: "คำร้องขอยกเลิกสอบประมวลความรู้/สอบวัดคุณสมบัต", icon: IconClipboardX , links: "/dean/RequestExam" }];
 
 const GraduateCommitteeChair = () => {
 	return (

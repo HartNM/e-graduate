@@ -50,11 +50,7 @@ router.get("/student/:student_id", async (req, res) => {
           CONCAT(level_name_long, ' (', level_name, ')') AS program,
           group_no AS study_group_id,
           t_mjname AS major_name,
-          faculty_name,
-          CASE 
-            WHEN level_type = N'ปริญญาโท' THEN N'ประมวลความรู้'
-            ELSE N'วัดคุณสมบัติ'
-          END AS request_type
+          faculty_name
         FROM Api_students
         WHERE id = @id
       `);

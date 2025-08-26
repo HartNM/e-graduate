@@ -43,7 +43,7 @@ const AuthenticationForm = () => {
 					student: "/student",
 					dean: "/dean",
 					officer_major: "/major-officer",
-					chairpersons: "/graduate-committee-chair",
+					chairpersons: "/chairpersons",
 					officer_registrar: "/registrar-officer",
 					advisor: "/advisor",
 				};

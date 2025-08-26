@@ -5,9 +5,12 @@ import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
 import AppRoutes from "./AppRoutes";
 import "dayjs/locale/th";
-import { useColorScheme } from "@mantine/hooks";
+import "./index.css";
 
 const theme = createTheme({
+	fontFamily: "Kanit, sans-serif",
+	fontFamilyMonospace: "Kanit, monospace",
+
 	components: {
 		TextInput: TextInput.extend({
 			styles: {
@@ -42,7 +45,7 @@ const theme = createTheme({
 
 export default function App() {
 	return (
-		<MantineProvider theme={theme}>
+		<MantineProvider theme={theme} defaultColorScheme="light" withGlobalStyles withNormalizeCSS>
 			<DatesProvider settings={{ locale: "th" }}>
 				<AppRoutes />
 			</DatesProvider>

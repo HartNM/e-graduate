@@ -7,12 +7,10 @@ async function fillPdf(data, Exam_date) {
 	const pdfDoc = await PDFDocument.load(existingPdfBytes);
 	pdfDoc.registerFontkit(fontkit);
 
-	const fontBytes = await fetch("/fonts/THSarabunNew.ttf").then((res) => res.arrayBuffer());
-	const customFont = await pdfDoc.embedFont(fontBytes);
-	const fontBytesBold = await fetch("/fonts/THSarabunNew Bold.ttf").then((res) => res.arrayBuffer());
-	const customFontBold = await pdfDoc.embedFont(fontBytesBold);
-	const fontBytesNoto = await fetch("/fonts/DejaVuSans.ttf").then((r) => r.arrayBuffer());
-	const customFontNoto = await pdfDoc.embedFont(fontBytesNoto);
+	const THSarabunNewBytes = await fetch("/fonts/THSarabunNew.ttf").then((res) => res.arrayBuffer());
+	const THSarabunNew = await pdfDoc.embedFont(THSarabunNewBytes);
+	const THSarabunNewBoldBytes = await fetch("/fonts/THSarabunNew Bold.ttf").then((res) => res.arrayBuffer());
+	const THSarabunNewBold = await pdfDoc.embedFont(THSarabunNewBoldBytes);
 
 	const pages = pdfDoc.getPages();
 	const firstPage = pages[0];
@@ -44,8 +42,8 @@ async function fillPdf(data, Exam_date) {
 		}
 	};
 	/* ------------------------------------------------------------------------------------------------------------------------- */
-	const draw = (page, text, x, y, font = customFont, size = 14) => {
-		if (text !== undefined && text !== null) {
+	const draw = (page, text, x, y, font = THSarabunNew, size = 14, show = true) => {
+		if (text !== undefined && text !== null && show) {
 			page.drawText(String(text), { x, y, size, font });
 		}
 	};
@@ -85,38 +83,56 @@ async function fillPdf(data, Exam_date) {
 	const [chairpersons_approvals_date_day, chairpersons_approvals_date_month, chairpersons_approvals_date_year] = formatThaiDateShort(data?.chairpersons_approvals_date);
 	const [receipt_pay_date_day, receipt_pay_date_month, receipt_pay_date_year] = formatThaiDate(data?.receipt_pay_date);
 
-	drawCenterXText(firstPage, `คำร้องขอสอบ${data?.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, 780, customFontBold, 24);
+	drawCenterXText(firstPage, `คำร้องขอสอบ${data?.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, 780, THSarabunNewBold, 24);
+
+	let y = 760;
+	let space = 18;
+	let size = 14;
+
+	draw(firstPage, "มหาวิทยาลัยราชภัฏกำแพงเพชร", 420, (y -= space), THSarabunNew, size);
+	draw(firstPage, "วันที่................เดือน..................................พ.ศ. ..................", 335, (y -= space), THSarabunNew, size);
+	draw(firstPage, request_exam_date_day, 365, y + 2, THSarabunNew, size);
+	draw(firstPage, request_exam_date_month, 430, y + 2, THSarabunNew, size);
+	draw(firstPage, request_exam_date_year, 510, y + 2, THSarabunNew, size);
+	y -= space;
+
+	draw(firstPage, `เรื่อง`, 60, (y -= space), THSarabunNewBold, size);
+	draw(firstPage, `ขอสอบ${data?.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, 100, y, THSarabunNew, size);
+	draw(firstPage, `เรียน`, 60, (y -= space), THSarabunNewBold, size);
+	draw(firstPage, `ประธานคณะกรรมการบัณฑิตศึกษาประจำสาขาวิชา${data?.major_name}`, 100, y, THSarabunNew, size);
+	y -= space;
+
+	draw(firstPage, "ข้าพเจ้า................................................................................................รหัสประจำตัวนักศึกษา...................................................", 100, (y -= space), THSarabunNew, size);
+	draw(firstPage, data?.student_name, 180, y + 2, THSarabunNew, size);
+	draw(firstPage, data?.student_id, 460, y + 2, THSarabunNew, size);
+
+	draw(firstPage, "ระดับ...........................................หลักสูตร.......................................................................สาขาวิชา............................................................", 60, (y -= space), THSarabunNew, size);
+	draw(firstPage, data?.education_level, 110, y + 2, THSarabunNew, size);
+	draw(firstPage, data?.program, 230, y + 2, THSarabunNew, size);
+	draw(firstPage, data?.major_name, 420, y + 2, THSarabunNew, size);
+
+	draw(firstPage, "คณะ..........................................................................................มีความประสงค์..........................................................................................", 60, (y -= space), THSarabunNew, size);
+	draw(firstPage, data?.faculty_name, 100, y + 2, THSarabunNew, size);
+	draw(firstPage, `ขอสอบ${data?.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, 370, y + 2, THSarabunNew, size);
+
+	draw(firstPage, "ในภาคเรียนที่......................................วันที่สอบ..........................................................", 60, (y -= space), THSarabunNew, size);
+	draw(firstPage, data?.term, 140, y + 2, THSarabunNew, size);
+	draw(firstPage, exam_date_day, 240, y + 2, THSarabunNew, size);
+	draw(firstPage, exam_date_month, 260, y + 2, THSarabunNew, size);
+	draw(firstPage, exam_date_year + 543, 300, y + 2, THSarabunNew, size);
+	draw(firstPage, "จึงเรียนมาเพื่อโปรดพิจารณา", 100, (y -= space), THSarabunNew, size);
+	y -= space;
+
+	draw(firstPage, "ลงชื่อ...........................................................................นักศึกษา ", 310, (y -= space), THSarabunNew, size);
+	draw(firstPage, data?.student_name, 370, y + 2, THSarabunNew, size);
+	draw(firstPage, "(..........................................................................)", 330, (y -= space), THSarabunNew, size);
+	draw(firstPage, data?.student_name, 370, y + 2, THSarabunNew, size);
+	draw(firstPage, "วันที่..................../........................../...................... ", 320, (y -= space), THSarabunNew, size);
+	draw(firstPage, request_exam_date_day, 360, y + 2, THSarabunNew, size);
+	draw(firstPage, request_exam_date_month, 410, y + 2, THSarabunNew, size);
+	draw(firstPage, request_exam_date_year, 470, y + 2, THSarabunNew, size);
 
 	const drawItems = [
-		{ text: request_exam_date_day, x: 365, y: 721 },
-		{ text: request_exam_date_month, x: 430, y: 721 },
-		{ text: request_exam_date_year, x: 510, y: 721 },
-
-		{ text: `ขอสอบ${data?.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, x: 99, y: 687 },
-		{ text: `ประธานคณะกรรมการบัณฑิตศึกษาประจำสาขาวิชา${data?.major_name}`, x: 99, y: 669 },
-
-		{ text: "ข้าพเจ้า................................................................................................รหัสประจำตัวนักศึกษา...................................................", x: 99, y: 634 },
-		{ text: data?.student_name, x: 180, y: 637 },
-		{ text: data?.student_id, x: 460, y: 637 },
-		{ text: "ระดับ...........................................หลักสูตร...............................................................................สาขาวิชา....................................................", x: 63, y: 615 },
-		{ text: data?.education_level, x: 110, y: 618 },
-		{ text: data?.program, x: 230, y: 618 },
-		{ text: data?.major_name, x: 440, y: 618 },
-		{ text: `คณะ..........................................................................................มีความประสงค์ ขอสอบ${data?.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, x: 63, y: 596 },
-		{ text: data?.faculty_name, x: 100, y: 600 },
-		/* { text: `ขอสอบ${data?.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, x: 370, y: 600 }, */
-		{ text: "ในภาคเรียนที่......................................วันที่สอบ..........................................................", x: 63, y: 577 },
-		{ text: data?.term, x: 140, y: 580 },
-		{ text: exam_date_day, x: 240, y: 580 },
-		{ text: exam_date_month, x: 260, y: 580 },
-		{ text: exam_date_year + 543, x: 300, y: 580 },
-
-		{ text: data?.student_name, x: 370, y: 500 },
-		{ text: data?.student_name, x: 370, y: 481 },
-		{ text: request_exam_date_day, x: 360, y: 463 },
-		{ text: request_exam_date_month, x: 410, y: 463 },
-		{ text: request_exam_date_year, x: 470, y: 463 },
-
 		{ text: data?.advisor_approvals ? "เห็นควรสอบได้" : "ไม่เห็นควร", x: 80, y: 403, show: typeof data?.advisor_approvals === "boolean" },
 		{ text: "เนื่องจาก..................................................................................", x: 80, y: 384, show: typeof data?.advisor_approvals === "boolean" && !data.advisor_approvals },
 		{ text: data?.comment, x: 120, y: 386, show: typeof data?.advisor_approvals === "boolean" && !data.advisor_approvals },
@@ -139,7 +155,7 @@ async function fillPdf(data, Exam_date) {
 		{ text: "ลงทะเบียนเรียนครบตามหลักสูตร", x: 80, y: 252, show: typeof data?.registrar_approvals === "boolean" && data?.registrar_approvals },
 		{ text: "ให้ชำระค่าธรรมเนียมที่ฝ่ายการเงิน", x: 80, y: 233, show: typeof data?.registrar_approvals === "boolean" && data?.registrar_approvals },
 		{ text: "ไม่เห็นควร", x: 80, y: 271, show: typeof data?.registrar_approvals === "boolean" && !data?.registrar_approvals },
-		{ text: "เนื่องจาก............................................................................", x: 80, y: 252, show: typeof data?.registrar_approvals === "boolean" && !data?.registrar_approvals },
+		{ text: "เนื่องจาก............................................................................", x: 80, y: (y = y - space), show: typeof data?.registrar_approvals === "boolean" && !data?.registrar_approvals },
 		{ text: data?.comment, x: 120, y: 254, show: !data.registrar_approvals },
 		{ text: data?.registrar_approvals_id, x: 140, y: 180 },
 		{ text: data?.registrar_approvals_id, x: 140, y: 161 },
@@ -167,7 +183,7 @@ async function fillPdf(data, Exam_date) {
 	if (data?.receipt_vol_No === null) {
 		drawRect(firstPage, 306.5, 130, 250, 172.4);
 	}
-	/* drawGrid(firstPage); */
+	drawGrid(firstPage);
 
 	if (data?.cancel_list?.length > 0) {
 		const g07Bytes = await fetch("/pdf/g07.pdf").then((res) => res.arrayBuffer());
@@ -186,25 +202,25 @@ async function fillPdf(data, Exam_date) {
 			const [chairpersons_cancel_date_day, chairpersons_cancel_date_month, chairpersons_cancel_date_year] = formatThaiDateShort(date_cancel?.chairpersons_cancel_date);
 			const [dean_cancel_date_day, dean_cancel_date_month, dean_cancel_date_year] = formatThaiDateShort(date_cancel?.dean_cancel_date);
 
-			drawCenterXText(page, `คำร้องขอยกเลิกการเข้าสอบ${data?.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, 780, customFontBold, 24);
+			drawCenterXText(page, `คำร้องขอยกเลิกการเข้าสอบ${data?.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, 780, THSarabunNewBold, 24);
 			const drawItems = [
 				{ text: request_cancel_exam_date_day, x: 355, y: 726 },
 				{ text: request_cancel_exam_date_month, x: 420, y: 726 },
 				{ text: request_cancel_exam_date_year, x: 510, y: 726 },
 
-				{ text: `ขอยกเลิกการเข้าสอบ${data?.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, x: 99, y: 693 },
-				{ text: `คณบดี${data?.faculty_name}`, x: 99, y: 675 },
-				{ text: "ข้าพเจ้า................................................................................................รหัสประจำตัวนักศึกษา...................................................", x: 99, y: 640 },
+				{ text: `ขอยกเลิกการเข้าสอบ${data?.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, x: 100, y: 693 },
+				{ text: `คณบดี${data?.faculty_name}`, x: 100, y: 675 },
+				{ text: "ข้าพเจ้า................................................................................................รหัสประจำตัวนักศึกษา...................................................", x: 100, y: 640 },
 				{ text: data?.student_name, x: 180, y: 643 },
 				{ text: data?.student_id, x: 460, y: 643 },
-				{ text: "ระดับ...........................................หลักสูตร.......................................................................สาขาวิชา............................................................", x: 63, y: 621 },
+				{ text: "ระดับ...........................................หลักสูตร.......................................................................สาขาวิชา............................................................", x: 60, y: 621 },
 				{ text: data?.education_level, x: 110, y: 624 },
 				{ text: data?.program, x: 230, y: 624 },
 				{ text: data?.major_name, x: 420, y: 624 },
-				{ text: "คณะ..........................................................................................มีความประสงค์..........................................................................................", x: 63, y: 602 },
+				{ text: "คณะ..........................................................................................มีความประสงค์..........................................................................................", x: 60, y: 602 },
 				{ text: data?.faculty_name, x: 100, y: 606 },
 				{ text: `ขอยกเลิกการเข้าสอบ${data?.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, x: 370, y: 606 },
-				{ text: "เนื่่องจาก......................................................................................................................................................................................................", x: 63, y: 583 },
+				{ text: "เนื่่องจาก......................................................................................................................................................................................................", x: 60, y: 583 },
 				{ text: date_cancel?.reason, x: 140, y: 586 },
 
 				{ text: data?.student_name, x: 380, y: 474 },
@@ -231,7 +247,7 @@ async function fillPdf(data, Exam_date) {
 				{ text: chairpersons_cancel_date_month, x: 435, y: 286 },
 				{ text: chairpersons_cancel_date_year, x: 475, y: 286 },
 
-				{ text: `3. ความเห็นคณบดี${data?.faculty_name}`, x: 187, y: 257, font: customFontBold },
+				{ text: `3. ความเห็นคณบดี${data?.faculty_name}`, x: 187, y: 257, font: THSarabunNewBold },
 				{ text: date_cancel?.dean_cancel ? "อนุญาต" : "ไม่อนุญาต", x: 205, y: 240, show: typeof date_cancel?.dean_cancel === "boolean" },
 				{ text: "เนื่องจาก.............................................................................", x: 205, y: 220, show: typeof date_cancel?.dean_cancel === "boolean" && !data.chairpersons_approvals },
 				{ text: date_cancel?.comment, x: 245, y: 222, show: typeof date_cancel?.dean_cancel === "boolean" && !date_cancel?.dean_cancel },

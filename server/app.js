@@ -12,20 +12,26 @@ const authRoutes = require("./routes/auth");
 app.use("/api", authRoutes);
 const profileRoutes = require("./routes/profile");
 app.use("/api", profileRoutes);
+
+const assignMajorOfficer = require("./routes/assignMajorOfficer");
+app.use("/api", assignMajorOfficer);
+const assignChairpersons = require("./routes/assignChairpersons");
+app.use("/api", assignChairpersons);
+const CourseRegistration = require("./routes/CourseRegistration");
+app.use("/api", CourseRegistration);
+const ExamResults = require("./routes/ExamResults");
+app.use("/api", ExamResults);
+const ExamResultsPrint = require("./routes/ExamResultsPrint");
+app.use("/api", ExamResultsPrint);
+
+const RequestExam = require("./routes/RequestExam");
+app.use("/api", RequestExam);
 const requestExamInfoRouters = require("./routes/requestExamInfo");
 app.use("/api", requestExamInfoRouters);
-const requestExamRoutes = require("./routes/requestExam");
-app.use("/api", requestExamRoutes);
-const assignMajorOfficerRouters = require("./routes/assignMajorOfficer");
-app.use("/api", assignMajorOfficerRouters);
-const assignChairpersonsRouters = require("./routes/assignChairpersons");
-app.use("/api", assignChairpersonsRouters);
-const CourseRegistrationRouters = require("./routes/CourseRegistration");
-app.use("/api", CourseRegistrationRouters);
-const ExamResultsRouters = require("./routes/ExamResults");
-app.use("/api", ExamResultsRouters);
-const ExamResultsPrintRouters = require("./routes/ExamResultsPrint");
-app.use("/api", ExamResultsPrintRouters);
+
+const RequestEngTest = require("./routes/RequestEngTest");
+app.use("/api", RequestEngTest);
+
 
 app.listen(PORT, () => {
 	console.log(`Server is running on port ${PORT}`);

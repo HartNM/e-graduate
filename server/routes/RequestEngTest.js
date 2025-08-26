@@ -16,107 +16,17 @@ function formatThaiBuddhistDate() {
 	return `${buddhistYear}-${d.month() + 1}-${d.date()} ${d.format("HH:mm:ss")}`;
 }
 
-router.post("/cancelApproveRequestExam", authenticateToken, async (req, res) => {
-	const { request_cancel_exam_id, request_exam_id, name, role, selected, comment_cancel } = req.body;
-	if (!["advisor", "chairpersons", "dean"].includes(role)) {
-		return res.status(400).json({ message: "สิทธิ์ในการเข้าถึงไม่ถูกต้อง" });
-	}
-	try {
-		let statusValue = "";
-		if (selected === "approve") {
-			if (role === "advisor") {
-				statusValue = "8";
-			} else if (role === "chairpersons") {
-				statusValue = "9";
-			} else if (role === "dean") {
-				statusValue = "0";
-			}
-		} else {
-			statusValue = "5";
-		}
-		const pool = await poolPromise;
-		const request = pool.request();
-		const roleFields = {
-			advisor: `
-				advisor_cancel_name = @name,
-				advisor_cancel = @approve,
-				advisor_cancel_date = @date
-			`,
-			chairpersons: `
-				chairpersons_cancel_name = @name,
-				chairpersons_cancel = @approve,
-				chairpersons_cancel_date = @date
-			`,
-			dean: `
-				dean_cancel_name = @name,
-				dean_cancel = @approve,
-				dean_cancel_date = @date
-			`,
-		};
-		await request
-			.input("request_cancel_exam_id", request_cancel_exam_id)
-			.input("name", name)
-			.input("approve", selected === "approve" ? 1 : 0)
-			.input("date", formatThaiBuddhistDate())
-			.input("comment", comment_cancel).query(`
-				UPDATE request_cancel_exam
-				SET ${roleFields[role]}
-					${selected !== "approve" ? ", comment = @comment" : ""}
-				WHERE request_cancel_exam_id = @request_cancel_exam_id
-			`);
-		await request.input("request_exam_id", request_exam_id).input("status", statusValue).query(`
-			UPDATE request_exam
-			SET status = @status
-			WHERE request_exam_id = @request_exam_id
-		`);
-		res.status(200).json({ message: "บันทึกผลการอนุมัติคำร้องขอยกเลิกเรียบร้อยแล้ว" });
-	} catch (err) {
-		console.error("cancelApproveRequestExam:", err);
-		res.status(500).json({ message: "เกิดข้อผิดพลาดในการประมวลผล" });
-	}
-});
-
-router.post("/cancelRequestExam", authenticateToken, async (req, res) => {
-	const { request_exam_id, reason } = req.body;
+router.post("/payRequestEngTest", authenticateToken, async (req, res) => {
+	const { request_eng_test_id, receipt_vol_No } = req.body;
 	try {
 		const pool = await poolPromise;
-		const request = pool.request();
-		await request.input("request_exam_id", request_exam_id).input("reason", reason).input("request_cancel_exam_date", formatThaiBuddhistDate()).query(`
-			INSERT INTO request_cancel_exam (
-			request_exam_id,
-			reason,
-			request_cancel_exam_date
-			)
-			VALUES (
-			@request_exam_id,
-			@reason,
-			@request_cancel_exam_date
-			)
+		await pool.request().input("request_eng_test_id", request_eng_test_id).input("receipt_vol_No", receipt_vol_No).input("receipt_pay_date", formatThaiBuddhistDate()).input("status", "5").query(`
+			UPDATE request_eng_test
+			SET receipt_vol_No = @receipt_vol_No ,
+				receipt_pay_date = @receipt_pay_date,
+				status = @status
+			WHERE request_eng_test_id = @request_eng_test_id
 		`);
-		await request.input("status", "7").query(`
-			UPDATE request_exam
-			SET status = @status
-			WHERE request_exam_id = @request_exam_id
-		`);
-
-		res.status(200).json({ message: "บันทึกคำร้องขอยกเลิกการสอบเรียบร้อยแล้ว" });
-	} catch (err) {
-		console.error("SQL Error:", err);
-		res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกคำร้อง" });
-	}
-});
-
-router.post("/payRequestExam", authenticateToken, async (req, res) => {
-	const { request_exam_id, receipt_vol_No } = req.body;
-	try {
-		const pool = await poolPromise;
-		await pool.request().input("request_exam_id", request_exam_id).input("receipt_vol_No", receipt_vol_No).input("receipt_pay_date", formatThaiBuddhistDate()).input("status", "5").query(`
-      UPDATE request_exam
-      SET receipt_vol_No = @receipt_vol_No ,
-          receipt_pay_date = @receipt_pay_date,
-          status = @status
-      WHERE request_exam_id = @request_exam_id
-      `);
 		res.status(200).json({ message: "บันทึกข้อมูลการชำระเงินเรียบร้อยแล้ว" });
 	} catch (err) {
 		console.error("SQL Error:", err);
@@ -124,8 +34,8 @@ router.post("/payRequestExam", authenticateToken, async (req, res) => {
 	}
 });
 
-router.post("/approveRequestExam", authenticateToken, async (req, res) => {
-	const { request_exam_id, name, role, selected, comment } = req.body;
+router.post("/approveRequestEngTest", authenticateToken, async (req, res) => {
+	const { request_eng_test_id, name, role, selected, comment } = req.body;
 	if (!["advisor", "chairpersons", "officer_registrar"].includes(role)) {
 		return res.status(400).json({ message: "สิทธิ์ในการเข้าถึงไม่ถูกต้อง" });
 	}
@@ -145,7 +55,7 @@ router.post("/approveRequestExam", authenticateToken, async (req, res) => {
 		const pool = await poolPromise;
 		const request = pool
 			.request()
-			.input("request_exam_id", request_exam_id)
+			.input("request_eng_test_id", request_eng_test_id)
 			.input("status", statusValue)
 			.input("name", name)
 			.input("approve", selected === "approve" ? 1 : 0)
@@ -154,28 +64,28 @@ router.post("/approveRequestExam", authenticateToken, async (req, res) => {
 		// สร้าง query ตาม role
 		const roleFields = {
 			advisor: `
-        advisor_approvals_id = @name,
-        advisor_approvals = @approve,
-        advisor_approvals_date = @date
-      `,
+				advisor_approvals_id = @name,
+				advisor_approvals = @approve,
+				advisor_approvals_date = @date
+			`,
 			chairpersons: `
-        chairpersons_approvals_id = @name,
-        chairpersons_approvals = @approve,
-        chairpersons_approvals_date = @date
-      `,
+				chairpersons_approvals_id = @name,
+				chairpersons_approvals = @approve,
+				chairpersons_approvals_date = @date
+			`,
 			officer_registrar: `
-        registrar_approvals_id = @name,
-        registrar_approvals = @approve,
-        registrar_approvals_date = @date
-      `,
+				registrar_approvals_id = @name,
+				registrar_approvals = @approve,
+				registrar_approvals_date = @date
+			`,
 		};
 		const query = `
-      UPDATE request_exam
-      SET ${roleFields[role]},
-          status = @status
-          ${selected !== "approve" ? ", comment = @comment" : ""}
-      WHERE request_exam_id = @request_exam_id
-    `;
+			UPDATE request_eng_test
+			SET ${roleFields[role]},
+				status = @status
+				${selected !== "approve" ? ", comment = @comment" : ""}
+			WHERE request_eng_test_id = @request_eng_test_id
+		`;
 		await request.query(query);
 		res.status(200).json({ message: "บันทึกผลการอนุมัติคำร้องขอสอบเรียบร้อยแล้ว" });
 	} catch (err) {
@@ -184,21 +94,17 @@ router.post("/approveRequestExam", authenticateToken, async (req, res) => {
 	}
 });
 
-router.post("/requestExamAll", authenticateToken, async (req, res) => {
+router.post("/allRequestEngTest", authenticateToken, async (req, res) => {
 	const { role, id } = req.body;
 	console.log(role, id);
 
 	const statusMap = {
-		0: "ยกเลิก",
 		1: "รออาจารย์ที่ปรึกษาอนุมัติ",
 		2: "รอประธานหลักสูตรอนุมัติ",
 		3: "รอเจ้าหน้าที่ทะเบียนตรวจสอบ",
 		4: "รอการชำระค่าธรรมเนียม",
 		5: "อนุมัติ",
 		6: "ไม่อนุมัติ",
-		7: "รออาจารย์ที่ปรึกษาอนุมัติ",
-		8: "รอประธานหลักสูตรอนุมัติ",
-		9: "รอคณบดีอนุมัติ",
 	};
 
 	const formatDate = (date) => {
@@ -211,7 +117,7 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 		const request = pool.request().input("id", id);
 
 		// สร้าง query พื้นฐาน
-		let query = "SELECT * FROM request_exam";
+		let query = "SELECT * FROM request_eng_test";
 
 		// กำหนดเงื่อนไข WHERE ตาม role
 		if (role === "student") {
@@ -245,17 +151,6 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 					console.warn(`ไม่สามารถดึงข้อมูลนักศึกษา ${item.student_id}`);
 				}
 
-				try {
-					const cancelRes = await pool.request().query(`
-							SELECT * FROM request_cancel_exam 
-							WHERE request_exam_id = '${item.request_exam_id}'
-						`);
-					cancelInfo = cancelRes.recordset;
-				} catch (err) {
-					console.warn(`ไม่สามารถดึงข้อมูลการยกเลิกของ request_exam_id ${item.request_exam_id}`);
-					cancelInfo = [];
-				}
-
 				return {
 					...item,
 					...studentInfo,
@@ -266,16 +161,7 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 					request_date: formatDate(item.status > 6 ? cancelInfo[0]?.request_cancel_exam_date : item.request_exam_date) || null,
 					status_text: statusMap[item.status?.toString()] || null,
 					receipt_pay_date: formatDate(item.receipt_pay_date) || null,
-					request_type: item.status > 6 ? `ขอยกเลิกการเข้าสอบ${item.request_type}` : item.request_type || null,
-					...(cancelInfo.length > 0 && {
-						cancel_list: cancelInfo.map((c) => ({
-							...c,
-							request_cancel_exam_date: formatDate(c.request_cancel_exam_date),
-							advisor_cancel_date: formatDate(c.advisor_cancel_date),
-							chairpersons_cancel_date: formatDate(c.chairpersons_cancel_date),
-							dean_cancel_date: formatDate(c.dean_cancel_date),
-						})),
-					}),
+					request_type: item.status > 6 ? `ขอยกเลิกการเข้าสอบ${studentInfo?.request_type}` : item.request_type || null,
 				};
 			})
 		);
@@ -287,29 +173,29 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 	}
 }); /*  */
 
-router.post("/addRequestExam", authenticateToken, async (req, res) => {
-	const { student_id, study_group_id, major_name, faculty_name, education_level } = req.body;
+router.post("/addRequestEngTest", authenticateToken, async (req, res) => {
+	const { student_id, study_group_id, major_name, faculty_name, request_type } = req.body;
 	/* console.log(student_id, study_group_id, major_name, faculty_name ,`ขอสอบ${request_type}`); */
 
 	try {
 		const pool = await poolPromise;
 		const infoRes = await pool.request().query(`SELECT TOP 1 term FROM request_exam_info ORDER BY request_exam_info_id DESC`);
+
 		await pool
 			.request()
 			.input("student_id", student_id)
 			.input("study_group_id", study_group_id)
 			.input("major_name", major_name)
 			.input("faculty_name", faculty_name)
-			.input("request_type", `ขอสอบ${education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`)
+			.input("request_type", `ขอทดสอบความรู้ทางภาษาอังกฤษ`)
 			.input("term", infoRes.recordset[0].term)
 			.input("request_exam_date", formatThaiBuddhistDate())
 			.input("status", "1").query(`
-			INSERT INTO request_exam (
+			INSERT INTO request_eng_test (
 				student_id,
 				study_group_id,
 				major_name,
 				faculty_name,
-				request_type,
 				term,
 				request_exam_date,
 				status
@@ -318,7 +204,6 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 				@study_group_id,
 				@major_name,
 				@faculty_name,
-				@request_type,
 				@term,
 				@request_exam_date,
 				@status

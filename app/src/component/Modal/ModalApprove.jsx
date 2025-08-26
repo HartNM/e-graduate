@@ -1,13 +1,11 @@
 import { Modal, Box, Text, TextInput, Checkbox, Stack, Space, Flex, Button } from "@mantine/core";
 
 const ModalApprove = (props) => (
-	<Modal opened={props.opened} onClose={props.onClose} title={props.selectedRow && (props.role === "officer_registrar" ? "ตรวจสอบคำ" : "ลงความเห็น") + props.selectedRow.request_type} centered>
+	<Modal opened={props.opened} onClose={props.onClose} title={props.title} centered>
 		{props.selectedRow && (
 			<Box style={{ display: "flex", flexDirection: "column", height: 227, justifyContent: "space-between" }}>
 				<Box>
-					<Text>
-						คุณกำลัง{props.role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}สำหรับ: {props.selectedRow.student_name}
-					</Text>
+					<Text>{props.selectedRow.student_name}</Text>
 					<Space h="sm" />
 					<Stack>
 						<Checkbox checked={props.selected === "approve"} onChange={() => props.setSelected("approve")} label={props.role === "officer_registrar" ? "ผ่านการตรวจสอบ" : "เห็นควร"} />

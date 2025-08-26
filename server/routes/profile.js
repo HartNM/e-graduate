@@ -17,7 +17,7 @@ router.get("/profile", authenticateToken, async (req, res) => {
 				name: studentInfo.student_name,
 				role: "student",
 				id: studentInfo.student_id,
-				education_level: studentInfo.request_type,
+				education_level: studentInfo.education_level,
 			});
 		} catch (err) {
 			console.warn(`ดึงข้อมูลนักเรียนไม่สำเร็จ: ${reference_id}`);
@@ -49,11 +49,6 @@ router.get("/profile", authenticateToken, async (req, res) => {
 				idCol: "officer_registrar_id",
 				nameCol: "officer_registrar_name",
 			},
-			/* officer_faculty: {
-				table: "officer_faculty",
-				idCol: "officer_faculty_id",
-				nameCol: "officer_faculty_name",
-			}, */
 			officer_major: {
 				table: "officer_major",
 				idCol: "officer_major_id",
