@@ -8,7 +8,7 @@ import ModalAdd from "../component/Modal/ModalAdd";
 import ModalCheck from "../component/Modal/ModalCheck";
 import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
-import Pdfg01 from "../component/PDF/Pdfg01";
+import Pdfg01 from "../component/PDF/Pdfg01 copy";
 
 const RequestExam = () => {
 	// Modal Info
