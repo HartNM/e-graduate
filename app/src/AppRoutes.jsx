@@ -2,11 +2,17 @@ import { Routes, Route, BrowserRouter } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import LoadingScreen from "./component/LoadingScreen.jsx";
 
+const Personnel = lazy(() => import("./pages/personnel"));
+
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AuthenticationForm = lazy(() => import("./pages/AuthenticationTitle/login.jsx"));
 
 const RequestExam = lazy(() => import("./component/RequestExam.jsx"));
 const RequestEngTest = lazy(() => import("./component/RequestEngTest.jsx"));
+const PlagiarismReport = lazy(() => import("./component/PlagiarismReport.jsx"));
+const RequestGraduation = lazy(() => import("./component/RequestGraduation.jsx"));
+const RequestThesisDefense = lazy(() => import("./component/RequestThesisDefense.jsx"));
+const RequestThesisProposal = lazy(() => import("./component/RequestThesisProposal.jsx"));
 
 const Chairpersons = lazy(() => import("./pages/chairpersons/Chairpersons.jsx"));
 
@@ -32,6 +38,18 @@ function AppRoutes() {
 		<BrowserRouter>
 			<Suspense fallback={<LoadingScreen />}>
 				<Routes>
+					{/* <Route path="/Personnel" element={<Personnel />}>
+						<Route path="RequestExam/:type" element={<RequestExam />} />
+						<Route path="RequestExam" element={<RequestExam />} />
+						<Route path="RequestEngTest" element={<RequestEngTest />} />
+						<Route path="ExamScheduleSetupPage" element={<ExamScheduleSetupPage />} />
+						<Route path="assign-major-officer" element={<AssignMajorOfficer />} />
+						<Route path="exam-results-print" element={<ExamResultsPrint />} />
+						<Route path="CourseRegistration" element={<CourseRegistration />} />
+						<Route path="AssignChairpersons" element={<AssignChairpersons />} />
+						<Route path="examResults" element={<ExamResults />} />
+						<Route path="ExamEligibleListPrint" element={<ExamEligibleListPrint />} />
+					</Route> */}
 					<Route path="*" element={<NotFound />} />
 					<Route path="/login" element={<AuthenticationForm />} />
 
@@ -46,6 +64,10 @@ function AppRoutes() {
 					<Route path="/student" element={<Student />}>
 						<Route path="RequestExam" element={<RequestExam />} />
 						<Route path="RequestEngTest" element={<RequestEngTest />} />
+						<Route path="RequestThesisProposal" element={<RequestThesisProposal />} />
+						<Route path="RequestThesisDefense" element={<RequestThesisDefense />} />
+						<Route path="RequestGraduation" element={<RequestGraduation />} />
+						<Route path="PlagiarismReport" element={<PlagiarismReport />} />
 					</Route>
 
 					<Route path="/advisor" element={<Advisor />}>

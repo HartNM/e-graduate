@@ -9,7 +9,7 @@ function authenticateToken(req, res, next) {
 
   jwt.verify(token, SECRET_KEY, (err, user) => {
     if (err) return res.sendStatus(403);
-    req.user = user; // user = { reference_id, role }
+    req.user = user;
     next();
   });
 }

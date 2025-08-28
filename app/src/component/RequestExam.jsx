@@ -5,7 +5,6 @@ import { useParams } from "react-router-dom";
 import ModalApprove from "../component/Modal/ModalApprove";
 import ModalAddCancel from "../component/Modal/ModalAddCancel";
 import ModalAdd from "../component/Modal/ModalAdd";
-import ModalCheck from "../component/Modal/ModalCheck";
 import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
 import Pdfg01 from "../component/PDF/Pdfg01 copy";
@@ -21,7 +20,6 @@ const RequestExam = () => {
 	const [openApproveState, setOpenApproveState] = useState(false);
 	const [openAddCancel, setOpenAddCancel] = useState(false);
 	const [openPay, setOpenPay] = useState(false);
-	const [openCheck, setOpenCheck] = useState(false);
 	// Form states
 	const [formData, setFormData] = useState({});
 	const [selectedRow, setSelectedRow] = useState(null);
@@ -250,7 +248,40 @@ const RequestExam = () => {
 		}
 	};
 
-	const filteredData = requestExam.filter((p) => {
+	function sortRequests(data, role) {
+		return data.sort((a, b) => {
+			const statusA = Number(a.status);
+			const statusB = Number(b.status);
+			let orderA = 0,
+				orderB = 0;
+			switch (role) {
+				case "advisor":
+					orderA = statusA === 1 || statusA === 7 ? 0 : statusA === 0 ? 2 : 1;
+					orderB = statusB === 1 || statusB === 7 ? 0 : statusB === 0 ? 2 : 1;
+					break;
+				case "chairpersons":
+					orderA = statusA === 2 || statusA === 8 ? 0 : statusA === 0 ? 2 : 1;
+					orderB = statusB === 2 || statusB === 8 ? 0 : statusB === 0 ? 2 : 1;
+					break;
+				case "dean":
+					orderA = statusA === 9 ? 0 : statusA === 0 ? 2 : 1;
+					orderB = statusB === 9 ? 0 : statusB === 0 ? 2 : 1;
+					break;
+				case "officer_registrar":
+					orderA = statusA === 3 ? 0 : statusA === 0 ? 2 : 1;
+					orderB = statusB === 3 ? 0 : statusB === 0 ? 2 : 1;
+					break;
+				default:
+					orderA = statusA;
+					orderB = statusB;
+			}
+			return orderA - orderB || statusA - statusB;
+		});
+	}
+
+	const sortedData = sortRequests(requestExam, user.role);
+
+	const filteredData = sortedData.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
 		const matchesType = selectedType ? p.request_type === selectedType : true;
 		return matchesSearch && matchesType;
@@ -397,7 +428,6 @@ const RequestExam = () => {
 			/>
 			<ModalAddCancel opened={openAddCancel} onClose={() => setOpenAddCancel(false)} selectedRow={selectedRow} reason={reason} setReason={setReason} error={error} handleAddCancel={handleAddCancel} />
 			<ModalAdd opened={openAdd} onClose={() => setOpenAdd(false)} formData={formData} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`} />
-			<ModalCheck opened={openCheck} onClose={() => setOpenCheck(false)} selected={selected} setSelected={setSelected} comment={comment} setComment={setComment} error={error} />
 			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} />
 
 			<Text size="1.5rem" fw={900} mb="md">
@@ -406,7 +436,7 @@ const RequestExam = () => {
 			<Group justify="space-between">
 				<Box>
 					<Flex align="flex-end" gap="sm">
-						<TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />
+						{user.role !== "student" && <TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
 						{user.role === "chairpersons" && <Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
 					</Flex>
 				</Box>

@@ -58,6 +58,39 @@ const AuthenticationForm = () => {
 			setOpenInform(true);
 		}
 	};
+	/* const handleLogin = async () => {
+		setLoading(true);
+		try {
+			const response = await fetch("http://localhost:8080/api/login", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(loginForm.values),
+			});
+			const data = await response.json();
+			if (!response.ok) {
+				throw new Error(data.message);
+			}
+			localStorage.setItem("token", data.token);
+			setInformMessage(data.message);
+			setInformtype("success");
+			console.log(data);
+
+			setTimeout(() => {
+				if (data.roles.includes("student")) {
+					navigate("/student");
+				} else {
+					navigate("/personnel");
+				}
+			}, 1000);
+		} catch (error) {
+			console.error("Login error:", error);
+			setInformtype("error");
+			setInformMessage(error.message);
+		} finally {
+			setLoading(false);
+			setOpenInform(true);
+		}
+	}; */
 
 	return (
 		<Center bg="#e9ecef" h="100vh">
