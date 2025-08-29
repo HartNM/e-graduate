@@ -18,7 +18,7 @@ const Student = () => {
 
 				setMenu([
 					{ label: `คำร้องขอสอบ${eduData.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, icon: IconClipboardText, links: "/student/RequestExam" },
-					/* { label: `คำร้องขอยกเลิกการเข้าสอบ${eduData.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, icon: IconClipboardX, links: "/student/CancelExamRequest" }, */
+					{ label: `คำร้องขอยกเลิกการเข้าสอบ${eduData.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, icon: IconClipboardX, links: "/student/RequestExamCancel" },
 					{ label: "คำร้องขอทดสอบความรู้ทางภาษาอังกฤษ", icon: IconCertificate, links: "/student/RequestEngTest" },
 					{ label: `คำร้องขอลงทะเบียนสอบโครงร่าง${eduData.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`, icon: IconReport, links: "/student/RequestThesisProposal" },
 					/* { label: `คำร้องขอเลื่อนสอบโครงร่าง${eduData.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`, icon: IconCalendarClock, links: "/student/PostponeProposalExam" }, */

@@ -8,6 +8,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const AuthenticationForm = lazy(() => import("./pages/AuthenticationTitle/login.jsx"));
 
 const RequestExam = lazy(() => import("./component/RequestExam.jsx"));
+const RequestExamCancel = lazy(() => import("./component/RequestExamCancel.jsx"));
 const RequestEngTest = lazy(() => import("./component/RequestEngTest.jsx"));
 const PlagiarismReport = lazy(() => import("./component/PlagiarismReport.jsx"));
 const RequestGraduation = lazy(() => import("./component/RequestGraduation.jsx"));
@@ -63,6 +64,7 @@ function AppRoutes() {
 
 					<Route path="/student" element={<Student />}>
 						<Route path="RequestExam" element={<RequestExam />} />
+						<Route path="RequestExamCancel" element={<RequestExamCancel />} />
 						<Route path="RequestEngTest" element={<RequestEngTest />} />
 						<Route path="RequestThesisProposal" element={<RequestThesisProposal />} />
 						<Route path="RequestThesisDefense" element={<RequestThesisDefense />} />
@@ -72,16 +74,19 @@ function AppRoutes() {
 
 					<Route path="/advisor" element={<Advisor />}>
 						<Route path="RequestExam" element={<RequestExam />} />
+						<Route path="RequestExamCancel" element={<RequestExamCancel />} />
 						<Route path="RequestEngTest" element={<RequestEngTest />} />
 					</Route>
 
 					<Route path="/chairpersons" element={<Chairpersons />}>
 						<Route path="RequestExam" element={<RequestExam />} />
+						<Route path="RequestExamCancel" element={<RequestExamCancel />} />
 						<Route path="RequestEngTest" element={<RequestEngTest />} />
 					</Route>
 
 					<Route path="/dean" element={<Dean />}>
 						<Route path="RequestExam" element={<RequestExam />} />
+						<Route path="RequestExamCancel" element={<RequestExamCancel />} />
 					</Route>
 
 					<Route path="/major-officer" element={<MajorOfficer />}>

@@ -332,7 +332,11 @@ const RequestExam = () => {
 						</>
 					)}
 
-					{item.status > 6 && <Pill>{item.status_text}</Pill>}
+					{item.status > 6 && (
+						<Pill Pill variant="filled" style={{ backgroundColor: "#ffcccc", color: "#b30000" }}>
+							{item.status_text}
+						</Pill>
+					)}
 				</Table.Td>
 
 				<Table.Td style={{ maxWidth: "150px" }}>
@@ -353,7 +357,7 @@ const RequestExam = () => {
 								)}
 								{item.status === "5" && (
 									<>
-										<Button
+										{/* <Button
 											size="xs"
 											color="red"
 											onClick={() => {
@@ -362,7 +366,7 @@ const RequestExam = () => {
 											}}
 										>
 											ขอยกเลิก
-										</Button>
+										</Button> */}
 										<Button size="xs" color="green">
 											พิมพ์ใบเสร็จ
 										</Button>
@@ -384,7 +388,7 @@ const RequestExam = () => {
 								{user.role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
 							</Button>
 						)}
-						{((user.role === "advisor" && item.status === "7") || (user.role === "chairpersons" && item.status === "8") || (user.role === "dean" && item.status === "9")) && (
+						{/* {((user.role === "advisor" && item.status === "7") || (user.role === "chairpersons" && item.status === "8") || (user.role === "dean" && item.status === "9")) && (
 							<Button
 								size="xs"
 								color="green"
@@ -396,7 +400,7 @@ const RequestExam = () => {
 							>
 								ลงความเห็น
 							</Button>
-						)}
+						)} */}
 					</Group>
 				</Table.Td>
 				{item.exam_results !== null && (

@@ -1,7 +1,7 @@
 import { Modal, Box, TextInput, Textarea, Flex, Button } from "@mantine/core";
 
 const ModalAddCancel = (props) => (
-	<Modal opened={props.opened} onClose={props.onClose} title={`ยกเลิกคำร้อง${props.selectedRow?.request_type}`} centered>
+	<Modal opened={props.opened} onClose={props.onClose} title={`คำร้องขอยกเลิกสอบ${props.selectedRow?.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`} centered>
 		{props.selectedRow && (
 			<Box>
 				<TextInput label="ชื่อ" disabled value={props.selectedRow.student_name} />

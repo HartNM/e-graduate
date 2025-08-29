@@ -24,10 +24,12 @@ app.use("/api", ExamResults);
 const ExamResultsPrint = require("./routes/ExamResultsPrint");
 app.use("/api", ExamResultsPrint);
 
-const RequestExam = require("./routes/RequestExam");
-app.use("/api", RequestExam);
 const requestExamInfoRouters = require("./routes/requestExamInfo");
 app.use("/api", requestExamInfoRouters);
+const RequestExam = require("./routes/RequestExam");
+app.use("/api", RequestExam);
+const RequestExamCancel = require("./routes/RequestExamCancel");
+app.use("/api", RequestExamCancel);
 
 const RequestEngTest = require("./routes/RequestEngTest");
 app.use("/api", RequestEngTest);

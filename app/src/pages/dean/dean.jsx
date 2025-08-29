@@ -1,8 +1,11 @@
 //คณบดี
-import { IconClipboardX  } from "@tabler/icons-react";
+import { IconClipboardX } from "@tabler/icons-react";
 import UserLayout from "../../layout/userLayout.jsx";
 
-const menu = [{ label: "คำร้องขอยกเลิกสอบประมวลความรู้/สอบวัดคุณสมบัต", icon: IconClipboardX , links: "/dean/RequestExam" }];
+const menu = [
+	/* { label: "คำร้องขอยกเลิกสอบประมวลความรู้/สอบวัดคุณสมบัต", icon: IconClipboardX, links: "/dean/RequestExam" }, */
+	{ label: `คำร้องขอยกเลิกการเข้าสอบประมวลความรู้/สอบวัดคุณสมบัต`, icon: IconClipboardX, links: "/dean/RequestExamCancel" },
+];
 
 const GraduateCommitteeChair = () => {
 	return (
