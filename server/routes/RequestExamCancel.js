@@ -16,39 +16,6 @@ function formatThaiBuddhistDate() {
 	return `${buddhistYear}-${d.month() + 1}-${d.date()} ${d.format("HH:mm:ss")}`;
 }
 
-router.post("/AddRequestExamCancel", authenticateToken, async (req, res) => {
-	const { reason } = req.body;
-	const { reference_id } = req.user;
-	try {
-		const pool = await poolPromise;
-		const result = await pool.request().input("student_id", reference_id).query(`SELECT TOP 1 request_exam_id FROM request_exam WHERE student_id = @student_id 
-			ORDER BY request_exam_date DESC`);
-		if (result.recordset.length === 0) {
-			return res.status(404).json({ message: "ไม่พบคำร้องสอบของนักศึกษา" });
-		}
-
-		const request_exam_id = result.recordset[0].request_exam_id;
-		const transaction = new sql.Transaction(pool);
-		await transaction.begin();
-		try {
-			const request = new sql.Request(transaction);
-			await request.input("request_exam_id", request_exam_id).input("status", "7").input("reason", reason).input("request_cancel_exam_date", formatThaiBuddhistDate()).query(`
-				INSERT INTO request_cancel_exam (request_exam_id, reason, request_cancel_exam_date, status)
-				VALUES (@request_exam_id, @reason, @request_cancel_exam_date, @status)`);
-
-			await request.query(`UPDATE request_exam SET status = @status WHERE request_exam_id = @request_exam_id`);
-			await transaction.commit();
-			res.status(200).json({ message: "บันทึกคำร้องขอยกเลิกการสอบเรียบร้อยแล้ว" });
-		} catch (err) {
-			await transaction.rollback();
-			throw err;
-		}
-	} catch (err) {
-		console.error("AddRequestExamCancel:", err);
-		res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกคำร้อง" });
-	}
-});
-
 router.post("/AllRequestExamCancel", authenticateToken, async (req, res) => {
 	const { role, id } = req.body;
 	const statusMap = {
@@ -126,6 +93,39 @@ router.post("/AllRequestExamCancel", authenticateToken, async (req, res) => {
 	} catch (err) {
 		console.error("requestExamAll:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลคำร้อง" });
+	}
+});
+
+router.post("/AddRequestExamCancel", authenticateToken, async (req, res) => {
+	const { reason } = req.body;
+	const { reference_id } = req.user;
+	try {
+		const pool = await poolPromise;
+		const result = await pool.request().input("student_id", reference_id).query(`SELECT TOP 1 request_exam_id FROM request_exam WHERE student_id = @student_id 
+			ORDER BY request_exam_date DESC`);
+		if (result.recordset.length === 0) {
+			return res.status(404).json({ message: "ไม่พบคำร้องสอบของนักศึกษา" });
+		}
+
+		const request_exam_id = result.recordset[0].request_exam_id;
+		const transaction = new sql.Transaction(pool);
+		await transaction.begin();
+		try {
+			const request = new sql.Request(transaction);
+			await request.input("request_exam_id", request_exam_id).input("status", "7").input("reason", reason).input("request_cancel_exam_date", formatThaiBuddhistDate()).query(`
+				INSERT INTO request_cancel_exam (request_exam_id, reason, request_cancel_exam_date, status)
+				VALUES (@request_exam_id, @reason, @request_cancel_exam_date, @status)`);
+
+			await request.query(`UPDATE request_exam SET status = @status WHERE request_exam_id = @request_exam_id`);
+			await transaction.commit();
+			res.status(200).json({ message: "บันทึกคำร้องขอยกเลิกการสอบเรียบร้อยแล้ว" });
+		} catch (err) {
+			await transaction.rollback();
+			throw err;
+		}
+	} catch (err) {
+		console.error("AddRequestExamCancel:", err);
+		res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกคำร้อง" });
 	}
 });
 

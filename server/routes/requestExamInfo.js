@@ -17,48 +17,19 @@ const toBuddhistYear = (date) => {
 	return d.toISOString().split("T")[0];
 };
 
-router.post("/deleteRequestExamInfo", authenticateToken, async (req, res) => {
-	const { request_exam_info_id } = req.body;
-	try {
-		const pool = await poolPromise;
-		await pool.request().input("request_exam_info_id", request_exam_info_id).query(`DELETE FROM request_exam_info WHERE request_exam_info_id = @request_exam_info_id`);
-		res.status(200).json({ message: "ลบข้อมูลเรียบร้อยแล้ว" });
-	} catch (err) {
-		console.error("requestExamInfoEdit:", err);
-		res.status(500).json({ message: "เกิดข้อผิดพลาดในการลบข้อมูล" });
-	}
-});
-
-router.post("/editRequestExamInfo", authenticateToken, async (req, res) => {
-	const { exam_date, open_date, close_date, request_exam_info_id, term } = req.body;
-	try {
-		const pool = await poolPromise;
-		await pool
-			.request()
-			.input("term", term)
-			.input("exam_date", toBuddhistYear(exam_date))
-			.input("open_date", toBuddhistYear(open_date))
-			.input("close_date", toBuddhistYear(close_date))
-			.input("request_exam_info_id", request_exam_info_id).query(`
-        UPDATE request_exam_info 
-        SET term = @term,
-            exam_date = @exam_date, 
-            open_date = @open_date, 
-            close_date = @close_date 
-        WHERE request_exam_info_id = @request_exam_info_id
-      `);
-
-		res.status(200).json({ message: "แก้ไขข้อมูลเรียบร้อยแล้ว" });
-	} catch (err) {
-		console.error("requestExamInfoEdit:", err);
-		res.status(500).json({ message: "เกิดข้อผิดพลาดระหว่างการแก้ไขข้อมูล" });
-	}
-});
-
 router.post("/allRequestExamInfo", authenticateToken, async (req, res) => {
 	try {
+		const { term } = req.body;
 		const pool = await poolPromise;
-		const result = await pool.request().query("SELECT * FROM request_exam_info ORDER BY request_exam_info_id DESC");
+		const request = await pool.request();
+		let query = "SELECT * FROM request_exam_info";
+		if (term) {
+			query += " WHERE term = @term";
+			request.input("term", term);
+		}
+		query += " ORDER BY request_exam_info_id DESC";
+
+		const result = await request.query(query);
 
 		// แปลง พ.ศ. → ค.ศ. ก่อนส่งกลับ
 		const formattedData = result.recordset.map((item) => ({
@@ -110,6 +81,44 @@ router.post("/addRequestExamInfo", authenticateToken, async (req, res) => {
 	} catch (err) {
 		console.error("addRequestExamInfo:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการเพิ่มข้อมูล" });
+	}
+});
+
+router.post("/editRequestExamInfo", authenticateToken, async (req, res) => {
+	const { exam_date, open_date, close_date, request_exam_info_id, term } = req.body;
+	try {
+		const pool = await poolPromise;
+		await pool
+			.request()
+			.input("term", term)
+			.input("exam_date", toBuddhistYear(exam_date))
+			.input("open_date", toBuddhistYear(open_date))
+			.input("close_date", toBuddhistYear(close_date))
+			.input("request_exam_info_id", request_exam_info_id).query(`
+        UPDATE request_exam_info 
+        SET term = @term,
+            exam_date = @exam_date, 
+            open_date = @open_date, 
+            close_date = @close_date 
+        WHERE request_exam_info_id = @request_exam_info_id
+      `);
+
+		res.status(200).json({ message: "แก้ไขข้อมูลเรียบร้อยแล้ว" });
+	} catch (err) {
+		console.error("requestExamInfoEdit:", err);
+		res.status(500).json({ message: "เกิดข้อผิดพลาดระหว่างการแก้ไขข้อมูล" });
+	}
+});
+
+router.post("/deleteRequestExamInfo", authenticateToken, async (req, res) => {
+	const { request_exam_info_id } = req.body;
+	try {
+		const pool = await poolPromise;
+		await pool.request().input("request_exam_info_id", request_exam_info_id).query(`DELETE FROM request_exam_info WHERE request_exam_info_id = @request_exam_info_id`);
+		res.status(200).json({ message: "ลบข้อมูลเรียบร้อยแล้ว" });
+	} catch (err) {
+		console.error("requestExamInfoEdit:", err);
+		res.status(500).json({ message: "เกิดข้อผิดพลาดในการลบข้อมูล" });
 	}
 });
 

@@ -1,82 +1,33 @@
 import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument, rgb } from "pdf-lib";
 import { Button } from "@mantine/core";
+import { setDefaultFont, drawGrid, draw, drawRect, drawCenterXText, formatThaiDate, formatThaiDateShort } from "./PdfUtils.js";
 
-async function fillPdf(data, Exam_date) {
+async function fillPdf(data) {
 	const existingPdfBytes = await fetch("/pdf/g02.pdf").then((res) => res.arrayBuffer());
 	const pdfDoc = await PDFDocument.load(existingPdfBytes);
 	pdfDoc.registerFontkit(fontkit);
 
-	const fontBytes = await fetch("/fonts/THSarabunNew.ttf").then((res) => res.arrayBuffer());
-	const customFont = await pdfDoc.embedFont(fontBytes);
-	const fontBytesBold = await fetch("/fonts/THSarabunNew Bold.ttf").then((res) => res.arrayBuffer());
-	const customFontBold = await pdfDoc.embedFont(fontBytesBold);
-	const fontBytesNoto = await fetch("/fonts/DejaVuSans.ttf").then((r) => r.arrayBuffer());
-	const customFontNoto = await pdfDoc.embedFont(fontBytesNoto);
+	await setDefaultFont(pdfDoc);
 
 	const pages = pdfDoc.getPages();
-	const firstPage = pages[0];
-	/* ------------------------------------------------------------------------------------------------------------------------- */
-	const drawGrid = (page) => {
-		const width = page.getWidth();
-		const height = page.getHeight();
+	const page = pages[0];
 
-		// ตีเส้นแกน X ทุก 10
-		for (let x = 0; x <= width; x += 10) {
-			page.drawLine({
-				start: { x, y: 0 },
-				end: { x, y: height },
-				thickness: 0.3,
-				color: rgb(0.8, 0.8, 0.8),
-			});
-			page.drawText(`${x}`, { x: x + 1, y: 5, size: 6, color: rgb(1, 0, 0) });
+	let Exam_date;
+	try {
+		const token = localStorage.getItem("token");
+		const requestRes = await fetch("http://localhost:8080/api/allRequestExamInfo", {
+			method: "POST",
+			headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+			body: JSON.stringify({ term: data?.term }),
+		});
+		const requestData = await requestRes.json();
+		if (Array.isArray(requestData) && requestData.length > 0) {
+			Exam_date = requestData[0].exam_date;
+			data.term = requestData[0].term;
 		}
-
-		// ตีเส้นแกน Y ทุก 10
-		for (let y = 0; y <= height; y += 10) {
-			page.drawLine({
-				start: { x: 0, y },
-				end: { x: width, y },
-				thickness: 0.3,
-				color: rgb(0.8, 0.8, 0.8),
-			});
-			page.drawText(`${y}`, { x: 2, y: y + 1, size: 6, color: rgb(0, 0, 1) });
-		}
-	};
-	/* ------------------------------------------------------------------------------------------------------------------------- */
-	const draw = (page, text, x, y, font = customFont, size = 14) => {
-		if (text !== undefined && text !== null) {
-			page.drawText(String(text), { x, y, size, font });
-		}
-	};
-
-	const drawRect = (page, x, y, w, h, lineW = 0) => {
-		page.drawRectangle({ x, y, width: w, height: h, borderWidth: lineW, color: rgb(1, 1, 1), borderColor: rgb(0, 0, 0) });
-	};
-
-	const drawCenterXText = (page, text, y, font, size = 14) => {
-		if (text !== undefined && text !== null) {
-			const pageWidth = page.getWidth();
-			const textWidth = font.widthOfTextAtSize(text, size);
-			const x = (pageWidth - textWidth) / 2;
-			page.drawText(text, { x, y, size, font });
-		}
-	};
-
-	function formatThaiDate(dateStr) {
-		if (!dateStr) return ["", "", ""];
-		const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-		const [year, month, day] = dateStr.split("-").map(Number);
-		const thaiMonth = months[month - 1];
-		return [day, thaiMonth, year];
-	}
-
-	function formatThaiDateShort(dateStr) {
-		if (!dateStr) return ["", "", ""];
-		const monthsShort = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
-		const [year, month, day] = dateStr.split("-").map(Number);
-		const thaiMonthShort = monthsShort[month - 1];
-		return [day, thaiMonthShort, year];
+	} catch (e) {
+		console.error("Error fetch allRequestExamInfo:", e);
 	}
 
 	const [request_exam_date_day, request_exam_date_month, request_exam_date_year] = formatThaiDate(data?.request_exam_date);
@@ -84,6 +35,8 @@ async function fillPdf(data, Exam_date) {
 	const [advisor_approvals_date_day, advisor_approvals_date_month, advisor_approvals_date_year] = formatThaiDateShort(data?.advisor_approvals_date);
 	const [chairpersons_approvals_date_day, chairpersons_approvals_date_month, chairpersons_approvals_date_year] = formatThaiDateShort(data?.chairpersons_approvals_date);
 	const [receipt_pay_date_day, receipt_pay_date_month, receipt_pay_date_year] = formatThaiDate(data?.receipt_pay_date);
+
+	drawGrid(page);
 
 	const drawItems = [
 		{ text: request_exam_date_day, x: 340, y: 693 },
@@ -146,22 +99,20 @@ async function fillPdf(data, Exam_date) {
 		{ text: "นายณัฐวุฒิ มาตกาง", x: 400, y: 191, show: data?.receipt_vol_No !== null },
 	];
 
-	drawItems.filter((item) => item.show !== false).forEach((item) => draw(firstPage, item.text, item.x, item.y, item.font, item.size));
+	drawItems.filter((item) => item.show !== false).forEach((item) => draw(page, item.text, item.x, item.y, item.font, item.size));
 
 	if (typeof data?.advisor_approvals !== "boolean") {
-		drawRect(firstPage, 30, 290, 280, 140);
+		drawRect(page, 30, 290, 280, 140);
 	}
 	if (typeof data?.chairpersons_approvals !== "boolean") {
-		drawRect(firstPage, 302.5, 290, 260, 140);
+		drawRect(page, 302.5, 290, 260, 140);
 	}
 	if (typeof data?.registrar_approvals !== "boolean") {
-		drawRect(firstPage, 30, 120, 280, 173.5);
+		drawRect(page, 30, 120, 280, 173.5);
 	}
 	if (data?.receipt_vol_No === null) {
-		drawRect(firstPage, 302.5, 120, 260, 173.5);
+		drawRect(page, 302.5, 120, 260, 173.5);
 	}
-
-	drawGrid(firstPage);
 
 	const pdfBytes = await pdfDoc.save();
 	return new Blob([pdfBytes], { type: "application/pdf" });

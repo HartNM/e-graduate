@@ -2,12 +2,11 @@
 import { useState, useEffect } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
 import { useParams } from "react-router-dom";
-import ModalApprove from "../component/Modal/ModalApprove";
-import ModalAddCancel from "../component/Modal/ModalAddCancel";
 import ModalAdd from "../component/Modal/ModalAdd";
+import ModalApprove from "../component/Modal/ModalApprove";
 import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
-import Pdfg01 from "../component/PDF/Pdfg01 copy";
+import Pdfg01 from "../component/PDF/Pdfg01";
 
 const RequestExam = () => {
 	// Modal Info
@@ -18,7 +17,6 @@ const RequestExam = () => {
 	const [openAdd, setOpenAdd] = useState(false);
 	const [openApprove, setOpenApprove] = useState(false);
 	const [openApproveState, setOpenApproveState] = useState(false);
-	const [openAddCancel, setOpenAddCancel] = useState(false);
 	const [openPay, setOpenPay] = useState(false);
 	// Form states
 	const [formData, setFormData] = useState({});
@@ -29,34 +27,15 @@ const RequestExam = () => {
 	const [error, setError] = useState("");
 	// System states
 	const [user, setUser] = useState("");
-	//student //advisor //chairpersons //officer_registrar //dean
+	//student //advisor //chairpersons //officer_registrar
 	const [requestExam, setRequestExam] = useState([]);
 	const [search, setSearch] = useState("");
 	const [reloadTable, setReloadTable] = useState(false);
 	const token = localStorage.getItem("token");
 	const { type } = useParams();
-	const [dateExam, setDateExam] = useState("");
 	const [selectedType, setSelectedType] = useState("");
 
 	useEffect(() => {
-		const fetchExam_date = async () => {
-			try {
-				const requestRes = await fetch("http://localhost:8080/api/allRequestExamInfo", {
-					method: "POST",
-					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				});
-				const requestData = await requestRes.json();
-				if (!requestRes.ok) {
-					throw new Error(requestData.message);
-				}
-				setDateExam(requestData[0].exam_date);
-				console.log(requestData[0].exam_date);
-			} catch (e) {
-				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-				console.error("Error fetch allRequestExamInfo:", e);
-			}
-		};
-		fetchExam_date();
 		const fetchProfile = async () => {
 			try {
 				const requestRes = await fetch("http://localhost:8080/api/profile", {
@@ -99,12 +78,12 @@ const RequestExam = () => {
 			} catch (e) {
 				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 				console.error("Error fetching requestExamAll:", e);
-			} finally {
+			} /* finally {
 				setReloadTable(false);
-			}
+			} */
 		};
 		fetchRequestExam();
-	}, [user, reloadTable]);
+	}, [user /* reloadTable */]);
 
 	const handleOpenAdd = async () => {
 		try {
@@ -137,7 +116,8 @@ const RequestExam = () => {
 			}
 			notify("success", requestData.message || "สำเร็จ");
 			setOpenAdd(false);
-			setReloadTable(true);
+			setRequestExam((prev) => [...prev, { ...requestData.data, ...formData, status_text: "รออาจารย์ที่ปรึกษาอนุมัติ" }]);
+			console.log(requestExam);
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching addRequestExam:", e);
@@ -163,7 +143,7 @@ const RequestExam = () => {
 			setSelected("approve");
 			setComment("");
 			setOpenApprove(false);
-			setReloadTable(true);
+			setRequestExam((prev) => prev.map((row) => (row.request_exam_id === item.request_exam_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching approveRequestExam:", e);
@@ -183,68 +163,16 @@ const RequestExam = () => {
 			}
 			notify("success", requestData.message || "สำเร็จ");
 			setOpenPay(false);
-			setReloadTable(true);
+			setRequestExam((prev) =>
+				prev.map((row) =>
+					row.request_exam_id === item.request_exam_id
+						? { ...row, ...requestData.data }
+						: row
+				)
+			);
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching payRequestExam:", e);
-		}
-	};
-
-	const handleAddCancel = async (item) => {
-		if (!reason.trim()) {
-			setError("กรุณากรอกเหตุผล");
-			return;
-		}
-		try {
-			const requestRes = await fetch("http://localhost:8080/api/cancelRequestExam", {
-				method: "POST",
-				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ request_exam_id: item.request_exam_id, reason: reason }),
-			});
-			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
-			notify("success", requestData.message || "สำเร็จ");
-			setReason("");
-			setOpenAddCancel(false);
-			setReloadTable(true);
-		} catch (e) {
-			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-			console.error("Error fetching cancelRequestExam:", e);
-		}
-	};
-
-	const handleCancel = async (item) => {
-		if (selected === "noapprove" && comment.trim() === "") {
-			setError("กรุณาระบุเหตุผล");
-			return;
-		}
-		try {
-			const requestRes = await fetch("http://localhost:8080/api/cancelApproveRequestExam", {
-				method: "POST",
-				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({
-					request_cancel_exam_id: item.cancel_list[0].request_cancel_exam_id,
-					request_exam_id: item.request_exam_id,
-					name: user.name,
-					role: user.role,
-					selected: selected,
-					comment_cancel: comment,
-				}),
-			});
-			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
-			notify("success", requestData.message || "สำเร็จ");
-			setSelected("approve");
-			setComment("");
-			setOpenApprove(false);
-			setReloadTable(true);
-		} catch (e) {
-			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-			console.error("Error fetching cancelApproveRequestExam:", e);
 		}
 	};
 
@@ -256,16 +184,12 @@ const RequestExam = () => {
 				orderB = 0;
 			switch (role) {
 				case "advisor":
-					orderA = statusA === 1 || statusA === 7 ? 0 : statusA === 0 ? 2 : 1;
-					orderB = statusB === 1 || statusB === 7 ? 0 : statusB === 0 ? 2 : 1;
+					orderA = statusA === 1 ? 0 : statusA === 0 ? 2 : 1;
+					orderB = statusB === 1 ? 0 : statusB === 0 ? 2 : 1;
 					break;
 				case "chairpersons":
-					orderA = statusA === 2 || statusA === 8 ? 0 : statusA === 0 ? 2 : 1;
-					orderB = statusB === 2 || statusB === 8 ? 0 : statusB === 0 ? 2 : 1;
-					break;
-				case "dean":
-					orderA = statusA === 9 ? 0 : statusA === 0 ? 2 : 1;
-					orderB = statusB === 9 ? 0 : statusB === 0 ? 2 : 1;
+					orderA = statusA === 2 ? 0 : statusA === 0 ? 2 : 1;
+					orderB = statusB === 2 ? 0 : statusB === 0 ? 2 : 1;
 					break;
 				case "officer_registrar":
 					orderA = statusA === 3 ? 0 : statusA === 0 ? 2 : 1;
@@ -297,7 +221,7 @@ const RequestExam = () => {
 		.map((item) => (
 			<Table.Tr key={item.request_exam_id}>
 				<Table.Td>{item.student_name}</Table.Td>
-				{["advisor", "officer_registrar", "chairpersons", "dean"].includes(user?.role) && <Table.Td>{user?.role === "dean" ? `ขอยกเลิก${item.request_type.replace("ขอ", "")}` : item.request_type}</Table.Td>}
+				{["advisor", "officer_registrar", "chairpersons"].includes(user?.role) && <Table.Td>{item.request_type}</Table.Td>}
 				<Table.Td style={{ textAlign: "center" }}>
 					{item.status <= 4 && item.status > 0 && (
 						<>
@@ -331,14 +255,12 @@ const RequestExam = () => {
 							{item.advisor_approvals && item.chairpersons_approvals && !item.registrar_approvals && "เจ้าหน้าที่ทะเบียน"}
 						</>
 					)}
-
 					{item.status > 6 && (
 						<Pill Pill variant="filled" style={{ backgroundColor: "#ffcccc", color: "#b30000" }}>
 							{item.status_text}
 						</Pill>
 					)}
 				</Table.Td>
-
 				<Table.Td style={{ maxWidth: "150px" }}>
 					<Group>
 						{user.role === "student" && (
@@ -355,26 +277,17 @@ const RequestExam = () => {
 										ชำระค่าธรรมเนียม
 									</Button>
 								)}
-								{item.status === "5" && (
-									<>
-										{/* <Button
-											size="xs"
-											color="red"
-											onClick={() => {
-												setSelectedRow(item);
-												setOpenAddCancel(true);
-											}}
-										>
-											ขอยกเลิก
-										</Button> */}
-										<Button size="xs" color="green">
-											พิมพ์ใบเสร็จ
-										</Button>
-									</>
-								)}
+								{item.status === "5" ||
+									(item.status === "0" && (
+										<>
+											<Button size="xs" color="green">
+												พิมพ์ใบเสร็จ
+											</Button>
+										</>
+									))}
 							</>
 						)}
-						<Pdfg01 data={item} exam_date={dateExam} showType={item.status == 0 ? undefined : (user.role === "advisor" && item.status <= 1) || (user.role === "chairpersons" && item.status <= 2) || (user.role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
+						<Pdfg01 data={item} showType={item.status == 0 ? undefined : (user.role === "advisor" && item.status <= 1) || (user.role === "chairpersons" && item.status <= 2) || (user.role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
 						{((user.role === "advisor" && item.status === "1") || (user.role === "chairpersons" && item.status === "2") || (user.role === "officer_registrar" && item.status === "3")) && (
 							<Button
 								size="xs"
@@ -388,19 +301,6 @@ const RequestExam = () => {
 								{user.role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
 							</Button>
 						)}
-						{/* {((user.role === "advisor" && item.status === "7") || (user.role === "chairpersons" && item.status === "8") || (user.role === "dean" && item.status === "9")) && (
-							<Button
-								size="xs"
-								color="green"
-								onClick={() => {
-									setSelectedRow(item);
-									setOpenApproveState("cancel");
-									setOpenApprove(true);
-								}}
-							>
-								ลงความเห็น
-							</Button>
-						)} */}
 					</Group>
 				</Table.Td>
 				{item.exam_results !== null && (
@@ -426,16 +326,14 @@ const RequestExam = () => {
 				error={error}
 				openApproveState={openApproveState}
 				handleApprove={handleApprove}
-				handleCancel={handleCancel}
 				role={user.role}
 				title={`${user.role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}คำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`}
 			/>
-			<ModalAddCancel opened={openAddCancel} onClose={() => setOpenAddCancel(false)} selectedRow={selectedRow} reason={reason} setReason={setReason} error={error} handleAddCancel={handleAddCancel} />
 			<ModalAdd opened={openAdd} onClose={() => setOpenAdd(false)} formData={formData} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`} />
 			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} />
 
 			<Text size="1.5rem" fw={900} mb="md">
-				{user.role === "dean" ? "คำร้องขอยกเลิกสอบ" : `คำร้องขอสอบ${user.education_level ? `${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` : ""}`}
+				{`คำร้องขอสอบ${user.education_level ? `${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` : ""}`}
 			</Text>
 			<Group justify="space-between">
 				<Box>
@@ -446,7 +344,7 @@ const RequestExam = () => {
 				</Box>
 				<Box>
 					{user.role === "student" && (
-						<Button onClick={() => handleOpenAdd()} disabled={!requestExam.some((item) => item.status === "0") && !requestExam.every((item) => item.status === "6")}>
+						<Button onClick={() => handleOpenAdd()} disabled={!requestExam.every((item) => item.status === "0") && !requestExam.every((item) => item.status === "6")}>
 							เพิ่มคำร้อง
 						</Button>
 					)}
@@ -458,7 +356,7 @@ const RequestExam = () => {
 					<Table.Thead>
 						<Table.Tr>
 							<Table.Th style={{ minWidth: 100 }}>ชื่อ</Table.Th>
-							{["advisor", "officer_registrar", "chairpersons", "dean"].includes(user?.role) && <Table.Th style={{ minWidth: 100 }}>เรื่อง</Table.Th>}
+							{["advisor", "officer_registrar", "chairpersons"].includes(user?.role) && <Table.Th style={{ minWidth: 100 }}>เรื่อง</Table.Th>}
 							<Table.Th style={{ minWidth: 110 }}>สถานะ</Table.Th>
 							<Table.Th>การดำเนินการ</Table.Th>
 							{requestExam.some((it) => it.exam_results !== null) && <Table.Th style={{ minWidth: 110 }}>ผลสอบ</Table.Th>}

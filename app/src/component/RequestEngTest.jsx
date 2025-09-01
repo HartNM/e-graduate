@@ -31,27 +31,8 @@ const RequestExam = () => {
 	const [search, setSearch] = useState("");
 	const [reloadTable, setReloadTable] = useState(false);
 	const token = localStorage.getItem("token");
-	const [dateExam, setDateExam] = useState("");
 
 	useEffect(() => {
-		const fetchExam_date = async () => {
-			try {
-				const requestRes = await fetch("http://localhost:8080/api/allRequestExamInfo", {
-					method: "POST",
-					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				});
-				const requestData = await requestRes.json();
-				if (!requestRes.ok) {
-					throw new Error(requestData.message);
-				}
-				setDateExam(requestData[0].exam_date);
-				console.log(requestData[0].exam_date);
-			} catch (e) {
-				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-				console.error("Error fetch allRequestExamInfo:", e);
-			}
-		};
-		fetchExam_date();
 		const fetchProfile = async () => {
 			try {
 				const requestRes = await fetch("http://localhost:8080/api/profile", {
@@ -259,7 +240,7 @@ const RequestExam = () => {
 								)}
 							</>
 						)}
-						<Pdfg02 data={item} exam_date={dateExam} showType={item.status == 0 ? undefined : (user.role === "advisor" && item.status <= 1) || (user.role === "chairpersons" && item.status <= 2) || (user.role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
+						<Pdfg02 data={item} showType={item.status == 0 ? undefined : (user.role === "advisor" && item.status <= 1) || (user.role === "chairpersons" && item.status <= 2) || (user.role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
 						{((user.role === "advisor" && item.status === "1") || (user.role === "chairpersons" && item.status === "2") || (user.role === "officer_registrar" && item.status === "3")) && (
 							<Button
 								size="xs"
