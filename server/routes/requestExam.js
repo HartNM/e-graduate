@@ -47,34 +47,21 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 		if (role === "student") {
 			query += " WHERE student_id = @id";
 		} else if (role === "advisor") {
-			query += " WHERE study_group_id IN (SELECT value FROM STRING_SPLIT(@id, ','))" /*  ORDER BY CASE WHEN status IN (1, 7) THEN 0 WHEN status = 0 THEN 2 ELSE 1 END, status */;
+			query += " WHERE study_group_id IN (SELECT value FROM STRING_SPLIT(@id, ','))";
 		} else if (role === "chairpersons") {
-			query += " WHERE major_name = @id AND status IN (2, 3, 4, 5, 6, 8, 9, 0)" /*  ORDER BY CASE WHEN status IN (2, 8) THEN 0 WHEN status = 0 THEN 2 ELSE 1 END, status */;
-		} else if (role === "dean") {
-			query += " WHERE faculty_name = @id AND status IN (9, 0)" /*  ORDER BY CASE WHEN status = 9 THEN 0 WHEN status = 0 THEN 2 ELSE 1 END, status */;
+			query += " WHERE major_name = @id AND (status IN (0, 2, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL))";
 		} else if (role === "officer_registrar") {
-			query += " WHERE status IN (3, 4, 5, 6)" /*  ORDER BY CASE WHEN status = 3 THEN 0 ELSE 1 END, status */;
+			query += " WHERE (status IN (0, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL AND registrar_approvals_id IS NOT NULL))";
 		}
 		const result = await request.query(query);
 		const enrichedData = await Promise.all(
 			result.recordset.map(async (item) => {
 				let studentInfo = null;
-				let cancelInfo = [];
 				try {
 					const studentRes = await axios.get(`http://localhost:8080/externalApi/student/${item.student_id}`);
 					studentInfo = studentRes.data;
 				} catch (err) {
 					console.warn(`ไม่สามารถดึงข้อมูลนักศึกษา ${item.student_id}`);
-				}
-				try {
-					const cancelRes = await pool.request().query(`
-							SELECT * FROM request_cancel_exam 
-							WHERE request_exam_id = '${item.request_exam_id}'
-						`);
-					cancelInfo = cancelRes.recordset;
-				} catch (err) {
-					console.warn(`ไม่สามารถดึงข้อมูลการยกเลิกของ request_exam_id ${item.request_exam_id}`);
-					cancelInfo = [];
 				}
 				return {
 					...item,
@@ -86,15 +73,6 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 					receipt_pay_date: formatDate(item.receipt_pay_date) || null,
 					status_text: statusMap[item.status?.toString()] || null,
 					request_type: item.request_type || null,
-					...(cancelInfo.length > 0 && {
-						cancel_list: cancelInfo.map((c) => ({
-							...c,
-							request_cancel_exam_date: formatDate(c.request_cancel_exam_date),
-							advisor_cancel_date: formatDate(c.advisor_cancel_date),
-							chairpersons_cancel_date: formatDate(c.chairpersons_cancel_date),
-							dean_cancel_date: formatDate(c.dean_cancel_date),
-						})),
-					}),
 				};
 			})
 		);
@@ -129,9 +107,7 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 					term,
 					request_exam_date,
 					status
-				)
-				OUTPUT INSERTED.*
-				VALUES (
+				) OUTPUT INSERTED.* VALUES (
 					@student_id,
 					@study_group_id,
 					@major_name,
@@ -145,7 +121,15 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 
 		res.status(200).json({
 			message: "บันทึกคำร้องขอสอบเรียบร้อยแล้ว",
-			data: result.recordset[0], // ส่ง row ที่เพิ่มล่าสุดกลับไปด้วย
+			data: {
+				...result.recordset[0],
+				status_text: statusMap[result.recordset[0].status?.toString()] || null,
+				request_exam_date: formatDate(result.recordset[0].request_exam_date) || null,
+				advisor_approvals_date: formatDate(result.recordset[0].advisor_approvals_date) || null,
+				chairpersons_approvals_date: formatDate(result.recordset[0].chairpersons_approvals_date) || null,
+				registrar_approvals_date: formatDate(result.recordset[0].registrar_approvals_date) || null,
+				receipt_pay_date: formatDate(result.recordset[0].receipt_pay_date) || null,
+			},
 		});
 	} catch (err) {
 		console.error("addRequestExam:", err);
@@ -206,17 +190,16 @@ router.post("/approveRequestExam", authenticateToken, async (req, res) => {
 			WHERE request_exam_id = @request_exam_id
 			`;
 		const result = await request.query(query);
-		const row = result.recordset[0];
 		res.status(200).json({
 			message: "บันทึกผลการอนุมัติคำร้องขอสอบเรียบร้อยแล้ว",
 			data: {
-				...row,
-				status_text: statusMap[row.status?.toString()] || null,
-				request_exam_date: formatDate(row.request_exam_date) || null,
-				advisor_approvals_date: formatDate(row.advisor_approvals_date) || null,
-				chairpersons_approvals_date: formatDate(row.chairpersons_approvals_date) || null,
-				registrar_approvals_date: formatDate(row.registrar_approvals_date) || null,
-				receipt_pay_date: formatDate(row.receipt_pay_date) || null,
+				...result.recordset[0],
+				status_text: statusMap[result.recordset[0].status?.toString()] || null,
+				request_exam_date: formatDate(result.recordset[0].request_exam_date) || null,
+				advisor_approvals_date: formatDate(result.recordset[0].advisor_approvals_date) || null,
+				chairpersons_approvals_date: formatDate(result.recordset[0].chairpersons_approvals_date) || null,
+				registrar_approvals_date: formatDate(result.recordset[0].registrar_approvals_date) || null,
+				receipt_pay_date: formatDate(result.recordset[0].receipt_pay_date) || null,
 			},
 		});
 	} catch (err) {
@@ -256,119 +239,5 @@ router.post("/payRequestExam", authenticateToken, async (req, res) => {
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกการชำระเงิน" });
 	}
 });
-
-/* router.post("/requestExamAll", authenticateToken, async (req, res) => {
-	const { UserId, roles } = req.user;
-	const { id } = req.body;
-	const statusMap = {
-		0: "ยกเลิก",
-		1: "รออาจารย์ที่ปรึกษาอนุมัติ",
-		2: "รอประธานหลักสูตรอนุมัติ",
-		3: "รอเจ้าหน้าที่ทะเบียนตรวจสอบ",
-		4: "รอการชำระค่าธรรมเนียม",
-		5: "อนุมัติ",
-		6: "ไม่อนุมัติ",
-		7: "รออาจารย์ที่ปรึกษาอนุมัติ",
-		8: "รอประธานหลักสูตรอนุมัติ",
-		9: "รอคณบดีอนุมัติ",
-	};
-	const formatDate = (date) => {
-		if (!date) return null;
-		return new Date(date).toISOString().split("T")[0];
-	};
-
-	try {
-		const pool = await poolPromise;
-		const request = pool.request().input("UserId", UserId);
-		let query = "SELECT * FROM request_exam";
-		if (roles.includes("student")) {
-		}
-		if (roles.includes("advisor")) {
-			const result = await request.query("SELECT GroupId FROM AdvisorGroupId WHERE UserId = @UserId");
-			if (result.recordset.length > 0) {
-				const inParams = result.recordset.map((_, i) => `@g${i}`).join(",");
-				query += ` WHERE study_group_id IN (${inParams})`;
-				result.recordset.forEach((r, i) => {
-					request.input(`g${i}`, r.GroupId);
-				});
-			} else {
-				query += " WHERE 1=0";
-			}
-		}
-		if (roles.includes("chairpersons")) {
-		}
-		if (roles.includes("dean")) {
-		}
-		if (roles.includes("officer_registrar")) {
-		}
-	} catch (e) {
-		console.log(e);
-	}
-
-	try {
-		const pool = await poolPromise;
-		const request = pool.request().input("id", id);
-		let query = "SELECT * FROM request_exam";
-		if (roles === "student") {
-			query += " WHERE student_id = @id";
-		} else if (roles === "advisor") {
-			query += " WHERE study_group_id = @id ORDER BY CASE WHEN status IN (1, 7) THEN 0 WHEN status = 0 THEN 2 ELSE 1 END, status";
-		} else if (roles === "chairpersons") {
-			query += " WHERE major_name = @id AND status IN (2, 3, 4, 5, 6, 8, 9, 0) ORDER BY CASE WHEN status IN (2, 8) THEN 0 WHEN status = 0 THEN 2 ELSE 1 END, status";
-		} else if (roles === "dean") {
-			query += " WHERE faculty_name = @id AND status IN (9, 0) ORDER BY CASE WHEN status = 9 THEN 0 WHEN status = 0 THEN 2 ELSE 1 END, status";
-		} else if (roles === "officer_registrar") {
-			query += " WHERE status IN (3, 4, 5, 6) ORDER BY CASE WHEN status = 3 THEN 0 ELSE 1 END, status";
-		}
-		const result = await request.query(query);
-		const enrichedData = await Promise.all(
-			result.recordset.map(async (item) => {
-				let studentInfo = null;
-				let cancelInfo = [];
-				try {
-					const studentRes = await axios.get(`http://localhost:8080/externalApi/student/${item.student_id}`);
-					studentInfo = studentRes.data;
-				} catch (err) {
-					console.warn(`ไม่สามารถดึงข้อมูลนักศึกษา ${item.student_id}`);
-				}
-				try {
-					const cancelRes = await pool.request().query(`
-							SELECT * FROM request_cancel_exam 
-							WHERE request_exam_id = '${item.request_exam_id}'
-						`);
-					cancelInfo = cancelRes.recordset;
-				} catch (err) {
-					console.warn(`ไม่สามารถดึงข้อมูลการยกเลิกของ request_exam_id ${item.request_exam_id}`);
-					cancelInfo = [];
-				}
-				return {
-					...item,
-					...studentInfo,
-					advisor_approvals_date: formatDate(item.advisor_approvals_date) || null,
-					chairpersons_approvals_date: formatDate(item.chairpersons_approvals_date) || null,
-					registrar_approvals_date: formatDate(item.registrar_approvals_date) || null,
-					request_exam_date: formatDate(item.request_exam_date) || null,
-					request_date: formatDate(item.status > 6 ? cancelInfo[0]?.request_cancel_exam_date : item.request_exam_date) || null,
-					status_text: statusMap[item.status?.toString()] || null,
-					receipt_pay_date: formatDate(item.receipt_pay_date) || null,
-					request_type: item.status > 6 ? `ขอยกเลิกการเข้าสอบ${item.request_type}` : item.request_type || null,
-					...(cancelInfo.length > 0 && {
-						cancel_list: cancelInfo.map((c) => ({
-							...c,
-							request_cancel_exam_date: formatDate(c.request_cancel_exam_date),
-							advisor_cancel_date: formatDate(c.advisor_cancel_date),
-							chairpersons_cancel_date: formatDate(c.chairpersons_cancel_date),
-							dean_cancel_date: formatDate(c.dean_cancel_date),
-						})),
-					}),
-				};
-			})
-		);
-		res.status(200).json(enrichedData);
-	} catch (err) {
-		console.error("requestExamAll:", err);
-		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลคำร้อง" });
-	}
-}); */
 
 module.exports = router;

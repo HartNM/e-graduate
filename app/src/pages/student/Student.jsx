@@ -27,8 +27,18 @@ const Student = () => {
 					{ label: `คำร้องขอสำเร็จการศึกษาระดับบัณฑิตศึกษา`, icon: IconSchool, links: "/student/RequestGraduation" },
 					{ label: `รายงานผลการตรวจสอบการคัดลอกผลงานทางวิชาการ`, icon: IconSearch, links: "/student/PlagiarismReport" },
 				]);
-			} catch (err) {
-				console.error("Error fetching education level:", err);
+			} catch (e) {
+				console.error("Error fetching education level:", e);
+			}
+			try {
+				const res = await fetch("http://localhost:8080/api/checkStudent", {
+					method: "GET",
+					headers: { Authorization: `Bearer ${token}` },
+				});
+				const data = await res.json();
+				console.log(data);
+			} catch (e) {
+				console.error("Error fetching checkStudent:", eval);
 			}
 		})();
 	}, []);

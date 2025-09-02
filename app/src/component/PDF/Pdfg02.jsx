@@ -30,7 +30,7 @@ async function fillPdf(data) {
 		console.error("Error fetch allRequestExamInfo:", e);
 	}
 
-	const [request_exam_date_day, request_exam_date_month, request_exam_date_year] = formatThaiDate(data?.request_exam_date);
+	const [request_date_day, request_date_month, request_date_year] = formatThaiDate(data?.request_date);
 	const [exam_date_day, exam_date_month, exam_date_year] = formatThaiDate(Exam_date);
 	const [advisor_approvals_date_day, advisor_approvals_date_month, advisor_approvals_date_year] = formatThaiDateShort(data?.advisor_approvals_date);
 	const [chairpersons_approvals_date_day, chairpersons_approvals_date_month, chairpersons_approvals_date_year] = formatThaiDateShort(data?.chairpersons_approvals_date);
@@ -39,9 +39,9 @@ async function fillPdf(data) {
 	drawGrid(page);
 
 	const drawItems = [
-		{ text: request_exam_date_day, x: 340, y: 693 },
-		{ text: request_exam_date_month, x: 405, y: 693 },
-		{ text: request_exam_date_year, x: 490, y: 693 },
+		{ text: request_date_day, x: 340, y: 693 },
+		{ text: request_date_month, x: 405, y: 693 },
+		{ text: request_date_year, x: 490, y: 693 },
 
 		{ text: "ข้าพเจ้า..................................................................................รหัสประจำตัวนักศึกษา...................................................", x: 108, y: 601 },
 		{ text: data?.student_name, x: 180, y: 603 },
@@ -61,9 +61,9 @@ async function fillPdf(data) {
 
 		{ text: data?.student_name, x: 370, y: 492 },
 		{ text: data?.student_name, x: 370, y: 472 },
-		{ text: request_exam_date_day, x: 350, y: 453 },
-		{ text: request_exam_date_month, x: 400, y: 453 },
-		{ text: request_exam_date_year, x: 460, y: 453 },
+		{ text: request_date_day, x: 350, y: 453 },
+		{ text: request_date_month, x: 400, y: 453 },
+		{ text: request_date_year, x: 460, y: 453 },
 
 		{ text: data?.advisor_approvals ? "เห็นควรสอบได้" : "ไม่เห็นควร", x: 60, y: 394, show: typeof data?.advisor_approvals === "boolean" },
 		{ text: "เนื่องจาก..................................................................................", x: 60, y: 376, show: typeof data?.advisor_approvals === "boolean" && !data.advisor_approvals },

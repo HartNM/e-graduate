@@ -16,19 +16,21 @@ function formatThaiBuddhistDate() {
 	return `${buddhistYear}-${d.month() + 1}-${d.date()} ${d.format("HH:mm:ss")}`;
 }
 
+const statusMap = {
+	0: "อนุมัติ",
+	5: "ไม่อนุมัติ",
+	7: "รออาจารย์ที่ปรึกษาอนุมัติ",
+	8: "รอประธานหลักสูตรอนุมัติ",
+	9: "รอคณบดีอนุมัติ",
+};
+
+const formatDate = (date) => {
+	if (!date) return null;
+	return new Date(date).toISOString().split("T")[0];
+};
+
 router.post("/AllRequestExamCancel", authenticateToken, async (req, res) => {
 	const { role, id } = req.body;
-	const statusMap = {
-		0: "อนุมัติ",
-		5: "ไม่อนุมัติ",
-		7: "รออาจารย์ที่ปรึกษาอนุมัติ",
-		8: "รอประธานหลักสูตรอนุมัติ",
-		9: "รอคณบดีอนุมัติ",
-	};
-	const formatDate = (date) => {
-		if (!date) return null;
-		return new Date(date).toISOString().split("T")[0];
-	};
 	try {
 		const pool = await poolPromise;
 		const request = pool.request().input("id", id);
@@ -53,7 +55,7 @@ router.post("/AllRequestExamCancel", authenticateToken, async (req, res) => {
 					rce.dean_cancel,
 					rce.dean_cancel_date,
 					rce.comment
-			FROM [request_submission].[dbo].[request_cancel_exam] rce
+			FROM [request_submission].[dbo].[request_exam_cancel] rce
 			INNER JOIN [request_submission].[dbo].[request_exam] re
 					ON rce.request_exam_id = re.request_exam_id
 			`;
@@ -62,11 +64,11 @@ router.post("/AllRequestExamCancel", authenticateToken, async (req, res) => {
 		} else if (role === "advisor") {
 			query += " WHERE re.study_group_id IN (SELECT value FROM STRING_SPLIT(@id, ','))";
 		} else if (role === "chairpersons") {
-			query += " WHERE re.major_name = @id AND rce.status IN (0, 5, 8, 9)";
+			query += " WHERE re.major_name = @id AND (rce.status IN (0, 8, 9) OR (rce.status = 5 AND rce.advisor_cancel_name IS NOT NULL AND rce.chairpersons_cancel_name IS NOT NULL))";
 		} else if (role === "dean") {
-			query += " WHERE re.faculty_name = @id AND rce.status IN (0, 5, 9)";
+			query +=
+				" WHERE re.faculty_name = @id AND (rce.status IN (0, 9) OR (rce.status = 5 AND rce.advisor_cancel_name IS NOT NULL AND rce.chairpersons_cancel_name IS NOT NULL AND rce.dean_cancel_name IS NOT NULL))";
 		}
-
 		const result = await request.query(query);
 		const enrichedData = await Promise.all(
 			result.recordset.map(async (item) => {
@@ -112,13 +114,35 @@ router.post("/AddRequestExamCancel", authenticateToken, async (req, res) => {
 		await transaction.begin();
 		try {
 			const request = new sql.Request(transaction);
-			await request.input("request_exam_id", request_exam_id).input("status", "7").input("reason", reason).input("request_cancel_exam_date", formatThaiBuddhistDate()).query(`
-				INSERT INTO request_cancel_exam (request_exam_id, reason, request_cancel_exam_date, status)
-				VALUES (@request_exam_id, @reason, @request_cancel_exam_date, @status)`);
+			const request_exam_cancel = await request.input("request_exam_id", request_exam_id).input("status", "7").input("reason", reason).input("request_cancel_exam_date", formatThaiBuddhistDate())
+				.query(`
+				INSERT INTO request_exam_cancel (
+					request_exam_id, 
+					reason, 
+					request_cancel_exam_date, 
+				status
+				) OUTPUT INSERTED.* VALUES (
+					@request_exam_id, 
+					@reason, 
+					@request_cancel_exam_date, 
+				 	@status
+				)`);
 
-			await request.query(`UPDATE request_exam SET status = @status WHERE request_exam_id = @request_exam_id`);
+			const request_exam = await request.query(`UPDATE request_exam SET status = @status OUTPUT INSERTED.* WHERE request_exam_id = @request_exam_id`);
 			await transaction.commit();
-			res.status(200).json({ message: "บันทึกคำร้องขอยกเลิกการสอบเรียบร้อยแล้ว" });
+			res.status(200).json({
+				message: "บันทึกคำร้องขอยกเลิกการสอบเรียบร้อยแล้ว",
+				data: {
+					...request_exam.recordset[0],
+					...request_exam_cancel.recordset[0],
+					request_type: "ขอยกเลิกการเข้าสอบประมวลความรู้" || null,
+					status_text: statusMap[request_exam_cancel.recordset[0].status?.toString()] || null,
+					request_cancel_exam_date: formatDate(request_exam_cancel.recordset[0].request_cancel_exam_date) || null,
+					advisor_cancel_date: formatDate(request_exam_cancel.recordset[0].advisor_cancel_date) || null,
+					chairpersons_cancel_date: formatDate(request_exam_cancel.recordset[0].chairpersons_cancel_date) || null,
+					dean_cancel_date: formatDate(request_exam_cancel.recordset[0].dean_cancel_date) || null,
+				},
+			});
 		} catch (err) {
 			await transaction.rollback();
 			throw err;
@@ -148,7 +172,6 @@ router.post("/ApproveRequestExamCancel", authenticateToken, async (req, res) => 
 			statusValue = "5";
 		}
 		const pool = await poolPromise;
-		const request = pool.request();
 		const roleFields = {
 			advisor: `
 				advisor_cancel_name = @name,
@@ -169,34 +192,40 @@ router.post("/ApproveRequestExamCancel", authenticateToken, async (req, res) => 
 				status = @status
 			`,
 		};
-		/* if (role === "dean" || selected !== "approve") {
-			await request.input("request_exam_id", request_exam_id).input("status", statusValue).query(`
-				UPDATE request_exam
-				SET status = @status
-				WHERE request_exam_id = @request_exam_id`);
-		} */
 		const transaction = new sql.Transaction(pool);
 		await transaction.begin();
 		try {
 			const request = new sql.Request(transaction);
-			await request
+			const request_exam_cancel = await request
 				.input("request_cancel_exam_id", request_cancel_exam_id)
 				.input("name", name)
 				.input("approve", selected === "approve" ? 1 : 0)
 				.input("date", formatThaiBuddhistDate())
 				.input("status", statusValue)
 				.input("comment", comment_cancel).query(`
-				UPDATE request_cancel_exam
+				UPDATE request_exam_cancel
 				SET ${roleFields[role]}
 					${selected !== "approve" ? ", comment = @comment" : ""}
-				WHERE request_cancel_exam_id = @request_cancel_exam_id
+				OUTPUT INSERTED.* WHERE request_cancel_exam_id = @request_cancel_exam_id
 			`);
-			await request.input("request_exam_id", request_exam_id).query(`
+			const request_exam = await request.input("request_exam_id", request_exam_id).query(`
 				UPDATE request_exam
 				SET status = @status
-				WHERE request_exam_id = @request_exam_id`);
+				OUTPUT INSERTED.* WHERE request_exam_id = @request_exam_id`);
 			await transaction.commit();
-			res.status(200).json({ message: "บันทึกคำร้องขอยกเลิกการสอบเรียบร้อยแล้ว" });
+			res.status(200).json({
+				message: "บันทึกคำร้องขอยกเลิกการสอบเรียบร้อยแล้ว",
+				data: {
+					...request_exam.recordset[0],
+					...request_exam_cancel.recordset[0],
+					request_type: "ขอยกเลิกการเข้าสอบประมวลความรู้" || null,
+					status_text: statusMap[request_exam_cancel.recordset[0].status?.toString()] || null,
+					request_cancel_exam_date: formatDate(request_exam_cancel.recordset[0].request_cancel_exam_date) || null,
+					advisor_cancel_date: formatDate(request_exam_cancel.recordset[0].advisor_cancel_date) || null,
+					chairpersons_cancel_date: formatDate(request_exam_cancel.recordset[0].chairpersons_cancel_date) || null,
+					dean_cancel_date: formatDate(request_exam_cancel.recordset[0].dean_cancel_date) || null,
+				},
+			});
 		} catch (err) {
 			await transaction.rollback();
 			throw err;

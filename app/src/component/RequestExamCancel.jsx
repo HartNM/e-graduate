@@ -25,9 +25,8 @@ const RequestExamCancel = () => {
 	// System states
 	const [user, setUser] = useState("");
 	//student //advisor //chairpersons //officer_registrar //dean
-	const [requestExam, setRequestExam] = useState([]);
+	const [request, setRequest] = useState([]);
 	const [search, setSearch] = useState("");
-	const [reloadTable, setReloadTable] = useState(false);
 	const token = localStorage.getItem("token");
 	const { type } = useParams();
 	const [selectedType, setSelectedType] = useState("");
@@ -70,17 +69,15 @@ const RequestExamCancel = () => {
 				if (!requestRes.ok) {
 					throw new Error(requestData.message);
 				}
-				setRequestExam(requestData);
+				setRequest(requestData);
 				console.log(requestData);
 			} catch (e) {
 				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 				console.error("Error fetching AllRequestExamCancel:", e);
-			} finally {
-				setReloadTable(false);
 			}
 		};
 		fetchRequestExam();
-	}, [user, reloadTable]);
+	}, [user]);
 
 	const handleOpenAddCancel = async () => {
 		try {
@@ -102,7 +99,6 @@ const RequestExamCancel = () => {
 	};
 
 	const handleAddCancel = async () => {
-		console.log("asd");
 		if (!reason.trim()) {
 			setError("กรุณากรอกเหตุผล");
 			return;
@@ -120,7 +116,7 @@ const RequestExamCancel = () => {
 			notify("success", requestData.message || "สำเร็จ");
 			setReason("");
 			setOpenAddCancel(false);
-			setReloadTable(true);
+			setRequest((prev) => [...prev, { ...requestData.data, ...selectedRow }]);
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching cancelRequestExam:", e);
@@ -153,41 +149,18 @@ const RequestExamCancel = () => {
 			setSelected("approve");
 			setComment("");
 			setOpenApprove(false);
-			setReloadTable(true);
+			setRequest((prev) => prev.map((row) => (row.request_cancel_exam_id === item.request_cancel_exam_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching cancelApproveRequestExam:", e);
 		}
 	};
 
-	function sortRequests(data, role) {
-		return data.sort((a, b) => {
-			const statusA = Number(a.status);
-			const statusB = Number(b.status);
-			let orderA = 0,
-				orderB = 0;
-			switch (role) {
-				case "advisor":
-					orderA = statusA === 7 ? 0 : statusA === 0 ? 2 : 1;
-					orderB = statusB === 7 ? 0 : statusB === 0 ? 2 : 1;
-					break;
-				case "chairpersons":
-					orderA = statusA === 8 ? 0 : statusA === 0 ? 2 : 1;
-					orderB = statusB === 8 ? 0 : statusB === 0 ? 2 : 1;
-					break;
-				case "dean":
-					orderA = statusA === 9 ? 0 : statusA === 0 ? 2 : 1;
-					orderB = statusB === 9 ? 0 : statusB === 0 ? 2 : 1;
-					break;
-				default:
-					orderA = statusA;
-					orderB = statusB;
-			}
-			return orderA - orderB || statusA - statusB;
-		});
+	function sortRequests(data) {
+		return data.sort((a, b) => Number(a.status) - Number(b.status));
 	}
 
-	const sortedData = sortRequests(requestExam, user.role);
+	const sortedData = sortRequests(request, user.role);
 
 	const filteredData = sortedData.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
@@ -266,7 +239,7 @@ const RequestExamCancel = () => {
 				<Box>
 					{user.role === "student" && (
 						<>
-							<Button onClick={() => handleOpenAddCancel()} disabled={requestExam?.some((item) => ["0", "7", "8", "9"].includes(item.status))}>
+							<Button onClick={() => handleOpenAddCancel()} disabled={request?.some((item) => ["0", "7", "8", "9"].includes(item.status))}>
 								ขอยกเลิก
 							</Button>
 						</>

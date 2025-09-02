@@ -23,14 +23,12 @@ const RequestExam = () => {
 	const [selectedRow, setSelectedRow] = useState(null);
 	const [selected, setSelected] = useState("approve");
 	const [comment, setComment] = useState("");
-	const [reason, setReason] = useState("");
 	const [error, setError] = useState("");
 	// System states
 	const [user, setUser] = useState("");
 	//student //advisor //chairpersons //officer_registrar
-	const [requestExam, setRequestExam] = useState([]);
+	const [request, setRequest] = useState([]);
 	const [search, setSearch] = useState("");
-	const [reloadTable, setReloadTable] = useState(false);
 	const token = localStorage.getItem("token");
 	const { type } = useParams();
 	const [selectedType, setSelectedType] = useState("");
@@ -60,6 +58,8 @@ const RequestExam = () => {
 		setSelectedType(type);
 	}, [type]);
 
+	const [latestRequest, setLatestRequest] = useState(null);
+
 	useEffect(() => {
 		if (!user) return;
 		const fetchRequestExam = async () => {
@@ -73,17 +73,19 @@ const RequestExam = () => {
 				if (!requestRes.ok) {
 					throw new Error(requestData.message);
 				}
-				setRequestExam(requestData);
+
+				setRequest(requestData);
 				console.log(requestData);
+				setLatestRequest([...requestData].sort((a, b) => new Date(b.request_exam_id) - new Date(a.request_exam_id))[0]);
+				console.log([...requestData].sort((a, b) => new Date(b.request_exam_id) - new Date(a.request_exam_id))[0]);
+				
 			} catch (e) {
 				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 				console.error("Error fetching requestExamAll:", e);
-			} /* finally {
-				setReloadTable(false);
-			} */
+			}
 		};
 		fetchRequestExam();
-	}, [user /* reloadTable */]);
+	}, [user]);
 
 	const handleOpenAdd = async () => {
 		try {
@@ -116,8 +118,8 @@ const RequestExam = () => {
 			}
 			notify("success", requestData.message || "สำเร็จ");
 			setOpenAdd(false);
-			setRequestExam((prev) => [...prev, { ...requestData.data, ...formData, status_text: "รออาจารย์ที่ปรึกษาอนุมัติ" }]);
-			console.log(requestExam);
+			setRequest((prev) => [...prev, { ...requestData.data, ...formData }]);
+			setLatestRequest({ ...requestData.data, ...formData });
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching addRequestExam:", e);
@@ -143,7 +145,7 @@ const RequestExam = () => {
 			setSelected("approve");
 			setComment("");
 			setOpenApprove(false);
-			setRequestExam((prev) => prev.map((row) => (row.request_exam_id === item.request_exam_id ? { ...row, ...requestData.data } : row)));
+			setRequest((prev) => prev.map((row) => (row.request_exam_id === item.request_exam_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching approveRequestExam:", e);
@@ -163,47 +165,22 @@ const RequestExam = () => {
 			}
 			notify("success", requestData.message || "สำเร็จ");
 			setOpenPay(false);
-			setRequestExam((prev) =>
-				prev.map((row) =>
-					row.request_exam_id === item.request_exam_id
-						? { ...row, ...requestData.data }
-						: row
-				)
-			);
+			setRequest((prev) => prev.map((row) => (row.request_exam_id === item.request_exam_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching payRequestExam:", e);
 		}
 	};
 
-	function sortRequests(data, role) {
+	function sortRequests(data) {
 		return data.sort((a, b) => {
-			const statusA = Number(a.status);
-			const statusB = Number(b.status);
-			let orderA = 0,
-				orderB = 0;
-			switch (role) {
-				case "advisor":
-					orderA = statusA === 1 ? 0 : statusA === 0 ? 2 : 1;
-					orderB = statusB === 1 ? 0 : statusB === 0 ? 2 : 1;
-					break;
-				case "chairpersons":
-					orderA = statusA === 2 ? 0 : statusA === 0 ? 2 : 1;
-					orderB = statusB === 2 ? 0 : statusB === 0 ? 2 : 1;
-					break;
-				case "officer_registrar":
-					orderA = statusA === 3 ? 0 : statusA === 0 ? 2 : 1;
-					orderB = statusB === 3 ? 0 : statusB === 0 ? 2 : 1;
-					break;
-				default:
-					orderA = statusA;
-					orderB = statusB;
-			}
-			return orderA - orderB || statusA - statusB;
+			const orderA = Number(a.status) === 0 ? 1 : 0;
+			const orderB = Number(b.status) === 0 ? 1 : 0;
+			return orderA - orderB || Number(a.status) - Number(b.status);
 		});
 	}
 
-	const sortedData = sortRequests(requestExam, user.role);
+	const sortedData = sortRequests(request, user.role);
 
 	const filteredData = sortedData.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
@@ -211,106 +188,89 @@ const RequestExam = () => {
 		return matchesSearch && matchesType;
 	});
 
-	const rows = filteredData
-		.filter((item) => {
-			return (
-				item.status !== "6" ||
-				(item.status === "6" && ((user.role === "chairpersons" && item.advisor_approvals && (!item.chairpersons_approvals || !item.registrar_approvals)) || (user.role === "officer_registrar" && item.advisor_approvals && item.chairpersons_approvals && !item.registrar_approvals)))
-			);
-		})
-		.map((item) => (
-			<Table.Tr key={item.request_exam_id}>
-				<Table.Td>{item.student_name}</Table.Td>
-				{["advisor", "officer_registrar", "chairpersons"].includes(user?.role) && <Table.Td>{item.request_type}</Table.Td>}
-				<Table.Td style={{ textAlign: "center" }}>
-					{item.status <= 4 && item.status > 0 && (
-						<>
-							<Stepper active={item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
-								{[...Array(4)].map((_, i) => (
-									<Stepper.Step key={i}>
-										<Pill>{item.status_text}</Pill>
-									</Stepper.Step>
-								))}
-							</Stepper>
-						</>
-					)}
-					{item.status == 0 && (
+	const rows = filteredData.map((item) => (
+		<Table.Tr key={item.request_exam_id}>
+			<Table.Td>{item.student_name}</Table.Td>
+			{["advisor", "officer_registrar", "chairpersons"].includes(user?.role) && <Table.Td>{item.request_type}</Table.Td>}
+			<Table.Td style={{ textAlign: "center" }}>
+				{item.status <= 4 && item.status > 0 && (
+					<Stepper active={item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
+						{[...Array(4)].map((_, i) => (
+							<Stepper.Step key={i}>
+								<Pill>{item.status_text}</Pill>
+							</Stepper.Step>
+						))}
+					</Stepper>
+				)}
+				{(item.status == 0 || item.status > 6) && (
+					<Pill variant="filled" style={{ backgroundColor: "#ffcccc", color: "#b30000" }}>
+						{item.status_text}
+					</Pill>
+				)}
+				{item.status == 5 && (
+					<Pill variant="filled" style={{ backgroundColor: "#ccffcc", color: "#006600" }}>
+						{item.status_text}
+					</Pill>
+				)}
+				{item.status == 6 && (
+					<>
 						<Pill variant="filled" style={{ backgroundColor: "#ffcccc", color: "#b30000" }}>
 							{item.status_text}
 						</Pill>
-					)}
-					{item.status == 5 && (
-						<Pill variant="filled" style={{ backgroundColor: "#ccffcc", color: "#006600" }}>
-							{item.status_text}
-						</Pill>
-					)}
-					{item.status == 6 && (
+						<br />
+						{!item.advisor_approvals && "อาจารย์ที่ปรึกษา"}
+						{item.advisor_approvals && !item.chairpersons_approvals && "ประธานหลักสูตร"}
+						{item.advisor_approvals && item.chairpersons_approvals && !item.registrar_approvals && "เจ้าหน้าที่ทะเบียน"}
+					</>
+				)}
+			</Table.Td>
+			<Table.Td style={{ maxWidth: "150px" }}>
+				<Group>
+					{user.role === "student" && (
 						<>
-							<Pill variant="filled" style={{ backgroundColor: "#ffcccc", color: "#b30000" }}>
-								{item.status_text}
-							</Pill>
-							<br />
-							{!item.advisor_approvals && "อาจารย์ที่ปรึกษา"}
-							{item.advisor_approvals && !item.chairpersons_approvals && "ประธานหลักสูตร"}
-							{item.advisor_approvals && item.chairpersons_approvals && !item.registrar_approvals && "เจ้าหน้าที่ทะเบียน"}
+							{item.status === "4" && (
+								<Button
+									size="xs"
+									color="green"
+									onClick={() => {
+										setSelectedRow(item);
+										setOpenPay(true);
+									}}
+								>
+									ชำระค่าธรรมเนียม
+								</Button>
+							)}
+							{(item.status == 5 || item.status == 0 || item.status > 6) && (
+								<Button size="xs" color="green">
+									พิมพ์ใบเสร็จ
+								</Button>
+							)}
 						</>
 					)}
-					{item.status > 6 && (
-						<Pill Pill variant="filled" style={{ backgroundColor: "#ffcccc", color: "#b30000" }}>
-							{item.status_text}
-						</Pill>
+					<Pdfg01 data={item} showType={item.status == 0 ? undefined : (user.role === "advisor" && item.status <= 1) || (user.role === "chairpersons" && item.status <= 2) || (user.role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
+					{((user.role === "advisor" && item.status == 1) || (user.role === "chairpersons" && item.status == 2) || (user.role === "officer_registrar" && item.status == 3)) && (
+						<Button
+							size="xs"
+							color="green"
+							onClick={() => {
+								setSelectedRow(item);
+								setOpenApproveState("add");
+								setOpenApprove(true);
+							}}
+						>
+							{user.role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
+						</Button>
 					)}
+				</Group>
+			</Table.Td>
+			{item.exam_results !== null && (
+				<Table.Td style={{ textAlign: "center" }}>
+					{item.exam_results === true && <Text c="green">ผ่าน</Text>}
+					{item.exam_results === false && <Text c="red">ไม่ผ่าน</Text>}
 				</Table.Td>
-				<Table.Td style={{ maxWidth: "150px" }}>
-					<Group>
-						{user.role === "student" && (
-							<>
-								{item.status === "4" && (
-									<Button
-										size="xs"
-										color="green"
-										onClick={() => {
-											setSelectedRow(item);
-											setOpenPay(true);
-										}}
-									>
-										ชำระค่าธรรมเนียม
-									</Button>
-								)}
-								{item.status === "5" ||
-									(item.status === "0" && (
-										<>
-											<Button size="xs" color="green">
-												พิมพ์ใบเสร็จ
-											</Button>
-										</>
-									))}
-							</>
-						)}
-						<Pdfg01 data={item} showType={item.status == 0 ? undefined : (user.role === "advisor" && item.status <= 1) || (user.role === "chairpersons" && item.status <= 2) || (user.role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
-						{((user.role === "advisor" && item.status === "1") || (user.role === "chairpersons" && item.status === "2") || (user.role === "officer_registrar" && item.status === "3")) && (
-							<Button
-								size="xs"
-								color="green"
-								onClick={() => {
-									setSelectedRow(item);
-									setOpenApproveState("add");
-									setOpenApprove(true);
-								}}
-							>
-								{user.role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
-							</Button>
-						)}
-					</Group>
-				</Table.Td>
-				{item.exam_results !== null && (
-					<Table.Td style={{ textAlign: "center" }}>
-						{item.exam_results === true && <Text c="green">ผ่าน</Text>}
-						{item.exam_results === false && <Text c="red">ไม่ผ่าน</Text>}
-					</Table.Td>
-				)}
-			</Table.Tr>
-		));
+			)}
+		</Table.Tr>
+	));
 
 	return (
 		<Box>
@@ -344,7 +304,7 @@ const RequestExam = () => {
 				</Box>
 				<Box>
 					{user.role === "student" && (
-						<Button onClick={() => handleOpenAdd()} disabled={!requestExam.every((item) => item.status === "0") && !requestExam.every((item) => item.status === "6")}>
+						<Button onClick={() => handleOpenAdd()} disabled={latestRequest?.status !== "0" && latestRequest?.status !== "6" && latestRequest?.exam_results !== false}>
 							เพิ่มคำร้อง
 						</Button>
 					)}
@@ -359,7 +319,7 @@ const RequestExam = () => {
 							{["advisor", "officer_registrar", "chairpersons"].includes(user?.role) && <Table.Th style={{ minWidth: 100 }}>เรื่อง</Table.Th>}
 							<Table.Th style={{ minWidth: 110 }}>สถานะ</Table.Th>
 							<Table.Th>การดำเนินการ</Table.Th>
-							{requestExam.some((it) => it.exam_results !== null) && <Table.Th style={{ minWidth: 110 }}>ผลสอบ</Table.Th>}
+							{request.some((it) => it.exam_results !== null) && <Table.Th style={{ minWidth: 110 }}>ผลสอบ</Table.Th>}
 						</Table.Tr>
 					</Table.Thead>
 					<Table.Tbody>{rows}</Table.Tbody>

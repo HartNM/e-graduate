@@ -87,36 +87,6 @@ router.get("/profile", authenticateToken, async (req, res) => {
 	}
 });
 
-/* router.get("/profile", authenticateToken, async (req, res) => {
-	const { UserId } = req.user;
-	if (UserId.length == 9) {
-		try {
-			const studentRes = await axios.get(`http://localhost:8080/externalApi/student/${UserId}`);
-			const studentInfo = studentRes.data;
-			return res.status(200).json({
-				name: studentInfo.student_name,
-				education_level: studentInfo.education_level,
-			});
-		} catch (err) {
-			console.warn(`ดึงข้อมูลนักเรียนไม่สำเร็จ: ${UserId}`);
-			return res.status(502).json({ message: "ไม่สามารถเชื่อมต่อกับระบบภายนอกได้" }); // Bad Gateway
-		}
-	} else {
-		try {
-			const pool = await poolPromise;
-			const result = await pool.request().input("UserId", UserId).query(`SELECT Name FROM Users WHERE UserId = @UserId`);
-			const userName = result.recordset[0]?.Name;
-			if (!userName) {
-				return res.status(404).json({ message: "ไม่พบข้อมูลผู้ใช้งาน" });
-			}
-			return res.status(200).json({ name: userName });
-		} catch (err) {
-			console.error("เกิดข้อผิดพลาดระหว่างดึงข้อมูลบุคลากร:", err);
-			return res.status(500).json({ message: "เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์" });
-		}
-	}
-}); */
-
 router.get("/studentInfo", authenticateToken, async (req, res) => {
 	const student_id = req.user.reference_id;
 
@@ -125,20 +95,23 @@ router.get("/studentInfo", authenticateToken, async (req, res) => {
 		return res.status(200).json(response.data);
 	} catch (err) {
 		console.error("เกิดข้อผิดพลาดระหว่างเรียกข้อมูลนักศึกษา:", err);
-		return res.status(502).json({ message: "ไม่สามารถเชื่อมต่อกับระบบภายนอกได้" }); // Bad Gateway
+		return res.status(502).json({ message: "ไม่สามารถเชื่อมต่อกับระบบภายนอกได้" });
 	}
 });
 
-/* router.get("/studentInfo", authenticateToken, async (req, res) => {
-	const { UserId } = req.user;
-
+router.get("/checkStudent", authenticateToken, async (req, res) => {
+	const student_id = req.user.reference_id;
+	console.log(student_id);
 	try {
-		const response = await axios.get(`http://localhost:8080/externalApi/student/${UserId}`);
-		return res.status(200).json(response.data);
+		const pool = await poolPromise;
+		const RequestExamCancel = await pool.request().input("id", student_id).query(`SELECT status FROM request_exam WHERE student_id = @id AND status = 5`);
+		const RequestThesisProposal = await pool.request().input("id", student_id).query(`SELECT status FROM request_exam WHERE student_id = @id AND exam_results = 1`);
+		return res.status(200).json({
+			RequestExamCancel: !!RequestExamCancel.recordset[0],
+			RequestThesisProposal: !!RequestThesisProposal.recordset[0],
+		});
 	} catch (err) {
-		console.error("เกิดข้อผิดพลาดระหว่างเรียกข้อมูลนักศึกษา:", err);
 		return res.status(502).json({ message: "ไม่สามารถเชื่อมต่อกับระบบภายนอกได้" });
 	}
-}); */
-
+});
 module.exports = router;
