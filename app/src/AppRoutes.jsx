@@ -10,10 +10,12 @@ const AuthenticationForm = lazy(() => import("./pages/AuthenticationTitle/login.
 const RequestExam = lazy(() => import("./component/RequestExam.jsx"));
 const RequestExamCancel = lazy(() => import("./component/RequestExamCancel.jsx"));
 const RequestEngTest = lazy(() => import("./component/RequestEngTest.jsx"));
+const RequestThesisProposal = lazy(() => import("./component/RequestThesisProposal.jsx"));
+const PostponeProposalExam = lazy(() => import("./component/PostponeProposalExam.jsx"));
+const RequestThesisDefense = lazy(() => import("./component/RequestThesisDefense.jsx"));
+const PostponeDefenseExam = lazy(() => import("./component/PostponeDefenseExam.jsx"));
 const PlagiarismReport = lazy(() => import("./component/PlagiarismReport.jsx"));
 const RequestGraduation = lazy(() => import("./component/RequestGraduation.jsx"));
-const RequestThesisDefense = lazy(() => import("./component/RequestThesisDefense.jsx"));
-const RequestThesisProposal = lazy(() => import("./component/RequestThesisProposal.jsx"));
 
 const Chairpersons = lazy(() => import("./pages/chairpersons/Chairpersons.jsx"));
 
@@ -57,6 +59,7 @@ function AppRoutes() {
 					<Route path="/registrar-officer" element={<RegistrarOfficer />}>
 						<Route path="RequestExam/:type" element={<RequestExam />} />
 						<Route path="RequestEngTest" element={<RequestEngTest />} />
+						<Route path="RequestThesisProposal/:type" element={<RequestThesisProposal />} />
 						<Route path="ExamScheduleSetupPage" element={<ExamScheduleSetupPage />} />
 						<Route path="assign-major-officer" element={<AssignMajorOfficer />} />
 						<Route path="exam-results-print" element={<ExamResultsPrint />} />
@@ -67,21 +70,25 @@ function AppRoutes() {
 						<Route path="RequestExamCancel" element={<RequestExamCancel />} />
 						<Route path="RequestEngTest" element={<RequestEngTest />} />
 						<Route path="RequestThesisProposal" element={<RequestThesisProposal />} />
+						<Route path="PostponeProposalExam" element={<PostponeProposalExam />} />
 						<Route path="RequestThesisDefense" element={<RequestThesisDefense />} />
-						<Route path="RequestGraduation" element={<RequestGraduation />} />
+						<Route path="PostponeDefenseExam" element={<PostponeDefenseExam />} />
 						<Route path="PlagiarismReport" element={<PlagiarismReport />} />
+						<Route path="RequestGraduation" element={<RequestGraduation />} />
 					</Route>
 
 					<Route path="/advisor" element={<Advisor />}>
 						<Route path="RequestExam" element={<RequestExam />} />
 						<Route path="RequestExamCancel" element={<RequestExamCancel />} />
 						<Route path="RequestEngTest" element={<RequestEngTest />} />
+						<Route path="RequestThesisProposal" element={<RequestThesisProposal />} />
 					</Route>
 
 					<Route path="/chairpersons" element={<Chairpersons />}>
 						<Route path="RequestExam" element={<RequestExam />} />
 						<Route path="RequestExamCancel" element={<RequestExamCancel />} />
 						<Route path="RequestEngTest" element={<RequestEngTest />} />
+						<Route path="RequestThesisProposal" element={<RequestThesisProposal />} />
 					</Route>
 
 					<Route path="/dean" element={<Dean />}>

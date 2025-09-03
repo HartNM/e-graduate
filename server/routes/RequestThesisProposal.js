@@ -17,12 +17,19 @@ function formatThaiBuddhistDate() {
 }
 
 const statusMap = {
+	0: "ยกเลิก",
 	1: "รออาจารย์ที่ปรึกษาอนุมัติ",
 	2: "รอประธานหลักสูตรอนุมัติ",
 	3: "รอเจ้าหน้าที่ทะเบียนตรวจสอบ",
 	4: "รอการชำระค่าธรรมเนียม",
 	5: "อนุมัติ",
 	6: "ไม่อนุมัติ",
+	7: "ขอยกเลิก",
+	8: "ขอยกเลิก",
+	9: "ขอยกเลิก",
+	/* 7: "รออาจารย์ที่ปรึกษาอนุมัติ",
+	8: "รอประธานหลักสูตรอนุมัติ",
+	9: "รอคณบดีอนุมัติ", */
 };
 
 const formatDate = (date) => {
@@ -30,22 +37,26 @@ const formatDate = (date) => {
 	return new Date(date).toISOString().split("T")[0];
 };
 
-router.post("/allRequestEngTest", authenticateToken, async (req, res) => {
-	const { role, id } = req.body;
+router.post("/allRequestThesisProposal", authenticateToken, async (req, res) => {
+	const { role, id, lastRequest } = req.body;
+
 	try {
 		const pool = await poolPromise;
 		const request = pool.request().input("id", id);
-		let query = "SELECT * FROM request_eng_test";
+		let query = "SELECT * FROM request_thesis_proposal";
 		if (role === "student") {
+			if (lastRequest) {
+				query = "SELECT TOP 1 * FROM request_thesis_proposal";
+			}
 			query += " WHERE student_id = @id";
 		} else if (role === "advisor") {
 			query += " WHERE study_group_id IN (SELECT value FROM STRING_SPLIT(@id, ','))";
 		} else if (role === "chairpersons") {
-			query += " WHERE major_name = @id AND (status IN (0, 2, 3, 4, 5) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL))";
+			query += " WHERE major_name = @id AND (status IN (0, 2, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL))";
 		} else if (role === "officer_registrar") {
-			query += " WHERE (status IN (0, 3, 4, 5) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL AND registrar_approvals_id IS NOT NULL))";
+			query += " WHERE (status IN (0, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL AND registrar_approvals_id IS NOT NULL))";
 		}
-		query += " ORDER BY request_eng_test_id DESC";
+		query += " ORDER BY request_thesis_proposal_id DESC";
 		const result = await request.query(query);
 		const enrichedData = await Promise.all(
 			result.recordset.map(async (item) => {
@@ -65,6 +76,7 @@ router.post("/allRequestEngTest", authenticateToken, async (req, res) => {
 					registrar_approvals_date: formatDate(item.registrar_approvals_date) || null,
 					receipt_pay_date: formatDate(item.receipt_pay_date) || null,
 					status_text: statusMap[item.status?.toString()] || null,
+					request_type: item.request_type || null,
 				};
 			})
 		);
@@ -75,10 +87,8 @@ router.post("/allRequestEngTest", authenticateToken, async (req, res) => {
 	}
 });
 
-router.post("/addRequestEngTest", authenticateToken, async (req, res) => {
-	console.log("asdasdasd");
-
-	const { student_id, study_group_id, major_name, faculty_name } = req.body;
+router.post("/addRequestThesisProposal", authenticateToken, async (req, res) => {
+	const { student_id, study_group_id, major_name, faculty_name, education_level } = req.body;
 	try {
 		const pool = await poolPromise;
 		const infoRes = await pool.request().query(`SELECT TOP 1 term FROM request_exam_info ORDER BY request_exam_info_id DESC`);
@@ -88,26 +98,30 @@ router.post("/addRequestEngTest", authenticateToken, async (req, res) => {
 			.input("study_group_id", study_group_id)
 			.input("major_name", major_name)
 			.input("faculty_name", faculty_name)
+			.input("request_type", `คำร้องขอลงทะเบียนสอบโครงร่าง${education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`)
 			.input("term", infoRes.recordset[0].term)
 			.input("request_date", formatThaiBuddhistDate())
 			.input("status", "1").query(`
-			INSERT INTO request_eng_test (
-				student_id,
-				study_group_id,
-				major_name,
-				faculty_name,
-				term,
-				request_date,
-				status
-			) OUTPUT INSERTED.* VALUES (
-				@student_id,
-				@study_group_id,
-				@major_name,
-				@faculty_name,
-				@term,
-				@request_date,
-				@status
-			)`);
+				INSERT INTO request_thesis_proposal (
+					student_id,
+					study_group_id,
+					major_name,
+					faculty_name,
+					request_type,
+					term,
+					request_date,
+					status
+				) OUTPUT INSERTED.* VALUES (
+					@student_id,
+					@study_group_id,
+					@major_name,
+					@faculty_name,
+					@request_type,
+					@term,
+					@request_date,
+					@status
+				)
+			`);
 
 		res.status(200).json({
 			message: "บันทึกคำร้องขอสอบเรียบร้อยแล้ว",
@@ -127,8 +141,8 @@ router.post("/addRequestEngTest", authenticateToken, async (req, res) => {
 	}
 });
 
-router.post("/approveRequestEngTest", authenticateToken, async (req, res) => {
-	const { request_eng_test_id, name, role, selected, comment } = req.body;
+router.post("/approveRequestThesisProposal", authenticateToken, async (req, res) => {
+	const { request_thesis_proposal_id, name, role, selected, comment } = req.body;
 	if (!["advisor", "chairpersons", "officer_registrar"].includes(role)) {
 		return res.status(400).json({ message: "สิทธิ์ในการเข้าถึงไม่ถูกต้อง" });
 	}
@@ -148,13 +162,12 @@ router.post("/approveRequestEngTest", authenticateToken, async (req, res) => {
 		const pool = await poolPromise;
 		const request = pool
 			.request()
-			.input("request_eng_test_id", request_eng_test_id)
+			.input("request_thesis_proposal_id", request_thesis_proposal_id)
 			.input("status", statusValue)
 			.input("name", name)
 			.input("approve", selected === "approve" ? 1 : 0)
 			.input("date", formatThaiBuddhistDate())
 			.input("comment", comment);
-		// สร้าง query ตาม role
 		const roleFields = {
 			advisor: `
 				advisor_approvals_id = @name,
@@ -173,13 +186,13 @@ router.post("/approveRequestEngTest", authenticateToken, async (req, res) => {
 			`,
 		};
 		const query = `
-			UPDATE request_eng_test
+			UPDATE request_thesis_proposal
 			SET ${roleFields[role]},
 				status = @status
 				${selected !== "approve" ? ", comment = @comment" : ""}
-			OUTPUT INSERTED.* 
-			WHERE request_eng_test_id = @request_eng_test_id
-		`;
+			OUTPUT INSERTED.*
+			WHERE request_thesis_proposal_id = @request_thesis_proposal_id
+			`;
 		const result = await request.query(query);
 		res.status(200).json({
 			message: "บันทึกผลการอนุมัติคำร้องขอสอบเรียบร้อยแล้ว",
@@ -199,28 +212,30 @@ router.post("/approveRequestEngTest", authenticateToken, async (req, res) => {
 	}
 });
 
-router.post("/payRequestEngTest", authenticateToken, async (req, res) => {
-	const { request_eng_test_id, receipt_vol_No } = req.body;
+router.post("/payRequestThesisProposal", authenticateToken, async (req, res) => {
+	const { request_thesis_proposal_id, receipt_vol_No } = req.body;
 	try {
 		const pool = await poolPromise;
-		const result = await pool.request().input("request_eng_test_id", request_eng_test_id).input("receipt_vol_No", receipt_vol_No).input("receipt_pay_date", formatThaiBuddhistDate()).input("status", "5").query(`
-			UPDATE request_eng_test
+		const result = await pool.request().input("request_thesis_proposal_id", request_thesis_proposal_id).input("receipt_vol_No", receipt_vol_No).input("receipt_pay_date", formatThaiBuddhistDate()).input("status", "5")
+			.query(`
+			UPDATE request_thesis_proposal
 			SET receipt_vol_No = @receipt_vol_No ,
 				receipt_pay_date = @receipt_pay_date,
 				status = @status
-			OUTPUT INSERTED.* 
-			WHERE request_eng_test_id = @request_eng_test_id
+			OUTPUT INSERTED.*
+			WHERE request_thesis_proposal_id = @request_thesis_proposal_id
 		`);
+		const row = result.recordset[0];
 		res.status(200).json({
 			message: "บันทึกข้อมูลการชำระเงินเรียบร้อยแล้ว",
 			data: {
-				...result.recordset[0],
-				status_text: statusMap[result.recordset[0].status?.toString()] || null,
-				request_date: formatDate(result.recordset[0].request_date) || null,
-				advisor_approvals_date: formatDate(result.recordset[0].advisor_approvals_date) || null,
-				chairpersons_approvals_date: formatDate(result.recordset[0].chairpersons_approvals_date) || null,
-				registrar_approvals_date: formatDate(result.recordset[0].registrar_approvals_date) || null,
-				receipt_pay_date: formatDate(result.recordset[0].receipt_pay_date) || null,
+				...row,
+				status_text: statusMap[row.status?.toString()] || null,
+				request_date: formatDate(row.request_date),
+				advisor_approvals_date: formatDate(row.advisor_approvals_date),
+				chairpersons_approvals_date: formatDate(row.chairpersons_approvals_date),
+				registrar_approvals_date: formatDate(row.registrar_approvals_date),
+				receipt_pay_date: formatDate(row.receipt_pay_date),
 			},
 		});
 	} catch (err) {

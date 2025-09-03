@@ -46,14 +46,13 @@ export const draw = (page, text, x, y, font = THSarabunNewFont, size = 14) => {
 	}
 };
 
-export const drawRect = (page, x, y, w, h, lineW = 0) => {
+export const drawRect = (page, x, y, w, h, lineW = 1) => {
 	page.drawRectangle({
 		x,
 		y,
 		width: w,
 		height: h,
 		borderWidth: lineW,
-		color: rgb(1, 1, 1),
 		borderColor: rgb(0, 0, 0),
 	});
 };

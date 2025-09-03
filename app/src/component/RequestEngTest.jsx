@@ -5,7 +5,7 @@ import ModalApprove from "../component/Modal/ModalApprove";
 import ModalAdd from "../component/Modal/ModalAdd";
 import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
-import Pdfg02 from "../component/PDF/Pdfg02";
+import Pdfg02 from "../component/PDF/Pdfg02 copy";
 
 const RequestEngTest = () => {
 	// Modal notify
@@ -22,7 +22,6 @@ const RequestEngTest = () => {
 	const [selectedRow, setSelectedRow] = useState(null);
 	const [selected, setSelected] = useState("approve");
 	const [comment, setComment] = useState("");
-	const [reason, setReason] = useState("");
 	const [error, setError] = useState("");
 	// System states
 	const [user, setUser] = useState("");
@@ -52,6 +51,8 @@ const RequestEngTest = () => {
 		fetchProfile();
 	}, [token]);
 
+	const [latestRequest, setLatestRequest] = useState(null);
+
 	useEffect(() => {
 		if (!user) return;
 		const fetchRequestExam = async () => {
@@ -67,6 +68,7 @@ const RequestEngTest = () => {
 				}
 				setRequest(requestData);
 				console.log(requestData);
+				setLatestRequest(requestData[0]);
 			} catch (e) {
 				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 				console.error("Error fetching requestExamAll:", e);
@@ -159,7 +161,8 @@ const RequestEngTest = () => {
 		}
 	};
 
-	function sortRequests(data) {
+	function sortRequests(data, role) {
+		if (role === "student") return data;
 		return data.sort((a, b) => Number(a.status) - Number(b.status));
 	}
 
@@ -176,15 +179,13 @@ const RequestEngTest = () => {
 			{["advisor", "officer_registrar", "chairpersons", "dean"].includes(user?.role) && <Table.Td>ขอทดสอบความรู้ทางภาษาอังกฤษ</Table.Td>}
 			<Table.Td style={{ textAlign: "center" }}>
 				{item.status < 5 && item.status > 0 && (
-					<>
-						<Stepper active={item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
-							{[...Array(4)].map((_, i) => (
-								<Stepper.Step key={i}>
-									<Pill>{item.status_text}</Pill>
-								</Stepper.Step>
-							))}
-						</Stepper>
-					</>
+					<Stepper active={item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
+						{[...Array(4)].map((_, i) => (
+							<Stepper.Step key={i}>
+								<Pill>{item.status_text}</Pill>
+							</Stepper.Step>
+						))}
+					</Stepper>
 				)}
 				{item.status == 0 && (
 					<Pill variant="filled" style={{ backgroundColor: "#ffcccc", color: "#b30000" }}>
@@ -207,7 +208,6 @@ const RequestEngTest = () => {
 						{item.advisor_approvals && item.chairpersons_approvals && !item.registrar_approvals && "เจ้าหน้าที่ทะเบียน"}
 					</>
 				)}
-
 				{item.status > 6 && <Text>{item.status_text}</Text>}
 			</Table.Td>
 
@@ -286,7 +286,7 @@ const RequestEngTest = () => {
 				</Box>
 				<Box>
 					{user.role === "student" && (
-						<Button onClick={() => handleOpenAdd()} disabled={!request.some((item) => item.status === "0") && !request.every((item) => item.status === "6")}>
+						<Button onClick={() => handleOpenAdd()} disabled={latestRequest ? latestRequest.status !== "0" && latestRequest.status !== "6" : false}>
 							เพิ่มคำร้อง
 						</Button>
 					)}

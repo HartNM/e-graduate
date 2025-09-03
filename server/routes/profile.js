@@ -101,14 +101,26 @@ router.get("/studentInfo", authenticateToken, async (req, res) => {
 
 router.get("/checkStudent", authenticateToken, async (req, res) => {
 	const student_id = req.user.reference_id;
-	console.log(student_id);
 	try {
 		const pool = await poolPromise;
-		const RequestExamCancel = await pool.request().input("id", student_id).query(`SELECT status FROM request_exam WHERE student_id = @id AND status = 5`);
-		const RequestThesisProposal = await pool.request().input("id", student_id).query(`SELECT status FROM request_exam WHERE student_id = @id AND exam_results = 1`);
+		const student = await axios.get(`http://localhost:8080/externalApi/student/${student_id}`);
+		const request_exam = await pool.request().input("id", student_id).query(`SELECT TOP 1 status, exam_results FROM request_exam WHERE student_id = @id ORDER BY request_exam_id DESC`);
+
 		return res.status(200).json({
-			RequestExamCancel: !!RequestExamCancel.recordset[0],
-			RequestThesisProposal: !!RequestThesisProposal.recordset[0],
+			education_level: student.data.education_level,
+			RequestExamCancel:
+				(request_exam.recordset[0].status === "5" ||
+					request_exam.recordset[0].status === "7" ||
+					request_exam.recordset[0].status === "8" ||
+					request_exam.recordset[0].status === "9" ||
+					request_exam.recordset[0].status === "0") &&
+				request_exam.recordset[0].exam_results === null,
+			RequestThesisProposal: /* request_exam.recordset[0].status === "5" && request_exam.recordset[0].exam_results === */ true,
+			PostponeProposalExam: true,
+			RequestThesisDefense: true,
+			PostponeDefenseExam: true,
+			PlagiarismReport: true,
+			RequestGraduation: true,
 		});
 	} catch (err) {
 		return res.status(502).json({ message: "ไม่สามารถเชื่อมต่อกับระบบภายนอกได้" });

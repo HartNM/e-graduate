@@ -41,7 +41,7 @@ async function fillPdf(data) {
 	let y = 760;
 	let space = 20;
 
-	drawCenterXText(page, `คำร้อง${data?.request_type}`, 780, THSarabunNewBold, 20);
+	drawCenterXText(page, `คำร้องขอทดสอบความรู้ทางภาษาอังกฤษ`, 780, THSarabunNewBold, 20);
 
 	const drawItems = [
 		{ text: `มหาวิทยาลัยราชภัฏกำแพงเพชร`, x: 420, y: (y -= space) },
@@ -50,9 +50,9 @@ async function fillPdf(data) {
 		{ text: request_date_month, x: 440, y: y + 2 },
 		{ text: request_date_year, x: 510, y: y + 2 },
 		{ text: `เรื่อง`, x: 60, y: (y -= space * 2), font: THSarabunNewBold },
-		{ text: data?.request_type, x: 100, y: y },
+		{ text: `ขอทดสอบความรู้ทางภาษาอังกฤษสำหรับนักศึกษาระดับดุษฎีบัณฑิต`, x: 100, y: y },
 		{ text: `เรียน`, x: 60, y: (y -= space), font: THSarabunNewBold },
-		{ text: `ประธานคณะกรรมการบัณฑิตศึกษาประจำสาขาวิชา${data?.major_name}`, x: 100, y: y },
+		{ text: `อธิการบดีมหาวิทยาลัยราชภัฏกำแพงเพชร${data?.major_name}`, x: 100, y: y },
 		{ text: `ข้าพเจ้า................................................................................................รหัสประจำตัวนักศึกษา.................................................`, x: 100, y: (y -= space * 2) },
 		{ text: data?.student_name, x: 180, y: y + 2 },
 		{ text: data?.student_id, x: 460, y: y + 2 },
@@ -60,10 +60,9 @@ async function fillPdf(data) {
 		{ text: data?.education_level, x: 110, y: y + 2 },
 		{ text: data?.program, x: 230, y: y + 2 },
 		{ text: data?.major_name, x: 440, y: y + 2 },
-		{ text: `คณะ..........................................................................................มีความประสงค์.........................................................................................`, x: 60, y: (y -= space) },
+		{ text: `คณะ.................................................................................มีความประสงค์จะขอทดสอบความรู้ภาษาอังกฤษสำหรับนักศึกษาดุษฎีบัณฑิต`, x: 60, y: (y -= space) },
 		{ text: data?.faculty_name, x: 100, y: y + 2 },
-		{ text: `ขอสอบ${data?.request_type}`, x: 360, y: y + 2 },
-		{ text: `ในภาคเรียนที่ ....................... ในวันที่.....................................................`, x: 60, y: (y -= space) },
+		{ text: `ในภาคเรียนที่ .........................ในวันที่.....................................................`, x: 60, y: (y -= space) },
 		{ text: data?.term, x: 130, y: y + 2 },
 		{ text: `${exam_date_day} ${exam_date_month} ${exam_date_year + 543}`, x: 210, y: y + 2 },
 		{ text: `จึงเรียนมาเพื่อโปรดพิจารณา`, x: 100, y: (y -= space) },
@@ -118,7 +117,7 @@ async function fillPdf(data) {
 		{ text: registrar_approvals_date_year, x: 210, y: y + 2, show: typeof data?.registrar_approvals === "boolean" },
 
 		{ text: `4. ชำระค่าธรรมเนียมการสอบแล้ว ภาคเรียนที่ ${data?.term}`, x: 310, y: (y += space * 7), font: THSarabunNewBold, show: data?.receipt_vol_No !== null },
-		{ text: data?.education_level === "ปริญญาโท" ? "ปริญญาโท จำนวน 1,000 บาท (หนึ่งพันบาทถ้วน)" : "ปริญญาเอก จำนวน 1,500 บาท (หนึ่งพันห้าร้อยบาทถ้วน)", x: 330, y: (y -= space), show: data?.receipt_vol_No !== null },
+		{ text: "จำนวน 1,000 บาท (หนึ่งพันบาทถ้วน)", x: 330, y: (y -= space), show: data?.receipt_vol_No !== null },
 		{ text: `ตามใบเสร็จรับเงิน เล่มที่ ${data?.receipt_vol_No} เลขที่ ${data?.receipt_vol_No}`, x: 310, y: (y -= space), show: data?.receipt_vol_No !== null },
 		{ text: `ลงวันที่ ${receipt_pay_date_day} ${receipt_pay_date_month} ${receipt_pay_date_year}`, x: 310, y: (y -= space), show: data?.receipt_vol_No !== null },
 		{ text: `ลงชื่อ.......................................................................`, x: 325, y: (y -= space * 2), show: data?.receipt_vol_No !== null },
@@ -138,7 +137,7 @@ async function fillPdf(data) {
 	return new Blob([pdfBytes], { type: "application/pdf" });
 }
 
-export default function Pdfg01({ data, showType, exam_date }) {
+export default function Pdfg02({ data, showType, exam_date }) {
 	const handleOpen = async () => {
 		const blob = await fillPdf(data, exam_date);
 		const url = URL.createObjectURL(blob);

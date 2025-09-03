@@ -38,13 +38,16 @@ const formatDate = (date) => {
 };
 
 router.post("/requestExamAll", authenticateToken, async (req, res) => {
-	const { role, id } = req.body;
+	const { role, id, lastRequest } = req.body;
 
 	try {
 		const pool = await poolPromise;
 		const request = pool.request().input("id", id);
 		let query = "SELECT * FROM request_exam";
 		if (role === "student") {
+			if (lastRequest) {
+				query = "SELECT TOP 1 * FROM request_exam";
+			}
 			query += " WHERE student_id = @id";
 		} else if (role === "advisor") {
 			query += " WHERE study_group_id IN (SELECT value FROM STRING_SPLIT(@id, ','))";
@@ -53,6 +56,7 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 		} else if (role === "officer_registrar") {
 			query += " WHERE (status IN (0, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL AND registrar_approvals_id IS NOT NULL))";
 		}
+		query += " ORDER BY request_exam_id DESC";
 		const result = await request.query(query);
 		const enrichedData = await Promise.all(
 			result.recordset.map(async (item) => {
@@ -66,7 +70,7 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 				return {
 					...item,
 					...studentInfo,
-					request_exam_date: formatDate(item.request_exam_date) || null,
+					request_date: formatDate(item.request_date) || null,
 					advisor_approvals_date: formatDate(item.advisor_approvals_date) || null,
 					chairpersons_approvals_date: formatDate(item.chairpersons_approvals_date) || null,
 					registrar_approvals_date: formatDate(item.registrar_approvals_date) || null,
@@ -96,7 +100,7 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 			.input("faculty_name", faculty_name)
 			.input("request_type", `ขอสอบ${education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`)
 			.input("term", infoRes.recordset[0].term)
-			.input("request_exam_date", formatThaiBuddhistDate())
+			.input("request_date", formatThaiBuddhistDate())
 			.input("status", "1").query(`
 				INSERT INTO request_exam (
 					student_id,
@@ -105,7 +109,7 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 					faculty_name,
 					request_type,
 					term,
-					request_exam_date,
+					request_date,
 					status
 				) OUTPUT INSERTED.* VALUES (
 					@student_id,
@@ -114,7 +118,7 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 					@faculty_name,
 					@request_type,
 					@term,
-					@request_exam_date,
+					@request_date,
 					@status
 				)
 			`);
@@ -124,7 +128,7 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()] || null,
-				request_exam_date: formatDate(result.recordset[0].request_exam_date) || null,
+				request_date: formatDate(result.recordset[0].request_date) || null,
 				advisor_approvals_date: formatDate(result.recordset[0].advisor_approvals_date) || null,
 				chairpersons_approvals_date: formatDate(result.recordset[0].chairpersons_approvals_date) || null,
 				registrar_approvals_date: formatDate(result.recordset[0].registrar_approvals_date) || null,
@@ -195,7 +199,7 @@ router.post("/approveRequestExam", authenticateToken, async (req, res) => {
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()] || null,
-				request_exam_date: formatDate(result.recordset[0].request_exam_date) || null,
+				request_date: formatDate(result.recordset[0].request_date) || null,
 				advisor_approvals_date: formatDate(result.recordset[0].advisor_approvals_date) || null,
 				chairpersons_approvals_date: formatDate(result.recordset[0].chairpersons_approvals_date) || null,
 				registrar_approvals_date: formatDate(result.recordset[0].registrar_approvals_date) || null,
@@ -227,7 +231,7 @@ router.post("/payRequestExam", authenticateToken, async (req, res) => {
 			data: {
 				...row,
 				status_text: statusMap[row.status?.toString()] || null,
-				request_exam_date: formatDate(row.request_exam_date),
+				request_date: formatDate(row.request_date),
 				advisor_approvals_date: formatDate(row.advisor_approvals_date),
 				chairpersons_approvals_date: formatDate(row.chairpersons_approvals_date),
 				registrar_approvals_date: formatDate(row.registrar_approvals_date),

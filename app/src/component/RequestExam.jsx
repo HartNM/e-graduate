@@ -6,7 +6,7 @@ import ModalAdd from "../component/Modal/ModalAdd";
 import ModalApprove from "../component/Modal/ModalApprove";
 import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
-import Pdfg01 from "../component/PDF/Pdfg01";
+import Pdfg01 from "../component/PDF/Pdfg01 copy";
 
 const RequestExam = () => {
 	// Modal Info
@@ -76,9 +76,8 @@ const RequestExam = () => {
 
 				setRequest(requestData);
 				console.log(requestData);
-				setLatestRequest([...requestData].sort((a, b) => new Date(b.request_exam_id) - new Date(a.request_exam_id))[0]);
-				console.log([...requestData].sort((a, b) => new Date(b.request_exam_id) - new Date(a.request_exam_id))[0]);
-				
+				setLatestRequest(requestData[0]);
+				console.log(requestData[0]);
 			} catch (e) {
 				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 				console.error("Error fetching requestExamAll:", e);
@@ -172,7 +171,8 @@ const RequestExam = () => {
 		}
 	};
 
-	function sortRequests(data) {
+	function sortRequests(data, role) {
+		if (role === "student") return data;
 		return data.sort((a, b) => {
 			const orderA = Number(a.status) === 0 ? 1 : 0;
 			const orderB = Number(b.status) === 0 ? 1 : 0;
@@ -185,6 +185,8 @@ const RequestExam = () => {
 	const filteredData = sortedData.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
 		const matchesType = selectedType ? p.request_type === selectedType : true;
+		console.log(selectedType);
+		console.log(p.request_type);
 		return matchesSearch && matchesType;
 	});
 
@@ -304,7 +306,7 @@ const RequestExam = () => {
 				</Box>
 				<Box>
 					{user.role === "student" && (
-						<Button onClick={() => handleOpenAdd()} disabled={latestRequest?.status !== "0" && latestRequest?.status !== "6" && latestRequest?.exam_results !== false}>
+						<Button onClick={() => handleOpenAdd()} disabled={latestRequest ? latestRequest.status !== "0" && latestRequest.status !== "6" && latestRequest.exam_results !== false : false}>
 							เพิ่มคำร้อง
 						</Button>
 					)}

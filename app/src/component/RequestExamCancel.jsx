@@ -5,7 +5,7 @@ import { useParams } from "react-router-dom";
 import ModalAddCancel from "../component/Modal/ModalAddCancel";
 import ModalApprove from "../component/Modal/ModalApprove";
 import ModalInform from "../component/Modal/ModalInform";
-import Pdfg07 from "../component/PDF/Pdfg07";
+import Pdfg07 from "../component/PDF/Pdfg07 copy";
 
 const RequestExamCancel = () => {
 	// Modal Info
@@ -56,9 +56,31 @@ const RequestExamCancel = () => {
 		setSelectedType(type);
 	}, [type]);
 
+	const [latestRequest, setLatestRequest] = useState(null);
+
 	useEffect(() => {
 		if (!user) return;
 		const fetchRequestExam = async () => {
+			try {
+				const requestRes = await fetch("http://localhost:8080/api/requestExamAll", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+					body: JSON.stringify({ role: user.role, id: user.id, lastRequest: true }),
+				});
+				const requestData = await requestRes.json();
+				if (!requestRes.ok) {
+					throw new Error(requestData.message);
+				}
+				setLatestRequest([...requestData].sort((a, b) => new Date(b.request_exam_id) - new Date(a.request_exam_id))[0]);
+				console.log([...requestData].sort((a, b) => new Date(b.request_exam_id) - new Date(a.request_exam_id))[0]);
+			} catch (e) {
+				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+				console.error("Error fetching requestExamAll:", e);
+			}
+		};
+		fetchRequestExam();
+
+		const fetchRequestExamCancel = async () => {
 			try {
 				const requestRes = await fetch("http://localhost:8080/api/AllRequestExamCancel", {
 					method: "POST",
@@ -76,7 +98,7 @@ const RequestExamCancel = () => {
 				console.error("Error fetching AllRequestExamCancel:", e);
 			}
 		};
-		fetchRequestExam();
+		fetchRequestExamCancel();
 	}, [user]);
 
 	const handleOpenAddCancel = async () => {
@@ -156,7 +178,8 @@ const RequestExamCancel = () => {
 		}
 	};
 
-	function sortRequests(data) {
+	function sortRequests(data, role) {
+		if (role === "student") return data;
 		return data.sort((a, b) => Number(a.status) - Number(b.status));
 	}
 
@@ -239,7 +262,7 @@ const RequestExamCancel = () => {
 				<Box>
 					{user.role === "student" && (
 						<>
-							<Button onClick={() => handleOpenAddCancel()} disabled={request?.some((item) => ["0", "7", "8", "9"].includes(item.status))}>
+							<Button onClick={() => handleOpenAddCancel()} disabled={!(latestRequest?.status === "5" && latestRequest?.exam_results === null)}>
 								ขอยกเลิก
 							</Button>
 						</>
