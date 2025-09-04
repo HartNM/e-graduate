@@ -37,16 +37,16 @@ const formatDate = (date) => {
 	return new Date(date).toISOString().split("T")[0];
 };
 
-router.post("/allRequestThesisProposal", authenticateToken, async (req, res) => {
+router.post("/allRequestThesisDefense", authenticateToken, async (req, res) => {
 	const { role, id, lastRequest } = req.body;
 
 	try {
 		const pool = await poolPromise;
 		const request = pool.request().input("id", id);
-		let query = "SELECT * FROM request_thesis_proposal";
+		let query = "SELECT * FROM request_thesis_defense";
 		if (role === "student") {
 			if (lastRequest) {
-				query = "SELECT TOP 1 * FROM request_thesis_proposal";
+				query = "SELECT TOP 1 * FROM request_thesis_defense";
 			}
 			query += " WHERE student_id = @id";
 		} else if (role === "advisor") {
@@ -56,7 +56,7 @@ router.post("/allRequestThesisProposal", authenticateToken, async (req, res) => 
 		} else if (role === "officer_registrar") {
 			query += " WHERE (status IN (0, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL AND registrar_approvals_id IS NOT NULL))";
 		}
-		query += " ORDER BY request_thesis_proposal_id DESC";
+		query += " ORDER BY request_thesis_defense_id DESC";
 		const result = await request.query(query);
 		const enrichedData = await Promise.all(
 			result.recordset.map(async (item) => {
@@ -87,7 +87,7 @@ router.post("/allRequestThesisProposal", authenticateToken, async (req, res) => 
 	}
 });
 
-router.post("/addRequestThesisProposal", authenticateToken, async (req, res) => {
+router.post("/addRequestThesisDefense", authenticateToken, async (req, res) => {
 	const { student_id, study_group_id, major_name, faculty_name, education_level } = req.body;
 	try {
 		const pool = await poolPromise;
@@ -98,11 +98,11 @@ router.post("/addRequestThesisProposal", authenticateToken, async (req, res) => 
 			.input("study_group_id", study_group_id)
 			.input("major_name", major_name)
 			.input("faculty_name", faculty_name)
-			.input("request_type", `ขอลงทะเบียนสอบโครงร่าง${education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`)
+			.input("request_type", `ขอลงทะเบียนสอบ${education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`)
 			.input("term", infoRes.recordset[0].term)
 			.input("request_date", formatThaiBuddhistDate())
 			.input("status", "1").query(`
-				INSERT INTO request_thesis_proposal (
+				INSERT INTO request_thesis_defense (
 					student_id,
 					study_group_id,
 					major_name,
@@ -141,8 +141,8 @@ router.post("/addRequestThesisProposal", authenticateToken, async (req, res) => 
 	}
 });
 
-router.post("/approveRequestThesisProposal", authenticateToken, async (req, res) => {
-	const { request_thesis_proposal_id, name, role, selected, comment } = req.body;
+router.post("/approveRequestThesisDefense", authenticateToken, async (req, res) => {
+	const { request_thesis_defense_id, name, role, selected, comment } = req.body;
 	if (!["advisor", "chairpersons", "officer_registrar"].includes(role)) {
 		return res.status(400).json({ message: "สิทธิ์ในการเข้าถึงไม่ถูกต้อง" });
 	}
@@ -162,7 +162,7 @@ router.post("/approveRequestThesisProposal", authenticateToken, async (req, res)
 		const pool = await poolPromise;
 		const request = pool
 			.request()
-			.input("request_thesis_proposal_id", request_thesis_proposal_id)
+			.input("request_thesis_defense_id", request_thesis_defense_id)
 			.input("status", statusValue)
 			.input("name", name)
 			.input("approve", selected === "approve" ? 1 : 0)
@@ -186,12 +186,12 @@ router.post("/approveRequestThesisProposal", authenticateToken, async (req, res)
 			`,
 		};
 		const query = `
-			UPDATE request_thesis_proposal
+			UPDATE request_thesis_defense
 			SET ${roleFields[role]},
 				status = @status
 				${selected !== "approve" ? ", comment = @comment" : ""}
 			OUTPUT INSERTED.*
-			WHERE request_thesis_proposal_id = @request_thesis_proposal_id
+			WHERE request_thesis_defense_id = @request_thesis_defense_id
 			`;
 		const result = await request.query(query);
 		res.status(200).json({
@@ -212,18 +212,18 @@ router.post("/approveRequestThesisProposal", authenticateToken, async (req, res)
 	}
 });
 
-router.post("/payRequestThesisProposal", authenticateToken, async (req, res) => {
-	const { request_thesis_proposal_id, receipt_vol_No } = req.body;
+router.post("/payRequestThesisDefense", authenticateToken, async (req, res) => {
+	const { request_thesis_defense_id, receipt_vol_No } = req.body;
 	try {
 		const pool = await poolPromise;
-		const result = await pool.request().input("request_thesis_proposal_id", request_thesis_proposal_id).input("receipt_vol_No", receipt_vol_No).input("receipt_pay_date", formatThaiBuddhistDate()).input("status", "5")
+		const result = await pool.request().input("request_thesis_defense_id", request_thesis_defense_id).input("receipt_vol_No", receipt_vol_No).input("receipt_pay_date", formatThaiBuddhistDate()).input("status", "5")
 			.query(`
-			UPDATE request_thesis_proposal
+			UPDATE request_thesis_defense
 			SET receipt_vol_No = @receipt_vol_No ,
 				receipt_pay_date = @receipt_pay_date,
 				status = @status
 			OUTPUT INSERTED.*
-			WHERE request_thesis_proposal_id = @request_thesis_proposal_id
+			WHERE request_thesis_defense_id = @request_thesis_defense_id
 		`);
 		const row = result.recordset[0];
 		res.status(200).json({

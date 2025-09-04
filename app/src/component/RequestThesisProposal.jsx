@@ -6,7 +6,7 @@ import ModalAdd from "../component/Modal/ModalAdd";
 import ModalApprove from "../component/Modal/ModalApprove";
 import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
-import Pdfg01 from "../component/PDF/Pdfg01 copy";
+import Pdfg01 from "../component/PDF/Pdfg03";
 
 const RequestThesisProposal = () => {
 	// Modal Info
@@ -184,7 +184,7 @@ const RequestThesisProposal = () => {
 
 	const filteredData = sortedData.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
-		const matchesType = selectedType ? p.request_type === `คำร้องขอลงทะเบียนสอบโครงร่าง${selectedType}` : true;
+		const matchesType = selectedType ? p.request_type === `ขอลงทะเบียนสอบโครงร่าง${selectedType}` : true;
 		return matchesSearch && matchesType;
 	});
 

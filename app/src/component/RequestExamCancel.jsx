@@ -5,7 +5,7 @@ import { useParams } from "react-router-dom";
 import ModalAddCancel from "../component/Modal/ModalAddCancel";
 import ModalApprove from "../component/Modal/ModalApprove";
 import ModalInform from "../component/Modal/ModalInform";
-import Pdfg07 from "../component/PDF/Pdfg07 copy";
+import Pdfg07 from "../component/PDF/Pdfg07";
 
 const RequestExamCancel = () => {
 	// Modal Info

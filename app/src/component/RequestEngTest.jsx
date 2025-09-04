@@ -5,7 +5,7 @@ import ModalApprove from "../component/Modal/ModalApprove";
 import ModalAdd from "../component/Modal/ModalAdd";
 import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
-import Pdfg02 from "../component/PDF/Pdfg02 copy";
+import Pdfg02 from "../component/PDF/Pdfg02";
 
 const RequestEngTest = () => {
 	// Modal notify

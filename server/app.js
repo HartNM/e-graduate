@@ -37,6 +37,8 @@ app.use("/api", RequestEngTest);
 const RequestThesisProposal = require("./routes/RequestThesisProposal");
 app.use("/api", RequestThesisProposal);
 
+const RequestThesisDefense = require("./routes/RequestThesisDefense");
+app.use("/api", RequestThesisDefense);
 app.listen(PORT, () => {
 	console.log(`Server is running on port ${PORT}`);
 });

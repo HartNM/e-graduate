@@ -7,6 +7,7 @@ const menu = [
 	{ label: `คำร้องขอยกเลิกการเข้าสอบประมวลความรู้/สอบวัดคุณสมบัต`, icon: IconClipboardX, links: "/advisor/RequestExamCancel" },
 	{ label: "คำร้องขอทดสอบความรู้ทางภาษาอังกฤษ", icon: IconCertificate, links: "/advisor/RequestEngTest" },
 	{ label: `คำร้องขอลงทะเบียนสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconReport, links: "/advisor/RequestThesisProposal" },
+	{ label: `คำร้องขอลงทะเบียนสอบวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconReport, links: "/advisor/RequestThesisDefense" },
 ];
 
 const Advisor = () => {

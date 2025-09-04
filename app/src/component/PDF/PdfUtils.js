@@ -82,3 +82,7 @@ export function formatThaiDateShort(dateStr) {
 	const thaiMonthShort = monthsShort[month - 1];
 	return [day, thaiMonthShort, year];
 }
+
+export function drawLine(page, x1, y1, x2, y2, w = 1) {
+	page.drawLine({ start: { x: x1, y: y1 }, end: { x: x2, y: y2 }, thickness: w, color: rgb(0, 0, 0) });
+}
