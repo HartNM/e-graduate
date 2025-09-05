@@ -103,19 +103,25 @@ router.get("/checkStudent", authenticateToken, async (req, res) => {
 	const student_id = req.user.reference_id;
 	try {
 		const pool = await poolPromise;
+
 		const student = await axios.get(`http://localhost:8080/externalApi/student/${student_id}`);
-		const request_exam = await pool.request().input("id", student_id).query(`SELECT TOP 1 status, exam_results FROM request_exam WHERE student_id = @id ORDER BY request_exam_id DESC`);
+
+		const request_exam = await pool
+			.request()
+			.input("id", student_id)
+			.query(
+				`SELECT TOP 1 status, exam_results 
+				 FROM request_exam 
+				 WHERE student_id = @id 
+				 ORDER BY request_exam_id DESC`
+			);
+
+		const latest = request_exam.recordset[0] || {};
 
 		return res.status(200).json({
 			education_level: student.data.education_level,
-			RequestExamCancel:
-				(request_exam.recordset[0].status === "5" ||
-					request_exam.recordset[0].status === "7" ||
-					request_exam.recordset[0].status === "8" ||
-					request_exam.recordset[0].status === "9" ||
-					request_exam.recordset[0].status === "0") &&
-				request_exam.recordset[0].exam_results === null,
-			RequestThesisProposal: /* request_exam.recordset[0].status === "5" && request_exam.recordset[0].exam_results === */ true,
+			RequestExamCancel: ((latest.status === "5" || latest.status === "7" || latest.status === "8" || latest.status === "9" || latest.status === "0") && latest.exam_results === null) || false,
+			RequestThesisProposal: latest.status === "5" && latest.exam_results === true,
 			PostponeProposalExam: true,
 			RequestThesisDefense: true,
 			PostponeDefenseExam: true,
@@ -123,7 +129,9 @@ router.get("/checkStudent", authenticateToken, async (req, res) => {
 			RequestGraduation: true,
 		});
 	} catch (err) {
+		console.error(err);
 		return res.status(502).json({ message: "ไม่สามารถเชื่อมต่อกับระบบภายนอกได้" });
 	}
 });
+
 module.exports = router;

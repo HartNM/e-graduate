@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useParams } from "react-router-dom";
-import ModalAdd from "../component/Modal/ModalAddRequestGraduation";
+import ModalAddRequestGraduation from "../component/Modal/ModalAddPlagiarismReport";
 import ModalApprove from "../component/Modal/ModalApprove";
 import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
@@ -43,23 +43,28 @@ const PlagiarismReport = () => {
 	const AddForm = useForm({
 		initialValues: {
 			student_name: "",
+			study_group_id: "",
 			student_id: "",
 			education_level: "",
 			program: "",
 			major_name: "",
 			faculty_name: "",
-			Chapter_1: null,
-			Chapter_2: null,
-			Chapter_3: null,
-			Chapter_4: null,
-			Chapter_5: null,
+			chapter_1: "",
+			chapter_2: "",
+			chapter_3: "",
+			chapter_4: "",
+			chapter_5: "",
+			inspection_date: "",
 		},
 		validate: {
-			Chapter_1: validateChapter,
-			Chapter_2: validateChapter,
-			Chapter_3: validateChapter,
-			Chapter_4: validateChapter,
-			Chapter_5: validateChapter,
+			chapter_1: validateChapter,
+			chapter_2: validateChapter,
+			chapter_3: validateChapter,
+			chapter_4: validateChapter,
+			chapter_5: validateChapter,
+			inspection_date: (v) => {
+				if (!v) return "กรุณาระบุวันที่ปิด";
+			},
 		},
 	});
 
@@ -126,19 +131,17 @@ const PlagiarismReport = () => {
 			if (!requestRes.ok) {
 				throw new Error(requestData.message);
 			}
+			AddForm.reset();
 			AddForm.setValues({
 				student_name: requestData.student_name || "",
 				student_id: requestData.student_id || "",
+				study_group_id: requestData.study_group_id || "",
 				education_level: requestData.education_level || "",
 				program: requestData.program || "",
 				major_name: requestData.major_name || "",
 				faculty_name: requestData.faculty_name || "",
-				Chapter_1: "",
-				Chapter_2: "",
-				Chapter_3: "",
-				Chapter_4: "",
-				Chapter_5: "",
 			});
+			console.log(AddForm.values);
 			setFormData(requestData);
 			setOpenAdd(true);
 		} catch (e) {
@@ -148,7 +151,10 @@ const PlagiarismReport = () => {
 	};
 
 	const handleAdd = async () => {
-		try {
+		console.log(AddForm.values);
+		console.log(formData);
+
+		/* try {
 			const requestRes = await fetch("http://localhost:8080/api/addRequestExam", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -165,7 +171,7 @@ const PlagiarismReport = () => {
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching addRequestExam:", e);
-		}
+		} */
 	};
 
 	const handleApprove = async (item) => {
@@ -332,7 +338,7 @@ const PlagiarismReport = () => {
 				role={user.role}
 				title={`${user.role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}คำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`}
 			/>
-			<ModalAdd opened={openAdd} onClose={() => setOpenAdd(false)} AddForm={AddForm} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`} />
+			<ModalAddRequestGraduation opened={openAdd} onClose={() => setOpenAdd(false)} AddForm={AddForm} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`} />
 			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} />
 
 			<Text size="1.5rem" fw={900} mb="md">

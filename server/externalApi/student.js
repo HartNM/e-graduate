@@ -5,7 +5,7 @@ const { poolPromise, sql } = require("../db");
 
 
       /* major_name: item.mjcode, */
-/* router.get("/student/:student_id", async (req, res) => {
+/*  router.get("/student/:student_id", async (req, res) => {
   const studentid = req.params.student_id;
   try {
     const response = await axios.get(
@@ -24,15 +24,13 @@ const { poolPromise, sql } = require("../db");
 
       major_name: item.t_mjname,
       faculty_name: item.faculty_name,
-      request_type:
-        item.level_type === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ",
     };
     res.json(transformedData);
   } catch (err) {
     console.error("API call error:", err);
     res.status(500).json({ error: "Internal server error" });
   }
-}); */
+});  */
 
 router.get("/student/:student_id", async (req, res) => {
 	const studentid = req.params.student_id;
