@@ -54,7 +54,7 @@ const PlagiarismReport = () => {
 			chapter_3: "",
 			chapter_4: "",
 			chapter_5: "",
-			inspection_date: "",
+			inspection_date: null,
 		},
 		validate: {
 			chapter_1: validateChapter,
@@ -95,7 +95,7 @@ const PlagiarismReport = () => {
 
 	const [latestRequest, setLatestRequest] = useState(null);
 
-	useEffect(() => {
+	/* useEffect(() => {
 		if (!user) return;
 		const fetchRequestExam = async () => {
 			try {
@@ -119,7 +119,7 @@ const PlagiarismReport = () => {
 			}
 		};
 		fetchRequestExam();
-	}, [user]);
+	}, [user]); */
 
 	const handleOpenAdd = async () => {
 		try {
@@ -141,7 +141,6 @@ const PlagiarismReport = () => {
 				major_name: requestData.major_name || "",
 				faculty_name: requestData.faculty_name || "",
 			});
-			console.log(AddForm.values);
 			setFormData(requestData);
 			setOpenAdd(true);
 		} catch (e) {
@@ -152,13 +151,11 @@ const PlagiarismReport = () => {
 
 	const handleAdd = async () => {
 		console.log(AddForm.values);
-		console.log(formData);
-
 		/* try {
 			const requestRes = await fetch("http://localhost:8080/api/addRequestExam", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify(formData),
+				body: JSON.stringify(AddForm.values),
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) {
@@ -166,8 +163,7 @@ const PlagiarismReport = () => {
 			}
 			notify("success", requestData.message || "สำเร็จ");
 			setOpenAdd(false);
-			setRequest((prev) => [...prev, { ...requestData.data, ...formData }]);
-			setLatestRequest({ ...requestData.data, ...formData });
+			setRequest((prev) => [...prev, { ...AddForm.values, ...requestData.data }]);
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching addRequestExam:", e);
@@ -338,11 +334,11 @@ const PlagiarismReport = () => {
 				role={user.role}
 				title={`${user.role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}คำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`}
 			/>
-			<ModalAddRequestGraduation opened={openAdd} onClose={() => setOpenAdd(false)} AddForm={AddForm} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`} />
+			<ModalAddRequestGraduation opened={openAdd} onClose={() => setOpenAdd(false)} AddForm={AddForm} handleAdd={handleAdd} title={`เพิ่มรายงานผลการตรวจสอบการคัดลอกผลงานทางวิชาการ`} />
 			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} />
 
 			<Text size="1.5rem" fw={900} mb="md">
-				{`คำร้องขอสอบ${user.education_level ? `${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` : ""}`}
+				รายงานผลการตรวจสอบการคัดลอกผลงานทางวิชาการ
 			</Text>
 			<Group justify="space-between">
 				<Box>

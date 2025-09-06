@@ -20,7 +20,7 @@ const Personnel = () => {
 				menuItems.push(
 					{ label: "คำร้องขอสอบประมวลความรู้", icon: IconClipboardText, links: "/personnel/RequestExam/ขอสอบประมวลความรู้" },
 					{ label: "คำร้องขอสอบวัดคุณสมบัติ", icon: IconClipboardText, links: "/personnel/RequestExam/ขอสอบวัดคุณสมบัติ" },
-					{ label: "พิมพ์ผลการสอบประมวลความรู้/สอบวัดคุณสมบัต", icon: IconCertificate, links: "/personnel/exam-results-print" },
+					{ label: "พิมพ์ผลการสอบประมวลความรู้/สอบวัดคุณสมบัติ", icon: IconCertificate, links: "/personnel/exam-results-print" },
 					{ label: "กำหนดวันสอบประมวลความรู้/สอบวัดคุณสมบัติ", icon: IconCalendar, links: "/personnel/ExamScheduleSetupPage" },
 					{ label: "คำร้องขอทดสอบความรู้ทางภาษาอังกฤษ", icon: IconCertificate, links: "/personnel/RequestEngTest" },
 					{ label: "กรอกข้อมูลเจ้าหน้าที่ประจำสาขาวิชา", icon: IconUserCheck, links: "/personnel/assign-major-officer" }

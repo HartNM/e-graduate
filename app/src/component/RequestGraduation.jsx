@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
 import { useParams } from "react-router-dom";
-import ModalAdd from "../component/Modal/ModalAdd";
+import { useForm } from "@mantine/form";
+import ModalAddRequestGraduation from "../component/Modal/ModalAddRequestGraduation";
 import ModalApprove from "../component/Modal/ModalApprove";
 import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
@@ -33,6 +34,72 @@ const RequestGraduation = () => {
 	const { type } = useParams();
 	const [selectedType, setSelectedType] = useState("");
 
+	const AddForm = useForm({
+		initialValues: {
+			student_name: "",
+			study_group_id: "",
+			student_id: "",
+			education_level: "",
+			program: "",
+			major_name: "",
+			faculty_name: "",
+
+			bachelor_major: "",
+			bachelor_university: "",
+			master_major: "",
+			master_university: "",
+			contact_house_no: "",
+			contact_moo: "",
+			contact_road: "",
+			contact_subdistrict: "",
+			contact_district: "",
+			contact_province: "",
+			contact_zipcode: "",
+			contact_phone: "",
+			work_name: "",
+			work_moo: "",
+			work_road: "",
+			work_subdistrict: "",
+			work_district: "",
+			work_province: "",
+			work_zipcode: "",
+			work_phone: "",
+			work_department: "",
+		},
+		validate: {
+			student_name: (value) => (value.trim() === "" ? "กรุณากรอกชื่อ-นามสกุล" : null),
+			student_id: (value) => (value.trim() === "" ? "กรุณากรอกรหัสประจำตัว" : null),
+			education_level: (value) => (value.trim() === "" ? "กรุณาระบุระดับการศึกษา" : null),
+			program: (value) => (value.trim() === "" ? "กรุณากรอกหลักสูตร" : null),
+			major_name: (value) => (value.trim() === "" ? "กรุณากรอกสาขาวิชา" : null),
+			faculty_name: (value) => (value.trim() === "" ? "กรุณากรอกชื่อคณะ" : null),
+
+			bachelor_major: (value) => (value.trim() === "" ? "กรุณากรอกสาขาป.ตรี" : null),
+			bachelor_university: (value) => (value.trim() === "" ? "กรุณากรอกมหาวิทยาลัยป.ตรี" : null),
+			master_major: (value, values) => (values.education_level === "ปริญญาเอก" && value.trim() === "" ? "กรุณากรอกสาขาป.โท" : null),
+			master_university: (value, values) => (values.education_level === "ปริญญาเอก" && value.trim() === "" ? "กรุณากรอกมหาวิทยาลัยป.โท" : null),
+
+			contact_house_no: (value) => (value.trim() === "" ? "กรุณากรอกบ้านเลขที่" : null),
+			contact_moo: (value) => (value.trim() === "" ? "กรุณากรอกหมู่ที่" : null),
+			contact_road: (value) => (value.trim() === "" ? "กรุณากรอกถนน" : null),
+			contact_subdistrict: (value) => (value.trim() === "" ? "กรุณากรอกตำบล" : null),
+			contact_district: (value) => (value.trim() === "" ? "กรุณากรอกอำเภอ" : null),
+			contact_province: (value) => (value.trim() === "" ? "กรุณากรอกจังหวัด" : null),
+			contact_zipcode: (value) => (value === "" ? "กรุณากรอกรหัสไปรษณีย์" : null),
+			contact_phone: (value) => (value.trim() === "" ? "กรุณากรอกเบอร์โทร" : null),
+
+			work_name: (value) => (value.trim() === "" ? "กรุณากรอกสถานที่ทำงาน" : null),
+			work_moo: (value) => (value.trim() === "" ? "กรุณากรอกหมู่ที่" : null),
+			work_road: (value) => (value.trim() === "" ? "กรุณากรอกถนน" : null),
+			work_subdistrict: (value) => (value.trim() === "" ? "กรุณากรอกตำบล" : null),
+			work_district: (value) => (value.trim() === "" ? "กรุณากรอกอำเภอ" : null),
+			work_province: (value) => (value.trim() === "" ? "กรุณากรอกจังหวัด" : null),
+			work_zipcode: (value) => (value === "" ? "กรุณากรอกรหัสไปรษณีย์" : null),
+			work_phone: (value) => (value.trim() === "" ? "กรุณากรอกเบอร์โทร" : null),
+			work_department: (value) => (value.trim() === "" ? "กรุณากรอกหน่วยงาน" : null),
+		},
+	});
+
 	useEffect(() => {
 		const fetchProfile = async () => {
 			try {
@@ -60,7 +127,7 @@ const RequestGraduation = () => {
 
 	const [latestRequest, setLatestRequest] = useState(null);
 
-	useEffect(() => {
+	/* useEffect(() => {
 		if (!user) return;
 		const fetchRequestExam = async () => {
 			try {
@@ -84,7 +151,7 @@ const RequestGraduation = () => {
 			}
 		};
 		fetchRequestExam();
-	}, [user]);
+	}, [user]); */
 
 	const handleOpenAdd = async () => {
 		try {
@@ -96,6 +163,16 @@ const RequestGraduation = () => {
 			if (!requestRes.ok) {
 				throw new Error(requestData.message);
 			}
+			AddForm.reset();
+			AddForm.setValues({
+				student_name: requestData.student_name || "",
+				student_id: requestData.student_id || "",
+				study_group_id: requestData.study_group_id || "",
+				education_level: requestData.education_level || "",
+				program: requestData.program || "",
+				major_name: requestData.major_name || "",
+				faculty_name: requestData.faculty_name || "",
+			});
 			setFormData(requestData);
 			setOpenAdd(true);
 		} catch (e) {
@@ -105,7 +182,9 @@ const RequestGraduation = () => {
 	};
 
 	const handleAdd = async () => {
-		try {
+		console.log(AddForm.values);
+
+		/* try {
 			const requestRes = await fetch("http://localhost:8080/api/addRequestThesisProposal", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -122,7 +201,7 @@ const RequestGraduation = () => {
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching addRequestExam:", e);
-		}
+		} */
 	};
 
 	const handleApprove = async (item) => {
@@ -289,7 +368,7 @@ const RequestGraduation = () => {
 				role={user.role}
 				title={`${user.role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}คำร้องขอลงทะเบียนสอบโครงร่าง${user.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`}
 			/>
-			<ModalAdd opened={openAdd} onClose={() => setOpenAdd(false)} formData={formData} handleAdd={handleAdd} title={`เพิ่มคำร้องขอลงทะเบียนสอบโครงร่าง${user.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`} />
+			<ModalAddRequestGraduation opened={openAdd} onClose={() => setOpenAdd(false)} AddForm={AddForm} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสำเร็จการศึกษาระดับบัณฑิตศึกษา`} />
 			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} />
 
 			<Text size="1.5rem" fw={900} mb="md">

@@ -167,7 +167,7 @@ const AssignChairpersons = () => {
 			</Modal>
 
 			<Text size="1.5rem" fw={900} mb="md">
-				แต่งตั้งประธานกรรมการบัณฑิตศึกษา
+				กรอกข้อมูลประธานกรรมการบัณฑิตศึกษาประจำสาขาวิชา
 			</Text>
 			<Space h="xl" />
 			<Group justify="space-between">

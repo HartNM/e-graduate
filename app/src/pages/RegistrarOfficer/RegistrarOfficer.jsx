@@ -10,8 +10,8 @@ const menu = [
 	{ label: "คำร้องขอลงทะเบียนสอบโครงร่างการค้นคว้าอิสระ", icon: IconReport, links: "/registrar-officer/RequestThesisProposal/การค้นคว้าอิสระ" },
 	{ label: "คำร้องขอลงทะเบียนสอบวิทยานิพนธ์", icon: IconReport, links: "/registrar-officer/RequestThesisDefense/วิทยานิพนธ์" },
 	{ label: "คำร้องขอลงทะเบียนสอบการค้นคว้าอิสระ", icon: IconReport, links: "/registrar-officer/RequestThesisDefense/การค้นคว้าอิสระ" },
-	{ label: "พิมพ์ผลการสอบประมวลความรู้/สอบวัดคุณสมบัต", icon: IconCertificate, links: "/registrar-officer/exam-results-print" },
-	{ label: "กำหนดวันสอบประมวลความรู้/สอบวัดคุณสมบัต", icon: IconCalendar, links: "/registrar-officer/ExamScheduleSetupPage" },
+	{ label: "พิมพ์ผลการสอบประมวลความรู้/สอบวัดคุณสมบัติ", icon: IconCertificate, links: "/registrar-officer/exam-results-print" },
+	{ label: "กำหนดวันสอบประมวลความรู้/สอบวัดคุณสมบัติ", icon: IconCalendar, links: "/registrar-officer/ExamScheduleSetupPage" },
 	{ label: "กรอกข้อมูลเจ้าหน้าที่ประจำสาขาวิชา", icon: IconUserCheck, links: "/registrar-officer/assign-major-officer" },
 ];
 

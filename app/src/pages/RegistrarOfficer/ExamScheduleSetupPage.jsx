@@ -1,4 +1,4 @@
-//กำหนดวันสอบประมวลความรู้/สอบวัดคุณสมบัต
+//กำหนดวันสอบประมวลความรู้/สอบวัดคุณสมบัติ
 import { useState, useEffect } from "react";
 import { Box, Text, ScrollArea, Table, Button, Modal, Group, Flex, Space, TextInput } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
@@ -144,7 +144,7 @@ const ExamScheduleSetupPage = () => {
 	return (
 		<Box>
 			<ModalInform opened={openInform} onClose={() => setOpenInform(false)} message={informMessage} type={informtype} />
-			<Modal opened={openedPickDate} onClose={() => setOpenPickDate(false)} title={modalType === "delete" ? "ลบวันสอบประมวลความรู้/สอบวัดคุณสมบัต" : "กำหนดวันสอบประมวลความรู้/สอบวัดคุณสมบัต"} centered>
+			<Modal opened={openedPickDate} onClose={() => setOpenPickDate(false)} title={modalType === "delete" ? "ลบวันสอบประมวลความรู้/สอบวัดคุณสมบัติ" : "กำหนดวันสอบประมวลความรู้/สอบวัดคุณสมบัติ"} centered>
 				<form onSubmit={Form.onSubmit(handleSubmit)}>
 					<TextInput label="ปีการศึกษา" placeholder="กรอกปีการศึกษา" withAsterisk {...Form.getInputProps("term")} />
 					<DatePickerInput label="วันเปิดการยื่นคำร้อง" placeholder="เลือกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" withAsterisk {...Form.getInputProps("open_date")} />
@@ -158,7 +158,7 @@ const ExamScheduleSetupPage = () => {
 			</Modal>
 
 			<Text size="1.5rem" fw={900} mb="md">
-				กำหนดวันสอบประมวลความรู้/สอบวัดคุณสมบัต
+				กำหนดวันสอบประมวลความรู้/สอบวัดคุณสมบัติ
 			</Text>
 			<Space h="xl" />
 			<Box>

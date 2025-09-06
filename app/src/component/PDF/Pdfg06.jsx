@@ -12,7 +12,7 @@ async function fillPdf(data) {
 	const THSarabunNewBytesBold = await fetch("/fonts/THSarabunNew Bold.ttf").then((res) => res.arrayBuffer());
 	const THSarabunNewBold = await pdfDoc.embedFont(THSarabunNewBytesBold);
 
-	drawGrid(page);
+	/* drawGrid(page); */
 
 	let y = 760;
 	let space = 20;

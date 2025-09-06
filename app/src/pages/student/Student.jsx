@@ -35,11 +35,11 @@ const Student = () => {
 				if (data.PostponeDefenseExam) {
 					newMenu.push({ label: `คำร้องขอเลื่อนสอบ${data.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`, icon: IconCalendarClock, links: "/student/PostponeDefenseExam" });
 				}
-				if (data.PlagiarismReport) {
-					newMenu.push({ label: "คำร้องขอสำเร็จการศึกษาระดับบัณฑิตศึกษา", icon: IconSchool, links: "/student/RequestGraduation" });
-				}
 				if (data.RequestGraduation) {
 					newMenu.push({ label: "รายงานผลการตรวจสอบการคัดลอกผลงานทางวิชาการ", icon: IconSearch, links: "/student/PlagiarismReport" });
+				}
+				if (data.PlagiarismReport) {
+					newMenu.push({ label: "คำร้องขอสำเร็จการศึกษาระดับบัณฑิตศึกษา", icon: IconSchool, links: "/student/RequestGraduation" });
 				}
 				setMenu(newMenu);
 			} catch (e) {

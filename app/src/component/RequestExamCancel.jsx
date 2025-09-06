@@ -57,7 +57,7 @@ const RequestExamCancel = () => {
 	}, [type]);
 
 	const [latestRequest, setLatestRequest] = useState(null);
-
+	const [reloadTable, setReloadTable] = useState(false);
 	useEffect(() => {
 		if (!user) return;
 		const fetchRequestExam = async () => {
@@ -99,7 +99,8 @@ const RequestExamCancel = () => {
 			}
 		};
 		fetchRequestExamCancel();
-	}, [user]);
+		setReloadTable(false);
+	}, [user, reloadTable]);
 
 	const handleOpenAddCancel = async () => {
 		try {
@@ -129,16 +130,18 @@ const RequestExamCancel = () => {
 			const requestRes = await fetch("http://localhost:8080/api/AddRequestExamCancel", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ reason: reason }),
+				body: JSON.stringify({ reason: reason, request_type: `ขอยกเลิกการเข้าสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` }),
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) {
 				throw new Error(requestData.message);
 			}
 			notify("success", requestData.message || "สำเร็จ");
-			setReason("");
 			setOpenAddCancel(false);
-			setRequest((prev) => [...prev, { ...requestData.data, ...selectedRow }]);
+			/* setReason("");
+			console.log(requestData.data);
+			setRequest((prev) => [...prev, { ...selectedRow, ...requestData.data }]); */
+			setReloadTable(true);
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching cancelRequestExam:", e);
@@ -248,9 +251,8 @@ const RequestExamCancel = () => {
 				title={`ลงความเห็นคำร้องขอยกเลิกการเข้าสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`}
 			/>
 			<ModalAddCancel opened={openAddCancel} onClose={() => setOpenAddCancel(false)} selectedRow={selectedRow} reason={reason} setReason={setReason} error={error} handleAddCancel={handleAddCancel} />
-
 			<Text size="1.5rem" fw={900} mb="md">
-				{`คำร้องขอยกเลิกการเข้าสอบ${user.education_level ? `${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` : ""}`}
+				{`คำร้องขอยกเลิกการเข้าสอบ${user.education_level ? `${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` : "ประมวลความรู้/สอบวัดคุณสมบัติ"}`}
 			</Text>
 			<Group justify="space-between">
 				<Box>

@@ -8,8 +8,8 @@ const ModalApprove = (props) => (
 					<Text>{props.selectedRow.student_name}</Text>
 					<Space h="sm" />
 					<Stack>
-						<Checkbox checked={props.selected === "approve"} onChange={() => props.setSelected("approve")} label={props.role === "officer_registrar" ? "ผ่านการตรวจสอบ" : "เห็นควร"} />
-						<Checkbox checked={props.selected === "noapprove"} onChange={() => props.setSelected("noapprove")} label={props.role === "officer_registrar" ? "ไม่ผ่านการตรวจสอบ" : "ไม่เห็นควร"} />
+						<Checkbox checked={props.selected === "approve"} onChange={() => props.setSelected("approve")} label={props.role === "officer_registrar" ? "ผ่านการตรวจสอบ" : "เห็นควรอนุญาต"} />
+						<Checkbox checked={props.selected === "noapprove"} onChange={() => props.setSelected("noapprove")} label={props.role === "officer_registrar" ? "ไม่ผ่านการตรวจสอบ" : "ไม่อนุญาต"} />
 					</Stack>
 					<Space h="sm" />
 					{props.selected !== "approve" && <TextInput label="เนื่องจาก" value={props.comment} placeholder="เนื่องจาก" onChange={(event) => props.setComment(event.currentTarget.value)} error={props.selected === "noapprove" && props.error} disabled={props.selected === "approve"} />}

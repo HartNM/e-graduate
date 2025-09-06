@@ -95,7 +95,7 @@ async function fillPdf(templateUrl, data) {
 			const start = pageIndex * STUDENTS_PER_PAGE;
 			const end = Math.min(start + STUDENTS_PER_PAGE, students.length);
 
-			drawGrid(newPage);
+			/* drawGrid(newPage); */
 
 			const centerX = (newPage.getWidth() - pngDims.width) / 2;
 			newPage.drawImage(logoImage, {

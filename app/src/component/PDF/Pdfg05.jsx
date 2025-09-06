@@ -16,7 +16,7 @@ async function fillPdf(data) {
 	const logoImage = await pdfDoc.embedPng(logoBytes);
 	const pngDims = logoImage.scale(0.085);
 
-	drawGrid(page);
+	/* drawGrid(page); */
 
 	let y = 760;
 	let space = 20;

@@ -17,6 +17,7 @@ const ModalAdd = ({ opened, onClose, title, AddForm, handleAdd }) => (
 					<NumberInput label="บทที่ 1 มีความคล้ายคลึง กับผลงานผู้อื่น ร้อยละ" min={0} max={100} suffix="%" {...AddForm.getInputProps("chapter_1")} />
 					<NumberInput label="บทที่ 2 มีความคล้ายคลึง กับผลงานผู้อื่น ร้อยละ" min={0} max={100} suffix="%" {...AddForm.getInputProps("chapter_2")} />
 					<NumberInput label="บทที่ 3 มีความคล้ายคลึง กับผลงานผู้อื่น ร้อยละ" min={0} max={100} suffix="%" {...AddForm.getInputProps("chapter_3")} />
+					
 					<NumberInput label="บทที่ 4 มีความคล้ายคลึง กับผลงานผู้อื่น ร้อยละ" min={0} max={100} suffix="%" {...AddForm.getInputProps("chapter_4")} />
 					<NumberInput label="บทที่ 5 มีความคล้ายคลึง กับผลงานผู้อื่น ร้อยละ" min={0} max={100} suffix="%" {...AddForm.getInputProps("chapter_5")} />
 					<DatePickerInput label="ตรวจสอบเมื่อวันที่" placeholder="เลื่อกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" withAsterisk {...AddForm.getInputProps("inspection_date")} />

@@ -121,7 +121,7 @@ router.get("/checkStudent", authenticateToken, async (req, res) => {
 		return res.status(200).json({
 			education_level: student.data.education_level,
 			RequestExamCancel: ((latest.status === "5" || latest.status === "7" || latest.status === "8" || latest.status === "9" || latest.status === "0") && latest.exam_results === null) || false,
-			RequestThesisProposal: latest.status === "5" && latest.exam_results === true,
+			RequestThesisProposal: /* latest.status === "5" && latest.exam_results === */ true,
 			PostponeProposalExam: true,
 			RequestThesisDefense: true,
 			PostponeDefenseExam: true,

@@ -293,7 +293,7 @@ const RequestThesisDefense = () => {
 			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} />
 
 			<Text size="1.5rem" fw={900} mb="md">
-				{`คำร้องขอลงทะเบียนสอบ${user.education_level ? `${user.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}` : ""}`}
+				{`คำร้องขอลงทะเบียนสอบ${user.education_level ? `${user.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}` : "วิทยานิพนธ์/การค้นคว้าอิสระ"}`}
 			</Text>
 			<Group justify="space-between">
 				<Box>

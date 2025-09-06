@@ -14,7 +14,7 @@ async function fillPdf(data) {
 
 	/* drawGrid(page); */
 
-	const [request_cancel_exam_date_day, request_cancel_exam_date_month, request_cancel_exam_date_year] = formatThaiDate(data?.request_cancel_exam_date);
+	const [request_date_day, request_date_month, request_date_year] = formatThaiDate(data?.request_date);
 	const [advisor_cancel_date_day, advisor_cancel_date_month, advisor_cancel_date_year] = formatThaiDateShort(data?.advisor_cancel_date);
 	const [chairpersons_cancel_date_day, chairpersons_cancel_date_month, chairpersons_cancel_date_year] = formatThaiDateShort(data?.chairpersons_cancel_date);
 	const [dean_cancel_date_day, dean_cancel_date_month, dean_cancel_date_year] = formatThaiDateShort(data?.dean_cancel_date);
@@ -22,16 +22,16 @@ async function fillPdf(data) {
 	let y = 760;
 	let space = 20;
 
-	drawCenterXText(page, `คำร้องขอยกเลิกการเข้าสอบ${data?.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, 780, THSarabunNewBold, 20);
+	drawCenterXText(page, `คำร้อง${data.request_type}`, 780, THSarabunNewBold, 20);
 
 	const drawItems = [
 		{ text: `มหาวิทยาลัยราชภัฏกำแพงเพชร`, x: 420, y: (y -= space) },
 		{ text: `วันที่................เดือน...........................พ.ศ...................`, x: 350, y: (y -= space) },
-		{ text: request_cancel_exam_date_day, x: 380, y: y + 2 },
-		{ text: request_cancel_exam_date_month, x: 440, y: y + 2 },
-		{ text: request_cancel_exam_date_year, x: 510, y: y + 2 },
+		{ text: request_date_day, x: 380, y: y + 2 },
+		{ text: request_date_month, x: 440, y: y + 2 },
+		{ text: request_date_year, x: 510, y: y + 2 },
 		{ text: `เรื่อง`, x: 60, y: (y -= space * 2), font: THSarabunNewBold },
-		{ text: `ขอยกเลิกการเข้าสอบ${data?.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, x: 100, y: y },
+		{ text: data.request_type, x: 100, y: y },
 		{ text: `เรียน`, x: 60, y: (y -= space), font: THSarabunNewBold },
 		{ text: `คณบดี${data?.faculty_name}`, x: 100, y: y },
 		{ text: `ข้าพเจ้า................................................................................................รหัสประจำตัวนักศึกษา.................................................`, x: 100, y: (y -= space * 2) },
@@ -43,7 +43,7 @@ async function fillPdf(data) {
 		{ text: data?.major_name, x: 440, y: y + 2 },
 		{ text: `คณะ..........................................................................................มีความประสงค์.........................................................................................`, x: 60, y: (y -= space) },
 		{ text: data?.faculty_name, x: 100, y: y + 2 },
-		{ text: `ขอยกเลิกการเข้าสอบ${data?.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, x: 360, y: y + 2 },
+		{ text: data.request_type, x: 360, y: y + 2 },
 		{ text: "เนื่่องจาก.....................................................................................................................................................................................................", x: 60, y: (y -= space) },
 		{ text: data?.reason, x: 140, y: y + 2 },
 		{ text: `จึงเรียนมาเพื่อโปรดพิจารณา`, x: 100, y: (y -= space) },
@@ -53,9 +53,9 @@ async function fillPdf(data) {
 		{ text: data?.student_name, x: 370, y: y + 2 },
 		{ text: `นักศึกษา`, x: 400, y: (y -= space) },
 		{ text: `วันที่................/........................../......................`, x: 330, y: (y -= space) },
-		{ text: request_cancel_exam_date_day, x: 360, y: y + 2 },
-		{ text: request_cancel_exam_date_month, x: 400, y: y + 2 },
-		{ text: request_cancel_exam_date_year, x: 465, y: y + 2 },
+		{ text: request_date_day, x: 360, y: y + 2 },
+		{ text: request_date_month, x: 400, y: y + 2 },
+		{ text: request_date_year, x: 465, y: y + 2 },
 
 		{ text: `1. ความเห็นของอาจารย์ที่ปรึกษาหมู่เรียน`, x: 60, y: (y -= space * 2), font: THSarabunNewBold, show: typeof data?.advisor_cancel === "boolean" },
 		{ text: data?.advisor_cancel ? "เห็นควร" : "ไม่เห็นควร", x: 80, y: (y -= space), show: typeof data?.advisor_cancel === "boolean" },

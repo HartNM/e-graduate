@@ -17,19 +17,10 @@ function formatThaiBuddhistDate() {
 }
 
 const statusMap = {
-	0: "ยกเลิก",
-	1: "รออาจารย์ที่ปรึกษาอนุญาต",
-	2: "รอประธานกรรมการปะจำสาขาวิชาอนุญาต",
-	3: "รอเจ้าหน้าที่ทะเบียนตรวจสอบ",
-	4: "รอการชำระค่าธรรมเนียม",
-	5: "อนุญาต",
-	6: "ไม่อนุญาต",
-	7: "ขอยกเลิก",
-	8: "ขอยกเลิก",
-	9: "ขอยกเลิก",
-	/* 7: "รออาจารย์ที่ปรึกษาอนุญาต",
-	8: "รอประธานหลักสูตรอนุญาต",
-	9: "รอคณบดีอนุญาต", */
+	1: "รออาจารย์ที่ปรึกษาอนุมัติ",
+	2: "รอประธานหลักสูตรอนุมัติ",
+	5: "อนุมัติ",
+	6: "ไม่อนุมัติ",
 };
 
 const formatDate = (date) => {
@@ -37,17 +28,14 @@ const formatDate = (date) => {
 	return new Date(date).toISOString().split("T")[0];
 };
 
-router.post("/requestExamAll", authenticateToken, async (req, res) => {
-	const { role, id, lastRequest } = req.body;
+router.post("/AllPlagiarismReport", authenticateToken, async (req, res) => {
+	const { role, id } = req.body;
 
 	try {
 		const pool = await poolPromise;
 		const request = pool.request().input("id", id);
-		let query = "SELECT * FROM request_exam";
+		let query = "SELECT * FROM request_graduation";
 		if (role === "student") {
-			if (lastRequest) {
-				query = "SELECT TOP 1 * FROM request_exam";
-			}
 			query += " WHERE student_id = @id";
 		} else if (role === "advisor") {
 			query += " WHERE study_group_id IN (SELECT value FROM STRING_SPLIT(@id, ','))";
@@ -73,8 +61,6 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 					request_date: formatDate(item.request_date) || null,
 					advisor_approvals_date: formatDate(item.advisor_approvals_date) || null,
 					chairpersons_approvals_date: formatDate(item.chairpersons_approvals_date) || null,
-					registrar_approvals_date: formatDate(item.registrar_approvals_date) || null,
-					receipt_pay_date: formatDate(item.receipt_pay_date) || null,
 					status_text: statusMap[item.status?.toString()] || null,
 					request_type: item.request_type || null,
 				};
@@ -102,7 +88,7 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 			.input("term", infoRes.recordset[0].term)
 			.input("request_date", formatThaiBuddhistDate())
 			.input("status", "1").query(`
-				INSERT INTO request_exam (
+				INSERT INTO request_graduation (
 					student_id,
 					study_group_id,
 					major_name,
