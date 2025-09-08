@@ -59,8 +59,8 @@ function AppRoutes() {
 					<Route path="/registrar-officer" element={<RegistrarOfficer />}>
 						<Route path="RequestExam/:type" element={<RequestExam />} />
 						<Route path="RequestEngTest" element={<RequestEngTest />} />
-						<Route path="RequestThesisProposal/:type" element={<RequestThesisProposal />} />
-						<Route path="RequestThesisDefense/:type" element={<RequestThesisDefense />} />
+						<Route path="RequestThesisProposal" element={<RequestThesisProposal />} />
+						<Route path="RequestThesisDefense" element={<RequestThesisDefense />} />
 						<Route path="ExamScheduleSetupPage" element={<ExamScheduleSetupPage />} />
 						<Route path="assign-major-officer" element={<AssignMajorOfficer />} />
 						<Route path="exam-results-print" element={<ExamResultsPrint />} />

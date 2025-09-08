@@ -10,17 +10,6 @@ const ExamResults = () => {
 
 	const form = useForm({
 		initialValues: {},
-		validate: (values) => {
-			const errors = {};
-			Object.entries(selectedGroupId).forEach(([groupId, students]) => {
-				students.forEach((s) => {
-					if (values[s.id] === null || values[s.id] === undefined) {
-						errors[s.id] = "กรุณาเลือกผลสอบ";
-					}
-				});
-			});
-			return errors;
-		},
 	});
 
 	useEffect(() => {
@@ -59,7 +48,14 @@ const ExamResults = () => {
 				setGroup(requestData);
 				console.log(requestData);
 
-				form.setValues(Object.fromEntries(Object.entries(requestData).flatMap(([groupId, students]) => students.map((s) => [s.id, s.exam_results ?? null]))));
+				/* form.setValues(Object.fromEntries(Object.entries(requestData).flatMap(([groupId, students]) => students.map((s) => [s.id, s.exam_results ?? null])))); */
+				form.setValues(
+					Object.fromEntries(
+						Object.entries(requestData).flatMap(
+							([groupId, students]) => students.map((s) => [s.id, s.exam_results]) // ค่า default = "ผ่าน"
+						)
+					)
+				);
 			} catch (err) {
 				console.error("Error fetch AllExamResults:", err);
 			}
@@ -72,7 +68,7 @@ const ExamResults = () => {
 		setSelectedGroupId({ [groupId]: group[groupId] });
 		const initial = {};
 		group[groupId].forEach((student) => {
-			initial[student.id] = student.exam_results;
+			initial[student.id] = student.exam_results === null ? "ผ่าน" : student.exam_results;
 		});
 		form.reset();
 		form.setValues(initial);
@@ -162,8 +158,11 @@ const ExamResults = () => {
 											<Table.Td>{student.name}</Table.Td>
 											<Table.Td>
 												<Group justify="center" align="center">
-													<Checkbox color="green" checked={form.values[student.id] === true} onChange={() => form.setFieldValue(student.id, true)} label="ผ่าน" />
-													<Checkbox color="red" checked={form.values[student.id] === false} onChange={() => form.setFieldValue(student.id, false)} label="ไม่ผ่าน" />
+													{/* <Checkbox color="green" checked={form.values[student.id] === true} onChange={() => form.setFieldValue(student.id, true)} label="ผ่าน" />
+													<Checkbox color="red" checked={form.values[student.id] === false} onChange={() => form.setFieldValue(student.id, false)} label="ไม่ผ่าน" /> */}
+													<Checkbox color="green" checked={form.values[student.id] === "ผ่าน"} onChange={() => form.setFieldValue(student.id, "ผ่าน")} label="ผ่าน" />
+													<Checkbox color="red" checked={form.values[student.id] === "ไม่ผ่าน"} onChange={() => form.setFieldValue(student.id, "ไม่ผ่าน")} label="ไม่ผ่าน" />
+													<Checkbox color="gray" checked={form.values[student.id] === "ขาดสอบ"} onChange={() => form.setFieldValue(student.id, "ขาดสอบ")} label="ขาดสอบ" />
 												</Group>
 												{form.errors[student.id] && (
 													<Box justify="center" align="center" style={{ color: "red", fontSize: 12 }}>
@@ -196,8 +195,12 @@ const ExamResults = () => {
 									<Table.Td>{student.id}</Table.Td>
 									<Table.Td>{student.name}</Table.Td>
 									<Table.Td style={{ textAlign: "center" }}>
-										{form.values[student.id] === true && <Text c="green">ผ่าน</Text>}
-										{form.values[student.id] === false && <Text c="red">ไม่ผ่าน</Text>}
+										{/* {form.values[student.id] === true && <Text c="green">ผ่าน</Text>}
+										{form.values[student.id] === false && <Text c="red">ไม่ผ่าน</Text>} */}
+
+										{form.values[student.id] === "ผ่าน" && <Text c="green">ผ่าน</Text>}
+										{form.values[student.id] === "ไม่ผ่าน" && <Text c="red">ไม่ผ่าน</Text>}
+										{form.values[student.id] === "ขาดสอบ" && <Text c="gray">ขาดสอบ</Text>}
 									</Table.Td>
 								</Table.Tr>
 							))

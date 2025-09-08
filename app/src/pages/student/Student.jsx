@@ -16,24 +16,24 @@ const Student = () => {
 				});
 				const data = await res.json();
 				console.log(data);
-				
+
 				const newMenu = [];
 				newMenu.push({ label: `คำร้องขอสอบ${data.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, icon: IconClipboardText, links: "/student/RequestExam" });
 				if (data.RequestExamCancel) {
 					newMenu.push({ label: `คำร้องขอยกเลิกการเข้าสอบ${data.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, icon: IconClipboardX, links: "/student/RequestExamCancel" });
 				}
-				newMenu.push({ label: "คำร้องขอทดสอบความรู้ทางภาษาอังกฤษ", icon: IconCertificate, links: "/student/RequestEngTest" });
+				data.education_level === "ปริญญาเอก" && newMenu.push({ label: "คำร้องขอทดสอบความรู้ทางภาษาอังกฤษ", icon: IconCertificate, links: "/student/RequestEngTest" });
 				if (data.RequestThesisProposal) {
-					newMenu.push({ label: `คำร้องขอลงทะเบียนสอบโครงร่าง${data.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`, icon: IconReport, links: "/student/RequestThesisProposal" });
+					newMenu.push({ label: `คำร้องขอสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconReport, links: "/student/RequestThesisProposal" });
 				}
 				if (data.PostponeProposalExam) {
-					newMenu.push({ label: `คำร้องขอเลื่อนสอบโครงร่าง${data.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`, icon: IconCalendarClock, links: "/student/PostponeProposalExam" });
+					newMenu.push({ label: `คำร้องขอเลื่อนสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconCalendarClock, links: "/student/PostponeProposalExam" });
 				}
 				if (data.RequestThesisDefense) {
-					newMenu.push({ label: `คำร้องขอลงทะเบียนสอบ${data.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`, icon: IconFileText, links: "/student/RequestThesisDefense" });
+					newMenu.push({ label: `คำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconFileText, links: "/student/RequestThesisDefense" });
 				}
 				if (data.PostponeDefenseExam) {
-					newMenu.push({ label: `คำร้องขอเลื่อนสอบ${data.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`, icon: IconCalendarClock, links: "/student/PostponeDefenseExam" });
+					newMenu.push({ label: `คำร้องขอเลื่อนสอบวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconCalendarClock, links: "/student/PostponeDefenseExam" });
 				}
 				if (data.RequestGraduation) {
 					newMenu.push({ label: "รายงานผลการตรวจสอบการคัดลอกผลงานทางวิชาการ", icon: IconSearch, links: "/student/PlagiarismReport" });

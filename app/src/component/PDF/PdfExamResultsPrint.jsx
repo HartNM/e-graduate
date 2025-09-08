@@ -108,7 +108,7 @@ async function fillPdf(templateUrl, data) {
 			let y = 600;
 			drawCenterXText(newPage, `รายการผล${type}`, 680, customFont, 16);
 			drawCenterXText(newPage, `สาขาวิชา${students[0].major_name}`, 660, customFont, 16);
-			drawCenterXText(newPage, `ประจำภาคเรียนที่ ${students[0].term}`, 640, customFont, 16);
+			drawCenterXText(newPage, `ประจำภาคเรียนที่ ${students[0].term} สอบวันที่ 6 ก.ย 68 `, 640, customFont, 16);
 
 			drawRect(newPage, 60, y, 490, ROW_HEIGHT);
 			const tableHeight = (end - start) * ROW_HEIGHT;
@@ -129,7 +129,7 @@ async function fillPdf(templateUrl, data) {
 				drawMiddleText(newPage, students[i].name.split(" ")[0], 250, y, ROW_HEIGHT, customFont, 14);
 				drawMiddleText(newPage, students[i].name.split(" ").slice(1).join(" "), 360, y, ROW_HEIGHT, customFont, 14);
 				if (students[i].exam_results !== null) {
-					drawCenteredText(newPage, students[i].exam_results ? "ผ่าน" : "ไม่ผ่าน", 440, y, 110, ROW_HEIGHT, customFont, 14);
+					drawCenteredText(newPage, students[i].exam_results, 440, y, 110, ROW_HEIGHT, customFont, 14);
 				}
 			}
 			pageIndex++;

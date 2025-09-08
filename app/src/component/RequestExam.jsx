@@ -191,6 +191,7 @@ const RequestExam = () => {
 	const rows = filteredData.map((item) => (
 		<Table.Tr key={item.request_exam_id}>
 			<Table.Td>{item.student_name}</Table.Td>
+			<Table.Td style={{ textAlign: "center" }}>{item.term}</Table.Td>
 			{["advisor", "officer_registrar", "chairpersons"].includes(user?.role) && <Table.Td>{item.request_type}</Table.Td>}
 			<Table.Td style={{ textAlign: "center" }}>
 				{item.status <= 4 && item.status > 0 && (
@@ -265,8 +266,9 @@ const RequestExam = () => {
 			</Table.Td>
 			{item.exam_results !== null && (
 				<Table.Td style={{ textAlign: "center" }}>
-					{item.exam_results === true && <Text c="green">ผ่าน</Text>}
-					{item.exam_results === false && <Text c="red">ไม่ผ่าน</Text>}
+					{item.exam_results === "ผ่าน" && <Text c="green">ผ่าน</Text>}
+					{item.exam_results === "ไม่ผ่าน" && <Text c="red">ไม่ผ่าน</Text>}
+					{item.exam_results === "ขาดสอบ" && <Text c="gray">ขาดสอบ</Text>}
 				</Table.Td>
 			)}
 		</Table.Tr>
@@ -293,7 +295,7 @@ const RequestExam = () => {
 			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} />
 
 			<Text size="1.5rem" fw={900} mb="md">
-				{`คำร้องขอสอบ${user.education_level ? `${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` : ""}${type? type:"ประมวลความรู้/สอบวัดคุณสมบัติ"}`}
+				{`คำร้องขอสอบ${user.education_level ? `${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` : ""}${type ? type : "ประมวลความรู้/สอบวัดคุณสมบัติ"}`}
 			</Text>
 			<Group justify="space-between">
 				<Box>
@@ -316,6 +318,7 @@ const RequestExam = () => {
 					<Table.Thead>
 						<Table.Tr>
 							<Table.Th style={{ minWidth: 100 }}>ชื่อ</Table.Th>
+							<Table.Th style={{ minWidth: 100 }}>ภาคเรียน</Table.Th>
 							{["advisor", "officer_registrar", "chairpersons"].includes(user?.role) && <Table.Th style={{ minWidth: 100 }}>เรื่อง</Table.Th>}
 							<Table.Th style={{ minWidth: 110 }}>สถานะ</Table.Th>
 							<Table.Th>การดำเนินการ</Table.Th>

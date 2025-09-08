@@ -14,7 +14,7 @@ router.post("/AddExamResults", authenticateToken, async (req, res) => {
 			const request = pool.request();
 			await request
 				.input("id", id)
-				.input("exam_result", examResult ? 1 : 0)
+				.input("exam_result", examResult)
 				.query("UPDATE request_exam SET exam_results = @exam_result WHERE student_id = @id AND status = 5");
 		}
 
