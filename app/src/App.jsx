@@ -1,5 +1,5 @@
 // App.jsx
-import { MantineProvider, createTheme, TextInput, Modal, Select, ScrollArea, Table } from "@mantine/core";
+import { MantineProvider, createTheme, TextInput, Modal, Select, ScrollArea, Table, NumberInput } from "@mantine/core";
 import { DatesProvider } from "@mantine/dates";
 import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
@@ -13,6 +13,13 @@ const theme = createTheme({
 
 	components: {
 		TextInput: TextInput.extend({
+			styles: {
+				input: {
+					color: "light-dark(#000, #fff)",
+				},
+			},
+		}),
+		NumberInput: NumberInput.extend({
 			styles: {
 				input: {
 					color: "light-dark(#000, #fff)",

@@ -4,122 +4,128 @@ const authenticateToken = require("../middleware/authenticateToken");
 const { poolPromise } = require("../db");
 const axios = require("axios");
 
-router.post("/EditCourseRegistration", authenticateToken, async (req, res) => {
-	const { id, selectedSubjects } = req.body;
+router.post("/Course", authenticateToken, async (req, res) => {
+	let { course_id } = req.body;
 	try {
 		const pool = await poolPromise;
-		await pool.request().input("id", id).input("course_id", JSON.stringify(selectedSubjects)).query(`
-			UPDATE course_registration 
-			SET course_id = @course_id
-			WHERE id = @id`);
-		res.status(200).json({ message: "บันทึกข้อมูลเรียบร้อยแล้ว" });
-	} catch (err) {
-		console.error("requestExamInfoAll:", err);
-		res.status(500).json({ error: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
+		let result;
+		if (course_id && course_id.length > 0) {
+			const params = course_id.map((id, index) => `@id${index}`).join(", ");
+			const request = pool.request();
+			course_id.forEach((id, index) => {
+				request.input(`id${index}`, id);
+			});
+			result = await request.query(`SELECT * FROM courses WHERE course_id IN (${params})`);
+		} else {
+			result = await pool.request().query("SELECT * FROM courses");
+		}
+		res.json(result.recordset);
+	} catch (e) {
+		console.error("Course:", e);
+		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
 	}
 });
 
-/* router.post("/AllCourseRegistration", authenticateToken, async (req, res) => {
-	const { id } = req.body;
+router.post("/addCourseRegistration", authenticateToken, async (req, res) => {
+	const { course_id, major_name, study_group_id } = req.body;
+	try {
+		const pool = await poolPromise;
+		const check = await pool.request().input("study_group_id", study_group_id).query(`SELECT COUNT(*) as count FROM course_registration WHERE study_group_id = @study_group_id`);
+		if (check.recordset[0].count > 0) {
+			return res.status(400).json({ message: "หมู่เรียนนี้มีอยู่แล้ว ไม่สามารถเพิ่มได้" });
+		}
+		for (let i = 0; i < course_id.length; i++) {
+			await pool.request().input("major_name", major_name).input("study_group_id", study_group_id).input("course_id", course_id[i]).query(`
+                INSERT INTO course_registration (major_name, study_group_id, course_id)
+                VALUES (@major_name, @study_group_id, @course_id)
+            `);
+		}
+		res.status(201).json({ message: "บันทึกข้อมูลเรียบร้อยแล้ว" });
+	} catch (e) {
+		console.error("addCourseRegistration:", e);
+		res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
+	}
+});
 
+router.post("/editCourseRegistration", authenticateToken, async (req, res) => {
+	const { major_name, study_group_id, course_id } = req.body;
+	try {
+		const pool = await poolPromise;
+		await pool.request().input("study_group_id", study_group_id).query(`DELETE FROM course_registration WHERE study_group_id = @study_group_id`);
+		for (let i = 0; i < course_id.length; i++) {
+			await pool.request().input("major_name", major_name).input("study_group_id", study_group_id).input("course_id", course_id[i]).query(`
+			INSERT INTO course_registration (major_name, study_group_id, course_id)
+			VALUES (@major_name, @study_group_id, @course_id)
+			`);
+		}
+
+		res.status(200).json({ message: "แก้ไขข้อมูลเรียบร้อย" });
+	} catch (e) {
+		console.error("editCourseRegistration:", e);
+		res.status(500).json({ message: "เกิดข้อผิดพลาดในการแก้ไขข้อมูล" });
+	}
+});
+
+router.post("/deleteCourseRegistration", authenticateToken, async (req, res) => {
+	const { study_group_id } = req.body;
+	try {
+		const pool = await poolPromise;
+		await pool.request().input("study_group_id", study_group_id).query(`DELETE FROM course_registration WHERE study_group_id = @study_group_id`);
+		res.status(200).json({ message: "ลบข้อมูลเรียบร้อย" });
+	} catch (e) {
+		console.error("deleteCourseRegistration:", e);
+		res.status(500).json({ message: "เกิดข้อผิดพลาดในการลบข้อมูล" });
+	}
+});
+
+router.post("/allMajorCourseRegistration", authenticateToken, async (req, res) => {
+	const { id } = req.body;
 	try {
 		const pool = await poolPromise;
 		const result = await pool.request().input("id", id).query(`SELECT * FROM course_registration WHERE major_name = @id`);
 
-		const formatted = result.recordset.map((row) => ({
-			...row,
-			course_id: JSON.parse(row.course_id),
-		}));
+		const data = result.recordset;
+		if (data.length === 0) {
+			return res.status(200).json([]);
+		}
+		const grouped = {};
+		data.forEach((item) => {
+			if (!grouped[item.study_group_id]) {
+				grouped[item.study_group_id] = {
+					major_name: item.major_name,
+					study_group_id: item.study_group_id,
+					course_id: [],
+				};
+			}
+			grouped[item.study_group_id].course_id.push(item.course_id);
+		});
+		const formatted = Object.values(grouped);
 		res.status(200).json(formatted);
-	} catch (err) {
-		console.error("requestExamInfoAll:", err);
-		res.status(500).json({ error: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
+	} catch (e) {
+		console.error("allMajorCourseRegistration:", e);
+		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
 	}
-}); */
+});
 
-router.post("/AllCourseRegistration", authenticateToken, async (req, res) => {
-	const { id } = req.body;
-
+router.post("/allStudyGroupIdCourseRegistration", authenticateToken, async (req, res) => {
+	const id = req.user.reference_id.slice(0, -2);
 	try {
 		const pool = await poolPromise;
-		const result = await pool.request().input("id", id).query(`SELECT * FROM course_registration WHERE major_name = @id`);
-
-		const formatted = result.recordset.map((row) => ({
-			...row,
-			course_id: JSON.parse(row.course_id),
-		}));
+		const result = await pool.request().input("id", id).query(`SELECT * FROM course_registration WHERE study_group_id = @id`);
+		const data = result.recordset;
+		if (data.length === 0) {
+			return res.status(200).json(null);
+		}
+		const formatted = {
+			major_name: data[0].major_name,
+			study_group_id: data[0].study_group_id,
+			course_id: data.map((item) => item.course_id),
+		};
+		console.log(formatted);
 		res.status(200).json(formatted);
-	} catch (err) {
-		console.error("requestExamInfoAll:", err);
-		res.status(500).json({ error: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
+	} catch (e) {
+		console.error("allStudyGroupIdCourseRegistration:", e);
+		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
 	}
 });
-
-router.post("/AddCourseRegistration", authenticateToken, async (req, res) => {
-	const { selectedMajor, selectedGroup, selectedSubjects } = req.body;
-	const { reference_id } = req.user;
-	console.log(selectedMajor, selectedGroup, selectedSubjects, reference_id);
-
-	try {
-		const pool = await poolPromise;
-		/* 		const request = pool.request();
-		await request
-			.input("major_name", selectedMajor)
-			.input("study_group_id", selectedGroup)
-			.input("course_id", JSON.stringify(selectedSubjects))
-			.input("officer_faculty_id", reference_id)
-			.input("course_registration_date", new Date()).query(`
-				INSERT INTO course_registration ( 
-					major_name, 
-					study_group_id, 
-					course_id,
-					officer_faculty_id,
-					course_registration_date
-				) VALUES ( 
-					@major_name, 
-					@study_group_id, 
-					@course_id,
-					@officer_faculty_id, 
-					@course_registration_date
-				)`); */
-		res.status(201).json({ message: "บันทึกข้อมูลเรียบร้อยแล้ว" });
-	} catch (err) {
-		console.error("addRequestExamInfo:", err);
-		res.status(500).json({ error: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
-	}
-});
-
-/* router.post("/AddCourseRegistration", authenticateToken, async (req, res) => {
-	const { selectedMajor, selectedGroup, selectedSubjects } = req.body;
-	const { reference_id } = req.user;
-
-	try {
-		const pool = await poolPromise;
-		const request = pool.request();
-		await request
-			.input("major_name", selectedMajor)
-			.input("study_group_id", selectedGroup)
-			.input("course_id", JSON.stringify(selectedSubjects))
-			.input("officer_faculty_id", reference_id)
-			.input("course_registration_date", new Date()).query(`
-        INSERT INTO course_registration ( 
-            major_name, 
-            study_group_id, 
-            course_id,
-            officer_faculty_id,
-            course_registration_date
-        ) VALUES ( 
-            @major_name, 
-            @study_group_id, 
-            @course_id,
-            @officer_faculty_id, 
-            @course_registration_date
-        )`);
-		res.status(201).json({ message: "บันทึกข้อมูลเรียบร้อยแล้ว" });
-	} catch (err) {
-		console.error("addRequestExamInfo:", err);
-		res.status(500).json({ error: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
-	}
-});
- */
 module.exports = router;

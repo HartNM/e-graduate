@@ -6,6 +6,7 @@ import ModalAdd from "../component/Modal/ModalAdd";
 import ModalApprove from "../component/Modal/ModalApprove";
 import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
+import ModalCheckCourse from "../component/Modal/ModalCheckCourse";
 import Pdfg01 from "../component/PDF/Pdfg01";
 
 const RequestExam = () => {
@@ -18,6 +19,7 @@ const RequestExam = () => {
 	const [openApprove, setOpenApprove] = useState(false);
 	const [openApproveState, setOpenApproveState] = useState(false);
 	const [openPay, setOpenPay] = useState(false);
+	const [openCheckCourse, setOpenCheckCourse] = useState(false);
 	// Form states
 	const [formData, setFormData] = useState({});
 	const [selectedRow, setSelectedRow] = useState(null);
@@ -33,21 +35,34 @@ const RequestExam = () => {
 	const { type } = useParams();
 	const [selectedType, setSelectedType] = useState("");
 
+	const [registerCoures, setRegisterCoures] = useState(["1065201", "1065202", "1065204", "1065206", "1066205", "1065232"]);
+	const [missingCoures, setMissingCoures] = useState([]);
+/* 	const [coures, setCoures] = useState([
+		{ value: "1065201", label: "1065201 หลักการ ทฤษฎีและปฏิบัติทางการบริหารการศึกษา" },
+		{ value: "1065202", label: "1065202 ผู้นำทางวิชาการและการพัฒนาหลักสูตร " },
+		{ value: "1065204", label: "1065204 การบริหารทรัพยากรทางการศึกษา" },
+		{ value: "1065206", label: "1065206 ภาวะผู้นำทางการบริหารการศึกษา" },
+		{ value: "1065208", label: "1065208 การประกันคุณภาพการศึกษา" },
+		{ value: "1065222", label: "1065222 การฝึกปฏิบัติงานการบริหารการศึกษาและบริหารสถานศึกษา" },
+		{ value: "1065231", label: "1065231 คุณธรรม จริยธรรมและจรรยาบรรณวิชาชีพทางการศึกษา สำหรับนักบริหารการศึกษา และผู้บริหารการศึกษา" },
+		{ value: "1065232", label: "1065232 การบริหารงานวิชาการ กิจการและกิจกรรมนักเรียน" },
+		{ value: "1066205", label: "1066205 ความเป็นนักบริหารมืออาชีพ" },
+	]); */
+
 	useEffect(() => {
 		const fetchProfile = async () => {
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/profile", {
+				const req = await fetch("http://localhost:8080/api/profile", {
 					method: "GET",
 					headers: { Authorization: `Bearer ${token}` },
 				});
-				const requestData = await requestRes.json();
-				if (!requestRes.ok) {
-					throw new Error(requestData.message);
+				const res = await req.json();
+				if (!req.ok) {
+					throw new Error(res.message);
 				}
-				setUser(requestData);
-				console.log(requestData);
+				setUser(res);
 			} catch (e) {
-				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+				notify("error", e.message);
 				console.error("Error fetching profile:", e);
 			}
 		};
@@ -62,44 +77,85 @@ const RequestExam = () => {
 
 	useEffect(() => {
 		if (!user) return;
-		const fetchRequestExam = async () => {
+		if (user.role === "student") {
+			(async () => {
+				try {
+					const req = await fetch("http://localhost:8080/api/allStudyGroupIdCourseRegistration", {
+						method: "POST",
+						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+						body: JSON.stringify({ id: user.id }),
+					});
+					const res = await req.json();
+					if (!req.ok) throw new Error(res.message);
+					const courseRes = await fetch("http://localhost:8080/api/Course", {
+						method: "POST",
+						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+						body: JSON.stringify({ course_id: res.course_id }), // ส่ง array ของ course_id
+					});
+					const courseData = await courseRes.json();
+					const missingLabels = res.course_id
+						.filter((code) => !registerCoures.includes(code))
+						.map((code) => {
+							const course = courseData.find((c) => c.course_id === code);
+							return course ? `${course.course_id} ${course.course_name}` : code;
+						});
+					if (missingLabels.length) {
+						setMissingCoures(missingLabels);
+						setOpenCheckCourse(true);
+					}
+				} catch (e) {
+					notify("error", e.message);
+					console.error("Error fetching AllCourseRegistration:", e);
+				}
+				/* try {
+					const req = await fetch("http://localhost:8080/api/allStudyGroupIdCourseRegistration", {
+						method: "POST",
+						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+						body: JSON.stringify({ id: user.id }),
+					});
+					const res = await req.json();
+					if (!req.ok) throw new Error(res.message);
+					const missingLabels = res.course_id.filter((code) => !registerCoures.includes(code)).map((code) => coures.find((c) => c.value === code)?.label || code);
+					if (missingLabels.length) {
+						setMissingCoures(missingLabels);
+						setOpenCheckCourse(true);
+					}
+				} catch (e) {
+					notify("error", e.message);
+					console.error("Error fetching AllCourseRegistration:", e);
+				} */
+			})();
+		}
+		(async () => {
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/requestExamAll", {
+				const req = await fetch("http://localhost:8080/api/requestExamAll", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 					body: JSON.stringify({ role: user.role, id: user.id }),
 				});
-				const requestData = await requestRes.json();
-				if (!requestRes.ok) {
-					throw new Error(requestData.message);
-				}
-
-				setRequest(requestData);
-				console.log(requestData);
-				setLatestRequest(requestData[0]);
-				console.log(requestData[0]);
+				const res = await req.json();
+				if (!req.ok) throw new Error(res.message);
+				setRequest(res);
+				setLatestRequest(res[0]);
 			} catch (e) {
-				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+				notify("error", e.message);
 				console.error("Error fetching requestExamAll:", e);
 			}
-		};
-		fetchRequestExam();
+		})();
 	}, [user]);
 
 	const handleOpenAdd = async () => {
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/studentInfo", {
+			const req = await fetch("http://localhost:8080/api/studentInfo", {
 				method: "GET",
 				headers: { Authorization: `Bearer ${token}` },
 			});
-			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
-			setFormData(requestData);
+			const res = await req.json();
+			if (!req.ok) throw new Error(res.message);
+			setFormData(res);
 			setOpenAdd(true);
 		} catch (e) {
-			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+			notify("error", e.message);
 			console.error("Error fetching studentInfo:", e);
 		}
 	};
@@ -120,7 +176,7 @@ const RequestExam = () => {
 			setRequest((prev) => [...prev, { ...requestData.data, ...formData }]);
 			setLatestRequest({ ...requestData.data, ...formData });
 		} catch (e) {
-			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+			notify("error", e.message);
 			console.error("Error fetching addRequestExam:", e);
 		}
 	};
@@ -146,7 +202,7 @@ const RequestExam = () => {
 			setOpenApprove(false);
 			setRequest((prev) => prev.map((row) => (row.request_exam_id === item.request_exam_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
-			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+			notify("error", e.message);
 			console.error("Error fetching approveRequestExam:", e);
 		}
 	};
@@ -166,7 +222,7 @@ const RequestExam = () => {
 			setOpenPay(false);
 			setRequest((prev) => prev.map((row) => (row.request_exam_id === item.request_exam_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
-			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+			notify("error", e.message);
 			console.error("Error fetching payRequestExam:", e);
 		}
 	};
@@ -276,6 +332,7 @@ const RequestExam = () => {
 
 	return (
 		<Box>
+			<ModalCheckCourse opened={openCheckCourse} onClose={() => setOpenCheckCourse(false)} missingCoures={missingCoures} />
 			<ModalInform opened={inform.open} onClose={close} message={inform.message} type={inform.type} />
 			<ModalApprove
 				opened={openApprove}

@@ -15,8 +15,6 @@ const Student = () => {
 					headers: { Authorization: `Bearer ${token}` },
 				});
 				const data = await res.json();
-				console.log(data);
-
 				const newMenu = [];
 				newMenu.push({ label: `คำร้องขอสอบ${data.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, icon: IconClipboardText, links: "/student/RequestExam" });
 				if (data.RequestExamCancel) {
