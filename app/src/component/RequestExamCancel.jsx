@@ -8,6 +8,10 @@ import ModalInform from "../component/Modal/ModalInform";
 import Pdfg07 from "../component/PDF/Pdfg07";
 
 const RequestExamCancel = () => {
+	const token = localStorage.getItem("token");
+	const payloadBase64 = token.split(".")[1];
+	const payload = JSON.parse(atob(payloadBase64));
+	const role = payload.role;
 	// Modal Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
@@ -27,7 +31,6 @@ const RequestExamCancel = () => {
 	//student //advisor //chairpersons //officer_registrar //dean
 	const [request, setRequest] = useState([]);
 	const [search, setSearch] = useState("");
-	const token = localStorage.getItem("token");
 	const { type } = useParams();
 	const [selectedType, setSelectedType] = useState("");
 
@@ -39,13 +42,10 @@ const RequestExamCancel = () => {
 					headers: { Authorization: `Bearer ${token}` },
 				});
 				const requestData = await requestRes.json();
-				if (!requestRes.ok) {
-					throw new Error(requestData.message);
-				}
+				if (!requestRes.ok) throw new Error(requestData.message);
 				setUser(requestData);
-				console.log(requestData);
 			} catch (e) {
-				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+				notify("error", e.message);
 				console.error("Error fetching profile:", e);
 			}
 		};
@@ -65,16 +65,13 @@ const RequestExamCancel = () => {
 				const requestRes = await fetch("http://localhost:8080/api/requestExamAll", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-					body: JSON.stringify({ role: user.role, id: user.id, lastRequest: true }),
+					body: JSON.stringify({ lastRequest: true }),
 				});
 				const requestData = await requestRes.json();
-				if (!requestRes.ok) {
-					throw new Error(requestData.message);
-				}
+				if (!requestRes.ok) throw new Error(requestData.message);
 				setLatestRequest([...requestData].sort((a, b) => new Date(b.request_exam_id) - new Date(a.request_exam_id))[0]);
-				console.log([...requestData].sort((a, b) => new Date(b.request_exam_id) - new Date(a.request_exam_id))[0]);
 			} catch (e) {
-				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+				notify("error", e.message);
 				console.error("Error fetching requestExamAll:", e);
 			}
 		};
@@ -85,16 +82,12 @@ const RequestExamCancel = () => {
 				const requestRes = await fetch("http://localhost:8080/api/AllRequestExamCancel", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-					body: JSON.stringify({ role: user.role, id: user.id }),
 				});
 				const requestData = await requestRes.json();
-				if (!requestRes.ok) {
-					throw new Error(requestData.message);
-				}
+				if (!requestRes.ok) throw new Error(requestData.message);
 				setRequest(requestData);
-				console.log(requestData);
 			} catch (e) {
-				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+				notify("error", e.message);
 				console.error("Error fetching AllRequestExamCancel:", e);
 			}
 		};
@@ -109,14 +102,12 @@ const RequestExamCancel = () => {
 				headers: { Authorization: `Bearer ${token}` },
 			});
 			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
+			if (!requestRes.ok) throw new Error(requestData.message);
 			setSelectedRow(requestData);
 			setOpenAddCancel(true);
 			setError("");
 		} catch (e) {
-			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+			notify("error", e.message);
 			console.error("Error fetching studentInfo:", e);
 		}
 	};
@@ -133,17 +124,12 @@ const RequestExamCancel = () => {
 				body: JSON.stringify({ reason: reason, request_type: `ขอยกเลิกการเข้าสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` }),
 			});
 			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
+			if (!requestRes.ok) throw new Error(requestData.message);
 			notify("success", requestData.message || "สำเร็จ");
 			setOpenAddCancel(false);
-			/* setReason("");
-			console.log(requestData.data);
-			setRequest((prev) => [...prev, { ...selectedRow, ...requestData.data }]); */
 			setReloadTable(true);
 		} catch (e) {
-			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+			notify("error", e.message);
 			console.error("Error fetching cancelRequestExam:", e);
 		}
 	};
@@ -161,32 +147,39 @@ const RequestExamCancel = () => {
 					request_cancel_exam_id: item.request_cancel_exam_id,
 					request_exam_id: item.request_exam_id,
 					name: user.name,
-					role: user.role,
+					role: role,
 					selected: selected,
 					comment_cancel: comment,
 				}),
 			});
 			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
+			if (!requestRes.ok) throw new Error(requestData.message);
 			notify("success", requestData.message || "สำเร็จ");
 			setSelected("approve");
 			setComment("");
 			setOpenApprove(false);
 			setRequest((prev) => prev.map((row) => (row.request_cancel_exam_id === item.request_cancel_exam_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
-			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+			notify("error", e.message);
 			console.error("Error fetching cancelApproveRequestExam:", e);
 		}
 	};
 
 	function sortRequests(data, role) {
 		if (role === "student") return data;
-		return data.sort((a, b) => Number(a.status) - Number(b.status));
+		return data.sort((a, b) => {
+			const getOrder = (s) => {
+				if (Number(s) === 0) return 2;
+				if (Number(s) === 5) return 1;
+				return 0;
+			};
+			const orderA = getOrder(a.status);
+			const orderB = getOrder(b.status);
+			return orderA - orderB || Number(a.status) - Number(b.status);
+		});
 	}
 
-	const sortedData = sortRequests(request, user.role);
+	const sortedData = sortRequests(request, role);
 
 	const filteredData = sortedData.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
@@ -214,8 +207,8 @@ const RequestExamCancel = () => {
 
 			<Table.Td style={{ maxWidth: "150px" }}>
 				<Group>
-					<Pdfg07 data={item} showType={item.status == 5 || item.status == 0 ? undefined : (user.role === "advisor" && item.status <= 7) || (user.role === "chairpersons" && item.status <= 8) || (user.role === "dean" && item.status <= 9) ? "view" : undefined} />
-					{((user.role === "advisor" && item.status === "7") || (user.role === "chairpersons" && item.status === "8") || (user.role === "dean" && item.status === "9")) && (
+					<Pdfg07 data={item} showType={item.status == 5 || item.status == 0 ? undefined : (role === "advisor" && item.status <= 7) || (role === "chairpersons" && item.status <= 8) || (role === "dean" && item.status <= 9) ? "view" : undefined} />
+					{((role === "advisor" && item.status === "7") || (role === "chairpersons" && item.status === "8") || (role === "dean" && item.status === "9")) && (
 						<Button
 							size="xs"
 							color="green"
@@ -247,7 +240,7 @@ const RequestExamCancel = () => {
 				error={error}
 				openApproveState={openApproveState}
 				handleCancel={handleCancel}
-				role={user.role}
+				role={role}
 				title={`ลงความเห็นคำร้องขอยกเลิกการเข้าสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`}
 			/>
 			<ModalAddCancel opened={openAddCancel} onClose={() => setOpenAddCancel(false)} selectedRow={selectedRow} reason={reason} setReason={setReason} error={error} handleAddCancel={handleAddCancel} />
@@ -257,14 +250,14 @@ const RequestExamCancel = () => {
 			<Group justify="space-between">
 				<Box>
 					<Flex align="flex-end" gap="sm">
-						{user.role !== "student" && <TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
-						{user.role === "chairpersons" && <Select placeholder="ชนิดคำขอ" data={["ขอยกเลิกการเข้าสอบประมวลความรู้", "ขอยกเลิกการเข้าสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
+						{role !== "student" && <TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
+						{role === "chairpersons" && <Select placeholder="ชนิดคำขอ" data={["ขอยกเลิกการเข้าสอบประมวลความรู้", "ขอยกเลิกการเข้าสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
 					</Flex>
 				</Box>
 				<Box>
-					{user.role === "student" && (
+					{role === "student" && (
 						<>
-							<Button onClick={() => handleOpenAddCancel()} disabled={!(latestRequest?.status === "5" && latestRequest?.exam_results === null)}>
+							<Button onClick={() => handleOpenAddCancel()} disabled={!((latestRequest?.status === "1" || latestRequest?.status === "2" || latestRequest?.status === "3" || latestRequest?.status === "4" || latestRequest?.status === "5") && latestRequest?.exam_results === null)}>
 								ขอยกเลิก
 							</Button>
 						</>

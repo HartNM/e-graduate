@@ -37,9 +37,8 @@ const formatDate = (date) => {
 	return new Date(date).toISOString().split("T")[0];
 };
 
-router.post("/requestExamAll", authenticateToken, async (req, res) => {
+/* router.post("/requestExamAll", authenticateToken, async (req, res) => {
 	const { role, id, lastRequest } = req.body;
-
 	try {
 		const pool = await poolPromise;
 		const request = pool.request().input("id", id);
@@ -85,9 +84,60 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 		console.error("requestExamAll:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลคำร้อง" });
 	}
+}); */
+
+router.post("/requestExamAll", authenticateToken, async (req, res) => {
+	const { lastRequest } = req.body;
+	const { user_id, role } = req.user;
+	try {
+		const pool = await poolPromise;
+		const request = pool.request().input("user_id", user_id);
+		let query = "SELECT * FROM request_exam";
+		if (role === "student") {
+			if (lastRequest) {
+				query = "SELECT TOP 1 * FROM request_exam";
+			}
+			query += " WHERE student_id = @user_id";
+		} else if (role === "advisor") {
+			query += ` WHERE study_group_id IN (SELECT group_no FROM advisorGroup_no WHERE user_id = @user_id)`;
+		} else if (role === "chairpersons") {
+			query +=
+				" WHERE major_id IN (SELECT major_id FROM chairpersonsMajor_id WHERE user_id = @user_id) AND (status IN (0, 2, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL))";
+		} else if (role === "officer_registrar") {
+			query += " WHERE (status IN (0, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL AND registrar_approvals_id IS NOT NULL))";
+		}
+		query += " ORDER BY request_exam_id DESC";
+		const result = await request.query(query);
+		const enrichedData = await Promise.all(
+			result.recordset.map(async (item) => {
+				let studentInfo = null;
+				try {
+					const studentRes = await axios.get(`http://localhost:8080/externalApi/student/${item.student_id}`);
+					studentInfo = studentRes.data;
+				} catch (err) {
+					console.warn(`ไม่สามารถดึงข้อมูลนักศึกษา ${item.student_id}`);
+				}
+				return {
+					...item,
+					...studentInfo,
+					request_date: formatDate(item.request_date) || null,
+					advisor_approvals_date: formatDate(item.advisor_approvals_date) || null,
+					chairpersons_approvals_date: formatDate(item.chairpersons_approvals_date) || null,
+					registrar_approvals_date: formatDate(item.registrar_approvals_date) || null,
+					receipt_pay_date: formatDate(item.receipt_pay_date) || null,
+					status_text: statusMap[item.status?.toString()] || null,
+					request_type: item.request_type || null,
+				};
+			})
+		);
+		res.status(200).json(enrichedData);
+	} catch (err) {
+		console.error("requestExamAll:", err);
+		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลคำร้อง" });
+	}
 });
 
-router.post("/addRequestExam", authenticateToken, async (req, res) => {
+/* router.post("/addRequestExam", authenticateToken, async (req, res) => {
 	const { student_id, study_group_id, major_name, faculty_name, education_level } = req.body;
 	try {
 		const pool = await poolPromise;
@@ -122,7 +172,6 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 					@status
 				)
 			`);
-
 		res.status(200).json({
 			message: "บันทึกคำร้องขอสอบเรียบร้อยแล้ว",
 			data: {
@@ -139,9 +188,64 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 		console.error("addRequestExam:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกคำร้องขอสอบ" });
 	}
+}); */
+
+router.post("/addRequestExam", authenticateToken, async (req, res) => {
+	const { student_id, study_group_id, major_id, major_name, faculty_name, education_level } = req.body;
+	try {
+		const pool = await poolPromise;
+		const infoRes = await pool.request().query(`SELECT TOP 1 term FROM request_exam_info ORDER BY request_exam_info_id DESC`);
+		const result = await pool
+			.request()
+			.input("student_id", student_id)
+			.input("study_group_id", study_group_id)
+			.input("major_id", major_id)
+			.input("faculty_name", faculty_name)
+			.input("request_type", `ขอสอบ${education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`)
+			.input("term", infoRes.recordset[0].term)
+			.input("request_date", formatThaiBuddhistDate())
+			.input("status", "1").query(`
+				INSERT INTO request_exam (
+					student_id,
+					study_group_id,
+					major_id,
+					faculty_name,
+					request_type,
+					term,
+					request_date,
+					status
+				) OUTPUT INSERTED.* VALUES (
+					@student_id,
+					@study_group_id,
+					@major_id,
+					@faculty_name,
+					@request_type,
+					@term,
+					@request_date,
+					@status
+				)
+			`);
+
+		res.status(200).json({
+			message: "บันทึกคำร้องขอสอบเรียบร้อยแล้ว",
+			data: {
+				...result.recordset[0],
+				major_name: major_name || null,
+				status_text: statusMap[result.recordset[0].status?.toString()] || null,
+				request_date: formatDate(result.recordset[0].request_date) || null,
+				advisor_approvals_date: formatDate(result.recordset[0].advisor_approvals_date) || null,
+				chairpersons_approvals_date: formatDate(result.recordset[0].chairpersons_approvals_date) || null,
+				registrar_approvals_date: formatDate(result.recordset[0].registrar_approvals_date) || null,
+				receipt_pay_date: formatDate(result.recordset[0].receipt_pay_date) || null,
+			},
+		});
+	} catch (err) {
+		console.error("addRequestExam:", err);
+		res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกคำร้องขอสอบ" });
+	}
 });
 
-router.post("/approveRequestExam", authenticateToken, async (req, res) => {
+/* router.post("/approveRequestExam", authenticateToken, async (req, res) => {
 	const { request_exam_id, name, role, selected, comment } = req.body;
 	if (!["advisor", "chairpersons", "officer_registrar"].includes(role)) {
 		return res.status(400).json({ message: "สิทธิ์ในการเข้าถึงไม่ถูกต้อง" });
@@ -181,6 +285,78 @@ router.post("/approveRequestExam", authenticateToken, async (req, res) => {
 			`,
 			officer_registrar: `
 				registrar_approvals_id = @name,
+				registrar_approvals = @approve,
+				registrar_approvals_date = @date
+			`,
+		};
+		const query = `
+			UPDATE request_exam
+			SET ${roleFields[role]},
+				status = @status
+				${selected !== "approve" ? ", comment = @comment" : ""}
+			OUTPUT INSERTED.*
+			WHERE request_exam_id = @request_exam_id
+			`;
+		const result = await request.query(query);
+		res.status(200).json({
+			message: "บันทึกผลการอนุมัติคำร้องขอสอบเรียบร้อยแล้ว",
+			data: {
+				...result.recordset[0],
+				status_text: statusMap[result.recordset[0].status?.toString()] || null,
+				request_date: formatDate(result.recordset[0].request_date) || null,
+				advisor_approvals_date: formatDate(result.recordset[0].advisor_approvals_date) || null,
+				chairpersons_approvals_date: formatDate(result.recordset[0].chairpersons_approvals_date) || null,
+				registrar_approvals_date: formatDate(result.recordset[0].registrar_approvals_date) || null,
+				receipt_pay_date: formatDate(result.recordset[0].receipt_pay_date) || null,
+			},
+		});
+	} catch (err) {
+		console.error("Error approving request:", err);
+		res.status(500).json({ message: "เกิดข้อผิดพลาดในการประมวลผลการอนุมัติ" });
+	}
+}); */
+
+router.post("/approveRequestExam", authenticateToken, async (req, res) => {
+	const { request_exam_id, name, selected, comment } = req.body;
+	const { role } = req.user;
+	if (!["advisor", "chairpersons", "officer_registrar"].includes(role)) {
+		return res.status(400).json({ message: "สิทธิ์ในการเข้าถึงไม่ถูกต้อง" });
+	}
+	try {
+		let statusValue = "";
+		if (selected === "approve") {
+			if (role === "advisor") {
+				statusValue = "2";
+			} else if (role === "chairpersons") {
+				statusValue = "3";
+			} else if (role === "officer_registrar") {
+				statusValue = "4";
+			}
+		} else {
+			statusValue = "6";
+		}
+		const pool = await poolPromise;
+		const request = pool
+			.request()
+			.input("request_exam_id", request_exam_id)
+			.input("status", statusValue)
+			.input("user_id", name)
+			.input("approve", selected === "approve" ? 1 : 0)
+			.input("date", formatThaiBuddhistDate())
+			.input("comment", comment);
+		const roleFields = {
+			advisor: `
+				advisor_approvals_id = @user_id,
+				advisor_approvals = @approve,
+				advisor_approvals_date = @date
+			`,
+			chairpersons: `
+				chairpersons_approvals_id = @user_id,
+				chairpersons_approvals = @approve,
+				chairpersons_approvals_date = @date
+			`,
+			officer_registrar: `
+				registrar_approvals_id = @user_id,
 				registrar_approvals = @approve,
 				registrar_approvals_date = @date
 			`,

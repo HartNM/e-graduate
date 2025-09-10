@@ -8,8 +8,8 @@ const PORT = process.env.PORT;
 
 const externalApiStudent = require("./externalApi/student");
 app.use("/externalApi", externalApiStudent);
-const authRoutes = require("./routes/auth");
-app.use("/api", authRoutes);
+const loginRoutes = require("./routes/login");
+app.use("/api", loginRoutes);
 const profileRoutes = require("./routes/profile");
 app.use("/api", profileRoutes);
 

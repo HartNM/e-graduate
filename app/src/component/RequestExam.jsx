@@ -9,6 +9,7 @@ import ModalInform from "../component/Modal/ModalInform";
 import ModalCheckCourse from "../component/Modal/ModalCheckCourse";
 import Pdfg01 from "../component/PDF/Pdfg01";
 
+
 const RequestExam = () => {
 	// Modal Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
@@ -34,10 +35,12 @@ const RequestExam = () => {
 	const token = localStorage.getItem("token");
 	const { type } = useParams();
 	const [selectedType, setSelectedType] = useState("");
+	const [latestRequest, setLatestRequest] = useState(null);
 
-	const [registerCoures, setRegisterCoures] = useState(["1065201", "1065202", "1065204", "1065206", "1066205", "1065232"]);
+	const [registerCoures, setRegisterCoures] = useState(["1065201", "1065202", "1065204", "1065206", "1065208"]);
+	/* const [registerCoures, setRegisterCoures] = useState(["1065204", "1065206", "1065208"]); */
 	const [missingCoures, setMissingCoures] = useState([]);
-/* 	const [coures, setCoures] = useState([
+	/* 	const [coures, setCoures] = useState([
 		{ value: "1065201", label: "1065201 หลักการ ทฤษฎีและปฏิบัติทางการบริหารการศึกษา" },
 		{ value: "1065202", label: "1065202 ผู้นำทางวิชาการและการพัฒนาหลักสูตร " },
 		{ value: "1065204", label: "1065204 การบริหารทรัพยากรทางการศึกษา" },
@@ -73,67 +76,16 @@ const RequestExam = () => {
 		setSelectedType(type);
 	}, [type]);
 
-	const [latestRequest, setLatestRequest] = useState(null);
-
 	useEffect(() => {
 		if (!user) return;
-		if (user.role === "student") {
-			(async () => {
-				try {
-					const req = await fetch("http://localhost:8080/api/allStudyGroupIdCourseRegistration", {
-						method: "POST",
-						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-						body: JSON.stringify({ id: user.id }),
-					});
-					const res = await req.json();
-					if (!req.ok) throw new Error(res.message);
-					const courseRes = await fetch("http://localhost:8080/api/Course", {
-						method: "POST",
-						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-						body: JSON.stringify({ course_id: res.course_id }), // ส่ง array ของ course_id
-					});
-					const courseData = await courseRes.json();
-					const missingLabels = res.course_id
-						.filter((code) => !registerCoures.includes(code))
-						.map((code) => {
-							const course = courseData.find((c) => c.course_id === code);
-							return course ? `${course.course_id} ${course.course_name}` : code;
-						});
-					if (missingLabels.length) {
-						setMissingCoures(missingLabels);
-						setOpenCheckCourse(true);
-					}
-				} catch (e) {
-					notify("error", e.message);
-					console.error("Error fetching AllCourseRegistration:", e);
-				}
-				/* try {
-					const req = await fetch("http://localhost:8080/api/allStudyGroupIdCourseRegistration", {
-						method: "POST",
-						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-						body: JSON.stringify({ id: user.id }),
-					});
-					const res = await req.json();
-					if (!req.ok) throw new Error(res.message);
-					const missingLabels = res.course_id.filter((code) => !registerCoures.includes(code)).map((code) => coures.find((c) => c.value === code)?.label || code);
-					if (missingLabels.length) {
-						setMissingCoures(missingLabels);
-						setOpenCheckCourse(true);
-					}
-				} catch (e) {
-					notify("error", e.message);
-					console.error("Error fetching AllCourseRegistration:", e);
-				} */
-			})();
-		}
-		(async () => {
+		const fetchRequestExam = async () => {
 			try {
 				const req = await fetch("http://localhost:8080/api/requestExamAll", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-					body: JSON.stringify({ role: user.role, id: user.id }),
 				});
 				const res = await req.json();
+				
 				if (!req.ok) throw new Error(res.message);
 				setRequest(res);
 				setLatestRequest(res[0]);
@@ -141,7 +93,48 @@ const RequestExam = () => {
 				notify("error", e.message);
 				console.error("Error fetching requestExamAll:", e);
 			}
-		})();
+		};
+		const fetchStudentData = async () => {
+			try {
+				const registrationRes = await fetch("http://localhost:8080/api/allStudyGroupIdCourseRegistration", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+					body: JSON.stringify({ id: user.id }),
+				});
+				const registrationData = await registrationRes.json();
+				console.log(registrationData);
+				if (!registrationData) throw new Error("รอเจ้าหน้าที่กรอกราย วิชาที่ต้องเรียน");
+				if (!registrationRes.ok) throw new Error(registrationData.message);
+				const coursesRes = await fetch("http://localhost:8080/api/Course", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+					body: JSON.stringify({ course_id: registrationData.course_id }),
+				});
+				const coursesData = await coursesRes.json();
+				console.log(coursesData);
+				if (!coursesRes.ok) throw new Error(coursesData.message);
+				const missingLabels = registrationData.course_id
+					.filter((code) => !registerCoures.includes(code))
+					.map((code) => {
+						const course = coursesData.find((c) => c.course_id === code);
+						return course ? `${course.course_id} ${course.course_name}` : code;
+					});
+				if (missingLabels.length > 0) {
+					setMissingCoures(missingLabels);
+					setOpenCheckCourse(false);
+					return;
+				}
+				fetchRequestExam();
+			} catch (e) {
+				notify("error", e.message);
+				console.error("Error fetching CourseCheck:", e);
+			}
+		};
+		if (user.role === "student") {
+			fetchStudentData();
+		} else {
+			fetchRequestExam();
+		}
 	}, [user]);
 
 	const handleOpenAdd = async () => {
@@ -352,7 +345,7 @@ const RequestExam = () => {
 			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} />
 
 			<Text size="1.5rem" fw={900} mb="md">
-				{`คำร้องขอสอบ${user.education_level ? `${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` : ""}${type ? type : "ประมวลความรู้/สอบวัดคุณสมบัติ"}`}
+				{`คำร้องขอสอบ${user.education_level ? `${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` : ""}`}
 			</Text>
 			<Group justify="space-between">
 				<Box>

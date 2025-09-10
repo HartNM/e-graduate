@@ -107,8 +107,29 @@ router.post("/allMajorCourseRegistration", authenticateToken, async (req, res) =
 	}
 });
 
-router.post("/allStudyGroupIdCourseRegistration", authenticateToken, async (req, res) => {
+/* router.post("/allStudyGroupIdCourseRegistration", authenticateToken, async (req, res) => {
 	const id = req.user.reference_id.slice(0, -2);
+	try {
+		const pool = await poolPromise;
+		const result = await pool.request().input("id", id).query(`SELECT * FROM course_registration WHERE study_group_id = @id`);
+		const data = result.recordset;
+		if (data.length === 0) {
+			return res.status(200).json(null);
+		}
+		const formatted = {
+			major_name: data[0].major_name,
+			study_group_id: data[0].study_group_id,
+			course_id: data.map((item) => item.course_id),
+		};
+		console.log(formatted);
+		res.status(200).json(formatted);
+	} catch (e) {
+		console.error("allStudyGroupIdCourseRegistration:", e);
+		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
+	}
+}); */
+router.post("/allStudyGroupIdCourseRegistration", authenticateToken, async (req, res) => {
+	const id = req.user.user_id.slice(0, -2);
 	try {
 		const pool = await poolPromise;
 		const result = await pool.request().input("id", id).query(`SELECT * FROM course_registration WHERE study_group_id = @id`);

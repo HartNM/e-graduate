@@ -8,6 +8,10 @@ import ModalInform from "../component/Modal/ModalInform";
 import Pdfg02 from "../component/PDF/Pdfg02";
 
 const RequestEngTest = () => {
+	const token = localStorage.getItem("token");
+	const payloadBase64 = token.split(".")[1];
+	const payload = JSON.parse(atob(payloadBase64));
+	const role = payload.role;
 	// Modal notify
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
@@ -28,8 +32,7 @@ const RequestEngTest = () => {
 	//student //advisor //chairpersons //officer_registrar //dean
 	const [request, setRequest] = useState([]);
 	const [search, setSearch] = useState("");
-	const token = localStorage.getItem("token");
-
+	const [latestRequest, setLatestRequest] = useState(null);
 	useEffect(() => {
 		const fetchProfile = async () => {
 			try {
@@ -38,11 +41,8 @@ const RequestEngTest = () => {
 					headers: { Authorization: `Bearer ${token}` },
 				});
 				const requestData = await requestRes.json();
-				if (!requestRes.ok) {
-					throw new Error(requestData.message);
-				}
+				if (!requestRes.ok) throw new Error(requestData.message);
 				setUser(requestData);
-				console.log(requestData);
 			} catch (e) {
 				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 				console.error("Error fetching profile:", e);
@@ -50,9 +50,7 @@ const RequestEngTest = () => {
 		};
 		fetchProfile();
 	}, [token]);
-
-	const [latestRequest, setLatestRequest] = useState(null);
-
+	const [reloadTable, setReloadTable] = useState(false);
 	useEffect(() => {
 		if (!user) return;
 		const fetchRequestExam = async () => {
@@ -60,14 +58,11 @@ const RequestEngTest = () => {
 				const requestRes = await fetch("http://localhost:8080/api/allRequestEngTest", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-					body: JSON.stringify({ role: user.role, id: user.id }),
+					body: JSON.stringify({ role: role, id: user.id }),
 				});
 				const requestData = await requestRes.json();
-				if (!requestRes.ok) {
-					throw new Error(requestData.message);
-				}
+				if (!requestRes.ok) throw new Error(requestData.message);
 				setRequest(requestData);
-				console.log(requestData);
 				setLatestRequest(requestData[0]);
 			} catch (e) {
 				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
@@ -75,7 +70,8 @@ const RequestEngTest = () => {
 			}
 		};
 		fetchRequestExam();
-	}, [user]);
+		setReloadTable(false);
+	}, [user, reloadTable]);
 
 	const handleOpenAdd = async () => {
 		try {
@@ -84,9 +80,7 @@ const RequestEngTest = () => {
 				headers: { Authorization: `Bearer ${token}` },
 			});
 			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
+			if (!requestRes.ok) throw new Error(requestData.message);
 			setFormData(requestData);
 			setOpenAdd(true);
 		} catch (e) {
@@ -103,12 +97,10 @@ const RequestEngTest = () => {
 				body: JSON.stringify(formData),
 			});
 			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
+			if (!requestRes.ok) throw new Error(requestData.message);
 			notify("success", requestData.message || "สำเร็จ");
 			setOpenAdd(false);
-			setRequest((prev) => [...prev, { ...requestData.data, ...formData }]);
+			setReloadTable(true);
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching addRequestExam:", e);
@@ -124,12 +116,10 @@ const RequestEngTest = () => {
 			const requestRes = await fetch("http://localhost:8080/api/approveRequestEngTest", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ request_eng_test_id: item.request_eng_test_id, name: user.name, role: user.role, selected: selected, comment: comment }),
+				body: JSON.stringify({ request_eng_test_id: item.request_eng_test_id, name: user.name, role: role, selected: selected, comment: comment }),
 			});
 			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
+			if (!requestRes.ok) throw new Error(requestData.message);
 			notify("success", requestData.message || "สำเร็จ");
 			setSelected("approve");
 			setComment("");
@@ -149,9 +139,7 @@ const RequestEngTest = () => {
 				body: JSON.stringify({ request_eng_test_id: item.request_eng_test_id, receipt_vol_No: "10/54" }),
 			});
 			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
+			if (!requestRes.ok) throw new Error(requestData.message);
 			notify("success", requestData.message || "สำเร็จ");
 			setOpenPay(false);
 			setRequest((prev) => prev.map((row) => (row.request_eng_test_id === item.request_eng_test_id ? { ...row, ...requestData.data } : row)));
@@ -166,7 +154,7 @@ const RequestEngTest = () => {
 		return data.sort((a, b) => Number(a.status) - Number(b.status));
 	}
 
-	const sortedData = sortRequests(request, user.role);
+	const sortedData = sortRequests(request, role);
 
 	const filteredData = sortedData.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
@@ -213,7 +201,7 @@ const RequestEngTest = () => {
 
 			<Table.Td style={{ maxWidth: "150px" }}>
 				<Group>
-					{user.role === "student" && (
+					{role === "student" && (
 						<>
 							{item.status === "4" && (
 								<Button
@@ -236,8 +224,8 @@ const RequestEngTest = () => {
 							)}
 						</>
 					)}
-					<Pdfg02 data={item} showType={item.status == 0 ? undefined : (user.role === "advisor" && item.status <= 1) || (user.role === "chairpersons" && item.status <= 2) || (user.role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
-					{((user.role === "advisor" && item.status === "1") || (user.role === "chairpersons" && item.status === "2") || (user.role === "officer_registrar" && item.status === "3")) && (
+					<Pdfg02 data={item} showType={item.status == 0 ? undefined : (role === "advisor" && item.status <= 1) || (role === "chairpersons" && item.status <= 2) || (role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
+					{((role === "advisor" && item.status === "1") || (role === "chairpersons" && item.status === "2") || (role === "officer_registrar" && item.status === "3")) && (
 						<Button
 							size="xs"
 							color="green"
@@ -247,7 +235,7 @@ const RequestEngTest = () => {
 								setOpenApprove(true);
 							}}
 						>
-							{user.role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
+							{role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
 						</Button>
 					)}
 				</Group>
@@ -269,7 +257,7 @@ const RequestEngTest = () => {
 				error={error}
 				openApproveState={openApproveState}
 				handleApprove={handleApprove}
-				role={user.role}
+				role={role}
 				title={"ลงความเห็นคำร้องขอทดสอบความรู้ทางภาษาอังกฤษ"}
 			/>
 			<ModalAdd opened={openAdd} onClose={() => setOpenAdd(false)} formData={formData} handleAdd={handleAdd} title={"เพิ่มคำร้องขอทดสอบความรู้ทางภาษาอังกฤษ"} />
@@ -281,11 +269,11 @@ const RequestEngTest = () => {
 			<Group justify="space-between">
 				<Box>
 					<Flex align="flex-end" gap="sm">
-						{user.role !== "student" && <TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
+						{role !== "student" && <TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
 					</Flex>
 				</Box>
 				<Box>
-					{user.role === "student" && (
+					{role === "student" && (
 						<Button onClick={() => handleOpenAdd()} disabled={latestRequest ? latestRequest.status !== "0" && latestRequest.status !== "6" : false}>
 							เพิ่มคำร้อง
 						</Button>

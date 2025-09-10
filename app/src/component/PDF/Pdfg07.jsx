@@ -58,7 +58,7 @@ async function fillPdf(data) {
 		{ text: request_date_year, x: 465, y: y + 2 },
 
 		{ text: `1. ความเห็นของอาจารย์ที่ปรึกษาหมู่เรียน`, x: 60, y: (y -= space * 2), font: THSarabunNewBold, show: typeof data?.advisor_cancel === "boolean" },
-		{ text: data?.advisor_cancel ? "เห็นควร" : "ไม่เห็นควร", x: 80, y: (y -= space), show: typeof data?.advisor_cancel === "boolean" },
+		{ text: data?.advisor_cancel ? "เห็นควรอนุญาต" : "ไม่อนุญาต", x: 80, y: (y -= space), show: typeof data?.advisor_cancel === "boolean" },
 		{ text: `เนื่องจาก ${data?.comment}`, x: 80, y: (y -= space), show: typeof data?.advisor_cancel === "boolean" && !data.advisor_cancel },
 		{ text: `ลงชื่อ.......................................................................`, x: 75, y: (y -= space * 2), show: typeof data?.advisor_cancel === "boolean" },
 		{ text: data?.advisor_cancel_id, x: 140, y: y + 2, show: typeof data?.advisor_cancel === "boolean" },
@@ -71,7 +71,7 @@ async function fillPdf(data) {
 		{ text: advisor_cancel_date_year, x: 210, y: y + 2, show: typeof data?.advisor_cancel === "boolean" },
 
 		{ text: `2. ความเห็นประธานกรรมการบัณฑิตศึกษาประจำสาขาวิชา`, x: 310, y: (y += space * 7), font: THSarabunNewBold, show: typeof data?.chairpersons_cancel === "boolean" },
-		{ text: data?.chairpersons_cancel ? "อนุญาต" : "ไม่อนุญาต", x: 330, y: (y -= space), show: typeof data?.chairpersons_cancel === "boolean" },
+		{ text: data?.chairpersons_cancel ? "เห็นควรอนุญาต" : "ไม่อนุญาต", x: 330, y: (y -= space), show: typeof data?.chairpersons_cancel === "boolean" },
 		{ text: `เนื่องจาก ${data?.comment}`, x: 330, y: (y -= space), show: typeof data?.chairpersons_cancel === "boolean" && !data.chairpersons_cancel },
 		{ text: `ลงชื่อ.......................................................................`, x: 325, y: (y -= space * 2), show: typeof data?.chairpersons_cancel === "boolean" },
 		{ text: data?.chairpersons_cancel_id, x: 390, y: y + 2, show: typeof data?.chairpersons_cancel === "boolean" },

@@ -1,11 +1,37 @@
-import { Modal, Box, Text } from "@mantine/core";
+import { Modal, Box, Text, List, ThemeIcon, Title } from "@mantine/core";
 
 const ModalCheckCourse = ({ opened, onClose, missingCoures }) => (
-	<Modal opened={opened} onClose={onClose} title="ลงทะเบียนเรียนไม่ครบตามหลักสูตร" centered>
+	<Modal
+		opened={opened}
+		onClose={onClose}
+		title={
+			<Box className="flex items-center gap-2">
+				<Title order={4} c="red">
+					ลงทะเบียนเรียนไม่ครบตามหลักสูตร
+				</Title>
+			</Box>
+		}
+		centered
+	>
 		<Box>
-			{missingCoures.map((label, index) => (
-				<Text key={index}>{label}</Text>
-			))}
+			<Text mb="sm" c="dimmed">
+				คุณยังขาดการลงทะเบียนในรายวิชาต่อไปนี้
+			</Text>
+
+			<List
+				spacing="sm"
+				icon={
+					<ThemeIcon color="blue" size={20} radius="xl">
+						•
+					</ThemeIcon>
+				}
+			>
+				{missingCoures.map((label, index) => (
+					<List.Item key={index}>
+						<Text fw={500}>{label}</Text>
+					</List.Item>
+				))}
+			</List>
 		</Box>
 	</Modal>
 );

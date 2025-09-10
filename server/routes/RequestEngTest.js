@@ -31,17 +31,18 @@ const formatDate = (date) => {
 };
 
 router.post("/allRequestEngTest", authenticateToken, async (req, res) => {
-	const { role, id } = req.body;
+	const { role, user_id } = req.user;
 	try {
 		const pool = await poolPromise;
-		const request = pool.request().input("id", id);
+		const request = pool.request().input("user_id", user_id);
 		let query = "SELECT * FROM request_eng_test";
 		if (role === "student") {
-			query += " WHERE student_id = @id";
+			query += " WHERE student_id = @user_id";
 		} else if (role === "advisor") {
-			query += " WHERE study_group_id IN (SELECT value FROM STRING_SPLIT(@id, ','))";
+			query += " WHERE study_group_id IN (SELECT group_no FROM advisorGroup_no WHERE user_id = @user_id)";
 		} else if (role === "chairpersons") {
-			query += " WHERE major_name = @id AND (status IN (0, 2, 3, 4, 5) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL))";
+			query +=
+				" WHERE major_id IN (SELECT major_id FROM chairpersonsMajor_id WHERE user_id = @user_id) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL))";
 		} else if (role === "officer_registrar") {
 			query += " WHERE (status IN (0, 3, 4, 5) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL AND registrar_approvals_id IS NOT NULL))";
 		}
@@ -76,9 +77,7 @@ router.post("/allRequestEngTest", authenticateToken, async (req, res) => {
 });
 
 router.post("/addRequestEngTest", authenticateToken, async (req, res) => {
-	console.log("asdasdasd");
-
-	const { student_id, study_group_id, major_name, faculty_name } = req.body;
+	const { student_id, study_group_id, major_id, faculty_name } = req.body;
 	try {
 		const pool = await poolPromise;
 		const infoRes = await pool.request().query(`SELECT TOP 1 term FROM request_exam_info ORDER BY request_exam_info_id DESC`);
@@ -86,7 +85,7 @@ router.post("/addRequestEngTest", authenticateToken, async (req, res) => {
 			.request()
 			.input("student_id", student_id)
 			.input("study_group_id", study_group_id)
-			.input("major_name", major_name)
+			.input("major_id", major_id)
 			.input("faculty_name", faculty_name)
 			.input("term", infoRes.recordset[0].term)
 			.input("request_date", formatThaiBuddhistDate())
@@ -94,7 +93,7 @@ router.post("/addRequestEngTest", authenticateToken, async (req, res) => {
 			INSERT INTO request_eng_test (
 				student_id,
 				study_group_id,
-				major_name,
+				major_id,
 				faculty_name,
 				term,
 				request_date,
@@ -102,7 +101,7 @@ router.post("/addRequestEngTest", authenticateToken, async (req, res) => {
 			) OUTPUT INSERTED.* VALUES (
 				@student_id,
 				@study_group_id,
-				@major_name,
+				@major_id,
 				@faculty_name,
 				@term,
 				@request_date,
@@ -203,7 +202,12 @@ router.post("/payRequestEngTest", authenticateToken, async (req, res) => {
 	const { request_eng_test_id, receipt_vol_No } = req.body;
 	try {
 		const pool = await poolPromise;
-		const result = await pool.request().input("request_eng_test_id", request_eng_test_id).input("receipt_vol_No", receipt_vol_No).input("receipt_pay_date", formatThaiBuddhistDate()).input("status", "5").query(`
+		const result = await pool
+			.request()
+			.input("request_eng_test_id", request_eng_test_id)
+			.input("receipt_vol_No", receipt_vol_No)
+			.input("receipt_pay_date", formatThaiBuddhistDate())
+			.input("status", "5").query(`
 			UPDATE request_eng_test
 			SET receipt_vol_No = @receipt_vol_No ,
 				receipt_pay_date = @receipt_pay_date,

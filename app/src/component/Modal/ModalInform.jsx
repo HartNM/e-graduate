@@ -3,7 +3,7 @@ import { Modal, Center, Text } from "@mantine/core";
 import { IconCircleCheck, IconCircleX } from "@tabler/icons-react";
 import "../../styles/ModalInform.css"; // นำเข้า CSS แยก หรือใช้ style ใน component ก็ได้
 
-const ModalInform = ({ opened, onClose, message, type = "success", timeout = 2000 }) => {
+const ModalInform = ({ opened, onClose, message, type = "success", timeout = 3000 }) => {
 	useEffect(() => {
 		if (opened) {
 			const timer = setTimeout(() => {

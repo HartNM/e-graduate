@@ -38,6 +38,8 @@ const AuthenticationForm = () => {
 			localStorage.setItem("token", data.token);
 			setInformMessage(data.message);
 			setInformtype("success");
+			console.log(data);
+
 			setTimeout(() => {
 				const routeMap = {
 					student: "/student",
@@ -58,7 +60,7 @@ const AuthenticationForm = () => {
 			setOpenInform(true);
 		}
 	};
-	/* const handleLogin = async () => {
+	/* 	const handleLogin = async () => {
 		setLoading(true);
 		try {
 			const response = await fetch("http://localhost:8080/api/login", {
@@ -73,14 +75,16 @@ const AuthenticationForm = () => {
 			localStorage.setItem("token", data.token);
 			setInformMessage(data.message);
 			setInformtype("success");
-			console.log(data);
-
 			setTimeout(() => {
-				if (data.roles.includes("student")) {
-					navigate("/student");
-				} else {
-					navigate("/personnel");
-				}
+				const routeMap = {
+					student: "/student",
+					dean: "/dean",
+					officer_major: "/major-officer",
+					chairpersons: "/chairpersons",
+					officer_registrar: "/registrar-officer",
+					advisor: "/advisor",
+				};
+				navigate(routeMap[data.role] || "/");
 			}, 1000);
 		} catch (error) {
 			console.error("Login error:", error);
