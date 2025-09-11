@@ -2,75 +2,50 @@
 import { Box, Text, ScrollArea, Table, Group, Space, Select } from "@mantine/core";
 import { useState, useEffect } from "react";
 import SignatureForm from "../../component/PDF/SignatureForm";
+import ModalInform from "../../component/Modal/ModalInform";
 
 const ExamEligibleListPrint = () => {
+	const [inform, setInform] = useState({ open: false, type: "", message: "" });
+	const notify = (type, message) => setInform({ open: true, type, message });
+	const close = () => setInform((s) => ({ ...s, open: false }));
+
 	const token = localStorage.getItem("token");
-	const [user, setUser] = useState("");
-	const [reloadTable, setReloadTable] = useState(false);
-	const [group, setGroup] = useState([]);
+
 	const [term, setTerm] = useState([]);
 	const [dateExam, setDateExam] = useState([]);
-
+	const [group, setGroup] = useState([]);
 	useEffect(() => {
-		const fetchProfile = async () => {
+		const fetchTermAndData = async () => {
 			try {
-				const profileRes = await fetch("http://localhost:8080/api/profile", {
-					method: "GET",
-					headers: { Authorization: `Bearer ${token}` },
-				});
-				const profileData = await profileRes.json();
-				setUser(profileData);
-				console.log(profileData);
-			} catch (err) {
-				console.error("Error fetching profile:", err);
-			}
-
-			try {
-				const requestRes = await fetch("http://localhost:8080/api/allRequestExamInfo", {
+				const res = await fetch("http://localhost:8080/api/allRequestExamInfo", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
-				const requestData = await requestRes.json();
-				if (!requestRes.ok) {
-					throw new Error(requestData.message);
-				}
-				const terms = requestData.map((item) => item.term);
-				setTerm(terms);
-				setDateExam(requestData[0].exam_date);
-				setSelectedTerm(terms[0]);
-			} catch (err) {
-				console.error("Error fetch allRequestExamInfo:", err);
+				const data = await res.json();
+				if (!res.ok) throw new Error(data.message);
+				setTerm(data.map((item) => item.term));
+				setSelectedTerm(data[0]?.term);
+				setDateExam(data[0].exam_date);
+			} catch (e) {
+				notify("error", e.message);
+			}
+			try {
+				const res = await fetch("http://localhost:8080/api/allExamEligibleListPrint", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				});
+				const data = await res.json();
+				if (!res.ok) throw new Error(data.message);
+				setGroup(data);
+			} catch (e) {
+				notify("error", e.message);
 			}
 		};
-		fetchProfile();
+		fetchTermAndData();
 	}, []);
-
-	useEffect(() => {
-		if (!user) return;
-		const fetchRequestExamInfoAll = async () => {
-			try {
-				const requestRes = await fetch("http://localhost:8080/api/AllExamResults", {
-					method: "POST",
-					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-					body: JSON.stringify({ id: user.id }),
-				});
-				const requestData = await requestRes.json();
-				if (!requestRes.ok) {
-					throw new Error(requestData.message);
-				}
-				setGroup(requestData);
-				console.log(requestData);
-			} catch (err) {
-				console.error("Error fetch AllExamResults:", err);
-			}
-			setReloadTable(false);
-		};
-		fetchRequestExamInfoAll();
-	}, [user, reloadTable]);
 
 	const [selectedTerm, setSelectedTerm] = useState("");
 	const [selectedType, setSelectedType] = useState("");
-
 	const filteredGroup =
 		selectedType || selectedTerm
 			? Object.fromEntries(
@@ -85,8 +60,10 @@ const ExamEligibleListPrint = () => {
 
 	return (
 		<Box>
+			<ModalInform opened={inform.open} onClose={close} message={inform.message} type={inform.type} />
+
 			<Text size="1.5rem" fw={900} mb="md">
-				พิมพ์ใบรายชื่อผู้มีสิทธิสอบ
+				พิมพ์ใบรายชื่อผู้มีสิทธิสอบประมวลความรู้/สอบวัดคุณสมบัติ
 			</Text>
 			<Group justify="space-between">
 				<Group>
@@ -97,8 +74,8 @@ const ExamEligibleListPrint = () => {
 					<SignatureForm data={filteredGroup} exam_date={dateExam} />
 				</Box>
 			</Group>
-			<Space h="md" />
 
+			<Space h="md" />
 			<ScrollArea type="scroll" offsetScrollbars style={{ borderRadius: "8px", border: "1px solid #e0e0e0" }}>
 				<Table horizontalSpacing="sm" verticalSpacing="sm" highlightOnHover>
 					<Table.Thead>
@@ -109,19 +86,15 @@ const ExamEligibleListPrint = () => {
 						</Table.Tr>
 					</Table.Thead>
 					<Table.Tbody>
-						{
-							/* selectedType && selectedTerm
-							? */ Object.entries(filteredGroup).map(([groupId, students]) =>
-								students.map((student) => (
-									<Table.Tr key={student.id}>
-										<Table.Td>{student.term}</Table.Td>
-										<Table.Td>{student.name}</Table.Td>
-										<Table.Td>{student.request_type}</Table.Td>
-									</Table.Tr>
-								))
-							)
-							/* : null */
-						}
+						{Object.entries(filteredGroup).map(([groupId, students]) =>
+							students.map((student) => (
+								<Table.Tr key={student.id}>
+									<Table.Td>{student.term}</Table.Td>
+									<Table.Td>{student.name}</Table.Td>
+									<Table.Td>{student.request_type}</Table.Td>
+								</Table.Tr>
+							))
+						)}
 					</Table.Tbody>
 				</Table>
 			</ScrollArea>

@@ -67,6 +67,10 @@ export const drawCenterXText = (page, text, y, font = THSarabunNewFont, size = 1
 	}
 };
 
+export const drawLine = (page, x1, y1, x2, y2, w = 1) => {
+	page.drawLine({ start: { x: x1, y: y1 }, end: { x: x2, y: y2 }, thickness: w, color: rgb(0, 0, 0) });
+};
+
 export function formatThaiDate(dateStr) {
 	if (!dateStr) return ["", "", ""];
 	const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
@@ -83,6 +87,25 @@ export function formatThaiDateShort(dateStr) {
 	return [day, thaiMonthShort, year];
 }
 
-export function drawLine(page, x1, y1, x2, y2, w = 1) {
-	page.drawLine({ start: { x: x1, y: y1 }, end: { x: x2, y: y2 }, thickness: w, color: rgb(0, 0, 0) });
-}
+export const drawCenteredText = (page, text, x, y, width, height, font = THSarabunNewFont, size = 14) => {
+	if (!font) throw new Error("Font not loaded. Call setDefaultFont(pdfDoc) first.");
+	if (!text) return;
+
+	const textWidth = font.widthOfTextAtSize(text, size);
+	const textHeight = size; // approximate
+
+	const centerX = x + (width - textWidth) / 2;
+	const centerY = y + (height - textHeight) / 2 + size * 0.3; // ปรับ baseline
+
+	page.drawText(text, { x: centerX, y: centerY, size, font });
+};
+
+export const drawMiddleText = (page, text, x, y, height, font = THSarabunNewFont, size = 14) => {
+	if (!font) throw new Error("Font not loaded. Call setDefaultFont(pdfDoc) first.");
+	if (!text) return;
+
+	const textHeight = size; // approximate
+	const centerY = y + (height - textHeight) / 2 + size * 0.3; // baseline
+
+	page.drawText(text, { x, y: centerY, size, font });
+};

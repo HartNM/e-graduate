@@ -339,7 +339,7 @@ const RequestExam = () => {
 			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} />
 
 			<Text size="1.5rem" fw={900} mb="md">
-				{`คำร้องขอสอบ${user.education_level ? `${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` : ""}`}
+				{`คำร้องขอสอบ${type ? type : `${user.education_level ? `${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` : "ประมวลความรู้/วัดคุณสมบัติ"}`}`}
 			</Text>
 			<Group justify="space-between">
 				<Box>

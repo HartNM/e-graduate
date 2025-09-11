@@ -6,73 +6,34 @@ const axios = require("axios");
 
 router.post("/AddExamResults", authenticateToken, async (req, res) => {
 	const studentIdsObj = req.body;
-
 	try {
 		const pool = await poolPromise;
-
 		for (const [id, examResult] of Object.entries(studentIdsObj)) {
 			const request = pool.request();
-			await request
-				.input("id", id)
-				.input("exam_result", examResult)
-				.query("UPDATE request_exam SET exam_results = @exam_result WHERE student_id = @id AND status = 5");
+			await request.input("id", id).input("exam_result", examResult).query("UPDATE request_exam SET exam_results = @exam_result WHERE student_id = @id AND status = 5");
 		}
-
-		res.status(200).json({ success: true, updated: Object.keys(studentIdsObj).length });
+		res.status(200).json({ message: "บันทึกผลสอบเรียบร้อยแล้ว" });
 	} catch (err) {
 		console.error("AddExamResults:", err);
-		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
+		res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกผลสอบ" });
 	}
 });
 
 router.post("/AllExamResults", authenticateToken, async (req, res) => {
-	console.log(req.body);
-	const { id } = req.body;
+	const { user_id } = req.user;
 	try {
-		const pool = await poolPromise;
-		const request = pool.request().input("id", id);
-		let query = `
+		const { recordset: exams } = await (await poolPromise).request().input("user_id", user_id).query(`
 			SELECT study_group_id, student_id, exam_results, term, request_type
 			FROM request_exam 
-			WHERE major_name = @id AND status = 5
-		`;
-		const result = await request.query(query);
-
-		const output = {};
-		result.recordset.forEach((row) => {
-			if (!output[row.study_group_id]) output[row.study_group_id] = [];
-			output[row.study_group_id].push({
-				student_id: row.student_id,
-				exam_results: row.exam_results,
-				term: row.term,
-				request_type: row.request_type,
-			});
-		});
-
-		const allStudentIds = Object.values(output).flatMap((group) => group.map((s) => s.student_id));
-
-		const promises = allStudentIds.map((studentId) => axios.get(`http://localhost:8080/externalApi/student/${studentId}`));
-		const studentResults = await Promise.all(promises);
-
-		const studentMap = {};
-		studentResults.forEach((res) => {
-			const student = res.data;
-			studentMap[student.student_id] = student;
-		});
-		
-		const finalOutput = {};
-		Object.entries(output).forEach(([groupId, students]) => {
-			finalOutput[groupId] = students.map(({ student_id, exam_results, term, request_type }) => ({
-				id: student_id,
-				name: studentMap[student_id]?.student_name || "",
-				exam_results,
-				term,
-				request_type,
-				major_name: studentMap[student_id]?.major_name,
-			}));
-		});
-
-		res.status(200).json(finalOutput);
+			WHERE major_id IN (SELECT major_id FROM officerMajor_id WHERE user_id = @user_id) AND status = 5
+    	`);
+		const examsWithStudentData = await Promise.all(
+			exams.map(async ({ student_id, ...rest }) => {
+				const { NAME, major_name } = (await axios.get(`http://localhost:8080/externalApi/student/${student_id}`)).data;
+				return { ...rest, student_id, name: NAME, major_name };
+			})
+		);
+		res.status(200).json(examsWithStudentData);
 	} catch (err) {
 		console.error("requestExamInfoAll:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });

@@ -3,7 +3,6 @@ import { Avatar, Group, Text, UnstyledButton } from "@mantine/core";
 import classes from "./UserButton.module.css";
 
 export function UserButton() {
-	
 	const [user, setUser] = useState("");
 
 	const token = localStorage.getItem("token");
@@ -14,12 +13,9 @@ export function UserButton() {
 					method: "GET",
 					headers: { Authorization: `Bearer ${token}` },
 				});
-				if (!res.ok) {
-					throw new Error("Failed to fetch profile");
-				}
+				if (!res.ok) throw new Error("Failed to fetch profile");
 				const data = await res.json();
 				setUser(data.name);
-				console.log(data.name);
 			} catch (err) {
 				console.error("Error fetching profile:", err);
 			}

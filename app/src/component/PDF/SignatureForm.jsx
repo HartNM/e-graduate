@@ -155,7 +155,7 @@ export default function SignatureForm({ data, exam_date }) {
 		const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
 
 		const [year, month, day] = dateStr.split("-").map(Number);
-		const buddhistYear = year + 543;
+		const buddhistYear = year;
 		const thaiMonth = months[month - 1];
 
 		return `${day} ${thaiMonth} ${buddhistYear}`;

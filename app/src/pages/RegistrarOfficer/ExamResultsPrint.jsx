@@ -5,60 +5,46 @@ import PDFExamResultsPrint from "../../component/PDF/PdfExamResultsPrint";
 
 const ExamResultsPrint = () => {
 	const token = localStorage.getItem("token");
-	const [reloadTable, setReloadTable] = useState(false);
 	const [group, setGroup] = useState([]);
 	const [term, setTerm] = useState([]);
+	const [dateExam, setDateExam] = useState([]);
 	const [selectedTerm, setSelectedTerm] = useState("");
 	const [selectedType, setSelectedType] = useState("");
 
+	const parseTerm = (termStr) => {
+		const [semester, year] = termStr.split("/").map(Number);
+		return year * 10 + semester;
+	};
+
 	useEffect(() => {
-		const fetchRequestExamInfoAll = async () => {
+		const fetchTermAndData = async () => {
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/AllExamResultsPrint", {
+				const res = await fetch("http://localhost:8080/api/allRequestExamInfo", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
-				const requestData = await requestRes.json();
-				if (!requestRes.ok) {
-					throw new Error(requestData.message);
-				}
-				setGroup(requestData);
-				console.log(requestData);
-			} catch (err) {
-				console.error("Error fetch AllExamResults:", err);
+				const data = await res.json();
+				if (!res.ok) throw new Error(data.message);
+				setTerm(data.map((item) => item.term));
+				setSelectedTerm(data[0]?.term);
+				setDateExam(data[0].exam_date);
+			} catch (e) {
+				notify("error", e.message);
 			}
-
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/allRequestExamInfo", {
+				const res = await fetch("http://localhost:8080/api/allExamResultsPrint", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
-				const requestData = await requestRes.json();
-				if (!requestRes.ok) {
-					throw new Error(requestData.message);
-				}
-				const terms = requestData.map((item) => item.term);
-				setTerm(terms);
-				setSelectedTerm(terms[0]);
-			} catch (err) {
-				console.error("Error fetch allRequestExamInfo:", err);
+				const data = await res.json();
+				if (!res.ok) throw new Error(data.message);
+				setGroup(data);
+			} catch (e) {
+				notify("error", e.message);
 			}
-			setReloadTable(false);
 		};
-		fetchRequestExamInfoAll();
-	}, [reloadTable]);
-
-	const filteredGroup =
-		selectedType || selectedTerm
-			? Object.fromEntries(
-					Object.entries(group).map(([groupId, students]) => [
-						groupId,
-						students.filter((student) => {
-							return (!selectedTerm || student.term === selectedTerm) && (!selectedType || student.request_type === selectedType);
-						}),
-					])
-			  )
-			: group;
+		fetchTermAndData();
+	}, []);
 
 	return (
 		<Box>
@@ -83,29 +69,28 @@ const ExamResultsPrint = () => {
 						</Table.Tr>
 					</Table.Thead>
 					<Table.Tbody>
-						{Object.entries(filteredGroup).map(([groupId, students]) => {
-							const termGroups = [...new Set(students.map((s) => s.term))].sort((a, b) => {
-								const [termA, yearA] = a.split("/").map(Number);
-								const [termB, yearB] = b.split("/").map(Number);
-
-								if (yearA !== yearB) return yearB - yearA; // ปีใหม่สุดก่อน
-								return termB - termA; // เทอมมากไปน้อย
-							});
-
-							return termGroups.map((term) => {
-								const reqType = students.find((s) => s.term === term)?.request_type;
-								return (
-									<Table.Tr key={`${groupId}-${term}`}>
-										<Table.Td>{groupId}</Table.Td>
-										<Table.Td>{term}</Table.Td>
-										<Table.Td>{reqType}</Table.Td>
-										<Table.Td>
-											<PDFExamResultsPrint data={{ [groupId]: students.filter((s) => s.term === term) }} />
-										</Table.Td>
-									</Table.Tr>
-								);
-							});
-						})}
+						{Object.entries(
+							group
+								.filter((item) => (!selectedTerm || item.term === selectedTerm) && (!selectedType || item.request_type === selectedType))
+								.sort((a, b) => parseTerm(b.term) - parseTerm(a.term))
+								.reduce((acc, item) => {
+									const key = `${item.study_group_id}-${item.term}`;
+									if (!acc[key]) acc[key] = [];
+									acc[key].push(item);
+									return acc;
+								}, {})
+						).map(([key, students]) => (
+							<Table.Tr key={key}>
+								<Table.Td>{students[0].study_group_id}</Table.Td>
+								<Table.Td>{students[0].term}</Table.Td>
+								<Table.Td>{[...new Set(students.map((s) => s.request_type))].join(", ")}</Table.Td>
+								<Table.Td>
+									<Button size="xs" onClick={() => PDFExamResultsPrint(students, dateExam)}>
+										พิมพ์
+									</Button>
+								</Table.Td>
+							</Table.Tr>
+						))}
 					</Table.Tbody>
 				</Table>
 			</ScrollArea>

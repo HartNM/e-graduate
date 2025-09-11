@@ -13,6 +13,9 @@ app.use("/api", loginRoutes);
 const profileRoutes = require("./routes/profile");
 app.use("/api", profileRoutes);
 
+const majors = require("./routes/majors");
+app.use("/api", majors);
+
 const assignMajorOfficer = require("./routes/assignMajorOfficer");
 app.use("/api", assignMajorOfficer);
 const assignChairpersons = require("./routes/assignChairpersons");
@@ -23,9 +26,12 @@ const ExamResults = require("./routes/ExamResults");
 app.use("/api", ExamResults);
 const ExamResultsPrint = require("./routes/ExamResultsPrint");
 app.use("/api", ExamResultsPrint);
+const ExamEligibleListPrint = require("./routes/ExamEligibleListPrint");
+app.use("/api", ExamEligibleListPrint);
 
 const requestExamInfoRouters = require("./routes/requestExamInfo");
 app.use("/api", requestExamInfoRouters);
+
 const RequestExam = require("./routes/RequestExam");
 app.use("/api", RequestExam);
 const RequestExamCancel = require("./routes/RequestExamCancel");

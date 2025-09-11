@@ -3,8 +3,8 @@ import { IconFileText, IconEdit, IconBooks, IconUserCheck } from "@tabler/icons-
 import UserLayout from "../../layout/userLayout.jsx";
 
 const menu = [
-	{ label: "พิมพ์ใบรายชื่อผู้มีสิทธิสอบ", icon: IconFileText, links: "/major-officer/ExamEligibleListPrint" },
-	{ label: "กรอกผลการสอบ", icon: IconEdit, links: "/major-officer/examResults" },
+	{ label: "พิมพ์ใบรายชื่อผู้มีสิทธิสอบประมวลความรู้/สอบวัดคุณสมบัติ", icon: IconFileText, links: "/major-officer/ExamEligibleListPrint" },
+	{ label: "กรอกผลการสอบประมวลความรู้/สอบวัดคุณสมบัติ", icon: IconEdit, links: "/major-officer/examResults" },
 	{ label: "กรอกวิชาที่ต้องลงทะเบียนเรียน", icon: IconBooks, links: "/major-officer/CourseRegistration" },
 	{ label: "กรอกข้อมูลประธานกรรมการบัณฑิตศึกษาประจำสาขาวิชา", icon: IconUserCheck, links: "/major-officer/AssignChairpersons" },
 ];

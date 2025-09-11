@@ -3,18 +3,9 @@ const router = express.Router();
 const authenticateToken = require("../middleware/authenticateToken");
 const { poolPromise } = require("../db");
 
-const toChristianYear = (date) => {
+const formatDate = (date) => {
 	if (!date) return null;
-	const d = new Date(date);
-	d.setFullYear(d.getFullYear() - 543); // พ.ศ. → ค.ศ.
-	return d.toISOString().split("T")[0];
-};
-
-const toBuddhistYear = (date) => {
-	if (!date) return null;
-	const d = new Date(date);
-	d.setFullYear(d.getFullYear() + 543); // ค.ศ. → พ.ศ.
-	return d.toISOString().split("T")[0];
+	return new Date(date).toISOString().split("T")[0];
 };
 
 router.post("/allRequestExamInfo", authenticateToken, async (req, res) => {
@@ -28,18 +19,18 @@ router.post("/allRequestExamInfo", authenticateToken, async (req, res) => {
 			request.input("term", term);
 		}
 		query += " ORDER BY request_exam_info_id DESC";
-
 		const result = await request.query(query);
 
-		// แปลง พ.ศ. → ค.ศ. ก่อนส่งกลับ
-		const formattedData = result.recordset.map((item) => ({
-			...item,
-			open_date: toChristianYear(item.open_date),
-			close_date: toChristianYear(item.close_date),
-			exam_date: toChristianYear(item.exam_date),
-		}));
+		const data = result.recordset.map((row) => {
+			return {
+				...row,
+				open_date: formatDate(row.open_date),
+				close_date: formatDate(row.close_date),
+				exam_date: formatDate(row.exam_date),
+			};
+		});
 
-		res.status(200).json(formattedData);
+		res.status(200).json(data);
 	} catch (err) {
 		console.error("requestExamInfoAll:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลช่วงเวลาการยื่นคำร้อง" });
@@ -48,35 +39,34 @@ router.post("/allRequestExamInfo", authenticateToken, async (req, res) => {
 
 router.post("/addRequestExamInfo", authenticateToken, async (req, res) => {
 	const { open_date, close_date, exam_date, term } = req.body;
-	const { reference_id } = req.user;
+	const { user_id } = req.user;
 	try {
 		const pool = await poolPromise;
 		await pool
 			.request()
 			.input("term", term)
-			.input("open_date", toBuddhistYear(open_date)) // ค.ศ. → พ.ศ.
-			.input("close_date", toBuddhistYear(close_date))
-			.input("exam_date", toBuddhistYear(exam_date))
-			.input("officer_registrar_id", reference_id)
-			.input("info_exam_date", toBuddhistYear(new Date())).query(`
-        INSERT INTO request_exam_info (
-          term,
-          open_date, 
-          close_date, 
-          exam_date, 
-          officer_registrar_id, 
-          info_exam_date 
-        )
-        VALUES ( 
-          @term,
-          @open_date, 
-          @close_date, 
-          @exam_date, 
-          @officer_registrar_id, 
-          @info_exam_date 
-        )
-      `);
-
+			.input("open_date", open_date) // ค.ศ. → พ.ศ.
+			.input("close_date", close_date)
+			.input("exam_date", exam_date)
+			.input("officer_registrar_id", user_id)
+			.input("info_exam_date", new Date()).query(`
+				INSERT INTO request_exam_info (
+				term,
+				open_date, 
+				close_date, 
+				exam_date, 
+				officer_registrar_id, 
+				info_exam_date 
+				)
+				VALUES ( 
+				@term,
+				@open_date, 
+				@close_date, 
+				@exam_date, 
+				@officer_registrar_id, 
+				@info_exam_date 
+				)
+			`);
 		res.status(200).json({ message: "เพิ่มข้อมูลช่วงเวลาการยื่นคำร้องสอบเรียบร้อยแล้ว" });
 	} catch (err) {
 		console.error("addRequestExamInfo:", err);

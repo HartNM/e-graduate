@@ -27,7 +27,7 @@ router.post("/Course", authenticateToken, async (req, res) => {
 });
 
 router.post("/addCourseRegistration", authenticateToken, async (req, res) => {
-	const { course_id, major_name, study_group_id } = req.body;
+	const { course_id, major_id, study_group_id } = req.body;
 	try {
 		const pool = await poolPromise;
 		const check = await pool.request().input("study_group_id", study_group_id).query(`SELECT COUNT(*) as count FROM course_registration WHERE study_group_id = @study_group_id`);
@@ -79,10 +79,10 @@ router.post("/deleteCourseRegistration", authenticateToken, async (req, res) => 
 });
 
 router.post("/allMajorCourseRegistration", authenticateToken, async (req, res) => {
-	const { id } = req.body;
+	const { user_id } = req.user;
 	try {
 		const pool = await poolPromise;
-		const result = await pool.request().input("id", id).query(`SELECT * FROM course_registration WHERE major_name = @id`);
+		const result = await pool.request().input("user_id", user_id).query(`SELECT * FROM course_registration WHERE major_id IN (SELECT major_id FROM officerMajor_id WHERE user_id = @user_id)`);
 
 		const data = result.recordset;
 		if (data.length === 0) {

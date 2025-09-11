@@ -10,8 +10,8 @@ const CourseRegistration = () => {
 	const close = () => setInform((s) => ({ ...s, open: false }));
 	// System
 	const token = localStorage.getItem("token");
-	const [user, setUser] = useState("");
 	const [tableData, setTableData] = useState([]);
+	const [major_name, setMajor_name] = useState("");
 	const [reloadTable, setReloadTable] = useState(false);
 	const [modalType, setModalType] = useState("");
 	const [openCoures, setOpenCoures] = useState(false);
@@ -29,6 +29,7 @@ const CourseRegistration = () => {
 
 	const Form = useForm({
 		initialValues: {
+			major_id: "",
 			major_name: "",
 			study_group_id: "",
 			course_id: [],
@@ -40,54 +41,38 @@ const CourseRegistration = () => {
 	});
 
 	useEffect(() => {
-		const fetchProfile = async () => {
-			try {
-				const req = await fetch("http://localhost:8080/api/profile", {
-					method: "GET",
-					headers: { Authorization: `Bearer ${token}` },
-				});
-				const res = await req.json();
-				if (!req.ok) {
-					throw new Error(res.message);
-				}
-				setUser(res);
-				console.log(res);
-			} catch (e) {
-				notify("error", e.message);
-				console.error("Error fetching profile:", e);
-			}
-		};
-		fetchProfile();
-	}, []);
-
-	useEffect(() => {
-		if (!user) return;
-		const fetchProfileAndData = async () => {
+		const fetchMajorNameAndData = async () => {
 			try {
 				const req = await fetch("http://localhost:8080/api/allMajorCourseRegistration", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-					body: JSON.stringify({ id: user.id }),
 				});
 				const res = await req.json();
-				if (!req.ok) {
-					throw new Error(res.message);
-				}
+				if (!req.ok) throw new Error(res.message);
 				setTableData(res);
+			} catch (e) {
+				notify("error", e.message);
+			}
+			try {
+				const req = await fetch("http://localhost:8080/api/getMajor_name", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				});
+				const res = await req.json();
+				if (!req.ok) throw new Error(res.message);
+				setMajor_name(res);
 				console.log(res);
 			} catch (e) {
 				notify("error", e.message);
-				console.error("Error fetching AllCourseRegistration:", e);
 			}
 			setReloadTable(false);
 		};
-
-		fetchProfileAndData();
-	}, [user, reloadTable]);
+		fetchMajorNameAndData();
+	}, [reloadTable]);
 
 	const handleOpenAdd = () => {
 		Form.reset();
-		Form.setValues({ major_name: user.id });
+		Form.setValues({ major_name: "fetch" });
 		setModalType("add");
 		setOpenCoures(true);
 	};
@@ -152,7 +137,7 @@ const CourseRegistration = () => {
 			<Modal opened={openCoures} onClose={() => setOpenCoures(false)} title="กรอกข้อมูลรายวิชาประจำสาขา" centered closeOnClickOutside={false}>
 				<Box>
 					<form onSubmit={Form.onSubmit(handleSubmit)}>
-						<Text>สาขา{user.id}</Text>
+						<Text>สาขา{"fetch"}</Text>
 						<NumberInput label="หมู่เรียน" hideControls disabled={modalType === "add" ? false : true} {...Form.getInputProps("study_group_id")} />
 						<MultiSelect label="รหัสวิชาที่ต้องเรียน" searchable hidePickedOptions data={coures} disabled={modalType === "delete" ? true : false} {...Form.getInputProps("course_id")} />
 						<Space h="md" />

@@ -4,52 +4,21 @@ const authenticateToken = require("../middleware/authenticateToken");
 const { poolPromise } = require("../db");
 const axios = require("axios");
 
-router.post("/AllExamResultsPrint", authenticateToken, async (req, res) => {
+router.post("/allExamResultsPrint", authenticateToken, async (req, res) => {
 	try {
-		const pool = await poolPromise;
-		const request = pool.request();
-		let query = `
+		const { recordset: exams } = await (await poolPromise).request().query(`
 			SELECT study_group_id, student_id, exam_results, term, request_type
 			FROM request_exam 
 			WHERE status = 5
-		`;
-		const result = await request.query(query);
-
-		const output = {};
-		result.recordset.forEach((row) => {
-			if (!output[row.study_group_id]) output[row.study_group_id] = [];
-			output[row.study_group_id].push({
-				student_id: row.student_id,
-				exam_results: row.exam_results,
-				term: row.term,
-				request_type: row.request_type,
-			});
-		});
-
-		const allStudentIds = Object.values(output).flatMap((group) => group.map((s) => s.student_id));
-
-		const promises = allStudentIds.map((studentId) => axios.get(`http://localhost:8080/externalApi/student/${studentId}`));
-		const studentResults = await Promise.all(promises);
-
-		const studentMap = {};
-		studentResults.forEach((res) => {
-			const student = res.data;
-			studentMap[student.student_id] = student;
-		});
-
-		const finalOutput = {};
-		Object.entries(output).forEach(([groupId, students]) => {
-			finalOutput[groupId] = students.map(({ student_id, exam_results, term, request_type }) => ({
-				id: student_id,
-				name: studentMap[student_id]?.student_name || "",
-				exam_results,
-				term,
-				request_type,
-				major_name: studentMap[student_id]?.major_name,
-			}));
-		});
-
-		res.status(200).json(finalOutput);
+		`);
+		const examsWithStudentData = await Promise.all(
+			exams.map(async ({ student_id, ...rest }) => {
+				const { NAME, major_name } = (await axios.get(`http://localhost:8080/externalApi/student/${student_id}`)).data;
+				return { ...rest, student_id, name: NAME, major_name };
+			})
+		);
+		console.log(examsWithStudentData);
+		res.status(200).json(examsWithStudentData);
 	} catch (err) {
 		console.error("requestExamInfoAll:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
