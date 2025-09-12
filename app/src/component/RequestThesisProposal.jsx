@@ -1,14 +1,19 @@
-//คำร้องขอลงทะเบียนสอบโครงร่าง
+//คำร้องขอสอบโครงร่าง
 import { useState, useEffect } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
 import { useParams } from "react-router-dom";
-import ModalAdd from "../component/Modal/ModalAdd";
+import ModalAddRequestThesisProposal from "../component/Modal/ModalAddRequestThesisProposal";
 import ModalApprove from "../component/Modal/ModalApprove";
 import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
-import Pdfg01 from "../component/PDF/Pdfg03";
+import Pdfg01 from "./PDF/Pdfg03-04";
+import { useForm } from "@mantine/form";
 
 const RequestThesisProposal = () => {
+	const token = localStorage.getItem("token");
+	const payloadBase64 = token.split(".")[1];
+	const payload = JSON.parse(atob(payloadBase64));
+	const role = payload.role;
 	// Modal Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
@@ -19,7 +24,6 @@ const RequestThesisProposal = () => {
 	const [openApproveState, setOpenApproveState] = useState(false);
 	const [openPay, setOpenPay] = useState(false);
 	// Form states
-	const [formData, setFormData] = useState({});
 	const [selectedRow, setSelectedRow] = useState(null);
 	const [selected, setSelected] = useState("approve");
 	const [comment, setComment] = useState("");
@@ -29,10 +33,29 @@ const RequestThesisProposal = () => {
 	//student //advisor //chairpersons //officer_registrar
 	const [request, setRequest] = useState([]);
 	const [search, setSearch] = useState("");
-	const token = localStorage.getItem("token");
 	const { type } = useParams();
 	const [selectedType, setSelectedType] = useState("");
 
+	const form = useForm({
+		initialValues: {
+			student_name: "",
+			student_id: "",
+			education_level: "",
+			program: "",
+			major_name: "",
+			faculty_name: "",
+			request_type: "",
+			thesis_advisor_id: "",
+			thesis_exam_date: null,
+		},
+		validate: {
+			request_type: (value) => (value === "" ? "กรุณาเลือกชนิดโครงร่างงานวิจัย" : null),
+			thesis_advisor_id: (value) => (value === "" ? "กรุณาเลือกอาจารย์ที่ปรึกษางานวิจัย" : null),
+			thesis_exam_date: (v) => {
+				if (!v) return "กรุณาระบุวันที่สอบ";
+			},
+		},
+	});
 	useEffect(() => {
 		const fetchProfile = async () => {
 			try {
@@ -41,18 +64,16 @@ const RequestThesisProposal = () => {
 					headers: { Authorization: `Bearer ${token}` },
 				});
 				const requestData = await requestRes.json();
-				if (!requestRes.ok) {
-					throw new Error(requestData.message);
-				}
+				if (!requestRes.ok) throw new Error(requestData.message);
 				setUser(requestData);
 				console.log(requestData);
 			} catch (e) {
-				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+				notify("error", e.message);
 				console.error("Error fetching profile:", e);
 			}
 		};
 		fetchProfile();
-	}, [token]);
+	}, []);
 
 	useEffect(() => {
 		setSelectedType(type);
@@ -67,19 +88,13 @@ const RequestThesisProposal = () => {
 				const requestRes = await fetch("http://localhost:8080/api/allRequestThesisProposal", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-					body: JSON.stringify({ role: user.role, id: user.id }),
 				});
 				const requestData = await requestRes.json();
-				if (!requestRes.ok) {
-					throw new Error(requestData.message);
-				}
-
+				if (!requestRes.ok) throw new Error(requestData.message);
 				setRequest(requestData);
-				console.log(requestData);
 				setLatestRequest(requestData[0]);
-				console.log(requestData[0]);
 			} catch (e) {
-				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+				notify("error", e.message);
 				console.error("Error fetching requestExamAll:", e);
 			}
 		};
@@ -93,13 +108,12 @@ const RequestThesisProposal = () => {
 				headers: { Authorization: `Bearer ${token}` },
 			});
 			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
-			setFormData(requestData);
+			if (!requestRes.ok) throw new Error(requestData.message);
+			form.setValues({ request_type: "", thesis_advisor_id: "", thesis_exam_date: null });
+			form.setValues(requestData);
 			setOpenAdd(true);
 		} catch (e) {
-			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+			notify("error", e.message);
 			console.error("Error fetching studentInfo:", e);
 		}
 	};
@@ -109,18 +123,16 @@ const RequestThesisProposal = () => {
 			const requestRes = await fetch("http://localhost:8080/api/addRequestThesisProposal", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify(formData),
+				body: JSON.stringify(form.values),
 			});
 			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
-			notify("success", requestData.message || "สำเร็จ");
+			if (!requestRes.ok) throw new Error(requestData.message);
+			notify("success", requestData.message);
 			setOpenAdd(false);
-			setRequest((prev) => [...prev, { ...requestData.data, ...formData }]);
-			setLatestRequest({ ...requestData.data, ...formData });
+			setRequest((prev) => [...prev, { ...requestData.data, ...form.values }]);
+			setLatestRequest({ ...requestData.data, ...form.values });
 		} catch (e) {
-			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+			notify("error", e.message);
 			console.error("Error fetching addRequestExam:", e);
 		}
 	};
@@ -134,7 +146,7 @@ const RequestThesisProposal = () => {
 			const requestRes = await fetch("http://localhost:8080/api/approveRequestThesisProposal", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ request_thesis_proposal_id: item.request_thesis_proposal_id, name: user.name, role: user.role, selected: selected, comment: comment }),
+				body: JSON.stringify({ request_thesis_proposal_id: item.request_thesis_proposal_id, name: user.name, role: role, selected: selected, comment: comment }),
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) {
@@ -146,7 +158,7 @@ const RequestThesisProposal = () => {
 			setOpenApprove(false);
 			setRequest((prev) => prev.map((row) => (row.request_thesis_proposal_id === item.request_thesis_proposal_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
-			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+			notify("error", e.message);
 			console.error("Error fetching approveRequestExam:", e);
 		}
 	};
@@ -166,7 +178,7 @@ const RequestThesisProposal = () => {
 			setOpenPay(false);
 			setRequest((prev) => prev.map((row) => (row.request_thesis_proposal_id === item.request_thesis_proposal_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
-			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+			notify("error", e.message);
 			console.error("Error fetching payRequestExam:", e);
 		}
 	};
@@ -180,11 +192,11 @@ const RequestThesisProposal = () => {
 		});
 	}
 
-	const sortedData = sortRequests(request, user.role);
+	const sortedData = sortRequests(request, role);
 
 	const filteredData = sortedData.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
-		const matchesType = selectedType ? p.request_type === `ขอลงทะเบียนสอบโครงร่าง${selectedType}` : true;
+		const matchesType = selectedType ? p.request_type === `ขอสอบโครงร่าง${selectedType}` : true;
 		return matchesSearch && matchesType;
 	});
 
@@ -226,7 +238,7 @@ const RequestThesisProposal = () => {
 			</Table.Td>
 			<Table.Td style={{ maxWidth: "150px" }}>
 				<Group>
-					{user.role === "student" && (
+					{role === "student" && (
 						<>
 							{item.status === "4" && (
 								<Button
@@ -247,8 +259,8 @@ const RequestThesisProposal = () => {
 							)}
 						</>
 					)}
-					<Pdfg01 data={item} showType={item.status == 0 ? undefined : (user.role === "advisor" && item.status <= 1) || (user.role === "chairpersons" && item.status <= 2) || (user.role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
-					{((user.role === "advisor" && item.status == 1) || (user.role === "chairpersons" && item.status == 2) || (user.role === "officer_registrar" && item.status == 3)) && (
+					<Pdfg01 data={item} showType={item.status == 0 ? undefined : (role === "advisor" && item.status <= 1) || (role === "chairpersons" && item.status <= 2) || (role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
+					{((role === "advisor" && item.status == 1) || (role === "chairpersons" && item.status == 2) || (role === "officer_registrar" && item.status == 3)) && (
 						<Button
 							size="xs"
 							color="green"
@@ -258,7 +270,7 @@ const RequestThesisProposal = () => {
 								setOpenApprove(true);
 							}}
 						>
-							{user.role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
+							{role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
 						</Button>
 					)}
 				</Group>
@@ -286,24 +298,24 @@ const RequestThesisProposal = () => {
 				error={error}
 				openApproveState={openApproveState}
 				handleApprove={handleApprove}
-				role={user.role}
-				title={`${user.role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}คำร้องขอลงทะเบียนสอบโครงร่าง${user.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`}
+				role={role}
+				title={`${role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}คำร้องขอสอบโครงร่าง${user.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`}
 			/>
-			<ModalAdd opened={openAdd} onClose={() => setOpenAdd(false)} formData={formData} handleAdd={handleAdd} title={`เพิ่มคำร้องขอลงทะเบียนสอบโครงร่าง${user.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`} />
+			<ModalAddRequestThesisProposal opened={openAdd} onClose={() => setOpenAdd(false)} form={form} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`} />
 			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} />
 
 			<Text size="1.5rem" fw={900} mb="md">
-				{`คำร้องขอลงทะเบียนสอบโครงร่าง${user.education_level ? `${user.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}` : "วิทยานิพนธ์/การค้นคว้าอิสระ"}`}
+				คำร้องขอสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ
 			</Text>
 			<Group justify="space-between">
 				<Box>
 					<Flex align="flex-end" gap="sm">
-						{user.role !== "student" && <TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
-						{user.role === "chairpersons" && <Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
+						{role !== "student" && <TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
+						{role === "chairpersons" && <Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
 					</Flex>
 				</Box>
 				<Box>
-					{user.role === "student" && (
+					{role === "student" && (
 						<Button onClick={() => handleOpenAdd()} disabled={latestRequest ? latestRequest.status !== "0" && latestRequest.status !== "6" && latestRequest.exam_results !== false : false}>
 							เพิ่มคำร้อง
 						</Button>

@@ -64,7 +64,7 @@ async function fillPdf(data) {
 		{ text: data?.faculty_name, x: 100, y: y + 2 },
 		{ text: `ในภาคเรียนที่ .........................ในวันที่.....................................................`, x: 60, y: (y -= space) },
 		{ text: data?.term, x: 130, y: y + 2 },
-		{ text: `${exam_date_day} ${exam_date_month} ${exam_date_year + 543}`, x: 210, y: y + 2 },
+		{ text: `${exam_date_day} ${exam_date_month} ${exam_date_year }`, x: 210, y: y + 2 },
 		{ text: `จึงเรียนมาเพื่อโปรดพิจารณา`, x: 100, y: (y -= space) },
 		{ text: `ลงชื่อ...........................................................................`, x: 310, y: (y -= space * 2) },
 		{ text: data?.student_name, x: 370, y: y + 2 },

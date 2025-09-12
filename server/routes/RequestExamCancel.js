@@ -10,23 +10,24 @@ const timezone = require("dayjs/plugin/timezone");
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-function formatThaiBuddhistDate() {
-	const d = dayjs().tz("Asia/Bangkok");
+// คืนค่าแบบ YYYY-MM-DD (พ.ศ.) สำหรับส่ง response
+const formatDateThaiBE = (date) => {
+	if (!date) return null;
+	const d = dayjs(date).tz("Asia/Bangkok");
 	const buddhistYear = d.year() + 543;
-	return `${buddhistYear}-${d.month() + 1}-${d.date()} ${d.format("HH:mm:ss")}`;
-}
+	return `${buddhistYear}-${(d.month() + 1).toString().padStart(2, "0")}-${d.date().toString().padStart(2, "0")}`;
+};
 
+// คืนค่าแบบ YYYY-MM-DD HH:mm:ss (พ.ศ.) สำหรับบันทึก DB
+function formatDateForDB(date = new Date()) {
+	return dayjs(date).tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss");
+}
 const statusMap = {
 	0: "อนุมัติ",
 	5: "ไม่อนุมัติ",
 	7: "รออาจารย์ที่ปรึกษาอนุญาต",
 	8: "รอประธานกรรมการปะจำสาขาวิชาอนุญาต",
 	9: "รอคณบดีอนุญาต",
-};
-
-const formatDate = (date) => {
-	if (!date) return null;
-	return new Date(date).toISOString().split("T")[0];
 };
 
 router.post("/AllRequestExamCancel", authenticateToken, async (req, res) => {
@@ -84,10 +85,10 @@ router.post("/AllRequestExamCancel", authenticateToken, async (req, res) => {
 				return {
 					...item,
 					...studentInfo,
-					request_date: formatDate(item.request_date) || null,
-					advisor_cancel_date: formatDate(item.advisor_cancel_date) || null,
-					chairpersons_cancel_date: formatDate(item.chairpersons_cancel_date) || null,
-					dean_cancel_date: formatDate(item.dean_cancel_date) || null,
+					request_date: formatDateThaiBE(item.request_date) || null,
+					advisor_cancel_date: formatDateThaiBE(item.advisor_cancel_date) || null,
+					chairpersons_cancel_date: formatDateThaiBE(item.chairpersons_cancel_date) || null,
+					dean_cancel_date: formatDateThaiBE(item.dean_cancel_date) || null,
 					status_text: statusMap[item.status?.toString()] || null,
 				};
 			})
@@ -110,13 +111,13 @@ router.post("/AddRequestExamCancel", authenticateToken, async (req, res) => {
 		if (result.recordset.length === 0) {
 			return res.status(404).json({ message: "ไม่พบคำร้องสอบของนักศึกษา" });
 		}
-
 		const request_exam_id = result.recordset[0].request_exam_id;
 		const transaction = new sql.Transaction(pool);
 		await transaction.begin();
 		try {
 			const request = new sql.Request(transaction);
-			await request.input("request_exam_id", request_exam_id).input("status", "7").input("reason", reason).input("request_type", request_type).input("request_date", formatThaiBuddhistDate()).query(`
+			await request.input("request_exam_id", request_exam_id).input("status", "7").input("reason", reason).input("request_type", request_type).input("request_date", formatDateForDB())
+				.query(`
 				INSERT INTO request_exam_cancel (
 					request_exam_id, 
 					reason, 
@@ -205,7 +206,7 @@ router.post("/ApproveRequestExamCancel", authenticateToken, async (req, res) => 
 				.input("request_cancel_exam_id", request_cancel_exam_id)
 				.input("user_id", name)
 				.input("approve", selected === "approve" ? 1 : 0)
-				.input("date", formatThaiBuddhistDate())
+				.input("date", formatDateForDB())
 				.input("statusCancel", statusCancel)
 				.input("comment", comment_cancel).query(`
 				UPDATE request_exam_cancel
@@ -224,11 +225,11 @@ router.post("/ApproveRequestExamCancel", authenticateToken, async (req, res) => 
 					...request_exam.recordset[0],
 					...request_exam_cancel.recordset[0],
 					status_text: statusMap[request_exam_cancel.recordset[0].status?.toString()] || null,
-					request_date: formatDate(request_exam_cancel.recordset[0].request_date) || null,
-					request_cancel_exam_date: formatDate(request_exam_cancel.recordset[0].request_cancel_exam_date) || null,
-					advisor_cancel_date: formatDate(request_exam_cancel.recordset[0].advisor_cancel_date) || null,
-					chairpersons_cancel_date: formatDate(request_exam_cancel.recordset[0].chairpersons_cancel_date) || null,
-					dean_cancel_date: formatDate(request_exam_cancel.recordset[0].dean_cancel_date) || null,
+					request_date: formatDateThaiBE(request_exam_cancel.recordset[0].request_date) || null,
+					request_cancel_exam_date: formatDateThaiBE(request_exam_cancel.recordset[0].request_cancel_exam_date) || null,
+					advisor_cancel_date: formatDateThaiBE(request_exam_cancel.recordset[0].advisor_cancel_date) || null,
+					chairpersons_cancel_date: formatDateThaiBE(request_exam_cancel.recordset[0].chairpersons_cancel_date) || null,
+					dean_cancel_date: formatDateThaiBE(request_exam_cancel.recordset[0].dean_cancel_date) || null,
 				},
 			});
 		} catch (err) {

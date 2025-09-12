@@ -6,6 +6,7 @@ import ModalAdd from "../component/Modal/ModalAdd";
 import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
 import Pdfg02 from "../component/PDF/Pdfg02";
+import { useForm } from "@mantine/form";
 
 const RequestEngTest = () => {
 	const token = localStorage.getItem("token");
@@ -22,7 +23,6 @@ const RequestEngTest = () => {
 	const [openApproveState, setOpenApproveState] = useState(false);
 	const [openPay, setOpenPay] = useState(false);
 	// Form states
-	const [formData, setFormData] = useState({});
 	const [selectedRow, setSelectedRow] = useState(null);
 	const [selected, setSelected] = useState("approve");
 	const [comment, setComment] = useState("");
@@ -33,6 +33,12 @@ const RequestEngTest = () => {
 	const [request, setRequest] = useState([]);
 	const [search, setSearch] = useState("");
 	const [latestRequest, setLatestRequest] = useState(null);
+
+	const form = useForm({
+		initialValues: {},
+		validate: {},
+	});
+
 	useEffect(() => {
 		const fetchProfile = async () => {
 			try {
@@ -81,7 +87,7 @@ const RequestEngTest = () => {
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) throw new Error(requestData.message);
-			setFormData(requestData);
+			form.setValues(requestData);
 			setOpenAdd(true);
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
@@ -94,7 +100,7 @@ const RequestEngTest = () => {
 			const requestRes = await fetch("http://localhost:8080/api/addRequestEngTest", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify(formData),
+				body: JSON.stringify(form.values),
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) throw new Error(requestData.message);
@@ -260,7 +266,7 @@ const RequestEngTest = () => {
 				role={role}
 				title={"ลงความเห็นคำร้องขอทดสอบความรู้ทางภาษาอังกฤษ"}
 			/>
-			<ModalAdd opened={openAdd} onClose={() => setOpenAdd(false)} formData={formData} handleAdd={handleAdd} title={"เพิ่มคำร้องขอทดสอบความรู้ทางภาษาอังกฤษ"} />
+			<ModalAdd opened={openAdd} onClose={() => setOpenAdd(false)} form={form.values} handleAdd={handleAdd} title={"เพิ่มคำร้องขอทดสอบความรู้ทางภาษาอังกฤษ"} />
 			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} />
 
 			<Text size="1.5rem" fw={900} mb="md">

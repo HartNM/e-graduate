@@ -263,7 +263,7 @@ const RequestGraduation = () => {
 
 	const filteredData = sortedData.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
-		const matchesType = selectedType ? p.request_type === `ขอลงทะเบียนสอบโครงร่าง${selectedType}` : true;
+		const matchesType = selectedType ? p.request_type === `ขอสอบโครงร่าง${selectedType}` : true;
 		return matchesSearch && matchesType;
 	});
 
@@ -366,7 +366,7 @@ const RequestGraduation = () => {
 				openApproveState={openApproveState}
 				handleApprove={handleApprove}
 				role={user.role}
-				title={`${user.role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}คำร้องขอลงทะเบียนสอบโครงร่าง${user.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`}
+				title={`${user.role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}คำร้องขอสอบโครงร่าง${user.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`}
 			/>
 			<ModalAddRequestGraduation opened={openAdd} onClose={() => setOpenAdd(false)} AddForm={AddForm} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสำเร็จการศึกษาระดับบัณฑิตศึกษา`} />
 			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} />

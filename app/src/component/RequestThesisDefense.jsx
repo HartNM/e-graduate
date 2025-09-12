@@ -1,14 +1,19 @@
-//คำร้องขอลงทะเบียนสอบ
+//คำร้องขอสอบ
 import { useState, useEffect } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
 import { useParams } from "react-router-dom";
-import ModalAdd from "../component/Modal/ModalAdd";
+import ModalAddRequestThesisDefense from "../component/Modal/ModalAddRequestThesisDefense";
 import ModalApprove from "../component/Modal/ModalApprove";
 import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
-import Pdfg01 from "../component/PDF/Pdfg04.jsx";
+import Pdfg01 from "../component/PDF/Pdfg03-04.jsx";
+import { useForm } from "@mantine/form";
 
 const RequestThesisDefense = () => {
+	const token = localStorage.getItem("token");
+	const payloadBase64 = token.split(".")[1];
+	const payload = JSON.parse(atob(payloadBase64));
+	const role = payload.role;
 	// Modal Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
@@ -29,9 +34,25 @@ const RequestThesisDefense = () => {
 	//student //advisor //chairpersons //officer_registrar
 	const [request, setRequest] = useState([]);
 	const [search, setSearch] = useState("");
-	const token = localStorage.getItem("token");
 	const { type } = useParams();
 	const [selectedType, setSelectedType] = useState("");
+
+	const form = useForm({
+		initialValues: {
+			student_name: "",
+			student_id: "",
+			education_level: "",
+			program: "",
+			major_name: "",
+			faculty_name: "",
+			thesis_exam_date: null,
+		},
+		validate: {
+			thesis_exam_date: (v) => {
+				if (!v) return "กรุณาระบุวันที่สอบ";
+			},
+		},
+	});
 
 	useEffect(() => {
 		const fetchProfile = async () => {
@@ -41,9 +62,7 @@ const RequestThesisDefense = () => {
 					headers: { Authorization: `Bearer ${token}` },
 				});
 				const requestData = await requestRes.json();
-				if (!requestRes.ok) {
-					throw new Error(requestData.message);
-				}
+				if (!requestRes.ok) throw new Error(requestData.message);
 				setUser(requestData);
 				console.log(requestData);
 			} catch (e) {
@@ -67,17 +86,14 @@ const RequestThesisDefense = () => {
 				const requestRes = await fetch("http://localhost:8080/api/allRequestThesisDefense", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-					body: JSON.stringify({ role: user.role, id: user.id }),
+					body: JSON.stringify({ role: role, id: user.id }),
 				});
 				const requestData = await requestRes.json();
 				if (!requestRes.ok) {
 					throw new Error(requestData.message);
 				}
-
 				setRequest(requestData);
-				console.log(requestData);
 				setLatestRequest(requestData[0]);
-				console.log(requestData[0]);
 			} catch (e) {
 				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 				console.error("Error fetching requestExamAll:", e);
@@ -93,10 +109,9 @@ const RequestThesisDefense = () => {
 				headers: { Authorization: `Bearer ${token}` },
 			});
 			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
-			setFormData(requestData);
+			if (!requestRes.ok) throw new Error(requestData.message);
+			form.setValues({ thesis_exam_date: null });
+			form.setValues(requestData);
 			setOpenAdd(true);
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
@@ -109,16 +124,14 @@ const RequestThesisDefense = () => {
 			const requestRes = await fetch("http://localhost:8080/api/addRequestThesisDefense", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify(formData),
+				body: JSON.stringify(form.values),
 			});
 			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
+			if (!requestRes.ok) throw new Error(requestData.message);
 			notify("success", requestData.message || "สำเร็จ");
 			setOpenAdd(false);
-			setRequest((prev) => [...prev, { ...requestData.data, ...formData }]);
-			setLatestRequest({ ...requestData.data, ...formData });
+			setRequest((prev) => [...prev, { ...requestData.data, ...form.values }]);
+			setLatestRequest({ ...requestData.data, ...form.values });
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching addRequestExam:", e);
@@ -134,7 +147,7 @@ const RequestThesisDefense = () => {
 			const requestRes = await fetch("http://localhost:8080/api/approveRequestThesisDefense", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ request_thesis_proposal_id: item.request_thesis_proposal_id, name: user.name, role: user.role, selected: selected, comment: comment }),
+				body: JSON.stringify({ request_thesis_defense_id: item.request_thesis_defense_id, name: user.name, role: role, selected: selected, comment: comment }),
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) {
@@ -156,7 +169,7 @@ const RequestThesisDefense = () => {
 			const requestRes = await fetch("http://localhost:8080/api/payRequestThesisDefense", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ request_thesis_proposal_id: item.request_thesis_proposal_id, receipt_vol_No: "10/54" }),
+				body: JSON.stringify({ request_thesis_defense_id: item.request_thesis_defense_id, receipt_vol_No: "10/54" }),
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) {
@@ -180,11 +193,11 @@ const RequestThesisDefense = () => {
 		});
 	}
 
-	const sortedData = sortRequests(request, user.role);
+	const sortedData = sortRequests(request, role);
 
 	const filteredData = sortedData.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
-		const matchesType = selectedType ? p.request_type === `ขอลงทะเบียนสอบโครงร่าง${selectedType}` : true;
+		const matchesType = selectedType ? p.request_type === `ขอสอบโครงร่าง${selectedType}` : true;
 		return matchesSearch && matchesType;
 	});
 
@@ -226,7 +239,7 @@ const RequestThesisDefense = () => {
 			</Table.Td>
 			<Table.Td style={{ maxWidth: "150px" }}>
 				<Group>
-					{user.role === "student" && (
+					{role === "student" && (
 						<>
 							{item.status === "4" && (
 								<Button
@@ -247,8 +260,8 @@ const RequestThesisDefense = () => {
 							)}
 						</>
 					)}
-					<Pdfg01 data={item} showType={item.status == 0 ? undefined : (user.role === "advisor" && item.status <= 1) || (user.role === "chairpersons" && item.status <= 2) || (user.role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
-					{((user.role === "advisor" && item.status == 1) || (user.role === "chairpersons" && item.status == 2) || (user.role === "officer_registrar" && item.status == 3)) && (
+					<Pdfg01 data={item} showType={item.status == 0 ? undefined : (role === "advisor" && item.status <= 1) || (role === "chairpersons" && item.status <= 2) || (role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
+					{((role === "advisor" && item.status == 1) || (role === "chairpersons" && item.status == 2) || (role === "officer_registrar" && item.status == 3)) && (
 						<Button
 							size="xs"
 							color="green"
@@ -258,7 +271,7 @@ const RequestThesisDefense = () => {
 								setOpenApprove(true);
 							}}
 						>
-							{user.role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
+							{role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
 						</Button>
 					)}
 				</Group>
@@ -286,24 +299,24 @@ const RequestThesisDefense = () => {
 				error={error}
 				openApproveState={openApproveState}
 				handleApprove={handleApprove}
-				role={user.role}
-				title={`${user.role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}คำร้องขอลงทะเบียนสอบ${user.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`}
+				role={role}
+				title={`${role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}คำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`}
 			/>
-			<ModalAdd opened={openAdd} onClose={() => setOpenAdd(false)} formData={formData} handleAdd={handleAdd} title={`เพิ่มคำร้องขอลงทะเบียนสอบ${user.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`} />
+			<ModalAddRequestThesisDefense opened={openAdd} onClose={() => setOpenAdd(false)} form={form} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`} />
 			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} />
 
 			<Text size="1.5rem" fw={900} mb="md">
-				{`คำร้องขอลงทะเบียนสอบ${user.education_level ? `${user.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}` : "วิทยานิพนธ์/การค้นคว้าอิสระ"}`}
+				คำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ
 			</Text>
 			<Group justify="space-between">
 				<Box>
 					<Flex align="flex-end" gap="sm">
-						{user.role !== "student" && <TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
-						{user.role === "chairpersons" && <Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
+						{role !== "student" && <TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
+						{role === "chairpersons" && <Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
 					</Flex>
 				</Box>
 				<Box>
-					{user.role === "student" && (
+					{role === "student" && (
 						<Button onClick={() => handleOpenAdd()} disabled={latestRequest ? latestRequest.status !== "0" && latestRequest.status !== "6" && latestRequest.exam_results !== false : false}>
 							เพิ่มคำร้อง
 						</Button>

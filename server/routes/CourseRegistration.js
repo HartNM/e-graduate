@@ -2,7 +2,30 @@ const express = require("express");
 const router = express.Router();
 const authenticateToken = require("../middleware/authenticateToken");
 const { poolPromise } = require("../db");
-const axios = require("axios");
+
+router.post("/officerGetMajor_id", authenticateToken, async (req, res) => {
+	const { user_id } = req.body;
+	try {
+		const pool = await poolPromise;
+		const result = await pool.request().input("user_id", user_id).query(`SELECT major_id FROM officerMajor_id WHERE user_id = @user_id`);
+		res.status(200).json(result.recordset[0]);
+	} catch (e) {
+		console.error("addCourseRegistration:", e);
+		res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
+	}
+});
+
+router.post("/major_idGetMajor_name", authenticateToken, async (req, res) => {
+	const { major_id } = req.body;
+	try {
+		const pool = await poolPromise;
+		const result = await pool.request().input("major_id", major_id).query(`SELECT major_name FROM majors WHERE major_id = @major_id`);
+		res.status(200).json(result.recordset[0]);
+	} catch (e) {
+		console.error("addCourseRegistration:", e);
+		res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
+	}
+});
 
 router.post("/Course", authenticateToken, async (req, res) => {
 	let { course_id } = req.body;
@@ -35,9 +58,9 @@ router.post("/addCourseRegistration", authenticateToken, async (req, res) => {
 			return res.status(400).json({ message: "หมู่เรียนนี้มีอยู่แล้ว ไม่สามารถเพิ่มได้" });
 		}
 		for (let i = 0; i < course_id.length; i++) {
-			await pool.request().input("major_name", major_name).input("study_group_id", study_group_id).input("course_id", course_id[i]).query(`
-                INSERT INTO course_registration (major_name, study_group_id, course_id)
-                VALUES (@major_name, @study_group_id, @course_id)
+			await pool.request().input("major_id", major_id).input("study_group_id", study_group_id).input("course_id", course_id[i]).query(`
+                INSERT INTO course_registration (major_id, study_group_id, course_id)
+                VALUES (@major_id, @study_group_id, @course_id)
             `);
 		}
 		res.status(201).json({ message: "บันทึกข้อมูลเรียบร้อยแล้ว" });
@@ -48,14 +71,14 @@ router.post("/addCourseRegistration", authenticateToken, async (req, res) => {
 });
 
 router.post("/editCourseRegistration", authenticateToken, async (req, res) => {
-	const { major_name, study_group_id, course_id } = req.body;
+	const { course_id, major_id, study_group_id } = req.body;
 	try {
 		const pool = await poolPromise;
 		await pool.request().input("study_group_id", study_group_id).query(`DELETE FROM course_registration WHERE study_group_id = @study_group_id`);
 		for (let i = 0; i < course_id.length; i++) {
-			await pool.request().input("major_name", major_name).input("study_group_id", study_group_id).input("course_id", course_id[i]).query(`
-			INSERT INTO course_registration (major_name, study_group_id, course_id)
-			VALUES (@major_name, @study_group_id, @course_id)
+			await pool.request().input("major_id", major_id).input("study_group_id", study_group_id).input("course_id", course_id[i]).query(`
+			INSERT INTO course_registration (major_id, study_group_id, course_id)
+			VALUES (@major_id, @study_group_id, @course_id)
 			`);
 		}
 
@@ -92,7 +115,7 @@ router.post("/allMajorCourseRegistration", authenticateToken, async (req, res) =
 		data.forEach((item) => {
 			if (!grouped[item.study_group_id]) {
 				grouped[item.study_group_id] = {
-					major_name: item.major_name,
+					major_id: item.major_id,
 					study_group_id: item.study_group_id,
 					course_id: [],
 				};
@@ -107,42 +130,18 @@ router.post("/allMajorCourseRegistration", authenticateToken, async (req, res) =
 	}
 });
 
-/* router.post("/allStudyGroupIdCourseRegistration", authenticateToken, async (req, res) => {
-	const id = req.user.reference_id.slice(0, -2);
-	try {
-		const pool = await poolPromise;
-		const result = await pool.request().input("id", id).query(`SELECT * FROM course_registration WHERE study_group_id = @id`);
-		const data = result.recordset;
-		if (data.length === 0) {
-			return res.status(200).json(null);
-		}
-		const formatted = {
-			major_name: data[0].major_name,
-			study_group_id: data[0].study_group_id,
-			course_id: data.map((item) => item.course_id),
-		};
-		console.log(formatted);
-		res.status(200).json(formatted);
-	} catch (e) {
-		console.error("allStudyGroupIdCourseRegistration:", e);
-		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
-	}
-}); */
 router.post("/allStudyGroupIdCourseRegistration", authenticateToken, async (req, res) => {
-	const id = req.user.user_id.slice(0, -2);
+	const study_group_id = req.user.user_id.slice(0, -2);
 	try {
 		const pool = await poolPromise;
-		const result = await pool.request().input("id", id).query(`SELECT * FROM course_registration WHERE study_group_id = @id`);
+		const result = await pool.request().input("study_group_id", study_group_id).query(`SELECT * FROM course_registration WHERE study_group_id = @study_group_id`);
 		const data = result.recordset;
-		if (data.length === 0) {
-			return res.status(200).json(null);
-		}
+		if (data.length === 0) return res.status(200).json(null);
 		const formatted = {
-			major_name: data[0].major_name,
+			major_id: data[0].major_id,
 			study_group_id: data[0].study_group_id,
 			course_id: data.map((item) => item.course_id),
 		};
-		console.log(formatted);
 		res.status(200).json(formatted);
 	} catch (e) {
 		console.error("allStudyGroupIdCourseRegistration:", e);

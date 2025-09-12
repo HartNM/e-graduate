@@ -2,15 +2,19 @@
 import { useState, useEffect } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
 import { useParams } from "react-router-dom";
-import ModalAdd from "../component/Modal/ModalAdd";
-import ModalApprove from "../component/Modal/ModalApprove";
-import ModalPay from "../component/Modal/ModalPay";
-import ModalInform from "../component/Modal/ModalInform";
-import ModalCheckCourse from "../component/Modal/ModalCheckCourse";
-import Pdfg01 from "../component/PDF/Pdfg01";
-
+import ModalAdd from "./Modal/ModalAdd";
+import ModalApprove from "./Modal/ModalApprove";
+import ModalPay from "./Modal/ModalPay";
+import ModalInform from "./Modal/ModalInform";
+import ModalCheckCourse from "./Modal/ModalCheckCourse";
+import Pdfg01 from "./PDF/Pdfg01";
+import { useForm } from "@mantine/form";
 
 const RequestExam = () => {
+	const token = localStorage.getItem("token");
+	const payloadBase64 = token.split(".")[1];
+	const payload = JSON.parse(atob(payloadBase64));
+	const role = payload.role;
 	// Modal Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
@@ -22,35 +26,29 @@ const RequestExam = () => {
 	const [openPay, setOpenPay] = useState(false);
 	const [openCheckCourse, setOpenCheckCourse] = useState(false);
 	// Form states
-	const [formData, setFormData] = useState({});
 	const [selectedRow, setSelectedRow] = useState(null);
 	const [selected, setSelected] = useState("approve");
 	const [comment, setComment] = useState("");
 	const [error, setError] = useState("");
 	// System states
 	const [user, setUser] = useState("");
-	//student //advisor //chairpersons //officer_registrar
 	const [request, setRequest] = useState([]);
 	const [search, setSearch] = useState("");
-	const token = localStorage.getItem("token");
 	const { type } = useParams();
 	const [selectedType, setSelectedType] = useState("");
-	const [latestRequest, setLatestRequest] = useState(null);
+	const [latestRequest, setLatestRequest] = useState(true);
 
-	const [registerCoures, setRegisterCoures] = useState(["1065201", "1065202", "1065204", "1065206", "1065208"]);
-	/* const [registerCoures, setRegisterCoures] = useState(["1065204", "1065206", "1065208"]); */
+	const [registerCoures, setRegisterCoures] = useState(["1065232", "1066205", "1065222", "1065222", "1065204", "1065232", "1065202", "1065201", "1065206", "1065208", "1065231"]);
 	const [missingCoures, setMissingCoures] = useState([]);
-	/* 	const [coures, setCoures] = useState([
-		{ value: "1065201", label: "1065201 หลักการ ทฤษฎีและปฏิบัติทางการบริหารการศึกษา" },
-		{ value: "1065202", label: "1065202 ผู้นำทางวิชาการและการพัฒนาหลักสูตร " },
-		{ value: "1065204", label: "1065204 การบริหารทรัพยากรทางการศึกษา" },
-		{ value: "1065206", label: "1065206 ภาวะผู้นำทางการบริหารการศึกษา" },
-		{ value: "1065208", label: "1065208 การประกันคุณภาพการศึกษา" },
-		{ value: "1065222", label: "1065222 การฝึกปฏิบัติงานการบริหารการศึกษาและบริหารสถานศึกษา" },
-		{ value: "1065231", label: "1065231 คุณธรรม จริยธรรมและจรรยาบรรณวิชาชีพทางการศึกษา สำหรับนักบริหารการศึกษา และผู้บริหารการศึกษา" },
-		{ value: "1065232", label: "1065232 การบริหารงานวิชาการ กิจการและกิจกรรมนักเรียน" },
-		{ value: "1066205", label: "1066205 ความเป็นนักบริหารมืออาชีพ" },
-	]); */
+
+	const form = useForm({
+		initialValues: {},
+		validate: {},
+	});
+
+	useEffect(() => {
+		setSelectedType(type);
+	}, [type]);
 
 	useEffect(() => {
 		const fetchProfile = async () => {
@@ -60,24 +58,13 @@ const RequestExam = () => {
 					headers: { Authorization: `Bearer ${token}` },
 				});
 				const res = await req.json();
-				if (!req.ok) {
-					throw new Error(res.message);
-				}
+				if (!req.ok) throw new Error(res.message);
 				setUser(res);
 			} catch (e) {
 				notify("error", e.message);
 				console.error("Error fetching profile:", e);
 			}
 		};
-		fetchProfile();
-	}, [token]);
-
-	useEffect(() => {
-		setSelectedType(type);
-	}, [type]);
-
-	useEffect(() => {
-		if (!user) return;
 		const fetchRequestExam = async () => {
 			try {
 				const req = await fetch("http://localhost:8080/api/requestExamAll", {
@@ -85,10 +72,15 @@ const RequestExam = () => {
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
 				const res = await req.json();
-				
 				if (!req.ok) throw new Error(res.message);
+				console.log(res);
+				
+				const countFailOrAbsent = res.filter((row) => row.exam_results === "ไม่ผ่าน" || row.exam_results === "ขาดสอบ").length;
 				setRequest(res);
-				setLatestRequest(res[0]);
+				if (!res.length) setLatestRequest(false);
+				else if (countFailOrAbsent > 2) setLatestRequest(true);
+				else if (res[0].exam_results === "ไม่ผ่าน" || res[0].exam_results === "ขาดสอบ") setLatestRequest(false);
+				else setLatestRequest(res[0]);
 			} catch (e) {
 				notify("error", e.message);
 				console.error("Error fetching requestExamAll:", e);
@@ -99,10 +91,8 @@ const RequestExam = () => {
 				const registrationRes = await fetch("http://localhost:8080/api/allStudyGroupIdCourseRegistration", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-					body: JSON.stringify({ id: user.id }),
 				});
 				const registrationData = await registrationRes.json();
-				console.log(registrationData);
 				if (!registrationData) throw new Error("รอเจ้าหน้าที่กรอกราย วิชาที่ต้องเรียน");
 				if (!registrationRes.ok) throw new Error(registrationData.message);
 				const coursesRes = await fetch("http://localhost:8080/api/Course", {
@@ -111,7 +101,6 @@ const RequestExam = () => {
 					body: JSON.stringify({ course_id: registrationData.course_id }),
 				});
 				const coursesData = await coursesRes.json();
-				console.log(coursesData);
 				if (!coursesRes.ok) throw new Error(coursesData.message);
 				const missingLabels = registrationData.course_id
 					.filter((code) => !registerCoures.includes(code))
@@ -121,7 +110,7 @@ const RequestExam = () => {
 					});
 				if (missingLabels.length > 0) {
 					setMissingCoures(missingLabels);
-					setOpenCheckCourse(false);
+					setOpenCheckCourse(true);
 					return;
 				}
 				fetchRequestExam();
@@ -130,12 +119,13 @@ const RequestExam = () => {
 				console.error("Error fetching CourseCheck:", e);
 			}
 		};
-		if (user.role === "student") {
+		fetchProfile();
+		if (role === "student") {
 			fetchStudentData();
 		} else {
 			fetchRequestExam();
 		}
-	}, [user]);
+	}, []);
 
 	const handleOpenAdd = async () => {
 		try {
@@ -145,7 +135,7 @@ const RequestExam = () => {
 			});
 			const res = await req.json();
 			if (!req.ok) throw new Error(res.message);
-			setFormData(res);
+			form.setValues(res);
 			setOpenAdd(true);
 		} catch (e) {
 			notify("error", e.message);
@@ -158,16 +148,14 @@ const RequestExam = () => {
 			const requestRes = await fetch("http://localhost:8080/api/addRequestExam", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify(formData),
+				body: JSON.stringify(form.values),
 			});
 			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
+			if (!requestRes.ok) throw new Error(requestData.message);
 			notify("success", requestData.message || "สำเร็จ");
 			setOpenAdd(false);
-			setRequest((prev) => [...prev, { ...requestData.data, ...formData }]);
-			setLatestRequest({ ...requestData.data, ...formData });
+			setRequest((prev) => [...prev, { ...requestData.data, ...form.values }]);
+			setLatestRequest(true);
 		} catch (e) {
 			notify("error", e.message);
 			console.error("Error fetching addRequestExam:", e);
@@ -183,12 +171,10 @@ const RequestExam = () => {
 			const requestRes = await fetch("http://localhost:8080/api/approveRequestExam", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ request_exam_id: item.request_exam_id, name: user.name, role: user.role, selected: selected, comment: comment }),
+				body: JSON.stringify({ request_exam_id: item.request_exam_id, name: user.name, selected: selected, comment: comment }),
 			});
 			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
+			if (!requestRes.ok) throw new Error(requestData.message);
 			notify("success", requestData.message || "สำเร็จ");
 			setSelected("approve");
 			setComment("");
@@ -229,7 +215,7 @@ const RequestExam = () => {
 		});
 	}
 
-	const sortedData = sortRequests(request, user.role);
+	const sortedData = sortRequests(request, role);
 
 	const filteredData = sortedData.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
@@ -276,7 +262,7 @@ const RequestExam = () => {
 			</Table.Td>
 			<Table.Td style={{ maxWidth: "150px" }}>
 				<Group>
-					{user.role === "student" && (
+					{role === "student" && (
 						<>
 							{item.status === "4" && (
 								<Button
@@ -290,15 +276,15 @@ const RequestExam = () => {
 									ชำระค่าธรรมเนียม
 								</Button>
 							)}
-							{(item.status == 5 || item.status == 0 || item.status > 6) && (
+							{item.receipt_vol_No != null && (
 								<Button size="xs" color="green">
 									พิมพ์ใบเสร็จ
 								</Button>
 							)}
 						</>
 					)}
-					<Pdfg01 data={item} showType={item.status == 0 ? undefined : (user.role === "advisor" && item.status <= 1) || (user.role === "chairpersons" && item.status <= 2) || (user.role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
-					{((user.role === "advisor" && item.status == 1) || (user.role === "chairpersons" && item.status == 2) || (user.role === "officer_registrar" && item.status == 3)) && (
+					<Pdfg01 data={item} showType={item.status == 0 ? undefined : (role === "advisor" && item.status <= 1) || (role === "chairpersons" && item.status <= 2) || (role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
+					{((role === "advisor" && item.status == 1) || (role === "chairpersons" && item.status == 2) || (role === "officer_registrar" && item.status == 3)) && (
 						<Button
 							size="xs"
 							color="green"
@@ -308,7 +294,7 @@ const RequestExam = () => {
 								setOpenApprove(true);
 							}}
 						>
-							{user.role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
+							{role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
 						</Button>
 					)}
 				</Group>
@@ -338,24 +324,24 @@ const RequestExam = () => {
 				error={error}
 				openApproveState={openApproveState}
 				handleApprove={handleApprove}
-				role={user.role}
-				title={`${user.role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}คำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`}
+				role={role}
+				title={`${role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}คำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`}
 			/>
-			<ModalAdd opened={openAdd} onClose={() => setOpenAdd(false)} formData={formData} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`} />
+			<ModalAdd opened={openAdd} onClose={() => setOpenAdd(false)} form={form.values} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`} />
 			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} />
 
 			<Text size="1.5rem" fw={900} mb="md">
-				{`คำร้องขอสอบ${user.education_level ? `${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` : ""}`}
+				{`คำร้องขอสอบ${type ? type : `${user.education_level ? `${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` : "ประมวลความรู้/วัดคุณสมบัติ"}`}`}
 			</Text>
 			<Group justify="space-between">
 				<Box>
 					<Flex align="flex-end" gap="sm">
-						{user.role !== "student" && <TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
-						{user.role === "chairpersons" && <Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
+						{role !== "student" && <TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
+						{role === "chairpersons" && <Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
 					</Flex>
 				</Box>
 				<Box>
-					{user.role === "student" && (
+					{role === "student" && (
 						<Button onClick={() => handleOpenAdd()} disabled={latestRequest ? latestRequest.status !== "0" && latestRequest.status !== "6" && latestRequest.exam_results !== false : false}>
 							เพิ่มคำร้อง
 						</Button>

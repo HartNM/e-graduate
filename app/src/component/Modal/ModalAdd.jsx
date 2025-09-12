@@ -1,17 +1,17 @@
 import { Modal, Box, TextInput, Flex, Button, Space } from "@mantine/core";
 
-const ModalAdd = (props) => (
-	<Modal opened={props.opened} onClose={props.onClose} title={props.title} centered>
+const ModalAdd = ({ opened, onClose, title, form, handleAdd }) => (
+	<Modal opened={opened} onClose={onClose} title={title} centered>
 		<Box>
-			<TextInput label="ชื่อ-นามสกุล" disabled value={props.formData.student_name} />
-			<TextInput label="รหัสประจำตัว" disabled value={props.formData.student_id} />
-			<TextInput label="ระดับการศึกษา" disabled value={props.formData.education_level} />
-			<TextInput label="หลักสูตร" disabled value={props.formData.program} />
-			<TextInput label="สาขาวิชา" disabled value={props.formData.major_name} />
-			<TextInput label="คณะ" disabled value={props.formData.faculty_name} />
+			<TextInput label="ชื่อ-นามสกุล" disabled value={form.student_name} />
+			<TextInput label="รหัสประจำตัว" disabled value={form.student_id} />
+			<TextInput label="ระดับการศึกษา" disabled value={form.education_level} />
+			<TextInput label="หลักสูตร" disabled value={form.program} />
+			<TextInput label="สาขาวิชา" disabled value={form.major_name} />
+			<TextInput label="คณะ" disabled value={form.faculty_name} />
 			<Space h="lg" />
 			<Flex justify="flex-end">
-				<Button color="green" onClick={() => props.handleAdd()}>
+				<Button color="green" onClick={() => handleAdd()}>
 					บันทึก
 				</Button>
 			</Flex>

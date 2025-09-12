@@ -79,52 +79,11 @@ const axios = require("axios");
 		}
 	}
 });
-router.get("/studentInfo", authenticateToken, async (req, res) => {
-	const student_id = req.user.user_id;
-	try {
-		const response = await axios.get(`http://localhost:8080/externalApi/student/${student_id}`);
-		return res.status(200).json(response.data);
-	} catch (err) {
-		console.error("เกิดข้อผิดพลาดระหว่างเรียกข้อมูลนักศึกษา:", err);
-		return res.status(502).json({ message: "ไม่สามารถเชื่อมต่อกับระบบภายนอกได้" });
-	}
-});
-router.get("/checkStudent", authenticateToken, async (req, res) => {
-	const student_id = req.user.reference_id;
-	try {
-		const pool = await poolPromise;
-		const student = await axios.get(`http://localhost:8080/externalApi/student/${student_id}`);
-		const request_exam = await pool
-			.request()
-			.input("id", student_id)
-			.query(
-				`SELECT TOP 1 status, exam_results 
-				 FROM request_exam 
-				 WHERE student_id = @id 
-				 ORDER BY request_exam_id DESC`
-			);
-		const latest = request_exam.recordset[0] || {};
-		return res.status(200).json({
-			education_level: student.data.education_level,
-			RequestExamCancel: ((latest.status === "5" || latest.status === "7" || latest.status === "8" || latest.status === "9" || latest.status === "0") && latest.exam_results === null) || false,
-			//RequestThesisProposal:  latest.status === "5" && latest.exam_results ===  true,
-			RequestThesisProposal: true,
-			PostponeProposalExam: true,
-			RequestThesisDefense: true,
-			PostponeDefenseExam: true,
-			PlagiarismReport: true,
-			RequestGraduation: true,
-		});
-	} catch (err) {
-		console.error(err);
-		return res.status(502).json({ message: "ไม่สามารถเชื่อมต่อกับระบบภายนอกได้" });
-	}
-}); */
+*/
 
 router.get("/profile", authenticateToken, async (req, res) => {
 	const { user_id } = req.user;
 	if (user_id.length == 9) {
-		// นักศึกษา
 		try {
 			const studentRes = await axios.get(`http://localhost:8080/externalApi/student/${user_id}`);
 			const studentInfo = studentRes.data;
@@ -137,7 +96,6 @@ router.get("/profile", authenticateToken, async (req, res) => {
 			return res.status(502).json({ message: "ไม่สามารถเชื่อมต่อกับระบบภายนอกได้" }); // Bad Gateway
 		}
 	} else {
-		// บุคลากร
 		try {
 			const pool = await poolPromise;
 			const result = await pool.request().input("user_id", user_id).query(`SELECT * FROM users WHERE user_id = @user_id`);
@@ -169,30 +127,23 @@ router.get("/checkStudent", authenticateToken, async (req, res) => {
 	const { user_id } = req.user;
 	try {
 		const pool = await poolPromise;
-
 		const student = await axios.get(`http://localhost:8080/externalApi/student/${user_id}`);
-
-		const request_exam = await pool
-			.request()
-			.input("id", user_id)
-			.query(
-				`SELECT TOP 1 status, exam_results 
-				 FROM request_exam 
-				 WHERE student_id = @id 
-				 ORDER BY request_exam_id DESC`
-			);
-
-		const latest = request_exam.recordset[0] || {};
+		const request_exam = await pool.request().input("user_id", user_id).query(`SELECT status, exam_results FROM request_exam WHERE student_id = @user_id ORDER BY request_exam_id DESC`);
+		const latest_request_exam = request_exam.recordset[0] || null;
+		console.log(latest_request_exam);
+		const Proposal = await pool.request().input("user_id", user_id).query(`SELECT status FROM request_thesis_proposal WHERE student_id = @user_id ORDER BY thesis_advisor_id DESC`);
+		const latest_Proposal = Proposal.recordset[0] || null;
+		console.log(latest_Proposal);
 
 		return res.status(200).json({
 			education_level: student.data.education_level,
-			RequestExamCancel: latest.status !== "6" && latest.exam_results === null,
-			RequestThesisProposal: /* latest.status === "5" && latest.exam_results === */ true,
-			PostponeProposalExam: true,
-			RequestThesisDefense: true,
-			PostponeDefenseExam: true,
-			PlagiarismReport: true,
-			RequestGraduation: true,
+			RequestExamCancel: latest_request_exam ? latest_request_exam.status !== "6" && latest_request_exam.exam_results === null : false,
+			RequestThesisProposal: latest_request_exam ? latest_request_exam.status === "5" && latest_request_exam.exam_results === "ผ่าน" : false,
+			RequestThesisDefense: latest_Proposal ? latest_Proposal.status === "5" : false,
+			RequestGraduation: latest_Proposal ? latest_Proposal.status === "5" : false,
+			PlagiarismReport: false,
+			PostponeProposalExam: false,
+			PostponeDefenseExam: false,
 		});
 	} catch (err) {
 		console.error(err);

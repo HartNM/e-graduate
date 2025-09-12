@@ -11,9 +11,7 @@ async function fillPdf(data) {
 	await setDefaultFont(pdfDoc);
 	const THSarabunNewBytesBold = await fetch("/fonts/THSarabunNew Bold.ttf").then((res) => res.arrayBuffer());
 	const THSarabunNewBold = await pdfDoc.embedFont(THSarabunNewBytesBold);
-
-	/* drawGrid(page); */
-
+	
 	let Exam_date;
 	try {
 		const token = localStorage.getItem("token");
@@ -32,11 +30,11 @@ async function fillPdf(data) {
 	}
 
 	const [request_date_day, request_date_month, request_date_year] = formatThaiDate(data?.request_date);
-	const [exam_date_day, exam_date_month, exam_date_year] = formatThaiDate(Exam_date);
+	const [exam_date_day, exam_date_month, exam_date_year] = formatThaiDate(data?.thesis_exam_date);
 	const [advisor_approvals_date_day, advisor_approvals_date_month, advisor_approvals_date_year] = formatThaiDateShort(data?.advisor_approvals_date);
 	const [chairpersons_approvals_date_day, chairpersons_approvals_date_month, chairpersons_approvals_date_year] = formatThaiDateShort(data?.chairpersons_approvals_date);
 	const [registrar_approvals_date_day, registrar_approvals_date_month, registrar_approvals_date_year] = formatThaiDateShort(data?.registrar_approvals_date);
-	const [receipt_pay_date_day, receipt_pay_date_month, receipt_pay_date_year] = formatThaiDate(data?.receipt_pay_date);
+	const [receipt_pay_date_day, receipt_pay_date_month, receipt_pay_date_year] = formatThaiDateShort(data?.receipt_pay_date);
 
 	let y = 760;
 	let space = 20;
@@ -63,9 +61,9 @@ async function fillPdf(data) {
 		{ text: `คณะ..........................................................................................มีความประสงค์.........................................................................................`, x: 60, y: (y -= space) },
 		{ text: data?.faculty_name, x: 100, y: y + 2 },
 		{ text: `${data?.request_type}`, x: 360, y: y + 2 },
-		/* { text: `ในภาคเรียนที่ ....................... ในวันที่.....................................................`, x: 60, y: (y -= space) },
+		{ text: `ในภาคเรียนที่ ....................... ในวันที่.....................................................`, x: 60, y: (y -= space) },
 		{ text: data?.term, x: 130, y: y + 2 },
-		{ text: `${exam_date_day} ${exam_date_month} ${exam_date_year + 543}`, x: 210, y: y + 2 }, */
+		{ text: `${exam_date_day} ${exam_date_month} ${exam_date_year}`, x: 210, y: y + 2 },
 		{ text: `จึงเรียนมาเพื่อโปรดพิจารณา`, x: 100, y: (y -= space) },
 		{ text: `ลงชื่อ...........................................................................`, x: 310, y: (y -= space * 2) },
 		{ text: data?.student_name, x: 370, y: y + 2 },
@@ -120,12 +118,15 @@ async function fillPdf(data) {
 		{ text: `4. ชำระค่าธรรมเนียมการสอบแล้ว ภาคเรียนที่ ${data?.term}`, x: 310, y: (y += space * 7), font: THSarabunNewBold, show: data?.receipt_vol_No !== null },
 		{ text: data?.education_level === "ปริญญาโท" ? "จำนวน 2,000 บาท (สองพันบาทถ้วน)" : "จำนวน 5,000 บาท (ห้าพันบาทถ้วน)", x: 330, y: (y -= space), show: data?.receipt_vol_No !== null },
 		{ text: `ตามใบเสร็จรับเงิน เล่มที่ ${data?.receipt_vol_No} เลขที่ ${data?.receipt_vol_No}`, x: 310, y: (y -= space), show: data?.receipt_vol_No !== null },
-		{ text: `ลงวันที่ ${receipt_pay_date_day} ${receipt_pay_date_month} ${receipt_pay_date_year}`, x: 310, y: (y -= space), show: data?.receipt_vol_No !== null },
 		{ text: `ลงชื่อ.......................................................................`, x: 325, y: (y -= space * 2), show: data?.receipt_vol_No !== null },
 		{ text: "นายณัฐวุฒิ มาตกาง", x: 390, y: y + 2, show: data?.receipt_vol_No !== null },
 		{ text: `(.....................................................................) `, x: 345, y: (y -= space), show: data?.receipt_vol_No !== null },
 		{ text: "นายณัฐวุฒิ มาตกาง", x: 390, y: y + 2, show: data?.receipt_vol_No !== null },
 		{ text: `เจ้าหน้าที่การเงิน`, x: 395, y: (y -= space), show: data?.receipt_vol_No !== null },
+		{ text: `วันที่ ........../................./...................`, x: 360, y: (y -= space), show: data?.receipt_vol_No !== null },
+		{ text: receipt_pay_date_day, x: 385, y: y + 2, show: data?.receipt_vol_No !== null },
+		{ text: receipt_pay_date_month, x: 420, y: y + 2, show: data?.receipt_vol_No !== null },
+		{ text: receipt_pay_date_year, x: 460, y: y + 2, show: data?.receipt_vol_No !== null },
 	];
 	drawItems.filter((item) => item.show !== false).forEach((item) => draw(page, item.text, item.x, item.y, item.font, item.size));
 

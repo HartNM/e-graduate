@@ -15,8 +15,6 @@ router.post("/allExamEligibleListPrint", authenticateToken, async (req, res) => 
 			WHERE major_id IN (SELECT major_id FROM officerMajor_id WHERE user_id = @user_id) AND status = 5
 		`;
 		const result = await request.query(query);
-		console.log(result);
-
 		const output = {};
 		result.recordset.forEach((row) => {
 			if (!output[row.study_group_id]) output[row.study_group_id] = [];
