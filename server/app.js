@@ -1,9 +1,10 @@
 require("dotenv").config();
 const express = require("express");
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 const cors = require("cors");
-app.use(cors());
+app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 const PORT = process.env.PORT;
 
 const externalApiStudent = require("./externalApi/student");
@@ -45,6 +46,10 @@ app.use("/api", RequestThesisProposal);
 
 const RequestThesisDefense = require("./routes/RequestThesisDefense");
 app.use("/api", RequestThesisDefense);
+
+const PlagiarismReport = require("./routes/PlagiarismReport");
+app.use("/api", PlagiarismReport);
+
 app.listen(PORT, () => {
 	console.log(`Server is running on port ${PORT}`);
 });

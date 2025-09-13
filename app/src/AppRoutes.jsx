@@ -7,7 +7,7 @@ const Personnel = lazy(() => import("./pages/personnel"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AuthenticationForm = lazy(() => import("./pages/AuthenticationTitle/login.jsx"));
 
-const RequestExam = lazy(() => import("./component/RequestExamNewRole.jsx"));
+const RequestExam = lazy(() => import("./component/RequestExam.jsx"));
 const RequestExamCancel = lazy(() => import("./component/RequestExamCancel.jsx"));
 const RequestEngTest = lazy(() => import("./component/RequestEngTest.jsx"));
 const RequestThesisProposal = lazy(() => import("./component/RequestThesisProposal.jsx"));

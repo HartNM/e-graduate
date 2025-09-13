@@ -11,7 +11,7 @@ async function fillPdf(data) {
 	await setDefaultFont(pdfDoc);
 	const THSarabunNewBytesBold = await fetch("/fonts/THSarabunNew Bold.ttf").then((res) => res.arrayBuffer());
 	const THSarabunNewBold = await pdfDoc.embedFont(THSarabunNewBytesBold);
-	
+
 	let Exam_date;
 	try {
 		const token = localStorage.getItem("token");
@@ -35,6 +35,38 @@ async function fillPdf(data) {
 	const [chairpersons_approvals_date_day, chairpersons_approvals_date_month, chairpersons_approvals_date_year] = formatThaiDateShort(data?.chairpersons_approvals_date);
 	const [registrar_approvals_date_day, registrar_approvals_date_month, registrar_approvals_date_year] = formatThaiDateShort(data?.registrar_approvals_date);
 	const [receipt_pay_date_day, receipt_pay_date_month, receipt_pay_date_year] = formatThaiDateShort(data?.receipt_pay_date);
+
+	function numberToThaiText(number) {
+		const thNumbers = ["ศูนย์", "หนึ่ง", "สอง", "สาม", "สี่", "ห้า", "หก", "เจ็ด", "แปด", "เก้า"];
+		const thPositions = ["", "สิบ", "ร้อย", "พัน", "หมื่น", "แสน", "ล้าน"];
+		let numStr = number.toString();
+		let result = "";
+		let len = numStr.length;
+		for (let i = 0; i < len; i++) {
+			let digit = parseInt(numStr.charAt(i));
+			let position = len - i - 1;
+			if (digit !== 0) {
+				if (position === 1 && digit === 1) result += "สิบ";
+				else if (position === 1 && digit === 2) result += "ยี่สิบ";
+				else if (position === 1) result += thNumbers[digit] + "สิบ";
+				else if (position === 0 && digit === 1 && len > 1) result += "เอ็ด";
+				else result += thNumbers[digit] + thPositions[position];
+			}
+		}
+		return result;
+	}
+	const feeMap = {
+		ปริญญาโท: { โครงร่าง: 2000, สอบจริง: 3000 },
+		ปริญญาเอก: { โครงร่าง: 5000, สอบจริง: 7000 },
+	};
+	const examTypeMap = {
+		ขอสอบโครงร่างวิทยานิพนธ์: "โครงร่าง",
+		ขอสอบโครงร่างการค้นคว้าอิสระ: "โครงร่าง",
+		ขอสอบวิทยานิพนธ์: "สอบจริง",
+		ขอสอบการค้นคว้าอิสระ: "สอบจริง",
+	};
+	const examType = examTypeMap[data?.request_type];
+	const fee = feeMap[data?.education_level]?.[examType] ?? 0;
 
 	let y = 760;
 	let space = 20;
@@ -75,7 +107,7 @@ async function fillPdf(data) {
 		{ text: request_date_month, x: 400, y: y + 2 },
 		{ text: request_date_year, x: 465, y: y + 2 },
 
-		{ text: `1. ความเห็นของอาจารย์ที่ปรึกษาหมู่เรียน`, x: 60, y: (y -= space * 2), font: THSarabunNewBold, show: typeof data?.advisor_approvals === "boolean" },
+		{ text: `1. ความเห็นของอาจารย์ที่ปรึกษาวิทยานิพนธ์/การค้นคว้าอิสระ`, x: 60, y: (y -= space * 2), font: THSarabunNewBold, show: typeof data?.advisor_approvals === "boolean" },
 		{ text: data?.advisor_approvals ? "เห็นควรสอบได้" : "ไม่เห็นควร", x: 80, y: (y -= space), show: typeof data?.advisor_approvals === "boolean" },
 		{ text: `เนื่องจาก ${data?.comment}`, x: 80, y: (y -= space), show: typeof data?.advisor_approvals === "boolean" && !data.advisor_approvals },
 		{ text: `ลงชื่อ.......................................................................`, x: 75, y: (y -= space * 2), show: typeof data?.advisor_approvals === "boolean" },
@@ -116,7 +148,7 @@ async function fillPdf(data) {
 		{ text: registrar_approvals_date_year, x: 210, y: y + 2, show: typeof data?.registrar_approvals === "boolean" },
 
 		{ text: `4. ชำระค่าธรรมเนียมการสอบแล้ว ภาคเรียนที่ ${data?.term}`, x: 310, y: (y += space * 7), font: THSarabunNewBold, show: data?.receipt_vol_No !== null },
-		{ text: data?.education_level === "ปริญญาโท" ? "จำนวน 2,000 บาท (สองพันบาทถ้วน)" : "จำนวน 5,000 บาท (ห้าพันบาทถ้วน)", x: 330, y: (y -= space), show: data?.receipt_vol_No !== null },
+		{ text: `จำนวน ${fee.toLocaleString()} บาท `, x: 330, y: (y -= space), show: data?.receipt_vol_No !== null },
 		{ text: `ตามใบเสร็จรับเงิน เล่มที่ ${data?.receipt_vol_No} เลขที่ ${data?.receipt_vol_No}`, x: 310, y: (y -= space), show: data?.receipt_vol_No !== null },
 		{ text: `ลงชื่อ.......................................................................`, x: 325, y: (y -= space * 2), show: data?.receipt_vol_No !== null },
 		{ text: "นายณัฐวุฒิ มาตกาง", x: 390, y: y + 2, show: data?.receipt_vol_No !== null },
@@ -149,7 +181,6 @@ export default function Pdfg01({ data, showType, exam_date }) {
 	const handlePrint = async () => {
 		const blob = await fillPdf(data, exam_date);
 		const url = URL.createObjectURL(blob);
-
 		const iframe = document.createElement("iframe");
 		iframe.style.display = "none";
 		iframe.src = url;

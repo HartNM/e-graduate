@@ -5,11 +5,14 @@ import { useForm } from "@mantine/form";
 import { useParams } from "react-router-dom";
 import ModalAddRequestGraduation from "../component/Modal/ModalAddPlagiarismReport";
 import ModalApprove from "../component/Modal/ModalApprove";
-import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
-import Pdfg01 from "../component/PDF/Pdfg06";
+import Pdfg06 from "../component/PDF/Pdfg06";
 
 const PlagiarismReport = () => {
+	const token = localStorage.getItem("token");
+	const payloadBase64 = token.split(".")[1];
+	const payload = JSON.parse(atob(payloadBase64));
+	const role = payload.role;
 	// Modal Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
@@ -20,7 +23,6 @@ const PlagiarismReport = () => {
 	const [openApproveState, setOpenApproveState] = useState(false);
 	const [openPay, setOpenPay] = useState(false);
 	// Form states
-	const [formData, setFormData] = useState({});
 	const [selectedRow, setSelectedRow] = useState(null);
 	const [selected, setSelected] = useState("approve");
 	const [comment, setComment] = useState("");
@@ -30,9 +32,7 @@ const PlagiarismReport = () => {
 	//student //advisor //chairpersons //officer_registrar
 	const [request, setRequest] = useState([]);
 	const [search, setSearch] = useState("");
-	const token = localStorage.getItem("token");
 	const { type } = useParams();
-	const [selectedType, setSelectedType] = useState("");
 
 	const validateChapter = (value) => {
 		if (value === null || value === "") return "ห้ามเว้นว่าง";
@@ -40,7 +40,7 @@ const PlagiarismReport = () => {
 		return null;
 	};
 
-	const AddForm = useForm({
+	const form = useForm({
 		initialValues: {
 			student_name: "",
 			study_group_id: "",
@@ -49,19 +49,21 @@ const PlagiarismReport = () => {
 			program: "",
 			major_name: "",
 			faculty_name: "",
-			chapter_1: "",
-			chapter_2: "",
-			chapter_3: "",
-			chapter_4: "",
-			chapter_5: "",
+			research_name: "",
+			chapter_1: null,
+			chapter_2: null,
+			chapter_3: null,
+			chapter_4: null,
+			chapter_5: null,
 			inspection_date: null,
 		},
 		validate: {
-			chapter_1: validateChapter,
+			research_name: (value) => ((value || "").trim().length > 0 ? null : "กรุณากรอกชื่อวิจัย"),
+			/* chapter_1: validateChapter,
 			chapter_2: validateChapter,
 			chapter_3: validateChapter,
 			chapter_4: validateChapter,
-			chapter_5: validateChapter,
+			chapter_5: validateChapter, */
 			inspection_date: (v) => {
 				if (!v) return "กรุณาระบุวันที่ปิด";
 			},
@@ -76,9 +78,7 @@ const PlagiarismReport = () => {
 					headers: { Authorization: `Bearer ${token}` },
 				});
 				const requestData = await requestRes.json();
-				if (!requestRes.ok) {
-					throw new Error(requestData.message);
-				}
+				if (!requestRes.ok) throw new Error(requestData.message);
 				setUser(requestData);
 				console.log(requestData);
 			} catch (e) {
@@ -89,58 +89,44 @@ const PlagiarismReport = () => {
 		fetchProfile();
 	}, [token]);
 
-	useEffect(() => {
-		setSelectedType(type);
-	}, [type]);
-
 	const [latestRequest, setLatestRequest] = useState(null);
 
-	/* useEffect(() => {
-		if (!user) return;
+	useEffect(() => {
 		const fetchRequestExam = async () => {
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/requestExamAll", {
+				const requestRes = await fetch("http://localhost:8080/api/AllPlagiarismReport", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
 				const requestData = await requestRes.json();
-				if (!requestRes.ok) {
-					throw new Error(requestData.message);
-				}
-
+				if (!requestRes.ok) throw new Error(requestData.message);
 				setRequest(requestData);
-				console.log(requestData);
 				setLatestRequest(requestData[0]);
-				console.log(requestData[0]);
 			} catch (e) {
 				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 				console.error("Error fetching requestExamAll:", e);
 			}
 		};
 		fetchRequestExam();
-	}, [user]); */
+	}, []);
 
 	const handleOpenAdd = async () => {
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/studentInfo", {
+			const InfoRes = await fetch("http://localhost:8080/api/studentInfo", {
 				method: "GET",
 				headers: { Authorization: `Bearer ${token}` },
 			});
-			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
-			AddForm.reset();
-			AddForm.setValues({
-				student_name: requestData.student_name || "",
-				student_id: requestData.student_id || "",
-				study_group_id: requestData.study_group_id || "",
-				education_level: requestData.education_level || "",
-				program: requestData.program || "",
-				major_name: requestData.major_name || "",
-				faculty_name: requestData.faculty_name || "",
+			const InfoData = await InfoRes.json();
+			if (!InfoRes.ok) throw new Error(InfoData.message);
+			const ThesisRes = await fetch("http://localhost:8080/api/openCheckThesis", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 			});
-			setFormData(requestData);
+			const ThesisData = await ThesisRes.json();
+			if (!ThesisRes.ok) throw new Error(ThesisData.message);
+			console.log(ThesisData);
+			form.reset();
+			form.setValues({ ...InfoData, ...ThesisData });
 			setOpenAdd(true);
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
@@ -149,24 +135,28 @@ const PlagiarismReport = () => {
 	};
 
 	const handleAdd = async () => {
-		console.log(AddForm.values);
-		/* try {
-			const requestRes = await fetch("http://localhost:8080/api/addRequestExam", {
+		console.log(form.values);
+		try {
+			const formData = new FormData();
+			Object.entries(form.values).forEach(([key, value]) => {
+				if (value instanceof Date) formData.append(key, value.toISOString());
+				else if (value instanceof File) formData.append(key, value, value.name);
+				else formData.append(key, value ?? "");
+			});
+			const requestRes = await fetch("http://localhost:8080/api/addPlagiarismReport", {
 				method: "POST",
-				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify(AddForm.values),
+				headers: { Authorization: `Bearer ${token}` },
+				body: formData,
 			});
 			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
-			notify("success", requestData.message || "สำเร็จ");
+			if (!requestRes.ok) throw new Error(requestData.message);
+			notify("success", requestData.message);
 			setOpenAdd(false);
-			setRequest((prev) => [...prev, { ...AddForm.values, ...requestData.data }]);
+			setRequest((prev) => [...prev, { ...form.values, ...requestData.data }]);
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching addRequestExam:", e);
-		} */
+		}
 	};
 
 	const handleApprove = async (item) => {
@@ -175,16 +165,14 @@ const PlagiarismReport = () => {
 			return;
 		}
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/approveRequestExam", {
+			const requestRes = await fetch("http://localhost:8080/api/approvePlagiarismReport", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ request_exam_id: item.request_exam_id, name: user.name, role: user.role, selected: selected, comment: comment }),
+				body: JSON.stringify({ plagiarism_report_id: item.plagiarism_report_id, selected: selected, comment: comment }),
 			});
 			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
-			notify("success", requestData.message || "สำเร็จ");
+			if (!requestRes.ok) throw new Error(requestData.message);
+			notify("success", requestData.message);
 			setSelected("approve");
 			setComment("");
 			setOpenApprove(false);
@@ -192,26 +180,6 @@ const PlagiarismReport = () => {
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching approveRequestExam:", e);
-		}
-	};
-
-	const handlePay = async (item) => {
-		try {
-			const requestRes = await fetch("http://localhost:8080/api/payRequestExam", {
-				method: "POST",
-				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ request_exam_id: item.request_exam_id, receipt_vol_No: "10/54" }),
-			});
-			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
-			notify("success", requestData.message || "สำเร็จ");
-			setOpenPay(false);
-			setRequest((prev) => prev.map((row) => (row.request_exam_id === item.request_exam_id ? { ...row, ...requestData.data } : row)));
-		} catch (e) {
-			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-			console.error("Error fetching payRequestExam:", e);
 		}
 	};
 
@@ -224,32 +192,26 @@ const PlagiarismReport = () => {
 		});
 	}
 
-	const sortedData = sortRequests(request, user.role);
+	const sortedData = sortRequests(request, role);
 
 	const filteredData = sortedData.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
-		const matchesType = selectedType ? p.request_type === selectedType : true;
-		return matchesSearch && matchesType;
+		return matchesSearch;
 	});
 
 	const rows = filteredData.map((item) => (
-		<Table.Tr key={item.request_exam_id}>
+		<Table.Tr key={item.plagiarism_report_id}>
 			<Table.Td>{item.student_name}</Table.Td>
 			{["advisor", "officer_registrar", "chairpersons"].includes(user?.role) && <Table.Td>{item.request_type}</Table.Td>}
 			<Table.Td style={{ textAlign: "center" }}>
 				{item.status <= 4 && item.status > 0 && (
 					<Stepper active={item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
-						{[...Array(4)].map((_, i) => (
+						{[...Array(2)].map((_, i) => (
 							<Stepper.Step key={i}>
 								<Pill>{item.status_text}</Pill>
 							</Stepper.Step>
 						))}
 					</Stepper>
-				)}
-				{(item.status == 0 || item.status > 6) && (
-					<Pill variant="filled" style={{ backgroundColor: "#ffcccc", color: "#b30000" }}>
-						{item.status_text}
-					</Pill>
 				)}
 				{item.status == 5 && (
 					<Pill variant="filled" style={{ backgroundColor: "#ccffcc", color: "#006600" }}>
@@ -264,35 +226,13 @@ const PlagiarismReport = () => {
 						<br />
 						{!item.advisor_approvals && "อาจารย์ที่ปรึกษา"}
 						{item.advisor_approvals && !item.chairpersons_approvals && "ประธานหลักสูตร"}
-						{item.advisor_approvals && item.chairpersons_approvals && !item.registrar_approvals && "เจ้าหน้าที่ทะเบียน"}
 					</>
 				)}
 			</Table.Td>
 			<Table.Td style={{ maxWidth: "150px" }}>
 				<Group>
-					{user.role === "student" && (
-						<>
-							{item.status === "4" && (
-								<Button
-									size="xs"
-									color="green"
-									onClick={() => {
-										setSelectedRow(item);
-										setOpenPay(true);
-									}}
-								>
-									ชำระค่าธรรมเนียม
-								</Button>
-							)}
-							{(item.status == 5 || item.status == 0 || item.status > 6) && (
-								<Button size="xs" color="green">
-									พิมพ์ใบเสร็จ
-								</Button>
-							)}
-						</>
-					)}
-					<Pdfg01 data={item} showType={item.status == 0 ? undefined : (user.role === "advisor" && item.status <= 1) || (user.role === "chairpersons" && item.status <= 2) || (user.role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
-					{((user.role === "advisor" && item.status == 1) || (user.role === "chairpersons" && item.status == 2) || (user.role === "officer_registrar" && item.status == 3)) && (
+					<Pdfg06 data={item} showType={item.status == 0 ? undefined : (role === "advisor" && item.status <= 1) || (role === "chairpersons" && item.status <= 2) || (role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
+					{((role === "advisor" && item.status == 1) || (role === "chairpersons" && item.status == 2) || (role === "officer_registrar" && item.status == 3)) && (
 						<Button
 							size="xs"
 							color="green"
@@ -302,17 +242,11 @@ const PlagiarismReport = () => {
 								setOpenApprove(true);
 							}}
 						>
-							{user.role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
+							ลงความเห็น
 						</Button>
 					)}
 				</Group>
 			</Table.Td>
-			{item.exam_results !== null && (
-				<Table.Td style={{ textAlign: "center" }}>
-					{item.exam_results === true && <Text c="green">ผ่าน</Text>}
-					{item.exam_results === false && <Text c="red">ไม่ผ่าน</Text>}
-				</Table.Td>
-			)}
 		</Table.Tr>
 	));
 
@@ -330,24 +264,21 @@ const PlagiarismReport = () => {
 				error={error}
 				openApproveState={openApproveState}
 				handleApprove={handleApprove}
-				role={user.role}
-				title={`${user.role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}คำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`}
+				role={role}
+				title={`ลงความเห็นรายงานผลการตรวจสอบการคัดลอกผลงานทางวิชาการ`}
 			/>
-			<ModalAddRequestGraduation opened={openAdd} onClose={() => setOpenAdd(false)} AddForm={AddForm} handleAdd={handleAdd} title={`เพิ่มรายงานผลการตรวจสอบการคัดลอกผลงานทางวิชาการ`} />
-			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} />
-
+			<ModalAddRequestGraduation opened={openAdd} onClose={() => setOpenAdd(false)} form={form} handleAdd={handleAdd} title={`เพิ่มรายงานผลการตรวจสอบการคัดลอกผลงานทางวิชาการ`} />
 			<Text size="1.5rem" fw={900} mb="md">
 				รายงานผลการตรวจสอบการคัดลอกผลงานทางวิชาการ
 			</Text>
 			<Group justify="space-between">
 				<Box>
 					<Flex align="flex-end" gap="sm">
-						{user.role !== "student" && <TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
-						{user.role === "chairpersons" && <Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
+						{role !== "student" && <TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
 					</Flex>
 				</Box>
 				<Box>
-					{user.role === "student" && (
+					{role === "student" && (
 						<Button onClick={() => handleOpenAdd()} disabled={latestRequest ? latestRequest.status !== "0" && latestRequest.status !== "6" && latestRequest.exam_results !== false : false}>
 							เพิ่มคำร้อง
 						</Button>
@@ -360,10 +291,9 @@ const PlagiarismReport = () => {
 					<Table.Thead>
 						<Table.Tr>
 							<Table.Th style={{ minWidth: 100 }}>ชื่อ</Table.Th>
-							{["advisor", "officer_registrar", "chairpersons"].includes(user?.role) && <Table.Th style={{ minWidth: 100 }}>เรื่อง</Table.Th>}
+							{["advisor", "chairpersons"].includes(user?.role) && <Table.Th style={{ minWidth: 100 }}>เรื่อง</Table.Th>}
 							<Table.Th style={{ minWidth: 110 }}>สถานะ</Table.Th>
 							<Table.Th>การดำเนินการ</Table.Th>
-							{request.some((it) => it.exam_results !== null) && <Table.Th style={{ minWidth: 110 }}>ผลสอบ</Table.Th>}
 						</Table.Tr>
 					</Table.Thead>
 					<Table.Tbody>{rows}</Table.Tbody>

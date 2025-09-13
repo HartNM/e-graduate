@@ -15,6 +15,7 @@ const RequestExam = () => {
 	const payloadBase64 = token.split(".")[1];
 	const payload = JSON.parse(atob(payloadBase64));
 	const role = payload.role;
+	const user_id = payload.user_id;
 	// Modal Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
@@ -38,7 +39,6 @@ const RequestExam = () => {
 	const [selectedType, setSelectedType] = useState("");
 	const [latestRequest, setLatestRequest] = useState(true);
 
-	const [registerCoures, setRegisterCoures] = useState(["1065232", "1066205", "1065222", "1065222", "1065204", "1065232", "1065202", "1065201", "1065206", "1065208", "1065231"]);
 	const [missingCoures, setMissingCoures] = useState([]);
 
 	const form = useForm({
@@ -46,9 +46,12 @@ const RequestExam = () => {
 		validate: {},
 	});
 
+	/* const [registerCourses, setRegisterCourses] = useState([]); */
+	const [registerCourses] = useState(() => (user_id === "684270201" ? ["1065201"] : ["1065232", "1066205", "1065222", "1065222", "1065204", "1065232", "1065202", "1065201", "1065206", "1065208", "1065231"]));
+
 	useEffect(() => {
 		setSelectedType(type);
-	}, [type]);
+	}, []);
 
 	useEffect(() => {
 		const fetchProfile = async () => {
@@ -74,7 +77,7 @@ const RequestExam = () => {
 				const res = await req.json();
 				if (!req.ok) throw new Error(res.message);
 				console.log(res);
-				
+
 				const countFailOrAbsent = res.filter((row) => row.exam_results === "ไม่ผ่าน" || row.exam_results === "ขาดสอบ").length;
 				setRequest(res);
 				if (!res.length) setLatestRequest(false);
@@ -103,7 +106,7 @@ const RequestExam = () => {
 				const coursesData = await coursesRes.json();
 				if (!coursesRes.ok) throw new Error(coursesData.message);
 				const missingLabels = registrationData.course_id
-					.filter((code) => !registerCoures.includes(code))
+					.filter((code) => !registerCourses.includes(code))
 					.map((code) => {
 						const course = coursesData.find((c) => c.course_id === code);
 						return course ? `${course.course_id} ${course.course_name}` : code;
