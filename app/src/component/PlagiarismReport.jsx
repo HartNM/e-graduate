@@ -40,6 +40,13 @@ const PlagiarismReport = () => {
 		return null;
 	};
 
+	const examTypeMap = {
+		ขอสอบโครงร่างวิทยานิพนธ์: "โครงร่าง",
+		ขอสอบโครงร่างการค้นคว้าอิสระ: "โครงร่าง",
+		ขอสอบวิทยานิพนธ์: "",
+		ขอสอบการค้นคว้าอิสระ: "",
+	};
+
 	const form = useForm({
 		initialValues: {
 			student_name: "",
@@ -57,16 +64,25 @@ const PlagiarismReport = () => {
 			chapter_5: null,
 			inspection_date: null,
 		},
-		validate: {
-			research_name: (value) => ((value || "").trim().length > 0 ? null : "กรุณากรอกชื่อวิจัย"),
-			/* chapter_1: validateChapter,
-			chapter_2: validateChapter,
-			chapter_3: validateChapter,
-			chapter_4: validateChapter,
-			chapter_5: validateChapter, */
-			inspection_date: (v) => {
-				if (!v) return "กรุณาระบุวันที่ปิด";
-			},
+		validate: (values) => {
+			const errors = {};
+			if (!(values.research_name || "").trim()) {
+				errors.research_name = "กรุณากรอกชื่อวิจัย";
+			}
+			if (!values.inspection_date) {
+				errors.inspection_date = "กรุณาระบุวันที่ปิด";
+			}
+			let fieldsToCheck = [];
+			if (!values.request_type) {
+				fieldsToCheck = ["chapter_1", "chapter_2", "chapter_3", "chapter_4", "chapter_5"];
+			} else if (examTypeMap[values.request_type] === "โครงร่าง") {
+				fieldsToCheck = ["chapter_1", "chapter_2", "chapter_3"];
+			}
+			fieldsToCheck.forEach((field) => {
+				const error = validateChapter(values[field]);
+				if (error) errors[field] = error;
+			});
+			return errors;
 		},
 	});
 
@@ -100,8 +116,24 @@ const PlagiarismReport = () => {
 				});
 				const requestData = await requestRes.json();
 				if (!requestRes.ok) throw new Error(requestData.message);
+				const buttonRes = await fetch("http://localhost:8080/api/buttonCheck", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				});
+				const buttonData = await buttonRes.json();
+				console.log(buttonData);
+
+				if (!buttonRes.ok) throw new Error(buttonData.message);
+				console.log(requestData);
 				setRequest(requestData);
-				setLatestRequest(requestData[0]);
+				
+				if (buttonData.length !=0) {
+					
+					setLatestRequest(false);
+				} else {
+					setLatestRequest(requestData[0]);
+					console.log(false);
+				}
 			} catch (e) {
 				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 				console.error("Error fetching requestExamAll:", e);
@@ -202,7 +234,7 @@ const PlagiarismReport = () => {
 	const rows = filteredData.map((item) => (
 		<Table.Tr key={item.plagiarism_report_id}>
 			<Table.Td>{item.student_name}</Table.Td>
-			{["advisor", "officer_registrar", "chairpersons"].includes(user?.role) && <Table.Td>{item.request_type}</Table.Td>}
+			{["advisor", "officer_registrar", "chairpersons"].includes(role) && <Table.Td>{item.request_type}</Table.Td>}
 			<Table.Td style={{ textAlign: "center" }}>
 				{item.status <= 4 && item.status > 0 && (
 					<Stepper active={item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
@@ -291,7 +323,7 @@ const PlagiarismReport = () => {
 					<Table.Thead>
 						<Table.Tr>
 							<Table.Th style={{ minWidth: 100 }}>ชื่อ</Table.Th>
-							{["advisor", "chairpersons"].includes(user?.role) && <Table.Th style={{ minWidth: 100 }}>เรื่อง</Table.Th>}
+							{["advisor", "chairpersons"].includes(role) && <Table.Th style={{ minWidth: 100 }}>เรื่อง</Table.Th>}
 							<Table.Th style={{ minWidth: 110 }}>สถานะ</Table.Th>
 							<Table.Th>การดำเนินการ</Table.Th>
 						</Table.Tr>

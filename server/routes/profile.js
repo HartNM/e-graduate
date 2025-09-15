@@ -130,10 +130,10 @@ router.get("/checkStudent", authenticateToken, async (req, res) => {
 		const student = await axios.get(`http://localhost:8080/externalApi/student/${user_id}`);
 		const request_exam = await pool.request().input("user_id", user_id).query(`SELECT status, exam_results FROM request_exam WHERE student_id = @user_id ORDER BY request_exam_id DESC`);
 		const latest_request_exam = request_exam.recordset[0] || null;
-		console.log(latest_request_exam);
+		/* console.log(latest_request_exam); */
 		const Proposal = await pool.request().input("user_id", user_id).query(`SELECT status FROM request_thesis_proposal WHERE student_id = @user_id ORDER BY thesis_advisor_id DESC`);
 		const latest_Proposal = Proposal.recordset[0] || null;
-		console.log(latest_Proposal);
+		/* console.log(latest_Proposal); */
 
 		return res.status(200).json({
 			education_level: student.data.education_level,

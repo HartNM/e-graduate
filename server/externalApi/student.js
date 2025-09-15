@@ -33,7 +33,6 @@ const { poolPromise, sql } = require("../db");
 
 router.get("/student/:student_id", async (req, res) => {
 	const studentid = req.params.student_id;
-	/* mjcode AS major_id */
 	try {
 		const pool = await poolPromise;
 		const result = await pool.request().input("id", sql.BigInt, studentid).query(`
@@ -52,14 +51,13 @@ router.get("/student/:student_id", async (req, res) => {
         FROM Api_students
         WHERE id = @id
       `);
-
-		if (result.recordset.length > 0) {
+		/* if (result.recordset.length > 0) {
 			res.json(result.recordset[0]);
 		} else {
 			res.status(404).json({ error: "Student not found" });
-		}
-	} catch (err) {
-		console.error("DB query error:", err);
+		} */ res.json(result.recordset[0]);
+	} catch (e) {
+		console.error("DB query error:", e);
 		res.status(500).json({ error: "Internal server error" });
 	}
 });

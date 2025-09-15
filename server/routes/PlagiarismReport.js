@@ -15,11 +15,9 @@ const storage = multer.diskStorage({
 		const ext = path.extname(file.originalname); // .pdf
 		const today = new Date();
 		const dateStr = today.toISOString().split("T")[0].replace(/-/g, "");
-
 		cb(null, `${file.fieldname}-${dateStr}${ext}`);
 	},
 });
-
 const upload = multer({ storage });
 
 const dayjs = require("dayjs");
@@ -46,17 +44,39 @@ const statusMap = {
 	6: "ไม่อนุมัติ",
 };
 
+router.post("/buttonCheck", authenticateToken, async (req, res) => {
+	const { user_id } = req.user;
+	const pool = await poolPromise;
+	const resultThesisDefense = await pool.request().input("user_id", user_id).query(`
+		SELECT *
+		FROM request_thesis_defense
+		WHERE status = 5 AND student_id = @user_id ORDER BY request_thesis_defense_id DESC
+	`);
+	return res.status(200).json(resultThesisDefense.recordset);
+});
+
 router.post("/openCheckThesis", authenticateToken, async (req, res) => {
 	const { user_id } = req.user;
 	try {
+		let result;
 		const pool = await poolPromise;
-		const resultThesis = await pool.request().input("user_id", user_id).query(`
-			SELECT request_thesis_proposal_id, thesis_advisor_id, request_type
-			FROM request_thesis_proposal
-			WHERE status = 5 AND student_id = @user_id ORDER BY request_thesis_proposal_id DESC
+		const resultThesisDefense = await pool.request().input("user_id", user_id).query(`
+			SELECT request_thesis_defense_id, thesis_advisor_id, request_type
+			FROM request_thesis_defense
+			WHERE status = 5 AND student_id = @user_id ORDER BY request_thesis_defense_id DESC
 		`);
-		const resultAdvisor = await pool.request().input("user_id", resultThesis.recordset[0].thesis_advisor_id).query(`SELECT name FROM users WHERE user_id = @user_id`);
-		return res.status(200).json({ ...resultThesis.recordset[0], request_thesis_id: resultThesis.recordset[0].request_thesis_proposal_id, thesis_advisor_name: resultAdvisor.recordset[0].name });
+		if (resultThesisDefense.recordset.length > 0) {
+			result = resultThesisDefense.recordset[0];
+		} else {
+			const resultThesisProposal = await pool.request().input("user_id", user_id).query(`
+				SELECT request_thesis_proposal_id, thesis_advisor_id, request_type
+				FROM request_thesis_proposal
+				WHERE status = 5 AND student_id = @user_id ORDER BY request_thesis_proposal_id DESC
+			`);
+			result = resultThesisProposal.recordset[0];
+		}
+		const resultAdvisor = await pool.request().input("user_id", result.thesis_advisor_id).query(`SELECT name FROM users WHERE user_id = @user_id`);
+		return res.status(200).json({ ...result, request_thesis_id: result.request_thesis_proposal_id, thesis_advisor_name: resultAdvisor.recordset[0].name });
 	} catch (e) {
 		console.error("openCheckThesis:", e);
 		return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลคำร้อง" });
@@ -82,18 +102,35 @@ router.post("/AllPlagiarismReport", authenticateToken, async (req, res) => {
 		const enrichedData = await Promise.all(
 			result.recordset.map(async (item) => {
 				let studentInfo = null;
+				let advisorInfo = null;
+				let chairpersonsInfo = null;
 				try {
 					const studentRes = await axios.get(`http://localhost:8080/externalApi/student/${item.student_id}`);
 					studentInfo = studentRes.data;
-				} catch (err) {
-					console.warn(`ไม่สามารถดึงข้อมูลนักศึกษา ${item.student_id}`);
+				} catch (e) {
+					console.warn(item.student_id, e);
+				}
+				try {
+					const advisorRes = await axios.get(`http://localhost:8080/externalApi/user_idGetUser_name/${item.advisor_approvals_id}`);
+					advisorInfo = advisorRes.data;
+				} catch (e) {
+					console.warn(item.advisor_approvals_id, e);
+				}
+				try {
+					const chairpersonsRes = await axios.get(`http://localhost:8080/externalApi/user_idGetUser_name/${item.chairpersons_approvals_id}`);
+					chairpersonsInfo = chairpersonsRes.data;
+				} catch (e) {
+					console.warn(item.chairpersons_approvals_id, e);
 				}
 				return {
 					...item,
 					...studentInfo,
 					request_date: formatDateThaiBE(item.request_date) || null,
+					advisor_approvals_name: advisorInfo.name,
 					advisor_approvals_date: formatDateThaiBE(item.advisor_approvals_date) || null,
+					chairpersons_approvals_name: chairpersonsInfo.name,
 					chairpersons_approvals_date: formatDateThaiBE(item.chairpersons_approvals_date) || null,
+					inspection_date: formatDateThaiBE(result.recordset[0].inspection_date),
 					status_text: statusMap[item.status?.toString()] || null,
 					request_type: item.request_type || null,
 				};
@@ -128,8 +165,6 @@ async function sendPdfByType(req, res, field) {
 		}
 		let cleanPath = rawPath.replace(/^uploads[\/\\]/, "");
 		let absPath = path.resolve(UPLOAD_ROOT, cleanPath);
-		console.log("rawPath from DB:", rawPath);
-		console.log("Resolved absPath:", absPath);
 		if (!fs.existsSync(absPath)) {
 			return res.status(404).json({ message: "ไม่พบไฟล์" });
 		}
@@ -154,8 +189,22 @@ router.post(
 		try {
 			const plagiarismFilePath = req.files["plagiarism_file"]?.[0]?.path || null;
 			const fullReportFilePath = req.files["full_report_file"]?.[0]?.path || null;
-			const { student_id, study_group_id, major_id, faculty_name, research_name, thesis_advisor_id, chapter_1, chapter_2, chapter_3, chapter_4, chapter_5, inspection_date, request_thesis_id } =
-				req.body;
+			const {
+				student_id,
+				study_group_id,
+				major_id,
+				faculty_name,
+				request_type,
+				research_name,
+				thesis_advisor_id,
+				chapter_1,
+				chapter_2,
+				chapter_3,
+				chapter_4,
+				chapter_5,
+				inspection_date,
+				request_thesis_id,
+			} = req.body;
 			const pool = await poolPromise;
 			const infoRes = await pool.request().query(`SELECT TOP 1 term FROM request_exam_info ORDER BY request_exam_info_id DESC`);
 			const result = await pool
@@ -167,7 +216,7 @@ router.post(
 				.input("thesis_advisor_id", thesis_advisor_id)
 				.input("major_id", major_id)
 				.input("faculty_name", faculty_name)
-				.input("request_type", `เพิ่มรายงานผลการตรวจสอบการคัดลอกผลงานทางวิชาการ`)
+				.input("request_thesis_type", request_type)
 				.input("term", infoRes.recordset[0].term)
 				.input("request_date", formatDateForDB())
 				.input("status", "1")
@@ -179,17 +228,18 @@ router.post(
 				.input("inspection_date", inspection_date)
 				.input("plagiarism_file", plagiarismFilePath)
 				.input("full_report_file", fullReportFilePath)
-				.query(`INSERT INTO plagiarism_report (request_thesis_id,student_id,study_group_id,research_name,thesis_advisor_id,major_id,faculty_name,request_type,
+				.query(`INSERT INTO plagiarism_report (request_thesis_id,student_id,study_group_id,research_name,thesis_advisor_id,major_id,faculty_name,request_thesis_type,
 					term,request_date,status,chapter_1,chapter_2,chapter_3,chapter_4,chapter_5,inspection_date,plagiarism_file,full_report_file
 				) OUTPUT INSERTED.* VALUES (
-				 	@request_thesis_id,@student_id,@study_group_id,@research_name,@thesis_advisor_id,@major_id,@faculty_name,@request_type,
+				 	@request_thesis_id,@student_id,@study_group_id,@research_name,@thesis_advisor_id,@major_id,@faculty_name,@request_thesis_type,
 					@term,@request_date,@status,@chapter_1,@chapter_2,@chapter_3,@chapter_4,@chapter_5,@inspection_date,@plagiarism_file,@full_report_file)`);
 			res.status(200).json({
 				message: "บันทึกคำร้องขอสอบเรียบร้อยแล้ว",
 				data: {
 					...result.recordset[0],
-					status_text: statusMap[result.recordset[0].status?.toString()] || null,
-					request_date: formatDateThaiBE(result.recordset[0].request_date) || null,
+					status_text: statusMap[result.recordset[0].status?.toString()],
+					request_date: formatDateThaiBE(result.recordset[0].request_date),
+					inspection_date: formatDateThaiBE(result.recordset[0].inspection_date),
 				},
 			});
 		} catch (err) {
@@ -246,16 +296,31 @@ router.post("/approvePlagiarismReport", authenticateToken, async (req, res) => {
 			WHERE plagiarism_report_id = @plagiarism_report_id
 			`;
 		const result = await request.query(query);
+		try {
+			const advisorRes = await axios.get(`http://localhost:8080/externalApi/user_idGetUser_name/${result.recordset[0].advisor_approvals_id}`);
+			advisorInfo = advisorRes.data;
+		} catch (e) {
+			console.warn(item.advisor_approvals_id, e);
+		}
+		try {
+			const chairpersonsRes = await axios.get(`http://localhost:8080/externalApi/user_idGetUser_name/${result.recordset[0].chairpersons_approvals_id}`);
+			chairpersonsInfo = chairpersonsRes.data;
+		} catch (e) {
+			console.warn(item.chairpersons_approvals_id, e);
+		}
 		res.status(200).json({
 			message: "บันทึกผลการอนุมัติคำร้องขอสอบเรียบร้อยแล้ว",
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()] || null,
 				request_date: formatDateThaiBE(result.recordset[0].request_date) || null,
+				advisor_approvals_name: advisorInfo.name,
 				advisor_approvals_date: formatDateThaiBE(result.recordset[0].advisor_approvals_date) || null,
+				chairpersons_approvals_name: chairpersonsInfo.name,
 				chairpersons_approvals_date: formatDateThaiBE(result.recordset[0].chairpersons_approvals_date) || null,
 				registrar_approvals_date: formatDateThaiBE(result.recordset[0].registrar_approvals_date) || null,
 				receipt_pay_date: formatDateThaiBE(result.recordset[0].receipt_pay_date) || null,
+				inspection_date: formatDateThaiBE(result.recordset[0].inspection_date),
 			},
 		});
 	} catch (err) {
@@ -287,6 +352,7 @@ router.post("/payRequestExam", authenticateToken, async (req, res) => {
 				chairpersons_approvals_date: formatDateThaiBE(row.chairpersons_approvals_date),
 				registrar_approvals_date: formatDateThaiBE(row.registrar_approvals_date),
 				receipt_pay_date: formatDateThaiBE(row.receipt_pay_date),
+				inspection_date: formatDateThaiBE(result.recordset[0].inspection_date),
 			},
 		});
 	} catch (err) {
