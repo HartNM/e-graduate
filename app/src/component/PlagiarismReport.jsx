@@ -63,6 +63,8 @@ const PlagiarismReport = () => {
 			chapter_4: null,
 			chapter_5: null,
 			inspection_date: null,
+			plagiarism_file: null,
+			full_report_file: null,
 		},
 		validate: (values) => {
 			const errors = {};
@@ -82,6 +84,12 @@ const PlagiarismReport = () => {
 				const error = validateChapter(values[field]);
 				if (error) errors[field] = error;
 			});
+			if (!(values.plagiarism_file instanceof File)) {
+				errors.plagiarism_file = "กรุณาอัปโหลดไฟล์ตรวจสอบ";
+			}
+			if (!(values.full_report_file instanceof File)) {
+				errors.full_report_file = "กรุณาอัปโหลดไฟล์รายงานฉบับเต็ม";
+			}
 			return errors;
 		},
 	});
@@ -126,10 +134,12 @@ const PlagiarismReport = () => {
 				if (!buttonRes.ok) throw new Error(buttonData.message);
 				console.log(requestData);
 				setRequest(requestData);
-				
-				if (buttonData.length !=0) {
-					
-					setLatestRequest(false);
+				if (buttonData.length == 1) {
+					if (requestData.length == 2) {
+						setLatestRequest(requestData[0]);
+					} else {
+						setLatestRequest(false);
+					}
 				} else {
 					setLatestRequest(requestData[0]);
 					console.log(false);
@@ -159,6 +169,8 @@ const PlagiarismReport = () => {
 			console.log(ThesisData);
 			form.reset();
 			form.setValues({ ...InfoData, ...ThesisData });
+			console.log({ ...InfoData, ...ThesisData });
+
 			setOpenAdd(true);
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
@@ -183,6 +195,7 @@ const PlagiarismReport = () => {
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) throw new Error(requestData.message);
 			notify("success", requestData.message);
+			setLatestRequest(false);
 			setOpenAdd(false);
 			setRequest((prev) => [...prev, { ...form.values, ...requestData.data }]);
 		} catch (e) {
@@ -208,7 +221,7 @@ const PlagiarismReport = () => {
 			setSelected("approve");
 			setComment("");
 			setOpenApprove(false);
-			setRequest((prev) => prev.map((row) => (row.request_exam_id === item.request_exam_id ? { ...row, ...requestData.data } : row)));
+			setRequest((prev) => prev.map((row) => (row.plagiarism_report_id === item.plagiarism_report_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching approveRequestExam:", e);
@@ -234,7 +247,7 @@ const PlagiarismReport = () => {
 	const rows = filteredData.map((item) => (
 		<Table.Tr key={item.plagiarism_report_id}>
 			<Table.Td>{item.student_name}</Table.Td>
-			{["advisor", "officer_registrar", "chairpersons"].includes(role) && <Table.Td>{item.request_type}</Table.Td>}
+			<Table.Td>{item.request_thesis_type.replace("ขอสอบ", "")}</Table.Td>
 			<Table.Td style={{ textAlign: "center" }}>
 				{item.status <= 4 && item.status > 0 && (
 					<Stepper active={item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
@@ -323,7 +336,7 @@ const PlagiarismReport = () => {
 					<Table.Thead>
 						<Table.Tr>
 							<Table.Th style={{ minWidth: 100 }}>ชื่อ</Table.Th>
-							{["advisor", "chairpersons"].includes(role) && <Table.Th style={{ minWidth: 100 }}>เรื่อง</Table.Th>}
+							<Table.Th style={{ minWidth: 100 }}>ชนิด</Table.Th>
 							<Table.Th style={{ minWidth: 110 }}>สถานะ</Table.Th>
 							<Table.Th>การดำเนินการ</Table.Th>
 						</Table.Tr>

@@ -130,20 +130,21 @@ router.get("/checkStudent", authenticateToken, async (req, res) => {
 		const student = await axios.get(`http://localhost:8080/externalApi/student/${user_id}`);
 		const request_exam = await pool.request().input("user_id", user_id).query(`SELECT status, exam_results FROM request_exam WHERE student_id = @user_id ORDER BY request_exam_id DESC`);
 		const latest_request_exam = request_exam.recordset[0] || null;
-		/* console.log(latest_request_exam); */
 		const Proposal = await pool.request().input("user_id", user_id).query(`SELECT status FROM request_thesis_proposal WHERE student_id = @user_id ORDER BY thesis_advisor_id DESC`);
 		const latest_Proposal = Proposal.recordset[0] || null;
-		/* console.log(latest_Proposal); */
-
+		const Defense = await pool.request().input("user_id", user_id).query(`SELECT status FROM request_thesis_defense WHERE student_id = @user_id ORDER BY request_thesis_defense_id DESC`);
+		const latest_defense = Defense.recordset[0] || null;
+		const Plagiarism = await pool.request().input("user_id", user_id).query(`SELECT status FROM plagiarism_report WHERE student_id = @user_id ORDER BY plagiarism_report_id DESC`);
+		const latest_Plagiarism = Plagiarism.recordset[0] || null;
 		return res.status(200).json({
 			education_level: student.data.education_level,
 			RequestExamCancel: latest_request_exam ? latest_request_exam.status !== "6" && latest_request_exam.exam_results === null : false,
 			RequestThesisProposal: latest_request_exam ? latest_request_exam.status === "5" && latest_request_exam.exam_results === "ผ่าน" : false,
-			RequestThesisDefense: latest_Proposal ? latest_Proposal.status === "5" : false,
-			RequestGraduation: latest_Proposal ? latest_Proposal.status === "5" : false,
-			PlagiarismReport: false,
-			PostponeProposalExam: false,
-			PostponeDefenseExam: false,
+			PlagiarismReport: latest_Proposal ? latest_Proposal.status === "5" : false,
+			PostponeProposalExam: latest_Proposal ? latest_Proposal.status === "5" : false,
+			RequestThesisDefense: latest_Plagiarism ? latest_Plagiarism.status === "5" : false,
+			PostponeDefenseExam: latest_defense ? latest_defense.status === "5" : false,
+			RequestGraduation: latest_defense ? latest_defense.status === "5" : false,
 		});
 	} catch (err) {
 		console.error(err);

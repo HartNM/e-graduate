@@ -7,15 +7,14 @@ const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
+const { v4: uuidv4 } = require("uuid");
 const storage = multer.diskStorage({
 	destination: function (req, file, cb) {
 		cb(null, "uploads/");
 	},
 	filename: function (req, file, cb) {
-		const ext = path.extname(file.originalname); // .pdf
-		const today = new Date();
-		const dateStr = today.toISOString().split("T")[0].replace(/-/g, "");
-		cb(null, `${file.fieldname}-${dateStr}${ext}`);
+		const ext = path.extname(file.originalname);
+		cb(null, `${file.fieldname}-${uuidv4()}${ext}`);
 	},
 });
 const upload = multer({ storage });
@@ -59,24 +58,29 @@ router.post("/openCheckThesis", authenticateToken, async (req, res) => {
 	const { user_id } = req.user;
 	try {
 		let result;
+		let request_thesis_id;
 		const pool = await poolPromise;
 		const resultThesisDefense = await pool.request().input("user_id", user_id).query(`
-			SELECT request_thesis_defense_id, thesis_advisor_id, request_type
+			SELECT request_thesis_defense_id, thesis_advisor_id, request_type, research_name
 			FROM request_thesis_defense
 			WHERE status = 5 AND student_id = @user_id ORDER BY request_thesis_defense_id DESC
 		`);
 		if (resultThesisDefense.recordset.length > 0) {
 			result = resultThesisDefense.recordset[0];
+			request_thesis_id = result.request_thesis_defense_id;
 		} else {
 			const resultThesisProposal = await pool.request().input("user_id", user_id).query(`
-				SELECT request_thesis_proposal_id, thesis_advisor_id, request_type
+				SELECT request_thesis_proposal_id, thesis_advisor_id, request_type, research_name
 				FROM request_thesis_proposal
 				WHERE status = 5 AND student_id = @user_id ORDER BY request_thesis_proposal_id DESC
 			`);
 			result = resultThesisProposal.recordset[0];
+			request_thesis_id = result.request_thesis_proposal_id;
 		}
 		const resultAdvisor = await pool.request().input("user_id", result.thesis_advisor_id).query(`SELECT name FROM users WHERE user_id = @user_id`);
-		return res.status(200).json({ ...result, request_thesis_id: result.request_thesis_proposal_id, thesis_advisor_name: resultAdvisor.recordset[0].name });
+		console.log(result);
+
+		return res.status(200).json({ ...result, request_thesis_id: request_thesis_id, thesis_advisor_name: resultAdvisor.recordset[0].name });
 	} catch (e) {
 		console.error("openCheckThesis:", e);
 		return res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลคำร้อง" });
@@ -205,6 +209,7 @@ router.post(
 				inspection_date,
 				request_thesis_id,
 			} = req.body;
+
 			const pool = await poolPromise;
 			const infoRes = await pool.request().query(`SELECT TOP 1 term FROM request_exam_info ORDER BY request_exam_info_id DESC`);
 			const result = await pool
@@ -233,6 +238,28 @@ router.post(
 				) OUTPUT INSERTED.* VALUES (
 				 	@request_thesis_id,@student_id,@study_group_id,@research_name,@thesis_advisor_id,@major_id,@faculty_name,@request_thesis_type,
 					@term,@request_date,@status,@chapter_1,@chapter_2,@chapter_3,@chapter_4,@chapter_5,@inspection_date,@plagiarism_file,@full_report_file)`);
+			const examTypeMap = {
+				ขอสอบโครงร่างวิทยานิพนธ์: true,
+				ขอสอบโครงร่างการค้นคว้าอิสระ: true,
+				ขอสอบวิทยานิพนธ์: false,
+				ขอสอบการค้นคว้าอิสระ: false,
+			};
+			console.log(research_name, req.body);
+
+			console.log(examTypeMap[request_type]);
+			if (examTypeMap[request_type]) {
+				await pool.request().input("research_name", research_name).input("request_thesis_id", request_thesis_id).query(`
+					UPDATE request_thesis_proposal
+					SET research_name = @research_name
+					WHERE request_thesis_proposal_id = @request_thesis_id
+				`);
+			} else {
+				await pool.request().input("research_name", research_name).input("request_thesis_id", request_thesis_id).query(`
+					UPDATE request_thesis_defense
+					SET research_name = @research_name
+					WHERE request_thesis_defense_id = @request_thesis_id
+				`);
+			}
 			res.status(200).json({
 				message: "บันทึกคำร้องขอสอบเรียบร้อยแล้ว",
 				data: {

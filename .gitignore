@@ -33,3 +33,4 @@ Thumbs.db
 server/dist/
 server/sc.js
 server/scaddrq.js
+server/uploads

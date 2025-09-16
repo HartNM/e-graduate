@@ -33,10 +33,10 @@ const Student = () => {
 				if (data.PostponeDefenseExam) {
 					newMenu.push({ label: `คำร้องขอเลื่อนสอบวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconCalendarClock, links: "/student/PostponeDefenseExam" });
 				}
-				if (data.RequestGraduation) {
+				if (data.PlagiarismReport) {
 					newMenu.push({ label: "รายงานผลการตรวจสอบการคัดลอกผลงานทางวิชาการ", icon: IconSearch, links: "/student/PlagiarismReport" });
 				}
-				if (data.PlagiarismReport) {
+				if (data.RequestGraduation) {
 					newMenu.push({ label: "คำร้องขอสำเร็จการศึกษาระดับบัณฑิตศึกษา", icon: IconSchool, links: "/student/RequestGraduation" });
 				}
 				setMenu(newMenu);

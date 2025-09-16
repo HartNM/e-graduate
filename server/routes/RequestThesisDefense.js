@@ -98,14 +98,14 @@ router.post("/allRequestThesisDefense", authenticateToken, async (req, res) => {
 });
 
 router.post("/addRequestThesisDefense", authenticateToken, async (req, res) => {
-	const { student_id, study_group_id, major_id, faculty_name, thesis_advisor_id, thesis_exam_date, request_type } = req.body;
+	const { student_id, study_group_id, major_id, faculty_name, thesis_exam_date } = req.body;
 	try {
 		const pool = await poolPromise;
 		const infoRes = await pool.request().query(`SELECT term FROM request_exam_info ORDER BY request_exam_info_id DESC`);
 		const infoProposal = await pool
 			.request()
 			.input("student_id", student_id)
-			.query(`SELECT thesis_advisor_id, request_type FROM request_thesis_proposal WHERE student_id = @student_id ORDER BY thesis_advisor_id DESC`);
+			.query(`SELECT thesis_advisor_id, request_type, research_name FROM request_thesis_proposal WHERE student_id = @student_id ORDER BY request_thesis_proposal_id DESC`);
 		const result = await pool
 			.request()
 			.input("student_id", student_id)
@@ -114,6 +114,7 @@ router.post("/addRequestThesisDefense", authenticateToken, async (req, res) => {
 			.input("thesis_exam_date", thesis_exam_date)
 			.input("major_id", major_id)
 			.input("faculty_name", faculty_name)
+			.input("research_name", infoProposal.recordset[0].research_name)
 			.input("request_type", infoProposal.recordset[0].request_type.replace("โครงร่าง", ""))
 			.input("term", infoRes.recordset[0].term)
 			.input("request_date", formatDateForDB())
@@ -125,6 +126,7 @@ router.post("/addRequestThesisDefense", authenticateToken, async (req, res) => {
 					thesis_exam_date,
 					major_id,
 					faculty_name,
+					research_name,
 					request_type,
 					term,
 					request_date,
@@ -136,6 +138,7 @@ router.post("/addRequestThesisDefense", authenticateToken, async (req, res) => {
 					@thesis_exam_date,
 					@major_id,
 					@faculty_name,
+					@research_name,
 					@request_type,
 					@term,
 					@request_date,
