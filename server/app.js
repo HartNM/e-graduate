@@ -52,6 +52,9 @@ app.use("/api", RequestThesisDefense);
 const PlagiarismReport = require("./routes/PlagiarismReport");
 app.use("/api", PlagiarismReport);
 
+const RequestGraduation = require("./routes/RequestGraduation");
+app.use("/api", RequestGraduation);
+
 app.listen(PORT, () => {
 	console.log(`Server is running on port ${PORT}`);
 });

@@ -1,7 +1,6 @@
 //คำร้องขอสำเร็จการศึกษาระดับบัณฑิตศึกษา
 import { useState, useEffect } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
-import { useParams } from "react-router-dom";
 import { useForm } from "@mantine/form";
 import ModalAddRequestGraduation from "../component/Modal/ModalAddRequestGraduation";
 import ModalApprove from "../component/Modal/ModalApprove";
@@ -10,6 +9,10 @@ import ModalInform from "../component/Modal/ModalInform";
 import Pdfg01 from "../component/PDF/Pdfg05";
 
 const RequestGraduation = () => {
+	const token = localStorage.getItem("token");
+	const payloadBase64 = token.split(".")[1];
+	const payload = JSON.parse(atob(payloadBase64));
+	const role = payload.role;
 	// Modal Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
@@ -20,7 +23,6 @@ const RequestGraduation = () => {
 	const [openApproveState, setOpenApproveState] = useState(false);
 	const [openPay, setOpenPay] = useState(false);
 	// Form states
-	const [formData, setFormData] = useState({});
 	const [selectedRow, setSelectedRow] = useState(null);
 	const [selected, setSelected] = useState("approve");
 	const [comment, setComment] = useState("");
@@ -30,11 +32,8 @@ const RequestGraduation = () => {
 	//student //advisor //chairpersons //officer_registrar
 	const [request, setRequest] = useState([]);
 	const [search, setSearch] = useState("");
-	const token = localStorage.getItem("token");
-	const { type } = useParams();
-	const [selectedType, setSelectedType] = useState("");
 
-	const AddForm = useForm({
+	const form = useForm({
 		initialValues: {
 			student_name: "",
 			study_group_id: "",
@@ -48,6 +47,7 @@ const RequestGraduation = () => {
 			bachelor_university: "",
 			master_major: "",
 			master_university: "",
+
 			contact_house_no: "",
 			contact_moo: "",
 			contact_road: "",
@@ -56,6 +56,7 @@ const RequestGraduation = () => {
 			contact_province: "",
 			contact_zipcode: "",
 			contact_phone: "",
+
 			work_name: "",
 			work_moo: "",
 			work_road: "",
@@ -108,9 +109,7 @@ const RequestGraduation = () => {
 					headers: { Authorization: `Bearer ${token}` },
 				});
 				const requestData = await requestRes.json();
-				if (!requestRes.ok) {
-					throw new Error(requestData.message);
-				}
+				if (!requestRes.ok) throw new Error(requestData.message);
 				setUser(requestData);
 				console.log(requestData);
 			} catch (e) {
@@ -121,37 +120,27 @@ const RequestGraduation = () => {
 		fetchProfile();
 	}, [token]);
 
-	useEffect(() => {
-		setSelectedType(type);
-	}, [type]);
-
 	const [latestRequest, setLatestRequest] = useState(null);
 
-	/* useEffect(() => {
-		if (!user) return;
+	useEffect(() => {
 		const fetchRequestExam = async () => {
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/allRequestThesisProposal", {
+				const requestRes = await fetch("http://localhost:8080/api/allRequestGraduation", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-					body: JSON.stringify({ role: user.role, id: user.id }),
 				});
 				const requestData = await requestRes.json();
-				if (!requestRes.ok) {
-					throw new Error(requestData.message);
-				}
-
+				if (!requestRes.ok) throw new Error(requestData.message);
 				setRequest(requestData);
 				console.log(requestData);
 				setLatestRequest(requestData[0]);
-				console.log(requestData[0]);
 			} catch (e) {
 				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 				console.error("Error fetching requestExamAll:", e);
 			}
 		};
 		fetchRequestExam();
-	}, [user]); */
+	}, []);
 
 	const handleOpenAdd = async () => {
 		try {
@@ -160,20 +149,9 @@ const RequestGraduation = () => {
 				headers: { Authorization: `Bearer ${token}` },
 			});
 			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
-			AddForm.reset();
-			AddForm.setValues({
-				student_name: requestData.student_name || "",
-				student_id: requestData.student_id || "",
-				study_group_id: requestData.study_group_id || "",
-				education_level: requestData.education_level || "",
-				program: requestData.program || "",
-				major_name: requestData.major_name || "",
-				faculty_name: requestData.faculty_name || "",
-			});
-			setFormData(requestData);
+			if (!requestRes.ok) throw new Error(requestData.message);
+			form.reset();
+			form.setValues(requestData);
 			setOpenAdd(true);
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
@@ -182,26 +160,23 @@ const RequestGraduation = () => {
 	};
 
 	const handleAdd = async () => {
-		console.log(AddForm.values);
-
-		/* try {
-			const requestRes = await fetch("http://localhost:8080/api/addRequestThesisProposal", {
+		console.log(form.values);
+		try {
+			const requestRes = await fetch("http://localhost:8080/api/addRequestGraduation", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify(formData),
+				body: JSON.stringify(form.values),
 			});
 			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
+			if (!requestRes.ok) throw new Error(requestData.message);
 			notify("success", requestData.message || "สำเร็จ");
 			setOpenAdd(false);
-			setRequest((prev) => [...prev, { ...requestData.data, ...formData }]);
-			setLatestRequest({ ...requestData.data, ...formData });
+			setRequest((prev) => [...prev, { ...requestData.data, ...form.values }]);
+			setLatestRequest({ ...requestData.data, ...form.values });
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching addRequestExam:", e);
-		} */
+		}
 	};
 
 	const handleApprove = async (item) => {
@@ -209,21 +184,21 @@ const RequestGraduation = () => {
 			setError("กรุณาระบุเหตุผล");
 			return;
 		}
+		console.log(item);
+
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/approveRequestThesisProposal", {
+			const requestRes = await fetch("http://localhost:8080/api/approveRequestGraduation", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ request_thesis_proposal_id: item.request_thesis_proposal_id, name: user.name, role: user.role, selected: selected, comment: comment }),
+				body: JSON.stringify({ request_graduation_id: item.request_graduation_id, name: user.name, role: role, selected: selected, comment: comment }),
 			});
 			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
+			if (!requestRes.ok) throw new Error(requestData.message);
 			notify("success", requestData.message || "สำเร็จ");
 			setSelected("approve");
 			setComment("");
 			setOpenApprove(false);
-			setRequest((prev) => prev.map((row) => (row.request_thesis_proposal_id === item.request_thesis_proposal_id ? { ...row, ...requestData.data } : row)));
+			setRequest((prev) => prev.map((row) => (row.request_graduation_id === item.request_graduation_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching approveRequestExam:", e);
@@ -232,10 +207,10 @@ const RequestGraduation = () => {
 
 	const handlePay = async (item) => {
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/payRequestThesisProposal", {
+			const requestRes = await fetch("http://localhost:8080/api/payRequestGraduation", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ request_thesis_proposal_id: item.request_thesis_proposal_id, receipt_vol_No: "10/54" }),
+				body: JSON.stringify({ request_graduation_id: item.request_graduation_id, receipt_vol_No: "10/54" }),
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) {
@@ -243,7 +218,7 @@ const RequestGraduation = () => {
 			}
 			notify("success", requestData.message || "สำเร็จ");
 			setOpenPay(false);
-			setRequest((prev) => prev.map((row) => (row.request_thesis_proposal_id === item.request_thesis_proposal_id ? { ...row, ...requestData.data } : row)));
+			setRequest((prev) => prev.map((row) => (row.request_graduation_id === item.request_graduation_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching payRequestExam:", e);
@@ -259,24 +234,25 @@ const RequestGraduation = () => {
 		});
 	}
 
-	const sortedData = sortRequests(request, user.role);
+	const sortedData = sortRequests(request, role);
 
 	const filteredData = sortedData.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
-		const matchesType = selectedType ? p.request_type === `ขอสอบโครงร่าง${selectedType}` : true;
-		return matchesSearch && matchesType;
+		return matchesSearch;
 	});
 
 	const rows = filteredData.map((item) => (
-		<Table.Tr key={item.request_thesis_proposal_id}>
+		<Table.Tr key={item.request_graduation_id}>
 			<Table.Td>{item.student_name}</Table.Td>
-			{["advisor", "officer_registrar", "chairpersons"].includes(user?.role) && <Table.Td>{item.request_type}</Table.Td>}
+			{["advisor", "officer_registrar", "chairpersons"].includes(role) && <Table.Td>{item.request_type}</Table.Td>}
 			<Table.Td style={{ textAlign: "center" }}>
 				{item.status <= 4 && item.status > 0 && (
-					<Stepper active={item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
-						{[...Array(4)].map((_, i) => (
+					<Stepper active={item.status === "4" ? item.status - 2 : item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
+						{[...Array(3)].map((_, i) => (
 							<Stepper.Step key={i}>
-								<Pill>{item.status_text}</Pill>
+								<Pill>
+									{item.status_text}
+								</Pill>
 							</Stepper.Step>
 						))}
 					</Stepper>
@@ -299,13 +275,12 @@ const RequestGraduation = () => {
 						<br />
 						{!item.advisor_approvals && "อาจารย์ที่ปรึกษา"}
 						{item.advisor_approvals && !item.chairpersons_approvals && "ประธานหลักสูตร"}
-						{item.advisor_approvals && item.chairpersons_approvals && !item.registrar_approvals && "เจ้าหน้าที่ทะเบียน"}
 					</>
 				)}
 			</Table.Td>
 			<Table.Td style={{ maxWidth: "150px" }}>
 				<Group>
-					{user.role === "student" && (
+					{role === "student" && (
 						<>
 							{item.status === "4" && (
 								<Button
@@ -326,8 +301,8 @@ const RequestGraduation = () => {
 							)}
 						</>
 					)}
-					<Pdfg01 data={item} showType={item.status == 0 ? undefined : (user.role === "advisor" && item.status <= 1) || (user.role === "chairpersons" && item.status <= 2) || (user.role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
-					{((user.role === "advisor" && item.status == 1) || (user.role === "chairpersons" && item.status == 2) || (user.role === "officer_registrar" && item.status == 3)) && (
+					<Pdfg01 data={item} showType={item.status == 0 ? undefined : (role === "advisor" && item.status <= 1) || (role === "chairpersons" && item.status <= 2) || (role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
+					{((role === "advisor" && item.status == 1) || (role === "chairpersons" && item.status == 2) || (role === "officer_registrar" && item.status == 3)) && (
 						<Button
 							size="xs"
 							color="green"
@@ -337,17 +312,11 @@ const RequestGraduation = () => {
 								setOpenApprove(true);
 							}}
 						>
-							{user.role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
+							{role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
 						</Button>
 					)}
 				</Group>
 			</Table.Td>
-			{item.exam_results !== null && (
-				<Table.Td style={{ textAlign: "center" }}>
-					{item.exam_results === true && <Text c="green">ผ่าน</Text>}
-					{item.exam_results === false && <Text c="red">ไม่ผ่าน</Text>}
-				</Table.Td>
-			)}
 		</Table.Tr>
 	));
 
@@ -365,10 +334,10 @@ const RequestGraduation = () => {
 				error={error}
 				openApproveState={openApproveState}
 				handleApprove={handleApprove}
-				role={user.role}
-				title={`${user.role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}คำร้องขอสอบโครงร่าง${user.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`}
+				role={role}
+				title={`คำร้องขอสำเร็จการศึกษาระดับบัณฑิตศึกษา`}
 			/>
-			<ModalAddRequestGraduation opened={openAdd} onClose={() => setOpenAdd(false)} AddForm={AddForm} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสำเร็จการศึกษาระดับบัณฑิตศึกษา`} />
+			<ModalAddRequestGraduation opened={openAdd} onClose={() => setOpenAdd(false)} form={form} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสำเร็จการศึกษาระดับบัณฑิตศึกษา`} />
 			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} />
 
 			<Text size="1.5rem" fw={900} mb="md">
@@ -377,12 +346,11 @@ const RequestGraduation = () => {
 			<Group justify="space-between">
 				<Box>
 					<Flex align="flex-end" gap="sm">
-						{user.role !== "student" && <TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
-						{user.role === "chairpersons" && <Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
+						{role !== "student" && <TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}{" "}
 					</Flex>
 				</Box>
 				<Box>
-					{user.role === "student" && (
+					{role === "student" && (
 						<Button onClick={() => handleOpenAdd()} disabled={latestRequest ? latestRequest.status !== "0" && latestRequest.status !== "6" && latestRequest.exam_results !== false : false}>
 							เพิ่มคำร้อง
 						</Button>
@@ -395,10 +363,9 @@ const RequestGraduation = () => {
 					<Table.Thead>
 						<Table.Tr>
 							<Table.Th style={{ minWidth: 100 }}>ชื่อ</Table.Th>
-							{["advisor", "officer_registrar", "chairpersons"].includes(user?.role) && <Table.Th style={{ minWidth: 100 }}>เรื่อง</Table.Th>}
+							{["advisor", "officer_registrar", "chairpersons"].includes(role) && <Table.Th style={{ minWidth: 100 }}>เรื่อง</Table.Th>}
 							<Table.Th style={{ minWidth: 110 }}>สถานะ</Table.Th>
 							<Table.Th>การดำเนินการ</Table.Th>
-							{request.some((it) => it.exam_results !== null) && <Table.Th style={{ minWidth: 110 }}>ผลสอบ</Table.Th>}
 						</Table.Tr>
 					</Table.Thead>
 					<Table.Tbody>{rows}</Table.Tbody>

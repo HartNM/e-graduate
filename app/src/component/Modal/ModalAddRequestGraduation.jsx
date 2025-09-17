@@ -1,36 +1,36 @@
 import { Modal, Box, TextInput, Flex, Button, Space, NumberInput, Grid } from "@mantine/core";
 
-const ModalAdd = ({ opened, onClose, title, AddForm, handleAdd }) => (
+const ModalAdd = ({ opened, onClose, title, form, handleAdd }) => (
 	<Modal opened={opened} onClose={onClose} title={title} centered size="800">
-		<form onSubmit={AddForm.onSubmit(handleAdd)}>
+		<form onSubmit={form.onSubmit(handleAdd)}>
 			<Grid type="container" breakpoints={{ md: "660px" }}>
 				<Grid.Col span={{ base: 12, md: 6 }}>
-					<TextInput label="ชื่อ-นามสกุล" disabled {...AddForm.getInputProps("student_name")} />
-					<TextInput label="รหัสประจำตัว" disabled {...AddForm.getInputProps("student_id")} />
-					<TextInput label="ระดับการศึกษา" disabled {...AddForm.getInputProps("education_level")} />
-					<TextInput label="หลักสูตร" disabled {...AddForm.getInputProps("program")} />
-					<TextInput label="สาขาวิชา" disabled {...AddForm.getInputProps("major_name")} />
-					<TextInput label="คณะ" disabled {...AddForm.getInputProps("faculty_name")} />
+					<TextInput label="ชื่อ-นามสกุล" disabled {...form.getInputProps("student_name")} />
+					<TextInput label="รหัสประจำตัว" disabled {...form.getInputProps("student_id")} />
+					<TextInput label="ระดับการศึกษา" disabled {...form.getInputProps("education_level")} />
+					<TextInput label="หลักสูตร" disabled {...form.getInputProps("program")} />
+					<TextInput label="สาขาวิชา" disabled {...form.getInputProps("major_name")} />
+					<TextInput label="คณะ" disabled {...form.getInputProps("faculty_name")} />
 					<Box mt="md" mb="sm" fw={500}>
 						วุฒิเดิมในระดับปริญญาตรี
 					</Box>
-					<Grid>
+					<Grid breakpoints={{ md: "660px" }}>
 						<Grid.Col span={{ base: 12, md: 6 }}>
-							<TextInput label="สาขา" {...AddForm.getInputProps("bachelor_major")} />
+							<TextInput label="สาขา" {...form.getInputProps("bachelor_major")} />
 						</Grid.Col>
 						<Grid.Col span={{ base: 12, md: 6 }}>
-							<TextInput label="มหาวิทยาลัย" {...AddForm.getInputProps("bachelor_university")} />
+							<TextInput label="มหาวิทยาลัย" {...form.getInputProps("bachelor_university")} />
 						</Grid.Col>
 					</Grid>
-					{AddForm.values.education_level === "ปริญญาเอก" && (
+					{form.values.education_level === "ปริญญาเอก" && (
 						<Box mt="md" mb="sm" fw={500}>
 							วุฒิเดิมในระดับปริญญาโท
-							<Grid>
+							<Grid breakpoints={{ md: "660px" }}>
 								<Grid.Col span={{ base: 12, md: 6 }}>
-									<TextInput label="สาขา" {...AddForm.getInputProps("master_major")} />
+									<TextInput label="สาขา" {...form.getInputProps("master_major")} />
 								</Grid.Col>
 								<Grid.Col span={{ base: 12, md: 6 }}>
-									<TextInput label="มหาวิทยาลัย" {...AddForm.getInputProps("master_university")} />
+									<TextInput label="มหาวิทยาลัย" {...form.getInputProps("master_university")} />
 								</Grid.Col>
 							</Grid>
 						</Box>
@@ -41,63 +41,63 @@ const ModalAdd = ({ opened, onClose, title, AddForm, handleAdd }) => (
 					<Box mt="md" mb="sm" fw={500}>
 						ที่อยู่สามารถติดต่อได้
 					</Box>
-					<Grid>
+					<Grid breakpoints={{ md: "660px" }}>
 						<Grid.Col span={{ base: 12, md: 4 }}>
-							<TextInput label="บ้านเลขที่" {...AddForm.getInputProps("contact_house_no")} />
+							<TextInput label="บ้านเลขที่" {...form.getInputProps("contact_house_no")} />
 						</Grid.Col>
 						<Grid.Col span={{ base: 12, md: 4 }}>
-							<TextInput label="หมู่ที่" {...AddForm.getInputProps("contact_moo")} />
+							<TextInput label="หมู่ที่" {...form.getInputProps("contact_moo")} />
 						</Grid.Col>
 						<Grid.Col span={{ base: 12, md: 4 }}>
-							<TextInput label="ถนน" {...AddForm.getInputProps("contact_road")} />
+							<TextInput label="ถนน" {...form.getInputProps("contact_road")} />
 						</Grid.Col>
 						<Grid.Col span={{ base: 12, md: 4 }}>
-							<TextInput label="ตำบล" {...AddForm.getInputProps("contact_subdistrict")} />
+							<TextInput label="ตำบล" {...form.getInputProps("contact_subdistrict")} />
 						</Grid.Col>
 						<Grid.Col span={{ base: 12, md: 4 }}>
-							<TextInput label="อำเภอ" {...AddForm.getInputProps("contact_district")} />
+							<TextInput label="อำเภอ" {...form.getInputProps("contact_district")} />
 						</Grid.Col>
 						<Grid.Col span={{ base: 12, md: 4 }}>
-							<TextInput label="จังหวัด" {...AddForm.getInputProps("contact_province")} />
+							<TextInput label="จังหวัด" {...form.getInputProps("contact_province")} />
 						</Grid.Col>
 						<Grid.Col span={{ base: 12, md: 4 }}>
-							<NumberInput label="รหัสไปรษณีย์" hideControls {...AddForm.getInputProps("contact_zipcode")} />
+							<TextInput label="รหัสไปรษณีย์" {...form.getInputProps("contact_zipcode")} onInput={(e) => (e.target.value = e.target.value.replace(/[^0-9]/g, ""))} />
 						</Grid.Col>
 						<Grid.Col span={{ base: 12, md: 4 }}>
-							<NumberInput label="โทรศัพท์" hideControls {...AddForm.getInputProps("contact_phone")} />
+							<TextInput label="โทรศัพท์" {...form.getInputProps("contact_phone")} onInput={(e) => (e.target.value = e.target.value.replace(/[^0-9]/g, ""))} />
 						</Grid.Col>
 					</Grid>
 
 					<Box mt="md" mb="sm" fw={500}>
 						สถานที่ทำงานปัจจุบัน
 					</Box>
-					<Grid>
+					<Grid breakpoints={{ md: "660px" }}>
 						<Grid.Col span={{ base: 12, md: 6 }}>
-							<TextInput label="สถานที่ทำงาน" {...AddForm.getInputProps("work_name")} />
+							<TextInput label="สถานที่ทำงาน" {...form.getInputProps("work_name")} />
 						</Grid.Col>
 						<Grid.Col span={{ base: 12, md: 3 }}>
-							<TextInput label="หมู่ที่" {...AddForm.getInputProps("work_moo")} />
+							<TextInput label="หมู่ที่" {...form.getInputProps("work_moo")} />
 						</Grid.Col>
 						<Grid.Col span={{ base: 12, md: 3 }}>
-							<TextInput label="ถนน" {...AddForm.getInputProps("work_road")} />
+							<TextInput label="ถนน" {...form.getInputProps("work_road")} />
 						</Grid.Col>
 						<Grid.Col span={{ base: 12, md: 4 }}>
-							<TextInput label="ตำบล" {...AddForm.getInputProps("work_subdistrict")} />
+							<TextInput label="ตำบล" {...form.getInputProps("work_subdistrict")} />
 						</Grid.Col>
 						<Grid.Col span={{ base: 12, md: 4 }}>
-							<TextInput label="อำเภอ" {...AddForm.getInputProps("work_district")} />
+							<TextInput label="อำเภอ" {...form.getInputProps("work_district")} />
 						</Grid.Col>
 						<Grid.Col span={{ base: 12, md: 4 }}>
-							<TextInput label="จังหวัด" {...AddForm.getInputProps("work_province")} />
+							<TextInput label="จังหวัด" {...form.getInputProps("work_province")} />
 						</Grid.Col>
 						<Grid.Col span={{ base: 12, md: 4 }}>
-							<NumberInput label="รหัสไปรษณีย์" hideControls {...AddForm.getInputProps("work_zipcode")} />
+							<TextInput label="รหัสไปรษณีย์" {...form.getInputProps("work_zipcode")} onInput={(e) => (e.target.value = e.target.value.replace(/[^0-9]/g, ""))} />
 						</Grid.Col>
 						<Grid.Col span={{ base: 12, md: 4 }}>
-							<NumberInput label="โทรศัพท์" hideControls {...AddForm.getInputProps("work_phone")} />
+							<TextInput label="โทรศัพท์" {...form.getInputProps("work_phone")} onInput={(e) => (e.target.value = e.target.value.replace(/[^0-9]/g, ""))} />
 						</Grid.Col>
 						<Grid.Col span={{ base: 12, md: 12 }}>
-							<TextInput label="สังกัดหน่วยงาน" {...AddForm.getInputProps("work_department")} />
+							<TextInput label="สังกัดหน่วยงาน" {...form.getInputProps("work_department")} />
 						</Grid.Col>
 					</Grid>
 				</Grid.Col>

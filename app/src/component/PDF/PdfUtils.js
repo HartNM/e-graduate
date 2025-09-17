@@ -79,6 +79,16 @@ export function formatThaiDate(dateStr) {
 	return [day, thaiMonth, year];
 }
 
+export function formatBdateDate(dateStr) {
+	if (!dateStr) return "";
+	const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+	const [dayStr, monthStr, yearStr] = dateStr.split("/");
+	const day = dayStr.padStart(2, "0");
+	const month = months[Number(monthStr) - 1];
+	const year = yearStr.length === 2 ? Number("25" + yearStr) : Number(yearStr);
+	return [day, month, year];
+}
+
 export function formatThaiDateShort(dateStr) {
 	if (!dateStr) return ["", "", ""];
 	const monthsShort = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
