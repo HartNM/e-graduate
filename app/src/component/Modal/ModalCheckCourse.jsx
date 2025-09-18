@@ -26,9 +26,11 @@ const ModalCheckCourse = ({ opened, onClose, missingCoures }) => (
 					</ThemeIcon>
 				}
 			>
-				{missingCoures.map((label, index) => (
+				{missingCoures.map((item, index) => (
 					<List.Item key={index}>
-						<Text fw={500}>{label}</Text>
+						<Text fw={500}>
+							{item.course_id} {item.course_name}
+						</Text>
 					</List.Item>
 				))}
 			</List>

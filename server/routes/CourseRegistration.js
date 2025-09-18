@@ -3,6 +3,21 @@ const router = express.Router();
 const authenticateToken = require("../middleware/authenticateToken");
 const { poolPromise } = require("../db");
 
+router.post("/allCoures", authenticateToken, async (req, res) => {
+	try {
+		const pool = await poolPromise;
+		const result = await pool.request().query(`SELECT * FROM courses`);
+		const formatted = result.recordset.map((row) => ({
+			value: row.course_id, // ใช้เป็น key
+			label: `${row.course_id} - ${row.course_name}`, // แสดงผล
+		}));
+		res.status(200).json(formatted);
+	} catch (e) {
+		console.error("addCourseRegistration:", e);
+		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
+	}
+});
+
 router.post("/officerGetMajor_id", authenticateToken, async (req, res) => {
 	const { user_id } = req.body;
 	try {
@@ -142,6 +157,7 @@ router.post("/allStudyGroupIdCourseRegistration", authenticateToken, async (req,
 			study_group_id: data[0].study_group_id,
 			course_id: data.map((item) => item.course_id),
 		};
+		console.log(formatted);
 		res.status(200).json(formatted);
 	} catch (e) {
 		console.error("allStudyGroupIdCourseRegistration:", e);

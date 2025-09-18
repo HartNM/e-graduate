@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Box, Text, ScrollArea, Table, Space, Button, Modal, MultiSelect, Group, Flex, Select, TextInput, NumberInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import ModalInform from "../../component/Modal/ModalInform";
+import AsyncCourseSelect from "../../component/AsyncCourseSelect";
 
 const CourseRegistration = () => {
 	const token = localStorage.getItem("token");
@@ -17,17 +18,7 @@ const CourseRegistration = () => {
 	const [reloadTable, setReloadTable] = useState(false);
 	const [modalType, setModalType] = useState("");
 	const [openCoures, setOpenCoures] = useState(false);
-	const [coures, setCoures] = useState([
-		{ value: "1065201", label: "1065201 หลักการ ทฤษฎีและปฏิบัติทางการบริหารการศึกษา" },
-		{ value: "1065202", label: "1065202 ผู้นำทางวิชาการและการพัฒนาหลักสูตร " },
-		{ value: "1065204", label: "1065204 การบริหารทรัพยากรทางการศึกษา" },
-		{ value: "1065206", label: "1065206 ภาวะผู้นำทางการบริหารการศึกษา" },
-		{ value: "1065208", label: "1065208 การประกันคุณภาพการศึกษา" },
-		{ value: "1065222", label: "1065222 การฝึกปฏิบัติงานการบริหารการศึกษาและบริหารสถานศึกษา" },
-		{ value: "1065231", label: "1065231 คุณธรรม จริยธรรมและจรรยาบรรณวิชาชีพทางการศึกษา สำหรับนักบริหารการศึกษา และผู้บริหารการศึกษา" },
-		{ value: "1065232", label: "1065232 การบริหารงานวิชาการ กิจการและกิจกรรมนักเรียน" },
-		{ value: "1066205", label: "1066205 ความเป็นนักบริหารมืออาชีพ" },
-	]);
+	const [courses, setCourses] = useState([]);
 
 	const Form = useForm({
 		initialValues: {
@@ -41,6 +32,25 @@ const CourseRegistration = () => {
 			course_id: (value) => (value.length > 0 ? null : "กรุณาเลือกรหัสวิชา"),
 		},
 	});
+/* 	useEffect(() => {
+		const fetchAllCoures = async () => {
+			try {
+				const allCouresReq = await fetch("http://localhost:8080/api/allCoures", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				});
+				const allCouresData = await allCouresReq.json();
+				if (!allCouresReq.ok) throw new Error(allCouresData.message);
+				setCourses(allCouresData);
+				console.log(allCouresData);
+			} catch (e) {
+				notify("error", e.message);
+				console.log(e);
+			}
+		};
+		fetchAllCoures();
+	}, []); */
+
 	useEffect(() => {
 		const fetchMajorNameAndData = async () => {
 			try {
@@ -143,7 +153,8 @@ const CourseRegistration = () => {
 							สาขา{Form.values.major_name}
 						</Text>
 						<NumberInput label="หมู่เรียน" hideControls disabled={modalType === "add" ? false : true} {...Form.getInputProps("study_group_id")} />
-						<MultiSelect label="รหัสวิชาที่ต้องเรียน" searchable hidePickedOptions data={coures} disabled={modalType === "delete" ? true : false} {...Form.getInputProps("course_id")} />
+						<AsyncCourseSelect form={Form} disabled={modalType === "delete"} />
+						{/* <MultiSelect label="รหัสวิชาที่ต้องเรียน" searchable hidePickedOptions data={courses} disabled={modalType === "delete" ? true : false} {...Form.getInputProps("course_id")} /> */}
 						<Space h="md" />
 						<Button color={modalType === "delete" ? "red" : "green"} type="submit" fullWidth>
 							{modalType === "delete" ? "ลบ" : "บันทึก"}

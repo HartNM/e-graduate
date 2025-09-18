@@ -31,6 +31,30 @@ const { poolPromise, sql } = require("../db");
   }
 });  */
 
+router.get("/subject-pass/:student_id", async (req, res) => {
+	const studentid = req.params.student_id;
+	try {
+		const response = await axios.post(
+			"http://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectPass",
+			{
+				ID_NO: studentid,
+			},
+			{
+				headers: {
+					"Content-Type": "application/json",ฃ
+				},
+			}
+		);
+ฃ
+		const subjects = response.data;
+
+		res.json(subjects);
+	} catch (err) {
+		console.error("API call error:", err.message);
+		res.status(500).json({ error: "Internal server error" });
+	}
+});
+
 router.get("/student/:student_id", async (req, res) => {
 	const studentid = req.params.student_id;
 	try {

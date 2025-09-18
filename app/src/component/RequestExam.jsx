@@ -47,7 +47,7 @@ const RequestExam = () => {
 	});
 
 	/* const [registerCourses, setRegisterCourses] = useState([]); */
-	const [registerCourses] = useState(() => (user_id === "684270201" ? ["1065201"] : ["1065232", "1066205", "1065222", "1065222", "1065204", "1065232", "1065202", "1065201", "1065206", "1065208", "1065231"]));
+	const [registerCourses, setRegisterCourses] = useState(() => (user_id === "684270201" ? ["1065201"] : ["1065232", "1066205", "1065222", "1065222", "1065204", "1065232", "1065202", "1065201", "1065206", "1065208", "1065231"]));
 
 	useEffect(() => {
 		setSelectedType(type);
@@ -98,21 +98,43 @@ const RequestExam = () => {
 				const registrationData = await registrationRes.json();
 				if (!registrationData) throw new Error("รอเจ้าหน้าที่กรอกราย วิชาที่ต้องเรียน");
 				if (!registrationRes.ok) throw new Error(registrationData.message);
-				const coursesRes = await fetch("http://localhost:8080/api/Course", {
+				console.log(registrationData);
+
+				const registerCoursesRes = await fetch("http://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectPass", {
 					method: "POST",
-					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-					body: JSON.stringify({ course_id: registrationData.course_id }),
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						ID_NO: user_id,
+					}),
 				});
-				const coursesData = await coursesRes.json();
-				if (!coursesRes.ok) throw new Error(coursesData.message);
-				const missingLabels = registrationData.course_id
-					.filter((code) => !registerCourses.includes(code))
-					.map((code) => {
-						const course = coursesData.find((c) => c.course_id === code);
-						return course ? `${course.course_id} ${course.course_name}` : code;
+				const registerCoursesData = await registerCoursesRes.json();
+				if (!registerCoursesRes.ok) throw new Error(registerCoursesData.message);
+				console.log(registerCoursesData);
+
+				const allCodes = registerCoursesData.map((c) => c.SJCODE);
+				const missing = registrationData.course_id.filter((code) => !allCodes.includes(code));
+				console.log(missing);
+
+				if (missing.length > 0) {
+					const coursesRes = await fetch("http://localhost:8080/api/Course", {
+						method: "POST",
+						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+						body: JSON.stringify({ course_id: missing }),
 					});
-				if (missingLabels.length > 0) {
-					setMissingCoures(missingLabels);
+					const coursesData = await coursesRes.json();
+					if (!coursesRes.ok) throw new Error(coursesData.message);
+
+					/* const res = await fetch("http://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectAll");
+					const subjects = await res.json();
+					console.log(subjects);
+					const subjMap = new Map(subjects.map((s) => [s.SUBJCODE, s.SUBJNAME]));
+					const coursesData = missing.map((course_id) => ({
+						course_id,
+						course_name: subjMap.get(course_id) || "ไม่พบข้อมูล",
+					})); */
+
+					console.log(coursesData);
+					setMissingCoures(coursesData);
 					setOpenCheckCourse(true);
 					return;
 				}
@@ -124,7 +146,7 @@ const RequestExam = () => {
 		};
 		fetchProfile();
 		if (role === "student") {
-			fetchStudentData();
+			user_id === "674140101" ? fetchStudentData() : fetchRequestExam();
 		} else {
 			fetchRequestExam();
 		}
