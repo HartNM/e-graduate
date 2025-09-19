@@ -2,10 +2,11 @@
 import { useState, useEffect } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
 import { useParams } from "react-router-dom";
-import ModalAddCancel from "../component/Modal/ModalAddCancel";
+import ModalAddPostponeProposalExam from "../component/Modal/ModalAddPostponeProposalExam";
 import ModalApprove from "../component/Modal/ModalApprove";
 import ModalInform from "../component/Modal/ModalInform";
-import Pdfg07 from "../component/PDF/Pdfg07";
+import Pdfg07 from "../component/PDF/Pdfg08";
+import { useForm } from "@mantine/form";
 
 const PostponeProposalExam = () => {
 	const token = localStorage.getItem("token");
@@ -17,14 +18,13 @@ const PostponeProposalExam = () => {
 	const notify = (type, message) => setInform({ open: true, type, message });
 	const close = () => setInform((s) => ({ ...s, open: false }));
 	// Modal states
+	const [openAdd, setOpenAdd] = useState(false);
 	const [openApprove, setOpenApprove] = useState(false);
 	const [openApproveState, setOpenApproveState] = useState(false);
-	const [openAddCancel, setOpenAddCancel] = useState(false);
 	// Form states
 	const [selectedRow, setSelectedRow] = useState(null);
 	const [selected, setSelected] = useState("approve");
 	const [comment, setComment] = useState("");
-	const [reason, setReason] = useState("");
 	const [error, setError] = useState("");
 	// System states
 	const [user, setUser] = useState("");
@@ -32,7 +32,25 @@ const PostponeProposalExam = () => {
 	const [request, setRequest] = useState([]);
 	const [search, setSearch] = useState("");
 	const { type } = useParams();
-	const [selectedType, setSelectedType] = useState("");
+
+	const formAdd = useForm({
+		initialValues: {
+			student_name: "",
+			student_id: "",
+			education_level: "",
+			program: "",
+			major_name: "",
+			faculty_name: "",
+			reason: "",
+			thesis_exam_date: "",
+		},
+		validate: {
+			reason: (value) => (value.trim() === "" ? "กรุณากรอกเหตุผล" : null),
+			thesis_exam_date: (v) => {
+				if (!v) return "กรุณาระบุวันที่สอบ";
+			},
+		},
+	});
 
 	useEffect(() => {
 		const fetchProfile = async () => {
@@ -52,38 +70,41 @@ const PostponeProposalExam = () => {
 		fetchProfile();
 	}, [token]);
 
-	useEffect(() => {
-		setSelectedType(type);
-	}, [type]);
+	const [latestRequest, setLatestRequest] = useState(true);
+	const [buttonAdd, setButtonAdd] = useState(true);
 
-	const [latestRequest, setLatestRequest] = useState(null);
-	const [reloadTable, setReloadTable] = useState(false);
 	useEffect(() => {
-		const fetchRequestExam = async () => {
+		const fetchLatestRequestThesisProposal = async () => {
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/requestExamAll", {
+				const requestRes = await fetch("http://localhost:8080/api/allRequestThesisProposal", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 					body: JSON.stringify({ lastRequest: true }),
 				});
 				const requestData = await requestRes.json();
 				if (!requestRes.ok) throw new Error(requestData.message);
-				setLatestRequest([...requestData].sort((a, b) => new Date(b.request_exam_id) - new Date(a.request_exam_id))[0]);
+				setLatestRequest(requestData[0]);
+				if (requestData[0].status === "5") {
+					setButtonAdd(false);
+				} else {
+					setButtonAdd(true);
+				}
 			} catch (e) {
 				notify("error", e.message);
 				console.error("Error fetching requestExamAll:", e);
 			}
 		};
-		fetchRequestExam();
+		fetchLatestRequestThesisProposal();
 
-		/* const fetchRequestExamCancel = async () => {
+		const fetchRequestExamCancel = async () => {
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/AllRequestExamCancel", {
+				const requestRes = await fetch("http://localhost:8080/api/allPostponeProposalExam", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
 				const requestData = await requestRes.json();
 				if (!requestRes.ok) throw new Error(requestData.message);
+				console.log(requestData);
 				setRequest(requestData);
 			} catch (e) {
 				notify("error", e.message);
@@ -91,10 +112,9 @@ const PostponeProposalExam = () => {
 			}
 		};
 		fetchRequestExamCancel();
-		setReloadTable(false); */
-	}, [reloadTable]);
+	}, []);
 
-	const handleOpenAddCancel = async () => {
+	const handleOpenAdd = async () => {
 		try {
 			const requestRes = await fetch("http://localhost:8080/api/studentInfo", {
 				method: "GET",
@@ -102,51 +122,49 @@ const PostponeProposalExam = () => {
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) throw new Error(requestData.message);
-			setSelectedRow(requestData);
-			setOpenAddCancel(true);
-			setError("");
+			formAdd.reset();
+			formAdd.setValues({ ...latestRequest, ...requestData });
+			setOpenAdd(true);
 		} catch (e) {
 			notify("error", e.message);
 			console.error("Error fetching studentInfo:", e);
 		}
 	};
 
-	const handleAddCancel = async () => {
-		if (!reason.trim()) {
-			setError("กรุณากรอกเหตุผล");
-			return;
-		}
-		/* try {
-			const requestRes = await fetch("http://localhost:8080/api/AddRequestExamCancel", {
+	const handleAdd = async () => {
+		try {
+			const requestRes = await fetch("http://localhost:8080/api/addPostponeProposalExam", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ reason: reason, request_type: `ขอยกเลิกการเข้าสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` }),
+				body: JSON.stringify(formAdd.values),
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) throw new Error(requestData.message);
+			setRequest((prev) => [...prev, { ...formAdd.values, ...requestData.data }]);
+
 			notify("success", requestData.message || "สำเร็จ");
-			setOpenAddCancel(false);
-			setReloadTable(true);
+			setButtonAdd(true);
+			setOpenAdd(false);
 		} catch (e) {
 			notify("error", e.message);
 			console.error("Error fetching cancelRequestExam:", e);
-		} */
+		}
 	};
 
-	const handleCancel = async (item) => {
+	const handleApprove = async (item) => {
 		if (selected === "noapprove" && comment.trim() === "") {
 			setError("กรุณาระบุเหตุผล");
 			return;
 		}
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/ApproveRequestExamCancel", {
+			const requestRes = await fetch("http://localhost:8080/api/approvePostponeProposalExam", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify({
-					request_cancel_exam_id: item.request_cancel_exam_id,
-					request_exam_id: item.request_exam_id,
+					postpone_proposal_exam_id: item.postpone_proposal_exam_id,
+					request_thesis_proposal_id: item.request_thesis_proposal_id,
+					thesis_exam_date: item.thesis_exam_date,
 					name: user.name,
-					role: role,
 					selected: selected,
 					comment_cancel: comment,
 				}),
@@ -157,7 +175,7 @@ const PostponeProposalExam = () => {
 			setSelected("approve");
 			setComment("");
 			setOpenApprove(false);
-			setRequest((prev) => prev.map((row) => (row.request_cancel_exam_id === item.request_cancel_exam_id ? { ...row, ...requestData.data } : row)));
+			setRequest((prev) => prev.map((row) => (row.postpone_proposal_exam_id === item.postpone_proposal_exam_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
 			notify("error", e.message);
 			console.error("Error fetching cancelApproveRequestExam:", e);
@@ -182,32 +200,19 @@ const PostponeProposalExam = () => {
 
 	const filteredData = sortedData.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
-		const matchesType = selectedType ? p.request_type === selectedType : true;
-		return matchesSearch && matchesType;
+		return matchesSearch;
 	});
 
 	const rows = filteredData.map((item) => (
-		<Table.Tr key={item.request_cancel_exam_id}>
+		<Table.Tr key={item.postpone_proposal_exam_id}>
 			<Table.Td>{item.student_name}</Table.Td>
-			{["advisor", "chairpersons", "dean"].includes(role) && <Table.Td>{role === "dean" ? `ขอยกเลิก${item.request_type.replace("ขอ", "")}` : item.request_type}</Table.Td>}
 			<Table.Td style={{ textAlign: "center" }}>
-				{item.status == 0 && (
-					<Pill variant="filled" style={{ backgroundColor: "#ccffcc", color: "#006600" }}>
-						{item.status_text}
-					</Pill>
-				)}
-				{item.status == 5 && (
-					<Pill variant="filled" style={{ backgroundColor: "#ffcccc", color: "#b30000" }}>
-						{item.status_text}
-					</Pill>
-				)}
-				{item.status > 6 && <Pill>{item.status_text}</Pill>}
+				<Pill>{item.status_text}</Pill>
 			</Table.Td>
-
 			<Table.Td style={{ maxWidth: "150px" }}>
 				<Group>
-					<Pdfg07 data={item} showType={item.status == 5 || item.status == 0 ? undefined : (role === "advisor" && item.status <= 7) || (role === "chairpersons" && item.status <= 8) || (role === "dean" && item.status <= 9) ? "view" : undefined} />
-					{((role === "advisor" && item.status === "7") || (role === "chairpersons" && item.status === "8") || (role === "dean" && item.status === "9")) && (
+					<Pdfg07 data={item} showType={item.status == 5 || item.status == 0 ? undefined : (role === "advisor" && item.status <= 7) || (role === "chairpersons" && item.status <= 8) ? "view" : undefined} />
+					{((role === "advisor" && item.status === "7") || (role === "chairpersons" && item.status === "8")) && (
 						<Button
 							size="xs"
 							color="green"
@@ -227,6 +232,7 @@ const PostponeProposalExam = () => {
 
 	return (
 		<Box>
+			<ModalAddPostponeProposalExam opened={openAdd} onClose={() => setOpenAdd(false)} form={formAdd} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`} />
 			<ModalInform opened={inform.open} onClose={close} message={inform.message} type={inform.type} />
 			<ModalApprove
 				opened={openApprove}
@@ -238,11 +244,11 @@ const PostponeProposalExam = () => {
 				setComment={setComment}
 				error={error}
 				openApproveState={openApproveState}
-				handleCancel={handleCancel}
+				handleCancel={handleApprove}
 				role={role}
-				title={`ลงความเห็นคำร้องขอยกเลิกการเข้าสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`}
+				title={`ลงความเห็นคำร้องขอเลื่อนสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`}
 			/>
-			<ModalAddCancel opened={openAddCancel} onClose={() => setOpenAddCancel(false)} selectedRow={selectedRow} reason={reason} setReason={setReason} error={error} handleAddCancel={handleAddCancel} />
+
 			<Text size="1.5rem" fw={900} mb="md">
 				คำร้องขอเลื่อนสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ
 			</Text>
@@ -250,13 +256,12 @@ const PostponeProposalExam = () => {
 				<Box>
 					<Flex align="flex-end" gap="sm">
 						{role !== "student" && <TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
-						{role === "chairpersons" && <Select placeholder="ชนิดคำขอ" data={["ขอยกเลิกการเข้าสอบประมวลความรู้", "ขอยกเลิกการเข้าสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
 					</Flex>
 				</Box>
 				<Box>
 					{role === "student" && (
 						<>
-							<Button onClick={() => handleOpenAddCancel()} disabled={!((latestRequest?.status === "1" || latestRequest?.status === "2" || latestRequest?.status === "3" || latestRequest?.status === "4" || latestRequest?.status === "5") && latestRequest?.exam_results === null)}>
+							<Button onClick={() => handleOpenAdd()} disabled={buttonAdd} /* disabled={!((latestRequest?.status === "1" || latestRequest?.status === "2" || latestRequest?.status === "3" || latestRequest?.status === "4" || latestRequest?.status === "5") && latestRequest?.exam_results === null)} */>
 								เพิ่มคำร้อง
 							</Button>
 						</>
@@ -269,7 +274,6 @@ const PostponeProposalExam = () => {
 					<Table.Thead>
 						<Table.Tr>
 							<Table.Th style={{ minWidth: 100 }}>ชื่อ</Table.Th>
-							{["advisor", "chairpersons", "dean"].includes(role) && <Table.Th style={{ minWidth: 100 }}>เรื่อง</Table.Th>}
 							<Table.Th style={{ minWidth: 110 }}>สถานะ</Table.Th>
 							<Table.Th>การดำเนินการ</Table.Th>
 						</Table.Tr>

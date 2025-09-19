@@ -45,9 +45,13 @@ app.use("/api", RequestEngTest);
 
 const RequestThesisProposal = require("./routes/RequestThesisProposal");
 app.use("/api", RequestThesisProposal);
+const PostponeProposalExam = require("./routes/PostponeProposalExam");
+app.use("/api", PostponeProposalExam);
 
 const RequestThesisDefense = require("./routes/RequestThesisDefense");
 app.use("/api", RequestThesisDefense);
+const PostponeDefenseExam = require("./routes/PostponeDefenseExam");
+app.use("/api", PostponeDefenseExam);
 
 const PlagiarismReport = require("./routes/PlagiarismReport");
 app.use("/api", PlagiarismReport);

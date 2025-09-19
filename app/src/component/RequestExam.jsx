@@ -47,11 +47,11 @@ const RequestExam = () => {
 	});
 
 	/* const [registerCourses, setRegisterCourses] = useState([]); */
-	const [registerCourses, setRegisterCourses] = useState(() => (user_id === "684270201" ? ["1065201"] : ["1065232", "1066205", "1065222", "1065222", "1065204", "1065232", "1065202", "1065201", "1065206", "1065208", "1065231"]));
+	const [registerCoursesData, setRegisterCourses] = useState(() => (user_id === "684270201" ? ["1065208R","1065222R"] : ["1065208R", "1066205R", "1065222R", "1065204R", "1065232R", "1065202R", "1065201R", "1065206R", "1065208R", "1065231R"]));
 
 	useEffect(() => {
 		setSelectedType(type);
-	}, []);
+	}, [type]);
 
 	useEffect(() => {
 		const fetchProfile = async () => {
@@ -100,19 +100,21 @@ const RequestExam = () => {
 				if (!registrationRes.ok) throw new Error(registrationData.message);
 				console.log(registrationData);
 
-				const registerCoursesRes = await fetch("http://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectPass", {
+				/* const registerCoursesRes = await fetch("http://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectPass", {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({
-						ID_NO: user_id,
+						ID_NO: user_id, 
 					}),
-				});
+				}); 
 				const registerCoursesData = await registerCoursesRes.json();
-				if (!registerCoursesRes.ok) throw new Error(registerCoursesData.message);
+				if (!registerCoursesRes.ok) throw new Error(registerCoursesData.message); 
 				console.log(registerCoursesData);
 
 				const allCodes = registerCoursesData.map((c) => c.SJCODE);
-				const missing = registrationData.course_id.filter((code) => !allCodes.includes(code));
+				const missing = registrationData.course_id.filter((code) => !allCodes.includes(code)); 
+				console.log(missing);*/
+				const missing = registrationData.course_id.filter((code) => !registerCoursesData.includes(code));
 				console.log(missing);
 
 				if (missing.length > 0) {
@@ -146,7 +148,8 @@ const RequestExam = () => {
 		};
 		fetchProfile();
 		if (role === "student") {
-			user_id === "674140101" ? fetchStudentData() : fetchRequestExam();
+			user_id === "684270201" ? fetchStudentData() : fetchRequestExam();
+			/* user_id === "674140101" ? fetchStudentData() : fetchRequestExam(); */
 		} else {
 			fetchRequestExam();
 		}

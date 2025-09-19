@@ -20,7 +20,6 @@ async function fillPdf(data) {
 
 	let y = 760;
 	let space = 20;
-	const lavel = "ปริญญาเอก";
 
 	const [request_date_day, request_date_month, request_date_year] = formatThaiDate(data?.request_date);
 	const [BDATE_day, BDATE_month, BDATE_year] = formatBdateDate(data?.BDATE);

@@ -29,9 +29,9 @@ const statusMap = {
 	4: "รอการชำระค่าธรรมเนียม",
 	5: "อนุมัติ",
 	6: "ไม่อนุมัติ",
-	7: "ขอยกเลิก",
-	8: "ขอยกเลิก",
-	9: "ขอยกเลิก",
+	7: "ขอเลื่อน",
+	8: "ขอเลื่อน",
+	9: "ขอเลื่อน",
 };
 
 router.post("/getAdvisors", authenticateToken, async (req, res) => {
@@ -78,7 +78,7 @@ router.post("/allRequestThesisProposal", authenticateToken, async (req, res) => 
 				return {
 					...item,
 					...studentInfo,
-					thesis_exam_date: formatDateThaiBE(item.thesis_exam_date),
+					thesis_exam_date: item.thesis_exam_date,
 					request_date: formatDateThaiBE(item.request_date),
 					advisor_approvals_date: formatDateThaiBE(item.advisor_approvals_date),
 					chairpersons_approvals_date: formatDateThaiBE(item.chairpersons_approvals_date),

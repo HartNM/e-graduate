@@ -6,7 +6,7 @@ import { useParams } from "react-router-dom";
 import ModalAddRequestGraduation from "../component/Modal/ModalAddPlagiarismReport";
 import ModalApprove from "../component/Modal/ModalApprove";
 import ModalInform from "../component/Modal/ModalInform";
-import Pdfg06 from "../component/PDF/Pdfg06";
+import Pdfg06 from "../component/PDF/Pdfg01";
 
 const PlagiarismReport = () => {
 	const token = localStorage.getItem("token");

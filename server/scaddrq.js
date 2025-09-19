@@ -26,7 +26,7 @@ async function main() {
 
 		/* const startId = 684140101;
 		const endId = 684140130;
-		const type = "ประมวลความรู้";
+		const type = "ขอสอบประมวลความรู้";
 		const term = "3/68";
 		const advisor = "นางสาวพรทิพย์ ขยันดี";
 		const chairpersons = "นายวิทยา พัฒน์";

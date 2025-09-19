@@ -156,7 +156,7 @@ const RequestThesisDefense = () => {
 			setSelected("approve");
 			setComment("");
 			setOpenApprove(false);
-			setRequest((prev) => prev.map((row) => (row.request_thesis_proposal_id === item.request_thesis_proposal_id ? { ...row, ...requestData.data } : row)));
+			setRequest((prev) => prev.map((row) => (row.request_thesis_defense_id === item.request_thesis_defense_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching approveRequestExam:", e);
@@ -176,7 +176,7 @@ const RequestThesisDefense = () => {
 			}
 			notify("success", requestData.message || "สำเร็จ");
 			setOpenPay(false);
-			setRequest((prev) => prev.map((row) => (row.request_thesis_proposal_id === item.request_thesis_proposal_id ? { ...row, ...requestData.data } : row)));
+			setRequest((prev) => prev.map((row) => (row.request_thesis_defense_id === item.request_thesis_defense_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching payRequestExam:", e);
