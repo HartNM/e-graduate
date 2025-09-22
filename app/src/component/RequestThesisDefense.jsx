@@ -63,7 +63,7 @@ const RequestThesisDefense = () => {
 				const requestData = await requestRes.json();
 				if (!requestRes.ok) throw new Error(requestData.message);
 				setUser(requestData);
-				console.log(requestData);
+				console.log(requestData); 
 			} catch (e) {
 				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 				console.error("Error fetching profile:", e);
