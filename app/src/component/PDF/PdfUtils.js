@@ -1,4 +1,10 @@
 import { rgb } from "pdf-lib";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc.js";
+import timezone from "dayjs/plugin/timezone.js";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 let THSarabunNewFont = null; // เก็บฟอนต์ไทยไว้ใช้เป็น default
 
@@ -72,28 +78,22 @@ export const drawLine = (page, x1, y1, x2, y2, w = 1) => {
 };
 
 export function formatThaiDate(dateStr) {
-	if (!dateStr) return ["", "", ""];
-	const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-	const [year, month, day] = dateStr.split("-").map(Number);
-	const thaiMonth = months[month - 1];
-	return [day, thaiMonth, year];
-}
-
-export function formatBdateDate(dateStr) {
 	if (!dateStr) return "";
 	const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-	const [dayStr, monthStr, yearStr] = dateStr.split("/");
-	const day = dayStr.padStart(2, "0");
-	const month = months[Number(monthStr) - 1];
-	const year = yearStr.length === 2 ? Number("25" + yearStr) : Number(yearStr);
+	const d = dayjs.utc(dateStr).tz("Asia/Bangkok");
+	const day = d.date().toString().padStart(2, "0");
+	const month = months[d.month()];
+	const year = d.year() + 543;
 	return [day, month, year];
 }
 
 export function formatThaiDateShort(dateStr) {
 	if (!dateStr) return ["", "", ""];
 	const monthsShort = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
-	const [year, month, day] = dateStr.split("-").map(Number);
-	const thaiMonthShort = monthsShort[month - 1];
+	const d = dayjs.utc(dateStr).tz("Asia/Bangkok");
+	const day = d.date();
+	const thaiMonthShort = monthsShort[d.month()];
+	const year = (d.year() + 543) % 100;
 	return [day, thaiMonthShort, year];
 }
 

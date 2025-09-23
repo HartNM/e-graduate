@@ -69,7 +69,6 @@ const AssignChairpersons = () => {
 				const requestRes = await fetch("http://localhost:8080/api/allAssignChairpersons", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-					body: JSON.stringify({ id: user.id }),
 				});
 				const requestData = await requestRes.json();
 				if (!requestRes.ok) {
@@ -126,9 +125,9 @@ const AssignChairpersons = () => {
 	};
 
 	const classRows = assignChairpersons.map((item) => (
-		<Table.Tr key={item.chairpersons_id}>
+		<Table.Tr key={item.user_id}>
 			<Table.Td>{item.major_name}</Table.Td>
-			<Table.Td>{item.chairpersons_name}</Table.Td>
+			<Table.Td>{item.name}</Table.Td>
 			<Table.Td>
 				<Group>
 					<Button color="red" size="xs" onClick={() => handleOpenDelete(item)}>

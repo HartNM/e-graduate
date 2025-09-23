@@ -4,23 +4,6 @@ const authenticateToken = require("../middleware/authenticateToken");
 const { poolPromise } = require("../db");
 const axios = require("axios");
 
-const dayjs = require("dayjs");
-const utc = require("dayjs/plugin/utc");
-const timezone = require("dayjs/plugin/timezone");
-dayjs.extend(utc);
-dayjs.extend(timezone);
-
-function formatDateThaiBE(date) {
-	if (!date) return null;
-	const d = dayjs(date).tz("Asia/Bangkok");
-	const buddhistYear = d.year() + 543;
-	return `${buddhistYear}-${(d.month() + 1).toString().padStart(2, "0")}-${d.date().toString().padStart(2, "0")}`;
-}
-
-function formatDateForDB(date = new Date()) {
-	return dayjs(date).tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss");
-}
-
 const statusMap = {
 	0: "ยกเลิก",
 	1: "รออาจารย์ที่ปรึกษาอนุญาต",
@@ -33,6 +16,25 @@ const statusMap = {
 	8: "ขอยกเลิก",
 	9: "ขอยกเลิก",
 };
+
+router.post("/check_openKQ", authenticateToken, async (req, res) => {
+	try {
+		const pool = await poolPromise;
+		const result = await pool.query(`
+			SELECT TOP 1 *
+			FROM request_exam_info
+			WHERE CAST(GETDATE() AS DATE) BETWEEN open_date AND close_date
+			ORDER BY request_exam_info_id DESC
+		`);
+		if (result.recordset.length === 0) {
+			return res.status(200).json({ message: "ระบบคำร้องขอสอบประมวลความรู้/วัดคุณสมบัติยังไม่เปิด" });
+		}
+		res.status(200).json(result.recordset[0]);
+	} catch (err) {
+		console.error("check_openKQ:", err);
+		res.status(500).json({ message: "เกิดข้อผิดพลาด" });
+	}
+});
 
 router.post("/requestExamAll", authenticateToken, async (req, res) => {
 	const { lastRequest } = req.body;
@@ -68,11 +70,11 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 				return {
 					...item,
 					...studentInfo,
-					request_date: formatDateThaiBE(item.request_date),
-					advisor_approvals_date: formatDateThaiBE(item.advisor_approvals_date),
-					chairpersons_approvals_date: formatDateThaiBE(item.chairpersons_approvals_date),
-					registrar_approvals_date: formatDateThaiBE(item.registrar_approvals_date),
-					receipt_pay_date: formatDateThaiBE(item.receipt_pay_date),
+					request_date: item.request_date,
+					advisor_approvals_date: item.advisor_approvals_date,
+					chairpersons_approvals_date: item.chairpersons_approvals_date,
+					registrar_approvals_date: item.registrar_approvals_date,
+					receipt_pay_date: item.receipt_pay_date,
 					status_text: statusMap[item.status?.toString()],
 					request_type: item.request_type,
 				};
@@ -98,7 +100,6 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 			.input("faculty_name", faculty_name)
 			.input("request_type", `ขอสอบ${education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`)
 			.input("term", infoRes.recordset[0].term)
-			.input("request_date", formatDateForDB())
 			.input("status", "1").query(`
 				INSERT INTO request_exam (
 					student_id,
@@ -116,7 +117,7 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 					@faculty_name,
 					@request_type,
 					@term,
-					@request_date,
+					GETDATE(),
 					@status
 				)
 			`);
@@ -127,11 +128,11 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 				...result.recordset[0],
 				major_name: major_name,
 				status_text: statusMap[result.recordset[0].status?.toString()],
-				request_date: formatDateThaiBE(result.recordset[0].request_date),
-				advisor_approvals_date: formatDateThaiBE(result.recordset[0].advisor_approvals_date),
-				chairpersons_approvals_date: formatDateThaiBE(result.recordset[0].chairpersons_approvals_date),
-				registrar_approvals_date: formatDateThaiBE(result.recordset[0].registrar_approvals_date),
-				receipt_pay_date: formatDateThaiBE(result.recordset[0].receipt_pay_date),
+				request_date: result.recordset[0].request_date,
+				advisor_approvals_date: result.recordset[0].advisor_approvals_date,
+				chairpersons_approvals_date: result.recordset[0].chairpersons_approvals_date,
+				registrar_approvals_date: result.recordset[0].registrar_approvals_date,
+				receipt_pay_date: result.recordset[0].receipt_pay_date,
 			},
 		});
 	} catch (err) {
@@ -166,23 +167,22 @@ router.post("/approveRequestExam", authenticateToken, async (req, res) => {
 			.input("status", statusValue)
 			.input("user_id", name)
 			.input("approve", selected === "approve" ? 1 : 0)
-			.input("date", formatDateForDB())
 			.input("comment", comment);
 		const roleFields = {
 			advisor: `
 				advisor_approvals_id = @user_id,
 				advisor_approvals = @approve,
-				advisor_approvals_date = @date
+				advisor_approvals_date = GETDATE()
 			`,
 			chairpersons: `
 				chairpersons_approvals_id = @user_id,
 				chairpersons_approvals = @approve,
-				chairpersons_approvals_date = @date
+				chairpersons_approvals_date = GETDATE()
 			`,
 			officer_registrar: `
 				registrar_approvals_id = @user_id,
 				registrar_approvals = @approve,
-				registrar_approvals_date = @date
+				registrar_approvals_date = GETDATE()
 			`,
 		};
 		const query = `
@@ -199,11 +199,11 @@ router.post("/approveRequestExam", authenticateToken, async (req, res) => {
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()],
-				request_date: formatDateThaiBE(result.recordset[0].request_date),
-				advisor_approvals_date: formatDateThaiBE(result.recordset[0].advisor_approvals_date),
-				chairpersons_approvals_date: formatDateThaiBE(result.recordset[0].chairpersons_approvals_date),
-				registrar_approvals_date: formatDateThaiBE(result.recordset[0].registrar_approvals_date),
-				receipt_pay_date: formatDateThaiBE(result.recordset[0].receipt_pay_date),
+				request_date: result.recordset[0].request_date,
+				advisor_approvals_date: result.recordset[0].advisor_approvals_date,
+				chairpersons_approvals_date: result.recordset[0].chairpersons_approvals_date,
+				registrar_approvals_date: result.recordset[0].registrar_approvals_date,
+				receipt_pay_date: result.recordset[0].receipt_pay_date,
 			},
 		});
 	} catch (err) {
@@ -216,10 +216,10 @@ router.post("/payRequestExam", authenticateToken, async (req, res) => {
 	const { request_exam_id, receipt_vol_No } = req.body;
 	try {
 		const pool = await poolPromise;
-		const result = await pool.request().input("request_exam_id", request_exam_id).input("receipt_vol_No", receipt_vol_No).input("receipt_pay_date", formatDateForDB()).input("status", "5").query(`
+		const result = await pool.request().input("request_exam_id", request_exam_id).input("receipt_vol_No", receipt_vol_No).input("status", "5").query(`
 			UPDATE request_exam
 			SET receipt_vol_No = @receipt_vol_No ,
-				receipt_pay_date = @receipt_pay_date,
+				receipt_pay_date = GETDATE(),
 				status = @status
 			OUTPUT INSERTED.*
 			WHERE request_exam_id = @request_exam_id
@@ -230,11 +230,11 @@ router.post("/payRequestExam", authenticateToken, async (req, res) => {
 			data: {
 				...row,
 				status_text: statusMap[row.status?.toString()],
-				request_date: formatDateThaiBE(row.request_date),
-				advisor_approvals_date: formatDateThaiBE(row.advisor_approvals_date),
-				chairpersons_approvals_date: formatDateThaiBE(row.chairpersons_approvals_date),
-				registrar_approvals_date: formatDateThaiBE(row.registrar_approvals_date),
-				receipt_pay_date: formatDateThaiBE(row.receipt_pay_date),
+				request_date: row.request_date,
+				advisor_approvals_date: row.advisor_approvals_date,
+				chairpersons_approvals_date: row.chairpersons_approvals_date,
+				registrar_approvals_date: row.registrar_approvals_date,
+				receipt_pay_date: row.receipt_pay_date,
 			},
 		});
 	} catch (err) {

@@ -20,6 +20,7 @@ const RequestExam = () => {
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
 	const close = () => setInform((s) => ({ ...s, open: false }));
+	const [timeout, setTimeout] = useState(3000);
 	// Modal states
 	const [openAdd, setOpenAdd] = useState(false);
 	const [openApprove, setOpenApprove] = useState(false);
@@ -47,7 +48,7 @@ const RequestExam = () => {
 	});
 
 	/* const [registerCourses, setRegisterCourses] = useState([]); */
-	const [registerCoursesData, setRegisterCourses] = useState(() => (user_id === "684270201" ? ["1065208R","1065222R"] : ["1065208R", "1066205R", "1065222R", "1065204R", "1065232R", "1065202R", "1065201R", "1065206R", "1065208R", "1065231R"]));
+	const [registerCoursesData, setRegisterCourses] = useState(() => (user_id === "684270201" ? ["1065208R", "1065222R", "1065208R", "1065222R", "1066205R"] : ["1065208R", "1066205R", "1065222R", "1065204R", "1065232R", "1065202R", "1065201R", "1065206R", "1065208R", "1065231R"]));
 
 	useEffect(() => {
 		setSelectedType(type);
@@ -65,7 +66,7 @@ const RequestExam = () => {
 				setUser(res);
 			} catch (e) {
 				notify("error", e.message);
-				console.error("Error fetching profile:", e);
+				console.error("Error fetchProfile:", e);
 			}
 		};
 		const fetchRequestExam = async () => {
@@ -76,10 +77,9 @@ const RequestExam = () => {
 				});
 				const res = await req.json();
 				if (!req.ok) throw new Error(res.message);
-				console.log(res);
+				setRequest(res);
 
 				const countFailOrAbsent = res.filter((row) => row.exam_results === "ไม่ผ่าน" || row.exam_results === "ขาดสอบ").length;
-				setRequest(res);
 				if (!res.length) setLatestRequest(false);
 				else if (countFailOrAbsent > 2) setLatestRequest(true);
 				else if (res[0].exam_results === "ไม่ผ่าน" || res[0].exam_results === "ขาดสอบ") setLatestRequest(false);
@@ -91,6 +91,15 @@ const RequestExam = () => {
 		};
 		const fetchStudentData = async () => {
 			try {
+				const res = await fetch("http://localhost:8080/api/check_openKQ", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				});
+				const data = await res.json();
+				if (!res.ok) throw new Error(data.message);
+				if (data.message) throw new Error(data.message);
+				console.log(data);
+
 				const registrationRes = await fetch("http://localhost:8080/api/allStudyGroupIdCourseRegistration", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -104,16 +113,17 @@ const RequestExam = () => {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({
-						ID_NO: user_id, 
+						ID_NO: user_id,
 					}),
-				}); 
+				});
 				const registerCoursesData = await registerCoursesRes.json();
 				if (!registerCoursesRes.ok) throw new Error(registerCoursesData.message); 
 				console.log(registerCoursesData);
 
 				const allCodes = registerCoursesData.map((c) => c.SJCODE);
-				const missing = registrationData.course_id.filter((code) => !allCodes.includes(code)); 
+				const missing = registrationData.course_id.filter((code) => !allCodes.includes(code));
 				console.log(missing);*/
+
 				const missing = registrationData.course_id.filter((code) => !registerCoursesData.includes(code));
 				console.log(missing);
 
@@ -142,6 +152,7 @@ const RequestExam = () => {
 				}
 				fetchRequestExam();
 			} catch (e) {
+				setTimeout(10000)
 				notify("error", e.message);
 				console.error("Error fetching CourseCheck:", e);
 			}
@@ -156,6 +167,7 @@ const RequestExam = () => {
 	}, []);
 
 	const handleOpenAdd = async () => {
+		setTimeout(3000)
 		try {
 			const req = await fetch("http://localhost:8080/api/studentInfo", {
 				method: "GET",
@@ -172,6 +184,7 @@ const RequestExam = () => {
 	};
 
 	const handleAdd = async () => {
+		setTimeout(3000)
 		try {
 			const requestRes = await fetch("http://localhost:8080/api/addRequestExam", {
 				method: "POST",
@@ -191,6 +204,7 @@ const RequestExam = () => {
 	};
 
 	const handleApprove = async (item) => {
+		setTimeout(3000)
 		if (selected === "noapprove" && comment.trim() === "") {
 			setError("กรุณาระบุเหตุผล");
 			return;
@@ -215,6 +229,7 @@ const RequestExam = () => {
 	};
 
 	const handlePay = async (item) => {
+		setTimeout(3000)
 		try {
 			const requestRes = await fetch("http://localhost:8080/api/payRequestExam", {
 				method: "POST",
@@ -340,7 +355,7 @@ const RequestExam = () => {
 	return (
 		<Box>
 			<ModalCheckCourse opened={openCheckCourse} onClose={() => setOpenCheckCourse(false)} missingCoures={missingCoures} />
-			<ModalInform opened={inform.open} onClose={close} message={inform.message} type={inform.type} />
+			<ModalInform opened={inform.open} onClose={close} message={inform.message} type={inform.type} timeout={timeout} />
 			<ModalApprove
 				opened={openApprove}
 				onClose={() => setOpenApprove(false)}

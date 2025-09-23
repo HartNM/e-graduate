@@ -46,13 +46,6 @@ const ExamScheduleSetupPage = () => {
 		},
 	});
 
-	const toChristianYear = (date) => {
-		if (!date) return null;
-		const d = new Date(date);
-		d.setFullYear(d.getFullYear() - 543); // พ.ศ. → ค.ศ.
-		return d.toISOString().split("T")[0];
-	};
-
 	useEffect(() => {
 		const fetchRequestExamInfoAll = async () => {
 			try {
@@ -61,14 +54,8 @@ const ExamScheduleSetupPage = () => {
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
 				const requestData = await requestRes.json();
-				const formattedData = requestData.map((item) => ({
-					...item,
-					open_date: toChristianYear(item.open_date),
-					close_date: toChristianYear(item.close_date),
-					exam_date: toChristianYear(item.exam_date),
-				}));
-				setRequestExamInfo(formattedData);
-				console.log(formattedData);
+				setRequestExamInfo(requestData);
+				console.log(requestData);
 			} catch (err) {
 				setInformtype("error");
 				setInformMessage("เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
@@ -97,7 +84,7 @@ const ExamScheduleSetupPage = () => {
 			const requestRes = await fetch(url[modalType], {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ ...Form.values, open_date: toBuddhistYear(Form.values.open_date), close_date: toBuddhistYear(Form.values.close_date), exam_date: toBuddhistYear(Form.values.exam_date) }),
+				body: JSON.stringify(Form.values),
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) throw new Error(requestData.message);
@@ -113,15 +100,16 @@ const ExamScheduleSetupPage = () => {
 			console.error("Error fetch addRequestExamInfo:", err);
 		}
 	};
-	const formatThaiDate = (dateStr) => {
-		if (!dateStr) return "";
-		const date = new Date(dateStr);
-		const day = String(date.getDate()).padStart(2, "0");
-		const month = String(date.getMonth() + 1).padStart(2, "0");
-		const year = date.getFullYear() + 543;
+	const formatThaiDate = (date) => {
+		if (!date) return "";
+
+		const d = new Date(date); // รองรับทั้ง Date object หรือ string
+		const day = String(d.getDate()).padStart(2, "0");
+		const month = String(d.getMonth() + 1).padStart(2, "0");
+		const year = d.getFullYear() + 543; // แปลงเป็น พ.ศ.
+
 		return `${day}/${month}/${year}`;
 	};
-
 	const Rows = requestExamInfo.map((item, index) => (
 		<Table.Tr key={item.request_exam_info_id}>
 			<Table.Td>{item.term}</Table.Td>

@@ -36,14 +36,27 @@ router.post("/editAssignChairpersons", authenticateToken, async (req, res) => {
 });
 
 router.post("/allAssignChairpersons", authenticateToken, async (req, res) => {
-	const {id} = req.body
 	try {
+		const { user_id } = req.user;
 		const pool = await poolPromise;
-		const request = pool.request().input("id", id);
-		let query = "SELECT * FROM chairpersons WHERE major_name = @id";
-		const result = await request.query(query);
+		const major_id = await pool.request().input("user_id", user_id).query(`SELECT * FROM officerMajor_id WHERE user_id = @user_id`);
 
-		res.status(200).json(result.recordset);
+		const major_name = await pool.request().input("major_id", major_id.recordset[0].major_id).query(`SELECT * FROM majors WHERE major_id = @major_id`);
+
+		const chairpersons_id = await pool.request().input("major_id", major_id.recordset[0].major_id).query(`SELECT * FROM chairpersonsMajor_id WHERE major_id = @major_id`);
+		const userIds = chairpersons_id.recordset.map((c) => c.user_id); // [id1, id2, id3]
+		const placeholders = userIds.map((_, i) => `@id${i}`).join(", "); // "@id0, @id1, @id2"
+
+		const request = pool.request();
+		userIds.forEach((id, i) => request.input(`id${i}`, id));
+		const chairpersons = await request.query(`SELECT user_id, name FROM users WHERE user_id IN (${placeholders})`);
+
+		res.status(200).json(
+			chairpersons.recordset.map((person) => ({
+				...person,
+				major_name: major_name.recordset[0].major_name,
+			}))
+		);
 	} catch (err) {
 		console.error("requestExamInfoAll:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
