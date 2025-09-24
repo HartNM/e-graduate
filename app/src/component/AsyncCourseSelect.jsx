@@ -11,7 +11,6 @@ function AsyncCourseSelect({ form, disabled = false }) {
   // โหลดข้อมูลครั้งเดียว
   useEffect(() => {
     const fetchAll = async () => {
-
       try {
         const res = await fetch("http://localhost:8080/api/allCoures", {
           method: "POST",
@@ -26,7 +25,6 @@ function AsyncCourseSelect({ form, disabled = false }) {
         setFullData([]);
         setData([]);
       }
-
     };
     fetchAll();
   }, [token]);

@@ -10,23 +10,22 @@ const AssignMajorOfficer = () => {
 	const [assignMajorOfficer, setAssignMajorOfficer] = useState([]);
 	const [openModal, setOpenModal] = useState(false);
 	const [modalType, setModalType] = useState(false);
-	const [major, setMajor] = useState(["การบริหารการศึกษา", "ยุทธศาสตร์การบริหารและการพัฒนา", "การจัดการสมัยใหม่", "รัฐประศาสนศาสตร์", "วิทยาศาสตร์ศึกษา"]);
-	
+	const [majors, setMajors] = useState([]);
 	const [openInform, setOpenInform] = useState(false);
 	const [informMessage, setInformMessage] = useState("");
 	const [informtype, setInformtype] = useState("");
 
 	const Form = useForm({
 		initialValues: {
-			officer_major_id: "",
-			officer_major_name: "",
-			major_name: "",
+			user_id: "",
+			name: "",
+			major_id: "",
 			password: "",
 		},
 		validate: {
-			officer_major_id: (value) => (value.trim().length > 0 ? null : "กรุณากรอกรหัสบัตร"),
-			officer_major_name: (value) => (value.trim().length > 0 ? null : "กรุณากรอกชื่อ"),
-			major_name: (value) => (value.trim().length > 0 ? null : "กรุณาเลือกสาขา"),
+			user_id: (value) => (value.trim().length > 0 ? null : "กรุณากรอกรหัสบัตร"),
+			name: (value) => (value.trim().length > 0 ? null : "กรุณากรอกชื่อ"),
+			major_id: (value) => (value.trim().length > 0 ? null : "กรุณาเลือกสาขา"),
 			password: (value) => {
 				if (modalType === "delete" || modalType === "edit") return null;
 				return value.trim().length > 0 ? null : "กรุณากรอกรหัสผ่าน";
@@ -56,17 +55,33 @@ const AssignMajorOfficer = () => {
 			setReloadTable(false);
 		};
 		fetchRequestExamInfoAll();
+		const fetchMajors = async () => {
+			try {
+				const requestRes = await fetch("http://localhost:8080/api/majors", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				});
+				const requestData = await requestRes.json();
+				if (!requestRes.ok) throw new Error(requestData.message);
+				const formatted = requestData.map((item) => ({
+					value: item.major_id,
+					label: item.major_name,
+				}));
+				setMajors(formatted);
+				console.log(formatted);
+			} catch (e) {
+				setInformtype("error");
+				setInformMessage(e.message);
+				setOpenInform(true);
+				console.error(e);
+			}
+		};
+		fetchMajors();
 	}, [reloadTable]);
 
 	const handleOpenAdd = () => {
 		Form.reset();
 		setModalType("add");
-		setOpenModal(true);
-	};
-
-	const handleOpenEdit = (item) => {
-		Form.setValues(item);
-		setModalType("edit");
 		setOpenModal(true);
 	};
 
@@ -79,7 +94,6 @@ const AssignMajorOfficer = () => {
 	const handleSubmit = async () => {
 		const url = {
 			add: "http://localhost:8080/api/addAssignMajorOfficer",
-			edit: "http://localhost:8080/api/editAssignMajorOfficer",
 			delete: "http://localhost:8080/api/deleteAssignMajorOfficer",
 		};
 		console.log(url[modalType]);
@@ -108,14 +122,14 @@ const AssignMajorOfficer = () => {
 	};
 
 	const classRows = assignMajorOfficer.map((item) => (
-		<Table.Tr key={item.officer_major_id}>
+		<Table.Tr key={item.user_id}>
 			<Table.Td>{item.major_name}</Table.Td>
-			<Table.Td>{item.officer_major_name}</Table.Td>
+			<Table.Td>{item.name}</Table.Td>
 			<Table.Td>
 				<Group>
-					<Button color="yellow" size="xs" onClick={() => handleOpenEdit(item)}>
+					{/* <Button color="yellow" size="xs" onClick={() => handleOpenEdit(item)}>
 						แก้ไข
-					</Button>
+					</Button> */}
 					<Button color="red" size="xs" onClick={() => handleOpenDelete(item)}>
 						ลบ
 					</Button>
@@ -127,12 +141,12 @@ const AssignMajorOfficer = () => {
 	return (
 		<Box>
 			<ModalInform opened={openInform} onClose={() => setOpenInform(false)} message={informMessage} type={informtype} />
-			<Modal opened={openModal} onClose={() => setOpenModal(false)} title="แต่งตั้งเจ้าหน้าที่ประจำสาขา" centered>
+			<Modal opened={openModal} onClose={() => setOpenModal(false)} title="กรอกข้อมูลเจ้าหน้าที่ประจำสาขาวิชา" centered>
 				<Box>
 					<form onSubmit={Form.onSubmit(handleSubmit)}>
-						<Select label="เลือกสาขา" data={major} {...Form.getInputProps("major_name")} disabled={modalType === "delete" ? true : false}></Select>
-						<TextInput label="รหัสบัตร" {...Form.getInputProps("officer_major_id")} disabled={modalType === "add" ? false : true} />
-						<TextInput label="ชื่อ" {...Form.getInputProps("officer_major_name")} disabled={modalType === "delete" ? true : false} />
+						<Select label="เลือกสาขา" data={majors} {...Form.getInputProps("major_id")} disabled={modalType === "delete" ? true : false}></Select>
+						<TextInput label="รหัสบัตร" {...Form.getInputProps("user_id")} disabled={modalType === "add" ? false : true} />
+						<TextInput label="ชื่อ" {...Form.getInputProps("name")} disabled={modalType === "delete" ? true : false} />
 						{modalType === "add" && <PasswordInput label="รหัสผ่าน" {...Form.getInputProps("password")} />}
 						<Space h="md" />
 						<Button color={modalType === "delete" ? "red" : "green"} type="submit" fullWidth>
@@ -143,7 +157,7 @@ const AssignMajorOfficer = () => {
 			</Modal>
 
 			<Text size="1.5rem" fw={900} mb="md">
-				แต่งตั้งเจ้าหน้าที่ประจำสาขา
+				กรอกข้อมูลเจ้าหน้าที่ประจำสาขาวิชา
 			</Text>
 			<Space h="xl" />
 			<Group justify="space-between">

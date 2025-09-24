@@ -52,7 +52,7 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 			query += ` WHERE study_group_id IN (SELECT group_no FROM advisorGroup_no WHERE user_id = @user_id)`;
 		} else if (role === "chairpersons") {
 			query +=
-				" WHERE major_id IN (SELECT major_id FROM chairpersonsMajor_id WHERE user_id = @user_id) AND (status IN (0, 2, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL))";
+				" WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND (status IN (0, 2, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL))";
 		} else if (role === "officer_registrar") {
 			query += " WHERE (status IN (0, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL AND registrar_approvals_id IS NOT NULL))";
 		}
@@ -91,7 +91,14 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 	const { student_id, study_group_id, major_id, major_name, faculty_name, education_level } = req.body;
 	try {
 		const pool = await poolPromise;
-		const infoRes = await pool.request().query(`SELECT TOP 1 term FROM request_exam_info ORDER BY request_exam_info_id DESC`);
+
+		const infoRes = await pool.request().query(`SELECT TOP 1 *
+			FROM request_exam_info
+			WHERE CAST(GETDATE() AS DATE) BETWEEN open_date AND close_date
+			ORDER BY request_exam_info_id DESC`);
+
+			console.log();
+			
 		const result = await pool
 			.request()
 			.input("student_id", student_id)

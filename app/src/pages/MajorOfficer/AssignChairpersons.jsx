@@ -31,17 +31,18 @@ const AssignChairpersons = () => {
 
 	const Form = useForm({
 		initialValues: {
-			chairpersons_id: "",
-			chairpersons_name: "",
-			major_name: "",
+			user_id: "",
+			name: "",
+			major_id: "",
 			password: "123456",
 		},
 		validate: {
-			chairpersons_name: (value) => (value.trim().length > 0 ? null : "กรุณากรอกชื่อ"),
+			name: (value) => (value.trim().length > 0 ? null : "กรุณากรอกชื่อ"),
 		},
 	});
 
 	const [user, setUser] = useState("");
+	const [majorName, setMajorName] = useState("");
 
 	useEffect(() => {
 		const fetchProfile = async () => {
@@ -53,6 +54,14 @@ const AssignChairpersons = () => {
 				const profileData = await profileRes.json();
 				setUser(profileData);
 				console.log(profileData);
+
+				const marjorRes = await fetch("http://localhost:8080/api/getMajor_name", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				});
+				const marjorData = await marjorRes.json();
+				setMajorName(marjorData);
+				console.log(marjorData);
 			} catch (e) {
 				notify("error", e.message);
 				console.error("Error fetching profile:", e);
@@ -62,7 +71,6 @@ const AssignChairpersons = () => {
 	}, []);
 
 	useEffect(() => {
-		if (!user) return;
 		const fetchRequestExamInfoAll = async () => {
 			try {
 				setChairpersons(save);
@@ -71,9 +79,7 @@ const AssignChairpersons = () => {
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
 				const requestData = await requestRes.json();
-				if (!requestRes.ok) {
-					throw new Error(requestData.message);
-				}
+				if (!requestRes.ok) throw new Error(requestData.message);
 				setAssignChairpersons(requestData);
 				console.log(requestData);
 				const assignedIds = assignChairpersons.map((item) => item.chairpersons_id);
@@ -85,7 +91,7 @@ const AssignChairpersons = () => {
 			setReloadTable(false);
 		};
 		fetchRequestExamInfoAll();
-	}, [user, reloadTable]);
+	}, [reloadTable]);
 
 	const handleOpenAdd = () => {
 		Form.reset();
@@ -109,7 +115,7 @@ const AssignChairpersons = () => {
 			const req = await fetch(url[modalType], {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify(Form.values),
+				body: JSON.stringify({ ...Form.values, major_id: majorName.major_id }),
 			});
 			const res = await req.json();
 			if (!req.ok) {
@@ -126,7 +132,7 @@ const AssignChairpersons = () => {
 
 	const classRows = assignChairpersons.map((item) => (
 		<Table.Tr key={item.user_id}>
-			<Table.Td>{item.major_name}</Table.Td>
+			<Table.Td>{majorName.major_name}</Table.Td>
 			<Table.Td>{item.name}</Table.Td>
 			<Table.Td>
 				<Group>
@@ -141,9 +147,9 @@ const AssignChairpersons = () => {
 	return (
 		<Box>
 			<ModalInform opened={inform.open} onClose={close} message={inform.message} type={inform.type} />
-			<Modal opened={openModal} onClose={() => setOpenModal(false)} title="แต่งตั้งประธานกรรมการบัณฑิตศึกษาประจำสาขา" centered>
+			<Modal opened={openModal} onClose={() => setOpenModal(false)} title="กรอกข้อมูลประธานกรรมการบัณฑิตศึกษาประจำสาขาวิชา" centered>
 				<form onSubmit={Form.onSubmit(handleSubmit)}>
-					<Text>สาขา{user.id}</Text>
+					<Text>สาขา{majorName.major_name}</Text>
 					{modalType === "delete" ? (
 						<TextInput label="ชื่อ" {...Form.getInputProps("chairpersons_name")} disabled={true} />
 					) : (
@@ -153,9 +159,9 @@ const AssignChairpersons = () => {
 							data={chairpersons}
 							value={Form.values.chairpersons_id}
 							onChange={(value) => {
-								Form.setFieldValue("chairpersons_id", value);
+								Form.setFieldValue("user_id", value);
 								const selected = chairpersons.find((c) => c.value === value);
-								Form.setFieldValue("chairpersons_name", selected ? selected.label : "");
+								Form.setFieldValue("name", selected ? selected.label : "");
 							}}
 						/>
 					)}

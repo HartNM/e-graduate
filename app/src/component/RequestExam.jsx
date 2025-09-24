@@ -363,7 +363,7 @@ const RequestExam = () => {
 				selected={selected}
 				setSelected={setSelected}
 				comment={comment}
-				setComment={setComment}
+				setComment={setComment}	
 				error={error}
 				openApproveState={openApproveState}
 				handleApprove={handleApprove}
