@@ -20,29 +20,33 @@ const ExamScheduleSetupPage = () => {
 	const Form = useForm({
 		initialValues: {
 			term: "",
-			open_date: null,
-			close_date: null,
-			exam_date: null,
+			term_open_date: null,
+			term_close_date: null,
+			KQ_open_date: null,
+			KQ_close_date: null,
+			KQ_exam_date: null,
+			ET_exam_date: null,
 		},
 		validate: {
 			term: (value) => (/^\d+\/\d+$/.test(value.trim()) ? null : "กรุณากรอกในรูปแบบ เช่น 1/68"),
-			open_date: (value) => (value ? null : "กรุณาระบุวันที่เปิด"),
-			close_date: (value) => {
-				if (modalType === "delete") return null;
-				if (!value) return "กรุณาระบุวันที่ปิด";
-				if (Form.values.open_date && value < Form.values.open_date) {
+			term_open_date: (value) => (value ? null : "กรุณาระบุวันที่"),
+			term_close_date: (value) => (value ? null : "กรุณาระบุวันที่"),
+			KQ_open_date: (value) => (value ? null : "กรุณาระบุวันที่"),
+			KQ_close_date: (value) => {
+				if (!value) return "กรุณาระบุวันที่";
+				if (Form.values.KQ_open_date && value < Form.values.KQ_open_date) {
 					return "วันที่ปิดต้องไม่น้อยกว่าวันเปิด";
 				}
 				return null;
 			},
-			exam_date: (value) => {
-				if (modalType === "delete") return null;
-				if (!value) return "กรุณาระบุวันที่สอบ";
-				if (Form.values.close_date && value < Form.values.close_date) {
-					return "วันที่สอบต้องไม่น้อยกว่าวันปิดรับ";
+			KQ_exam_date: (value) => {
+				if (!value) return "กรุณาระบุวันที่";
+				if (Form.values.KQ_close_date && value < Form.values.KQ_close_date) {
+					return "วันที่สอบต้องไม่น้อยกว่าวันปิด";
 				}
 				return null;
 			},
+			ET_exam_date: (value) => (value ? null : "กรุณาระบุวันที่"),
 		},
 	});
 
@@ -66,13 +70,6 @@ const ExamScheduleSetupPage = () => {
 		};
 		fetchRequestExamInfoAll();
 	}, [reloadTable]);
-
-	const toBuddhistYear = (date) => {
-		if (!date) return null;
-		const d = new Date(date);
-		d.setFullYear(d.getFullYear() + 543); // ค.ศ. → พ.ศ.
-		return d.toISOString().split("T")[0];
-	};
 
 	const handleSubmit = async () => {
 		const url = {
@@ -113,9 +110,9 @@ const ExamScheduleSetupPage = () => {
 	const Rows = requestExamInfo.map((item, index) => (
 		<Table.Tr key={item.request_exam_info_id}>
 			<Table.Td>{item.term}</Table.Td>
-			<Table.Td>{formatThaiDate(item.open_date)}</Table.Td>
-			<Table.Td>{formatThaiDate(item.close_date)}</Table.Td>
-			<Table.Td>{formatThaiDate(item.exam_date)}</Table.Td>
+			<Table.Td>{formatThaiDate(item.KQ_open_date)}</Table.Td>
+			<Table.Td>{formatThaiDate(item.KQ_close_date)}</Table.Td>
+			<Table.Td>{formatThaiDate(item.KQ_exam_date)}</Table.Td>
 			<Table.Td>
 				<Group>
 					<Button
@@ -150,10 +147,13 @@ const ExamScheduleSetupPage = () => {
 			<ModalInform opened={openInform} onClose={() => setOpenInform(false)} message={informMessage} type={informtype} />
 			<Modal opened={openedPickDate} onClose={() => setOpenPickDate(false)} title={modalType === "delete" ? "ลบวันสอบประมวลความรู้/สอบวัดคุณสมบัติ" : "กำหนดวันสอบประมวลความรู้/สอบวัดคุณสมบัติ"} centered>
 				<form onSubmit={Form.onSubmit(handleSubmit)}>
-					<TextInput label="ปีการศึกษา" placeholder="กรอกปีการศึกษา" withAsterisk {...Form.getInputProps("term")} disabled={modalType === "delete" ? true : false} />
-					<DatePickerInput label="วันเปิดการยื่นคำร้อง" placeholder="เลือกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" withAsterisk {...Form.getInputProps("open_date")} disabled={modalType === "delete" ? true : false} />
-					<DatePickerInput label="วันปิดการยื่นคำร้อง" placeholder="เลือกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" withAsterisk minDate={Form.values.open_date} {...Form.getInputProps("close_date")} disabled={modalType === "delete" ? true : false} />
-					<DatePickerInput label="วันสอบ" placeholder="เลื่อกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" withAsterisk minDate={Form.values.close_date} {...Form.getInputProps("exam_date")} disabled={modalType === "delete" ? true : false} />
+					<TextInput label="ปีการศึกษา" {...Form.getInputProps("term")} disabled={modalType === "delete" ? true : false} />
+					<DatePickerInput label="วันเปิดภาคเรียน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" {...Form.getInputProps("term_open_date")} disabled={modalType === "delete" ? true : false} />
+					<DatePickerInput label="วันปิดภาคเรียน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" {...Form.getInputProps("term_close_date")} disabled={modalType === "delete" ? true : false} />
+					<DatePickerInput label="วันเปิดยื่นคำร้องสอบประมวลความรู้/สอบวัดคุณสมบัติ" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" {...Form.getInputProps("KQ_open_date")} disabled={modalType === "delete" ? true : false} />
+					<DatePickerInput label="วันปิดยื่นคำร้องสอบประมวลความรู้/สอบวัดคุณสมบัติ" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" minDate={Form.values.KQ_open_date} {...Form.getInputProps("KQ_close_date")} disabled={modalType === "delete" ? true : false} />
+					<DatePickerInput label="วันสอบประมวลความรู้/สอบวัดคุณสมบัติ" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" minDate={Form.values.KQ_close_date} {...Form.getInputProps("KQ_exam_date")} disabled={modalType === "delete" ? true : false} />
+					<DatePickerInput label="วันสอบความรู้ทางภาษาอังกฤษ" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" {...Form.getInputProps("ET_exam_date")} disabled={modalType === "delete" ? true : false} />
 					<Space h="md" />
 					<Button color={modalType === "delete" ? "red" : "green"} type="submit" fullWidth>
 						{modalType === "delete" ? "ลบ" : "บันทึก"}

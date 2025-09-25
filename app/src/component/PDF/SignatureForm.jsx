@@ -4,7 +4,7 @@ import { PDFDocument, rgb } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import { formatThaiDate, drawGrid, drawRect, drawLine, drawCenteredText, drawMiddleText, drawCenterXText } from "./PdfUtils.js";
 
-async function fillPdf(templateUrl, data, exam_date) {
+async function fillPdf(templateUrl, data) {
 	// โหลด template PDF ใหม่สำหรับ copy
 	const templateBytes = await fetch(templateUrl).then((res) => res.arrayBuffer());
 	const templateDoc = await PDFDocument.load(templateBytes);
@@ -20,9 +20,32 @@ async function fillPdf(templateUrl, data, exam_date) {
 	const logoImage = await pdfDoc.embedPng(logoBytes);
 	const pngDims = logoImage.scale(0.125);
 
-	const [day, month, year] = formatThaiDate(exam_date);
-	const STUDENTS_PER_PAGE = 25;
+	
+	const firstArray = Object.values(data)[0];
+	const term = firstArray?.[0]?.term;
 
+	console.log("term:", term);
+
+	let KQ_exam_date;
+	try {
+		const token = localStorage.getItem("token");
+		const requestRes = await fetch("http://localhost:8080/api/allRequestExamInfo", {
+			method: "POST",
+			headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+			body: JSON.stringify({ term: term }),
+		});
+		const requestData = await requestRes.json();
+		if (Array.isArray(requestData) && requestData.length > 0) {
+			KQ_exam_date = requestData[0].KQ_exam_date;
+		}
+		console.log(KQ_exam_date);
+	} catch (e) {
+		console.error("Error fetch allRequestExamInfo:", e);
+	}
+
+	const [day, month, year] = formatThaiDate(KQ_exam_date);
+
+	const STUDENTS_PER_PAGE = 25;
 	const ROW_HEIGHT = 20;
 
 	for (const groupId in data) {
@@ -88,9 +111,9 @@ async function fillPdf(templateUrl, data, exam_date) {
 	return new Blob([pdfBytes], { type: "application/pdf" });
 }
 
-export default function SignatureForm({ data, exam_date }) {
+export default function SignatureForm({ data }) {
 	const handleClick = async () => {
-		const blob = await fillPdf("/pdf/blank.pdf", data, exam_date);
+		const blob = await fillPdf("/pdf/blank.pdf", data);
 		const url = URL.createObjectURL(blob);
 		window.open(url, "_blank");
 	};

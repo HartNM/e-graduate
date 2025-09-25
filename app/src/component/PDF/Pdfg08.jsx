@@ -91,15 +91,15 @@ async function fillPdf(data) {
 	return new Blob([pdfBytes], { type: "application/pdf" });
 }
 
-export default function Pdfg01({ data, showType, exam_date }) {
+export default function Pdfg01({ data, showType }) {
 	const handleOpen = async () => {
-		const blob = await fillPdf(data, exam_date);
+		const blob = await fillPdf(data);
 		const url = URL.createObjectURL(blob);
 		window.open(url, "_blank");
 	};
 
 	const handlePrint = async () => {
-		const blob = await fillPdf(data, exam_date);
+		const blob = await fillPdf(data);
 		const url = URL.createObjectURL(blob);
 
 		const iframe = document.createElement("iframe");

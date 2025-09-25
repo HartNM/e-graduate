@@ -23,7 +23,7 @@ router.post("/check_openKQ", authenticateToken, async (req, res) => {
 		const result = await pool.query(`
 			SELECT TOP 1 *
 			FROM request_exam_info
-			WHERE CAST(GETDATE() AS DATE) BETWEEN open_date AND close_date
+			WHERE CAST(GETDATE() AS DATE) BETWEEN KQ_open_date AND KQ_close_date
 			ORDER BY request_exam_info_id DESC
 		`);
 		if (result.recordset.length === 0) {
@@ -94,9 +94,8 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 
 		const infoRes = await pool.request().query(`SELECT TOP 1 *
 			FROM request_exam_info
-			WHERE CAST(GETDATE() AS DATE) BETWEEN open_date AND close_date
+			WHERE CAST(GETDATE() AS DATE) BETWEEN KQ_open_date AND KQ_close_date
 			ORDER BY request_exam_info_id DESC`);
-
 			console.log();
 			
 		const result = await pool

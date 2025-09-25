@@ -27,15 +27,21 @@ const Student = () => {
 				if (data.PostponeProposalExam) {
 					newMenu.push({ label: `คำร้องขอเลื่อนสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconCalendarClock, links: "/student/PostponeProposalExam" });
 				}
+				if (data.PlagiarismProposal) {
+					newMenu.push({ label: "รายงานผลการตรวจสอบการคัดลอกผลงานทางวิชาการ", icon: IconSearch, links: "/student/PlagiarismProposal" });
+				}
 				if (data.RequestThesisDefense) {
 					newMenu.push({ label: `คำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconFileText, links: "/student/RequestThesisDefense" });
 				}
 				if (data.PostponeDefenseExam) {
 					newMenu.push({ label: `คำร้องขอเลื่อนสอบวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconCalendarClock, links: "/student/PostponeDefenseExam" });
 				}
-				if (data.PlagiarismReport) {
-					newMenu.push({ label: "รายงานผลการตรวจสอบการคัดลอกผลงานทางวิชาการ", icon: IconSearch, links: "/student/PlagiarismReport" });
+				if (data.PlagiarismDefense) {
+					newMenu.push({ label: "รายงานผลการตรวจสอบการคัดลอกผลงานทางวิชาการ", icon: IconSearch, links: "/student/PlagiarismDefense" });
 				}
+				/* if (data.PlagiarismReport) {
+					newMenu.push({ label: "รายงานผลการตรวจสอบการคัดลอกผลงานทางวิชาการ", icon: IconSearch, links: "/student/PlagiarismReport" });
+				} */
 				if (data.RequestGraduation) {
 					newMenu.push({ label: "คำร้องขอสำเร็จการศึกษาระดับบัณฑิตศึกษา", icon: IconSchool, links: "/student/RequestGraduation" });
 				}

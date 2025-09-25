@@ -27,7 +27,7 @@ const ExamResultsPrint = () => {
 				if (!res.ok) throw new Error(data.message);
 				setTerm(data.map((item) => item.term));
 				setSelectedTerm(data[0]?.term);
-				setDateExam(data[0].exam_date);
+				setDateExam(data[0].KQ_exam_date);
 			} catch (e) {
 				notify("error", e.message);
 			}

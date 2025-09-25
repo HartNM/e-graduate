@@ -48,7 +48,7 @@ const RequestExam = () => {
 	});
 
 	/* const [registerCourses, setRegisterCourses] = useState([]); */
-	const [registerCoursesData, setRegisterCourses] = useState(() => (user_id === "684270201" ? ["1065208R", "1065222R", "1065208R", "1065222R", "1066205R"] : ["1065208R", "1066205R", "1065222R", "1065204R", "1065232R", "1065202R", "1065201R", "1065206R", "1065208R", "1065231R"]));
+	/* const [registerCoursesData, setRegisterCourses] = useState(() => (user_id === "684270201" ? ["1065208R", "1065222R", "1065208R", "1065222R", "1066205R"] : ["1065208R", "1066205R", "1065222R", "1065204R", "1065232R", "1065202R", "1065201R", "1065206R", "1065208R", "1065231R"])); */
 
 	useEffect(() => {
 		setSelectedType(type);
@@ -105,11 +105,11 @@ const RequestExam = () => {
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
 				const registrationData = await registrationRes.json();
-				if (!registrationData) throw new Error("รอเจ้าหน้าที่กรอกราย วิชาที่ต้องเรียน");
 				if (!registrationRes.ok) throw new Error(registrationData.message);
+				if (!registrationData) throw new Error("รอเจ้าหน้าที่กรอกราย วิชาที่ต้องเรียน");
 				console.log(registrationData);
 
-				/* const registerCoursesRes = await fetch("http://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectPass", {
+				const registerCoursesRes = await fetch("http://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectPass", {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({
@@ -117,57 +117,58 @@ const RequestExam = () => {
 					}),
 				});
 				const registerCoursesData = await registerCoursesRes.json();
-				if (!registerCoursesRes.ok) throw new Error(registerCoursesData.message); 
+				if (!registerCoursesRes.ok) throw new Error(registerCoursesData.message);
 				console.log(registerCoursesData);
 
 				const allCodes = registerCoursesData.map((c) => c.SJCODE);
 				const missing = registrationData.course_id.filter((code) => !allCodes.includes(code));
-				console.log(missing);*/
-
-				const missing = registrationData.course_id.filter((code) => !registerCoursesData.includes(code));
 				console.log(missing);
 
+				/* const missing = registrationData.course_id.filter((code) => !registerCoursesData.includes(code));
+				console.log(missing); */
+
 				if (missing.length > 0) {
-					const coursesRes = await fetch("http://localhost:8080/api/Course", {
+					/* const coursesRes = await fetch("http://localhost:8080/api/Course", {
 						method: "POST",
 						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 						body: JSON.stringify({ course_id: missing }),
 					});
 					const coursesData = await coursesRes.json();
-					if (!coursesRes.ok) throw new Error(coursesData.message);
+					if (!coursesRes.ok) throw new Error(coursesData.message); */
 
-					/* const res = await fetch("http://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectAll");
+					const res = await fetch("http://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectAll");
 					const subjects = await res.json();
 					console.log(subjects);
+
 					const subjMap = new Map(subjects.map((s) => [s.SUBJCODE, s.SUBJNAME]));
 					const coursesData = missing.map((course_id) => ({
 						course_id,
 						course_name: subjMap.get(course_id) || "ไม่พบข้อมูล",
-					})); */
-
+					}));
 					console.log(coursesData);
+					
 					setMissingCoures(coursesData);
 					setOpenCheckCourse(true);
 					return;
 				}
 				fetchRequestExam();
 			} catch (e) {
-				setTimeout(10000)
+				setTimeout(10000);
 				notify("error", e.message);
 				console.error("Error fetching CourseCheck:", e);
 			}
 		};
 		fetchProfile();
 		if (role === "student") {
-			user_id === "684270201" ? fetchStudentData() : fetchRequestExam();
-			/* user_id === "674140101" ? fetchStudentData() : fetchRequestExam(); */
+			/* user_id === "684270201" ? fetchStudentData() : fetchRequestExam(); */
+			user_id === "674140101" ? fetchStudentData() : fetchRequestExam();
 		} else {
 			fetchRequestExam();
 		}
 	}, []);
 
 	const handleOpenAdd = async () => {
-		setTimeout(3000)
+		setTimeout(3000);
 		try {
 			const req = await fetch("http://localhost:8080/api/studentInfo", {
 				method: "GET",
@@ -184,7 +185,7 @@ const RequestExam = () => {
 	};
 
 	const handleAdd = async () => {
-		setTimeout(3000)
+		setTimeout(3000);
 		try {
 			const requestRes = await fetch("http://localhost:8080/api/addRequestExam", {
 				method: "POST",
@@ -204,7 +205,7 @@ const RequestExam = () => {
 	};
 
 	const handleApprove = async (item) => {
-		setTimeout(3000)
+		setTimeout(3000);
 		if (selected === "noapprove" && comment.trim() === "") {
 			setError("กรุณาระบุเหตุผล");
 			return;
@@ -229,7 +230,7 @@ const RequestExam = () => {
 	};
 
 	const handlePay = async (item) => {
-		setTimeout(3000)
+		setTimeout(3000);
 		try {
 			const requestRes = await fetch("http://localhost:8080/api/payRequestExam", {
 				method: "POST",
@@ -363,7 +364,7 @@ const RequestExam = () => {
 				selected={selected}
 				setSelected={setSelected}
 				comment={comment}
-				setComment={setComment}	
+				setComment={setComment}
 				error={error}
 				openApproveState={openApproveState}
 				handleApprove={handleApprove}

@@ -12,23 +12,6 @@ async function fillPdf(data) {
 	const THSarabunNewBytesBold = await fetch("/fonts/THSarabunNew Bold.ttf").then((res) => res.arrayBuffer());
 	const THSarabunNewBold = await pdfDoc.embedFont(THSarabunNewBytesBold);
 
-	let Exam_date;
-	try {
-		const token = localStorage.getItem("token");
-		const requestRes = await fetch("http://localhost:8080/api/allRequestExamInfo", {
-			method: "POST",
-			headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-			body: JSON.stringify({ term: data?.term }),
-		});
-		const requestData = await requestRes.json();
-		if (Array.isArray(requestData) && requestData.length > 0) {
-			Exam_date = requestData[0].exam_date;
-			data.term = requestData[0].term;
-		}
-	} catch (e) {
-		console.error("Error fetch allRequestExamInfo:", e);
-	}
-
 	const [request_date_day, request_date_month, request_date_year] = formatThaiDate(data?.request_date);
 	const [exam_date_day, exam_date_month, exam_date_year] = formatThaiDate(data?.thesis_exam_date);
 	const [advisor_approvals_date_day, advisor_approvals_date_month, advisor_approvals_date_year] = formatThaiDateShort(data?.advisor_approvals_date);
@@ -171,15 +154,15 @@ async function fillPdf(data) {
 	return new Blob([pdfBytes], { type: "application/pdf" });
 }
 
-export default function Pdfg01({ data, showType, exam_date }) {
+export default function Pdfg01({ data, showType }) {
 	const handleOpen = async () => {
-		const blob = await fillPdf(data, exam_date);
+		const blob = await fillPdf(data);
 		const url = URL.createObjectURL(blob);
 		window.open(url, "_blank");
 	};
 
 	const handlePrint = async () => {
-		const blob = await fillPdf(data, exam_date);
+		const blob = await fillPdf(data);
 		const url = URL.createObjectURL(blob);
 		const iframe = document.createElement("iframe");
 		iframe.style.display = "none";

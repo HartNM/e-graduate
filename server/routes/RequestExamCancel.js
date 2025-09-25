@@ -66,10 +66,10 @@ router.post("/AllRequestExamCancel", authenticateToken, async (req, res) => {
 			query += " WHERE re.study_group_id IN (SELECT group_no FROM advisorGroup_no WHERE user_id = @user_id)";
 		} else if (role === "chairpersons") {
 			query +=
-				" WHERE re.major_id IN (SELECT major_id FROM chairpersonsMajor_id WHERE user_id = @user_id) AND (rce.status IN (0, 8, 9) OR (rce.status = 5 AND rce.advisor_cancel_id IS NOT NULL AND rce.chairpersons_cancel_id IS NOT NULL))";
+				" WHERE re.major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND (rce.status IN (0, 8, 9) OR (rce.status = 5 AND rce.advisor_cancel_id IS NOT NULL AND rce.chairpersons_cancel_id IS NOT NULL))";
 		} else if (role === "dean") {
 			query +=
-				" WHERE re.faculty_name IN (SELECT faculty_name FROM deanFaculty_name WHERE user_id = @user_id) AND (rce.status IN (0, 9) OR (rce.status = 5 AND rce.advisor_cancel_id IS NOT NULL AND rce.chairpersons_cancel_id IS NOT NULL AND rce.dean_cancel_id IS NOT NULL))";
+				" WHERE re.faculty_name IN (SELECT faculty_name FROM users WHERE user_id = @user_id) AND (rce.status IN (0, 9) OR (rce.status = 5 AND rce.advisor_cancel_id IS NOT NULL AND rce.chairpersons_cancel_id IS NOT NULL AND rce.dean_cancel_id IS NOT NULL))";
 		}
 		query += " ORDER BY request_cancel_exam_id DESC";
 		const result = await request.query(query);
@@ -85,10 +85,10 @@ router.post("/AllRequestExamCancel", authenticateToken, async (req, res) => {
 				return {
 					...item,
 					...studentInfo,
-					request_date: formatDateThaiBE(item.request_date) || null,
-					advisor_cancel_date: formatDateThaiBE(item.advisor_cancel_date) || null,
-					chairpersons_cancel_date: formatDateThaiBE(item.chairpersons_cancel_date) || null,
-					dean_cancel_date: formatDateThaiBE(item.dean_cancel_date) || null,
+					request_date: item.request_date || null,
+					advisor_cancel_date: item.advisor_cancel_date || null,
+					chairpersons_cancel_date: item.chairpersons_cancel_date || null,
+					dean_cancel_date: item.dean_cancel_date || null,
 					status_text: statusMap[item.status?.toString()] || null,
 				};
 			})
@@ -103,21 +103,21 @@ router.post("/AllRequestExamCancel", authenticateToken, async (req, res) => {
 router.post("/AddRequestExamCancel", authenticateToken, async (req, res) => {
 	const { reason, request_type } = req.body;
 	const { user_id } = req.user;
-
 	try {
 		const pool = await poolPromise;
+		
 		const result = await pool.request().input("student_id", user_id).query(`SELECT TOP 1 request_exam_id FROM request_exam WHERE student_id = @student_id 
 			ORDER BY request_exam_id DESC`);
 		if (result.recordset.length === 0) {
 			return res.status(404).json({ message: "ไม่พบคำร้องสอบของนักศึกษา" });
 		}
+
 		const request_exam_id = result.recordset[0].request_exam_id;
 		const transaction = new sql.Transaction(pool);
 		await transaction.begin();
 		try {
 			const request = new sql.Request(transaction);
-			await request.input("request_exam_id", request_exam_id).input("status", "7").input("reason", reason).input("request_type", request_type).input("request_date", formatDateForDB())
-				.query(`
+			await request.input("request_exam_id", request_exam_id).input("status", "7").input("reason", reason).input("request_type", request_type).query(`
 				INSERT INTO request_exam_cancel (
 					request_exam_id, 
 					reason, 
@@ -128,7 +128,7 @@ router.post("/AddRequestExamCancel", authenticateToken, async (req, res) => {
 					@request_exam_id, 
 					@reason, 
 					@request_type, 
-					@request_date, 
+					GETDATE(), 
 				 	@status
 				)`);
 			await request.query(`UPDATE request_exam SET status = @status WHERE request_exam_id = @request_exam_id`);
@@ -225,11 +225,11 @@ router.post("/ApproveRequestExamCancel", authenticateToken, async (req, res) => 
 					...request_exam.recordset[0],
 					...request_exam_cancel.recordset[0],
 					status_text: statusMap[request_exam_cancel.recordset[0].status?.toString()] || null,
-					request_date: formatDateThaiBE(request_exam_cancel.recordset[0].request_date) || null,
-					request_cancel_exam_date: formatDateThaiBE(request_exam_cancel.recordset[0].request_cancel_exam_date) || null,
-					advisor_cancel_date: formatDateThaiBE(request_exam_cancel.recordset[0].advisor_cancel_date) || null,
-					chairpersons_cancel_date: formatDateThaiBE(request_exam_cancel.recordset[0].chairpersons_cancel_date) || null,
-					dean_cancel_date: formatDateThaiBE(request_exam_cancel.recordset[0].dean_cancel_date) || null,
+					request_date: request_exam_cancel.recordset[0].request_date || null,
+					request_cancel_exam_date: request_exam_cancel.recordset[0].request_cancel_exam_date || null,
+					advisor_cancel_date: request_exam_cancel.recordset[0].advisor_cancel_date || null,
+					chairpersons_cancel_date: request_exam_cancel.recordset[0].chairpersons_cancel_date || null,
+					dean_cancel_date: request_exam_cancel.recordset[0].dean_cancel_date || null,
 				},
 			});
 		} catch (err) {

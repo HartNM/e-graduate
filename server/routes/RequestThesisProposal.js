@@ -79,11 +79,11 @@ router.post("/allRequestThesisProposal", authenticateToken, async (req, res) => 
 					...item,
 					...studentInfo,
 					thesis_exam_date: item.thesis_exam_date,
-					request_date: formatDateThaiBE(item.request_date),
-					advisor_approvals_date: formatDateThaiBE(item.advisor_approvals_date),
-					chairpersons_approvals_date: formatDateThaiBE(item.chairpersons_approvals_date),
-					registrar_approvals_date: formatDateThaiBE(item.registrar_approvals_date),
-					receipt_pay_date: formatDateThaiBE(item.receipt_pay_date),
+					request_date: item.request_date,
+					advisor_approvals_date: item.advisor_approvals_date,
+					chairpersons_approvals_date: item.chairpersons_approvals_date,
+					registrar_approvals_date: item.registrar_approvals_date,
+					receipt_pay_date: item.receipt_pay_date,
 					status_text: statusMap[item.status?.toString()],
 					request_type: item.request_type,
 				};
@@ -100,7 +100,10 @@ router.post("/addRequestThesisProposal", authenticateToken, async (req, res) => 
 	const { student_id, study_group_id, major_id, faculty_name, thesis_advisor_id, thesis_exam_date, request_type } = req.body;
 	try {
 		const pool = await poolPromise;
-		const infoRes = await pool.request().query(`SELECT TOP 1 term FROM request_exam_info ORDER BY request_exam_info_id DESC`);
+		const infoRes = await pool.request().query(`SELECT TOP 1 *
+			FROM request_exam_info
+			WHERE CAST(GETDATE() AS DATE) BETWEEN term_open_date AND term_close_date
+			ORDER BY request_exam_info_id DESC`);
 		const result = await pool
 			.request()
 			.input("student_id", student_id)
@@ -111,7 +114,6 @@ router.post("/addRequestThesisProposal", authenticateToken, async (req, res) => 
 			.input("faculty_name", faculty_name)
 			.input("request_type", `ขอสอบโครงร่าง${request_type}`)
 			.input("term", infoRes.recordset[0].term)
-			.input("request_date", formatDateForDB())
 			.input("status", "1").query(`
 				INSERT INTO request_thesis_proposal (
 					student_id,
@@ -133,7 +135,7 @@ router.post("/addRequestThesisProposal", authenticateToken, async (req, res) => 
 					@faculty_name,
 					@request_type,
 					@term,
-					@request_date,
+					GETDATE(),
 					@status
 				)
 			`);
@@ -143,12 +145,12 @@ router.post("/addRequestThesisProposal", authenticateToken, async (req, res) => 
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()],
-				thesis_exam_date: formatDateThaiBE(result.recordset[0].thesis_exam_date),
-				request_date: formatDateThaiBE(result.recordset[0].request_date),
-				advisor_approvals_date: formatDateThaiBE(result.recordset[0].advisor_approvals_date),
-				chairpersons_approvals_date: formatDateThaiBE(result.recordset[0].chairpersons_approvals_date),
-				registrar_approvals_date: formatDateThaiBE(result.recordset[0].registrar_approvals_date),
-				receipt_pay_date: formatDateThaiBE(result.recordset[0].receipt_pay_date),
+				thesis_exam_date: result.recordset[0].thesis_exam_date,
+				request_date: result.recordset[0].request_date,
+				advisor_approvals_date: result.recordset[0].advisor_approvals_date,
+				chairpersons_approvals_date: result.recordset[0].chairpersons_approvals_date,
+				registrar_approvals_date: result.recordset[0].registrar_approvals_date,
+				receipt_pay_date: result.recordset[0].receipt_pay_date,
 			},
 		});
 	} catch (err) {
@@ -182,23 +184,22 @@ router.post("/approveRequestThesisProposal", authenticateToken, async (req, res)
 			.input("status", statusValue)
 			.input("name", name)
 			.input("approve", selected === "approve" ? 1 : 0)
-			.input("date", formatDateForDB())
 			.input("comment", comment);
 		const roleFields = {
 			advisor: `
 				advisor_approvals_id = @name,
 				advisor_approvals = @approve,
-				advisor_approvals_date = @date
+				advisor_approvals_date = GETDATE()
 			`,
 			chairpersons: `
 				chairpersons_approvals_id = @name,
 				chairpersons_approvals = @approve,
-				chairpersons_approvals_date = @date
+				chairpersons_approvals_date = GETDATE()
 			`,
 			officer_registrar: `
 				registrar_approvals_id = @name,
 				registrar_approvals = @approve,
-				registrar_approvals_date = @date
+				registrar_approvals_date = GETDATE()
 			`,
 		};
 		const query = `
@@ -215,12 +216,12 @@ router.post("/approveRequestThesisProposal", authenticateToken, async (req, res)
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()],
-				thesis_exam_date: formatDateThaiBE(result.recordset[0].thesis_exam_date),
-				request_date: formatDateThaiBE(result.recordset[0].request_date),
-				advisor_approvals_date: formatDateThaiBE(result.recordset[0].advisor_approvals_date),
-				chairpersons_approvals_date: formatDateThaiBE(result.recordset[0].chairpersons_approvals_date),
-				registrar_approvals_date: formatDateThaiBE(result.recordset[0].registrar_approvals_date),
-				receipt_pay_date: formatDateThaiBE(result.recordset[0].receipt_pay_date),
+				thesis_exam_date: result.recordset[0].thesis_exam_date,
+				request_date: result.recordset[0].request_date,
+				advisor_approvals_date: result.recordset[0].advisor_approvals_date,
+				chairpersons_approvals_date: result.recordset[0].chairpersons_approvals_date,
+				registrar_approvals_date: result.recordset[0].registrar_approvals_date,
+				receipt_pay_date: result.recordset[0].receipt_pay_date,
 			},
 		});
 	} catch (err) {
@@ -237,11 +238,10 @@ router.post("/payRequestThesisProposal", authenticateToken, async (req, res) => 
 			.request()
 			.input("request_thesis_proposal_id", request_thesis_proposal_id)
 			.input("receipt_vol_No", receipt_vol_No)
-			.input("receipt_pay_date", formatDateForDB())
 			.input("status", "5").query(`
 			UPDATE request_thesis_proposal
 			SET receipt_vol_No = @receipt_vol_No ,
-				receipt_pay_date = @receipt_pay_date,
+				receipt_pay_date = GETDATE(),
 				status = @status
 			OUTPUT INSERTED.*
 			WHERE request_thesis_proposal_id = @request_thesis_proposal_id
@@ -252,12 +252,12 @@ router.post("/payRequestThesisProposal", authenticateToken, async (req, res) => 
 			data: {
 				...row,
 				status_text: statusMap[row.status?.toString()],
-				thesis_exam_date: formatDateThaiBE(row.thesis_exam_date),
-				request_date: formatDateThaiBE(row.request_date),
-				advisor_approvals_date: formatDateThaiBE(row.advisor_approvals_date),
-				chairpersons_approvals_date: formatDateThaiBE(row.chairpersons_approvals_date),
-				registrar_approvals_date: formatDateThaiBE(row.registrar_approvals_date),
-				receipt_pay_date: formatDateThaiBE(row.receipt_pay_date),
+				thesis_exam_date: row.thesis_exam_date,
+				request_date: row.request_date,
+				advisor_approvals_date: row.advisor_approvals_date,
+				chairpersons_approvals_date: row.chairpersons_approvals_date,
+				registrar_approvals_date: row.registrar_approvals_date,
+				receipt_pay_date: row.receipt_pay_date,
 			},
 		});
 	} catch (err) {

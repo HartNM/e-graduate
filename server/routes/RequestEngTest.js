@@ -41,8 +41,7 @@ router.post("/allRequestEngTest", authenticateToken, async (req, res) => {
 		} else if (role === "advisor") {
 			query += " WHERE study_group_id IN (SELECT group_no FROM advisorGroup_no WHERE user_id = @user_id)";
 		} else if (role === "chairpersons") {
-			query +=
-				" WHERE major_id IN (SELECT major_id FROM chairpersonsMajor_id WHERE user_id = @user_id) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL)";
+			query += " WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL)";
 		} else if (role === "officer_registrar") {
 			query += " WHERE (status IN (0, 3, 4, 5) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL AND registrar_approvals_id IS NOT NULL))";
 		}
@@ -60,11 +59,11 @@ router.post("/allRequestEngTest", authenticateToken, async (req, res) => {
 				return {
 					...item,
 					...studentInfo,
-					request_date: formatDate(item.request_date) || null,
-					advisor_approvals_date: formatDate(item.advisor_approvals_date) || null,
-					chairpersons_approvals_date: formatDate(item.chairpersons_approvals_date) || null,
-					registrar_approvals_date: formatDate(item.registrar_approvals_date) || null,
-					receipt_pay_date: formatDate(item.receipt_pay_date) || null,
+					request_date: item.request_date || null,
+					advisor_approvals_date: item.advisor_approvals_date || null,
+					chairpersons_approvals_date: item.chairpersons_approvals_date || null,
+					registrar_approvals_date: item.registrar_approvals_date || null,
+					receipt_pay_date: item.receipt_pay_date || null,
 					status_text: statusMap[item.status?.toString()] || null,
 				};
 			})
@@ -80,21 +79,25 @@ router.post("/addRequestEngTest", authenticateToken, async (req, res) => {
 	const { student_id, study_group_id, major_id, faculty_name } = req.body;
 	try {
 		const pool = await poolPromise;
-		const infoRes = await pool.request().query(`SELECT TOP 1 term FROM request_exam_info ORDER BY request_exam_info_id DESC`);
+		const infoRes = await pool.request().query(`SELECT TOP 1 *
+			FROM request_exam_info
+			WHERE CAST(GETDATE() AS DATE) BETWEEN term_open_date AND term_close_date
+			ORDER BY request_exam_info_id DESC`);
 		const result = await pool
 			.request()
 			.input("student_id", student_id)
 			.input("study_group_id", study_group_id)
 			.input("major_id", major_id)
 			.input("faculty_name", faculty_name)
+			.input("request_type", "คำร้องขอทดสอบความรู้ทางภาษาอังกฤษ")
 			.input("term", infoRes.recordset[0].term)
-			.input("request_date", formatThaiBuddhistDate())
 			.input("status", "1").query(`
 			INSERT INTO request_eng_test (
 				student_id,
 				study_group_id,
 				major_id,
 				faculty_name,
+				request_type,
 				term,
 				request_date,
 				status
@@ -103,8 +106,9 @@ router.post("/addRequestEngTest", authenticateToken, async (req, res) => {
 				@study_group_id,
 				@major_id,
 				@faculty_name,
+				@request_type,
 				@term,
-				@request_date,
+				GETDATE(),
 				@status
 			)`);
 
@@ -113,11 +117,11 @@ router.post("/addRequestEngTest", authenticateToken, async (req, res) => {
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()] || null,
-				request_date: formatDate(result.recordset[0].request_date) || null,
-				advisor_approvals_date: formatDate(result.recordset[0].advisor_approvals_date) || null,
-				chairpersons_approvals_date: formatDate(result.recordset[0].chairpersons_approvals_date) || null,
-				registrar_approvals_date: formatDate(result.recordset[0].registrar_approvals_date) || null,
-				receipt_pay_date: formatDate(result.recordset[0].receipt_pay_date) || null,
+				request_date: result.recordset[0].request_date || null,
+				advisor_approvals_date: result.recordset[0].advisor_approvals_date || null,
+				chairpersons_approvals_date: result.recordset[0].chairpersons_approvals_date || null,
+				registrar_approvals_date: result.recordset[0].registrar_approvals_date || null,
+				receipt_pay_date: result.recordset[0].receipt_pay_date || null,
 			},
 		});
 	} catch (err) {
@@ -151,24 +155,23 @@ router.post("/approveRequestEngTest", authenticateToken, async (req, res) => {
 			.input("status", statusValue)
 			.input("name", name)
 			.input("approve", selected === "approve" ? 1 : 0)
-			.input("date", formatThaiBuddhistDate())
 			.input("comment", comment);
 		// สร้าง query ตาม role
 		const roleFields = {
 			advisor: `
 				advisor_approvals_id = @name,
 				advisor_approvals = @approve,
-				advisor_approvals_date = @date
+				advisor_approvals_date = GETDATE()
 			`,
 			chairpersons: `
 				chairpersons_approvals_id = @name,
 				chairpersons_approvals = @approve,
-				chairpersons_approvals_date = @date
+				chairpersons_approvals_date = GETDATE()
 			`,
 			officer_registrar: `
 				registrar_approvals_id = @name,
 				registrar_approvals = @approve,
-				registrar_approvals_date = @date
+				registrar_approvals_date = GETDATE()
 			`,
 		};
 		const query = `
@@ -185,11 +188,11 @@ router.post("/approveRequestEngTest", authenticateToken, async (req, res) => {
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()] || null,
-				request_date: formatDate(result.recordset[0].request_date) || null,
-				advisor_approvals_date: formatDate(result.recordset[0].advisor_approvals_date) || null,
-				chairpersons_approvals_date: formatDate(result.recordset[0].chairpersons_approvals_date) || null,
-				registrar_approvals_date: formatDate(result.recordset[0].registrar_approvals_date) || null,
-				receipt_pay_date: formatDate(result.recordset[0].receipt_pay_date) || null,
+				request_date: result.recordset[0].request_date || null,
+				advisor_approvals_date: result.recordset[0].advisor_approvals_date || null,
+				chairpersons_approvals_date: result.recordset[0].chairpersons_approvals_date || null,
+				registrar_approvals_date: result.recordset[0].registrar_approvals_date || null,
+				receipt_pay_date: result.recordset[0].receipt_pay_date || null,
 			},
 		});
 	} catch (err) {
@@ -206,11 +209,11 @@ router.post("/payRequestEngTest", authenticateToken, async (req, res) => {
 			.request()
 			.input("request_eng_test_id", request_eng_test_id)
 			.input("receipt_vol_No", receipt_vol_No)
-			.input("receipt_pay_date", formatThaiBuddhistDate())
+
 			.input("status", "5").query(`
 			UPDATE request_eng_test
 			SET receipt_vol_No = @receipt_vol_No ,
-				receipt_pay_date = @receipt_pay_date,
+				receipt_pay_date = GETDATE(),
 				status = @status
 			OUTPUT INSERTED.* 
 			WHERE request_eng_test_id = @request_eng_test_id
@@ -220,11 +223,11 @@ router.post("/payRequestEngTest", authenticateToken, async (req, res) => {
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()] || null,
-				request_date: formatDate(result.recordset[0].request_date) || null,
-				advisor_approvals_date: formatDate(result.recordset[0].advisor_approvals_date) || null,
-				chairpersons_approvals_date: formatDate(result.recordset[0].chairpersons_approvals_date) || null,
-				registrar_approvals_date: formatDate(result.recordset[0].registrar_approvals_date) || null,
-				receipt_pay_date: formatDate(result.recordset[0].receipt_pay_date) || null,
+				request_date: result.recordset[0].request_date || null,
+				advisor_approvals_date: result.recordset[0].advisor_approvals_date || null,
+				chairpersons_approvals_date: result.recordset[0].chairpersons_approvals_date || null,
+				registrar_approvals_date: result.recordset[0].registrar_approvals_date || null,
+				receipt_pay_date: result.recordset[0].receipt_pay_date || null,
 			},
 		});
 	} catch (err) {

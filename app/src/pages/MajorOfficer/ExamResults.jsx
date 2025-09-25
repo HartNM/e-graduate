@@ -12,7 +12,6 @@ const ExamResults = () => {
 	const [openModal, setOpenModal] = useState(false);
 	const token = localStorage.getItem("token");
 	const [term, setTerm] = useState([]);
-	const [dateExam, setDateExam] = useState("");
 	const [reloadTable, setReloadTable] = useState(false);
 	const [group, setGroup] = useState([]);
 	const [selectedTerm, setSelectedTerm] = useState("");
@@ -35,9 +34,28 @@ const ExamResults = () => {
 				});
 				const data = await res.json();
 				if (!res.ok) throw new Error(data.message);
+
+				// เก็บ term ทั้งหมด
 				setTerm(data.map((item) => item.term));
-				setSelectedTerm(data[0]?.term);
-				setDateExam(data[0].exam_date);
+
+				// หาวันนี้
+				const today = new Date();
+
+				// หา term ที่อยู่ในช่วง open-close
+				let currentTerm = data.find((item) => {
+					const open = new Date(item.term_open_date);
+					const close = new Date(item.term_close_date);
+					return today >= open && today <= close;
+				});
+
+				if (!currentTerm && data.length > 0) {
+					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก close_date
+					currentTerm = [...data].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
+				}
+
+				if (currentTerm) {
+					setSelectedTerm(currentTerm.term);
+				}
 			} catch (e) {
 				notify("error", e.message);
 			}
@@ -162,7 +180,7 @@ const ExamResults = () => {
 													<Button size="xs" color={allFilled ? "yellow" : "blue"} onClick={() => handleFormClick(students)}>
 														{allFilled ? "แก้ไข" : "กรอก"}
 													</Button>
-													<Button size="xs" onClick={() => PDFExamResultsPrint(students, dateExam)}>
+													<Button size="xs" onClick={() => PDFExamResultsPrint(students)}>
 														พิมพ์
 													</Button>
 												</Group>

@@ -24,22 +24,37 @@ router.post("/allRequestExamInfo", authenticateToken, async (req, res) => {
 
 router.post("/addRequestExamInfo", authenticateToken, async (req, res) => {
 	try {
-		const { term, open_date, close_date, exam_date } = req.body;
+		const { term, term_open_date, term_close_date, KQ_open_date, KQ_close_date, KQ_exam_date, ET_exam_date } = req.body;
 		const { user_id } = req.user;
 		const pool = await poolPromise;
-		await pool.request().input("term", term).input("open_date", open_date).input("close_date", close_date).input("exam_date", exam_date).input("officer_registrar_id", user_id).query(`
+		await pool
+			.request()
+			.input("term", term)
+			.input("term_open_date", term_open_date)
+			.input("term_close_date", term_close_date)
+			.input("KQ_open_date", KQ_open_date)
+			.input("KQ_close_date", KQ_close_date)
+			.input("KQ_exam_date", KQ_exam_date)
+			.input("ET_exam_date", ET_exam_date)
+			.input("officer_registrar_id", user_id).query(`
 				INSERT INTO request_exam_info (
 				term,
-				open_date, 
-				close_date, 
-				exam_date, 
+				term_open_date,
+				term_close_date,
+				KQ_open_date, 
+				KQ_close_date, 
+				KQ_exam_date, 
+				ET_exam_date,
 				officer_registrar_id, 
 				info_exam_date 
 				) VALUES ( 
 				@term,
-				@open_date, 
-				@close_date, 
-				@exam_date, 
+				@term_open_date,
+				@term_close_date,
+				@KQ_open_date, 
+				@KQ_close_date, 
+				@KQ_exam_date, 
+				@ET_exam_date,
 				@officer_registrar_id, 
 				GETDATE() 
 			)`);
@@ -52,14 +67,26 @@ router.post("/addRequestExamInfo", authenticateToken, async (req, res) => {
 
 router.post("/editRequestExamInfo", authenticateToken, async (req, res) => {
 	try {
-		const { exam_date, open_date, close_date, request_exam_info_id, term } = req.body;
+		const { request_exam_info_id, term, term_open_date, term_close_date, KQ_open_date, KQ_close_date, KQ_exam_date, ET_exam_date } = req.body;
 		const pool = await poolPromise;
-		await pool.request().input("term", term).input("exam_date", exam_date).input("open_date", open_date).input("close_date", close_date).input("request_exam_info_id", request_exam_info_id).query(`
+		await pool
+			.request()
+			.input("request_exam_info_id", request_exam_info_id)
+			.input("term", term)
+			.input("term_open_date", term_open_date)
+			.input("term_close_date", term_close_date)
+			.input("KQ_open_date", KQ_open_date)
+			.input("KQ_close_date", KQ_close_date)
+			.input("KQ_exam_date", KQ_exam_date)
+			.input("ET_exam_date", ET_exam_date).query(`
 				UPDATE request_exam_info 
 				SET term = @term,
-					exam_date = @exam_date, 
-					open_date = @open_date, 
-					close_date = @close_date 
+					term_open_date = @term_open_date,
+					term_close_date = @term_close_date,
+					KQ_open_date = @KQ_open_date, 
+					KQ_close_date = @KQ_close_date, 
+					KQ_exam_date = @KQ_exam_date, 
+					ET_exam_date = @ET_exam_date
 				WHERE request_exam_info_id = @request_exam_info_id
 			`);
 		res.status(200).json({ message: "แก้ไขข้อมูลเรียบร้อยแล้ว" });

@@ -16,6 +16,8 @@ const RequestThesisDefense = lazy(() => import("./component/RequestThesisDefense
 const PostponeDefenseExam = lazy(() => import("./component/PostponeDefenseExam.jsx"));
 const PlagiarismReport = lazy(() => import("./component/PlagiarismReport.jsx"));
 const RequestGraduation = lazy(() => import("./component/RequestGraduation.jsx"));
+const PlagiarismProposal = lazy(() => import("./component/PlagiarismProposal.jsx"));
+const PlagiarismDefense = lazy(() => import("./component/PlagiarismDefense.jsx"));
 
 const Chairpersons = lazy(() => import("./pages/chairpersons/Chairpersons.jsx"));
 
@@ -41,18 +43,6 @@ function AppRoutes() {
 		<BrowserRouter>
 			<Suspense fallback={<LoadingScreen />}>
 				<Routes>
-					{/* <Route path="/Personnel" element={<Personnel />}>
-						<Route path="RequestExam/:type" element={<RequestExam />} />
-						<Route path="RequestExam" element={<RequestExam />} />
-						<Route path="RequestEngTest" element={<RequestEngTest />} />
-						<Route path="ExamScheduleSetupPage" element={<ExamScheduleSetupPage />} />
-						<Route path="assign-major-officer" element={<AssignMajorOfficer />} />
-						<Route path="exam-results-print" element={<ExamResultsPrint />} />
-						<Route path="CourseRegistration" element={<CourseRegistration />} />
-						<Route path="AssignChairpersons" element={<AssignChairpersons />} />
-						<Route path="examResults" element={<ExamResults />} />
-						<Route path="ExamEligibleListPrint" element={<ExamEligibleListPrint />} />
-					</Route> */}
 					<Route path="*" element={<NotFound />} />
 					<Route path="/login" element={<AuthenticationForm />} />
 
@@ -76,6 +66,8 @@ function AppRoutes() {
 						<Route path="PostponeDefenseExam" element={<PostponeDefenseExam />} />
 						<Route path="PlagiarismReport" element={<PlagiarismReport />} />
 						<Route path="RequestGraduation" element={<RequestGraduation />} />
+						<Route path="PlagiarismProposal" element={<PlagiarismProposal />} />
+						<Route path="PlagiarismDefense" element={<PlagiarismDefense />} />
 					</Route>
 
 					<Route path="/advisor" element={<Advisor />}>

@@ -143,16 +143,27 @@ router.get("/checkStudent", authenticateToken, async (req, res) => {
 		return res.status(200).json({
 			education_level: student.data.education_level,
 			RequestExamCancel: latest_request_exam ? latest_request_exam.status !== "6" && latest_request_exam.exam_results === null : false,
-
+			//รอผล RequestExamCancel
 			RequestThesisProposal: latest_request_exam ? latest_request_exam.status === "5" && latest_request_exam.exam_results === "ผ่าน" : false,
-			PostponeProposalExam: latest_Proposal ? latest_Proposal.status === "5" || latest_Proposal.status > 6 : false,
-
+			PostponeProposalExam: latest_Proposal ? latest_Proposal.status >= "5"  : false,
+			PlagiarismProposal: latest_Proposal ? latest_Proposal.status === "5" : false,
+			//รอผล RequestThesisProposal
 			RequestThesisDefense: latest_Proposal ? latest_Proposal.status === "5" : false,
-			PostponeDefenseExam: latest_defense ? latest_defense.status === "5" || latest_defense.status > 6 : false,
+			PostponeDefenseExam: latest_defense ? latest_defense.status >= "5" : false,
+			PlagiarismDefense: latest_defense ? latest_defense.status === "5" : false,
+			//PlagiarismReport: latest_Proposal ? latest_Proposal.status === "5" : false,
 
-			PlagiarismReport: latest_Proposal ? latest_Proposal.status === "5" : false,
-
+			//รอผล RequestThesisDefense
 			RequestGraduation: latest_defense ? latest_defense.status === "5" : false,
+
+			/* education_level: student.data.education_level,
+			RequestExamCancel: true,
+			RequestThesisProposal: true,
+			PostponeProposalExam: true,
+			RequestThesisDefense: true,
+			PostponeDefenseExam: true,
+			PlagiarismReport: true,
+			RequestGraduation: true, */
 		});
 	} catch (err) {
 		console.error(err);

@@ -78,6 +78,7 @@ export const drawLine = (page, x1, y1, x2, y2, w = 1) => {
 };
 
 export function formatThaiDate(dateStr) {
+	console.log(dateStr);
 	if (!dateStr) return "";
 	const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
 	const d = dayjs.utc(dateStr).tz("Asia/Bangkok");

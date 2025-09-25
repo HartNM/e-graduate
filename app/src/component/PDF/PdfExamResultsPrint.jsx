@@ -2,9 +2,7 @@ import { PDFDocument, rgb } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import { setDefaultFont, drawRect, drawCenterXText, drawCenteredText, drawMiddleText, drawLine, formatThaiDate } from "./PdfUtils.js";
 
-async function fillPdf(students, dateExam) {
-
-	
+async function fillPdf(students) {
 	const pdfDoc = await PDFDocument.create();
 	pdfDoc.registerFontkit(fontkit);
 	const page = pdfDoc.addPage([595, 842]);
@@ -19,7 +17,25 @@ async function fillPdf(students, dateExam) {
 	const ROW_HEIGHT = 20;
 	let pageIndex = 0;
 
-	const [exam_date_day, exam_date_month, exam_date_year] = formatThaiDate(dateExam);
+	let KQ_exam_date;
+	try {
+		const token = localStorage.getItem("token");
+		const requestRes = await fetch("http://localhost:8080/api/allRequestExamInfo", {
+			method: "POST",
+			headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+			body: JSON.stringify({ term: students[0].term }),
+		});
+		const requestData = await requestRes.json();
+		if (Array.isArray(requestData) && requestData.length > 0) {
+			KQ_exam_date = requestData[0].KQ_exam_date;
+		}
+		console.log(KQ_exam_date);
+	} catch (e) {
+		console.error("Error fetch allRequestExamInfo:", e);
+	}
+
+	const [exam_date_day, exam_date_month, exam_date_year] = formatThaiDate(KQ_exam_date);
+	console.log(exam_date_day, exam_date_month, exam_date_year);
 
 	while (pageIndex * STUDENTS_PER_PAGE < students.length) {
 		const newPage = pageIndex === 0 ? page : pdfDoc.addPage([595, 842]);
@@ -71,11 +87,10 @@ async function fillPdf(students, dateExam) {
 	return new Blob([pdfBytes], { type: "application/pdf" });
 }
 
-export default async function PDFExamResultsPrint(students, dateExam) {
-	console.log(dateExam);
+export default async function PDFExamResultsPrint(students) {
 	console.log("ข้อมูลที่จะพิมพ์:", students);
 	try {
-		const blob = await fillPdf(students, dateExam);
+		const blob = await fillPdf(students);
 		const url = URL.createObjectURL(blob);
 		window.open(url, "_blank");
 	} catch (err) {

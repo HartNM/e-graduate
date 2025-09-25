@@ -59,7 +59,6 @@ const RequestExamCancel = () => {
 	const [latestRequest, setLatestRequest] = useState(null);
 	const [reloadTable, setReloadTable] = useState(false);
 	useEffect(() => {
-		if (!user) return;
 		const fetchRequestExam = async () => {
 			try {
 				const requestRes = await fetch("http://localhost:8080/api/requestExamAll", {
@@ -93,7 +92,7 @@ const RequestExamCancel = () => {
 		};
 		fetchRequestExamCancel();
 		setReloadTable(false);
-	}, [user, reloadTable]);
+	}, [reloadTable]);
 
 	const handleOpenAddCancel = async () => {
 		try {

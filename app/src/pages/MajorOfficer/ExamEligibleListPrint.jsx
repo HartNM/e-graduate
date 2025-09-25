@@ -12,7 +12,7 @@ const ExamEligibleListPrint = () => {
 	const token = localStorage.getItem("token");
 
 	const [term, setTerm] = useState([]);
-	const [dateExam, setDateExam] = useState([]);
+
 	const [group, setGroup] = useState([]);
 	useEffect(() => {
 		const fetchTermAndData = async () => {
@@ -23,9 +23,28 @@ const ExamEligibleListPrint = () => {
 				});
 				const data = await res.json();
 				if (!res.ok) throw new Error(data.message);
+
+				// เก็บ term ทั้งหมด
 				setTerm(data.map((item) => item.term));
-				setSelectedTerm(data[0]?.term);
-				setDateExam(data[0].exam_date);
+
+				// หาวันนี้
+				const today = new Date();
+
+				// หา term ที่อยู่ในช่วง open-close
+				let currentTerm = data.find((item) => {
+					const open = new Date(item.term_open_date);
+					const close = new Date(item.term_close_date);
+					return today >= open && today <= close;
+				});
+
+				if (!currentTerm && data.length > 0) {
+					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก close_date
+					currentTerm = [...data].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
+				}
+
+				if (currentTerm) {
+					setSelectedTerm(currentTerm.term);
+				}
 			} catch (e) {
 				notify("error", e.message);
 			}
@@ -71,7 +90,7 @@ const ExamEligibleListPrint = () => {
 					<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} allowDeselect={false} onChange={setSelectedTerm} />
 				</Group>
 				<Box>
-					<SignatureForm data={filteredGroup} exam_date={dateExam} />
+					<SignatureForm data={filteredGroup} />
 				</Box>
 			</Group>
 

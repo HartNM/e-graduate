@@ -1,19 +1,19 @@
-//ตารางคำร้องขอ
+//รายงานผลการตรวจสอบการคัดลอกผลงานทางวิชาการ
 import { useState, useEffect } from "react";
-import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Flex, Stepper, Pill } from "@mantine/core";
-import ModalApprove from "../component/Modal/ModalApprove";
-import ModalAdd from "../component/Modal/ModalAdd";
-import ModalPay from "../component/Modal/ModalPay";
-import ModalInform from "../component/Modal/ModalInform";
-import Pdfg02 from "../component/PDF/Pdfg02";
+import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { useParams } from "react-router-dom";
+import ModalAddRequestGraduation from "../component/Modal/ModalAddPlagiarismReport";
+import ModalApprove from "../component/Modal/ModalApprove";
+import ModalInform from "../component/Modal/ModalInform";
+import Pdfg06 from "../component/PDF/Pdfg01";
 
-const RequestEngTest = () => {
+const PlagiarismReport = () => {
 	const token = localStorage.getItem("token");
 	const payloadBase64 = token.split(".")[1];
 	const payload = JSON.parse(atob(payloadBase64));
 	const role = payload.role;
-	// Modal notify
+	// Modal Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
 	const close = () => setInform((s) => ({ ...s, open: false }));
@@ -29,14 +29,69 @@ const RequestEngTest = () => {
 	const [error, setError] = useState("");
 	// System states
 	const [user, setUser] = useState("");
-	//student //advisor //chairpersons //officer_registrar //dean
+	//student //advisor //chairpersons //officer_registrar
 	const [request, setRequest] = useState([]);
 	const [search, setSearch] = useState("");
-	const [latestRequest, setLatestRequest] = useState(null);
+	const { type } = useParams();
+
+	const validateChapter = (value) => {
+		if (value === null || value === "") return "ห้ามเว้นว่าง";
+		if (value < 0 || value > 100) return "กรอก 0-100 เท่านั้น";
+		return null;
+	};
+
+	const examTypeMap = {
+		ขอสอบโครงร่างวิทยานิพนธ์: "โครงร่าง",
+		ขอสอบโครงร่างการค้นคว้าอิสระ: "โครงร่าง",
+		ขอสอบวิทยานิพนธ์: "",
+		ขอสอบการค้นคว้าอิสระ: "",
+	};
 
 	const form = useForm({
-		initialValues: {},
-		validate: {},
+		initialValues: {
+			student_name: "",
+			study_group_id: "",
+			student_id: "",
+			education_level: "",
+			program: "",
+			major_name: "",
+			faculty_name: "",
+			research_name: "",
+			chapter_1: null,
+			chapter_2: null,
+			chapter_3: null,
+			chapter_4: null,
+			chapter_5: null,
+			inspection_date: null,
+			plagiarism_file: null,
+			full_report_file: null,
+		},
+		validate: (values) => {
+			const errors = {};
+			if (!(values.research_name || "").trim()) {
+				errors.research_name = "กรุณากรอกชื่อวิจัย";
+			}
+			if (!values.inspection_date) {
+				errors.inspection_date = "กรุณาระบุวันที่ปิด";
+			}
+			let fieldsToCheck = [];
+			if (!values.request_type) {
+				fieldsToCheck = ["chapter_1", "chapter_2", "chapter_3", "chapter_4", "chapter_5"];
+			} else if (examTypeMap[values.request_type] === "โครงร่าง") {
+				fieldsToCheck = ["chapter_1", "chapter_2", "chapter_3"];
+			}
+			fieldsToCheck.forEach((field) => {
+				const error = validateChapter(values[field]);
+				if (error) errors[field] = error;
+			});
+			if (!(values.plagiarism_file instanceof File)) {
+				errors.plagiarism_file = "กรุณาอัปโหลดไฟล์ตรวจสอบ";
+			}
+			if (!(values.full_report_file instanceof File)) {
+				errors.full_report_file = "กรุณาอัปโหลดไฟล์รายงานฉบับเต็ม";
+			}
+			return errors;
+		},
 	});
 
 	useEffect(() => {
@@ -49,6 +104,7 @@ const RequestEngTest = () => {
 				const requestData = await requestRes.json();
 				if (!requestRes.ok) throw new Error(requestData.message);
 				setUser(requestData);
+				console.log(requestData);
 			} catch (e) {
 				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 				console.error("Error fetching profile:", e);
@@ -56,37 +112,65 @@ const RequestEngTest = () => {
 		};
 		fetchProfile();
 	}, [token]);
-	const [reloadTable, setReloadTable] = useState(false);
+
+	const [latestRequest, setLatestRequest] = useState(null);
+
 	useEffect(() => {
-		if (!user) return;
 		const fetchRequestExam = async () => {
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/allRequestEngTest", {
+				const requestRes = await fetch("http://localhost:8080/api/AllPlagiarismReport", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
 				const requestData = await requestRes.json();
 				if (!requestRes.ok) throw new Error(requestData.message);
+				const buttonRes = await fetch("http://localhost:8080/api/buttonCheck", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				});
+				const buttonData = await buttonRes.json();
+				console.log(buttonData);
+
+				if (!buttonRes.ok) throw new Error(buttonData.message);
+				console.log(requestData);
 				setRequest(requestData);
-				setLatestRequest(requestData[0]);
+				if (buttonData.length == 1) {
+					if (requestData.length == 2) {
+						setLatestRequest(requestData[0]);
+					} else {
+						setLatestRequest(false);
+					}
+				} else {
+					setLatestRequest(requestData[0]);
+					console.log(false);
+				}
 			} catch (e) {
 				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 				console.error("Error fetching requestExamAll:", e);
 			}
 		};
 		fetchRequestExam();
-		setReloadTable(false);
-	}, [user, reloadTable]);
+	}, []);
 
 	const handleOpenAdd = async () => {
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/studentInfo", {
+			const InfoRes = await fetch("http://localhost:8080/api/studentInfo", {
 				method: "GET",
 				headers: { Authorization: `Bearer ${token}` },
 			});
-			const requestData = await requestRes.json();
-			if (!requestRes.ok) throw new Error(requestData.message);
-			form.setValues(requestData);
+			const InfoData = await InfoRes.json();
+			if (!InfoRes.ok) throw new Error(InfoData.message);
+			const ThesisRes = await fetch("http://localhost:8080/api/openCheckThesis", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+			});
+			const ThesisData = await ThesisRes.json();
+			if (!ThesisRes.ok) throw new Error(ThesisData.message);
+			console.log(ThesisData);
+			form.reset();
+			form.setValues({ ...InfoData, ...ThesisData });
+			console.log({ ...InfoData, ...ThesisData });
+
 			setOpenAdd(true);
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
@@ -95,17 +179,25 @@ const RequestEngTest = () => {
 	};
 
 	const handleAdd = async () => {
+		console.log(form.values);
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/addRequestEngTest", {
+			const formData = new FormData();
+			Object.entries(form.values).forEach(([key, value]) => {
+				if (value instanceof Date) formData.append(key, value.toISOString());
+				else if (value instanceof File) formData.append(key, value, value.name);
+				else formData.append(key, value ?? "");
+			});
+			const requestRes = await fetch("http://localhost:8080/api/addPlagiarismReport", {
 				method: "POST",
-				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify(form.values),
+				headers: { Authorization: `Bearer ${token}` },
+				body: formData,
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) throw new Error(requestData.message);
-			notify("success", requestData.message || "สำเร็จ");
+			notify("success", requestData.message);
+			setLatestRequest(false);
 			setOpenAdd(false);
-			setReloadTable(true);
+			setRequest((prev) => [...prev, { ...form.values, ...requestData.data }]);
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching addRequestExam:", e);
@@ -118,45 +210,31 @@ const RequestEngTest = () => {
 			return;
 		}
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/approveRequestEngTest", {
+			const requestRes = await fetch("http://localhost:8080/api/approvePlagiarismReport", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ request_eng_test_id: item.request_eng_test_id, name: user.name, role: role, selected: selected, comment: comment }),
+				body: JSON.stringify({ plagiarism_report_id: item.plagiarism_report_id, selected: selected, comment: comment }),
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) throw new Error(requestData.message);
-			notify("success", requestData.message || "สำเร็จ");
+			notify("success", requestData.message);
 			setSelected("approve");
 			setComment("");
 			setOpenApprove(false);
-			setRequest((prev) => prev.map((row) => (row.request_eng_test_id === item.request_eng_test_id ? { ...row, ...requestData.data } : row)));
+			setRequest((prev) => prev.map((row) => (row.plagiarism_report_id === item.plagiarism_report_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching approveRequestExam:", e);
 		}
 	};
 
-	const handlePay = async (item) => {
-		try {
-			const requestRes = await fetch("http://localhost:8080/api/payRequestEngTest", {
-				method: "POST",
-				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ request_eng_test_id: item.request_eng_test_id, receipt_vol_No: "10/54" }),
-			});
-			const requestData = await requestRes.json();
-			if (!requestRes.ok) throw new Error(requestData.message);
-			notify("success", requestData.message || "สำเร็จ");
-			setOpenPay(false);
-			setRequest((prev) => prev.map((row) => (row.request_eng_test_id === item.request_eng_test_id ? { ...row, ...requestData.data } : row)));
-		} catch (e) {
-			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-			console.error("Error fetching payRequestExam:", e);
-		}
-	};
-
 	function sortRequests(data, role) {
 		if (role === "student") return data;
-		return data.sort((a, b) => Number(a.status) - Number(b.status));
+		return data.sort((a, b) => {
+			const orderA = Number(a.status) === 0 ? 1 : 0;
+			const orderB = Number(b.status) === 0 ? 1 : 0;
+			return orderA - orderB || Number(a.status) - Number(b.status);
+		});
 	}
 
 	const sortedData = sortRequests(request, role);
@@ -167,23 +245,18 @@ const RequestEngTest = () => {
 	});
 
 	const rows = filteredData.map((item) => (
-		<Table.Tr key={item.request_eng_test_id}>
+		<Table.Tr key={item.plagiarism_report_id}>
 			<Table.Td>{item.student_name}</Table.Td>
-			{["advisor", "officer_registrar", "chairpersons", "dean"].includes(role) && <Table.Td>ขอทดสอบความรู้ทางภาษาอังกฤษ</Table.Td>}
+			<Table.Td>{item.request_thesis_type.replace("ขอสอบ", "")}</Table.Td>
 			<Table.Td style={{ textAlign: "center" }}>
-				{item.status < 5 && item.status > 0 && (
+				{item.status <= 4 && item.status > 0 && (
 					<Stepper active={item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
-						{[...Array(4)].map((_, i) => (
+						{[...Array(2)].map((_, i) => (
 							<Stepper.Step key={i}>
 								<Pill>{item.status_text}</Pill>
 							</Stepper.Step>
 						))}
 					</Stepper>
-				)}
-				{item.status == 0 && (
-					<Pill variant="filled" style={{ backgroundColor: "#ffcccc", color: "#b30000" }}>
-						{item.status_text}
-					</Pill>
 				)}
 				{item.status == 5 && (
 					<Pill variant="filled" style={{ backgroundColor: "#ccffcc", color: "#006600" }}>
@@ -198,39 +271,13 @@ const RequestEngTest = () => {
 						<br />
 						{!item.advisor_approvals && "อาจารย์ที่ปรึกษา"}
 						{item.advisor_approvals && !item.chairpersons_approvals && "ประธานหลักสูตร"}
-						{item.advisor_approvals && item.chairpersons_approvals && !item.registrar_approvals && "เจ้าหน้าที่ทะเบียน"}
 					</>
 				)}
-				{item.status > 6 && <Text>{item.status_text}</Text>}
 			</Table.Td>
-
 			<Table.Td style={{ maxWidth: "150px" }}>
 				<Group>
-					{role === "student" && (
-						<>
-							{item.status === "4" && (
-								<Button
-									size="xs"
-									color="green"
-									onClick={() => {
-										setSelectedRow(item);
-										setOpenPay(true);
-									}}
-								>
-									ชำระค่าธรรมเนียม
-								</Button>
-							)}
-							{item.status === "5" && (
-								<>
-									<Button size="xs" color="green">
-										พิมพ์ใบเสร็จ
-									</Button>
-								</>
-							)}
-						</>
-					)}
-					<Pdfg02 data={item} showType={item.status == 0 ? undefined : (role === "advisor" && item.status <= 1) || (role === "chairpersons" && item.status <= 2) || (role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
-					{((role === "advisor" && item.status === "1") || (role === "chairpersons" && item.status === "2") || (role === "officer_registrar" && item.status === "3")) && (
+					<Pdfg06 data={item} showType={item.status == 0 ? undefined : (role === "advisor" && item.status <= 1) || (role === "chairpersons" && item.status <= 2) || (role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
+					{((role === "advisor" && item.status == 1) || (role === "chairpersons" && item.status == 2) || (role === "officer_registrar" && item.status == 3)) && (
 						<Button
 							size="xs"
 							color="green"
@@ -240,7 +287,7 @@ const RequestEngTest = () => {
 								setOpenApprove(true);
 							}}
 						>
-							{role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
+							ลงความเห็น
 						</Button>
 					)}
 				</Group>
@@ -263,13 +310,11 @@ const RequestEngTest = () => {
 				openApproveState={openApproveState}
 				handleApprove={handleApprove}
 				role={role}
-				title={"ลงความเห็นคำร้องขอทดสอบความรู้ทางภาษาอังกฤษ"}
+				title={`ลงความเห็นรายงานผลการตรวจสอบการคัดลอกผลงานทางวิชาการ`}
 			/>
-			<ModalAdd opened={openAdd} onClose={() => setOpenAdd(false)} form={form.values} handleAdd={handleAdd} title={"เพิ่มคำร้องขอทดสอบความรู้ทางภาษาอังกฤษ"} />
-			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} />
-
+			<ModalAddRequestGraduation opened={openAdd} onClose={() => setOpenAdd(false)} form={form} handleAdd={handleAdd} title={`เพิ่มรายงานผลการตรวจสอบการคัดลอกผลงานทางวิชาการ`} />
 			<Text size="1.5rem" fw={900} mb="md">
-				คำร้องขอทดสอบความรู้ทางภาษาอังกฤษ
+				รายงานผลการตรวจสอบการคัดลอกผลงานทางวิชาการ
 			</Text>
 			<Group justify="space-between">
 				<Box>
@@ -279,7 +324,7 @@ const RequestEngTest = () => {
 				</Box>
 				<Box>
 					{role === "student" && (
-						<Button onClick={() => handleOpenAdd()} disabled={latestRequest ? latestRequest.status !== "0" && latestRequest.status !== "6" : false}>
+						<Button onClick={() => handleOpenAdd()} disabled={latestRequest ? latestRequest.status !== "0" && latestRequest.status !== "6" && latestRequest.exam_results !== false : false}>
 							เพิ่มคำร้อง
 						</Button>
 					)}
@@ -291,7 +336,7 @@ const RequestEngTest = () => {
 					<Table.Thead>
 						<Table.Tr>
 							<Table.Th style={{ minWidth: 100 }}>ชื่อ</Table.Th>
-							{["advisor", "officer_registrar", "chairpersons", "dean"].includes(role) && <Table.Th style={{ minWidth: 100 }}>เรื่อง</Table.Th>}
+							<Table.Th style={{ minWidth: 100 }}>ชนิด</Table.Th>
 							<Table.Th style={{ minWidth: 110 }}>สถานะ</Table.Th>
 							<Table.Th>การดำเนินการ</Table.Th>
 						</Table.Tr>
@@ -303,4 +348,4 @@ const RequestEngTest = () => {
 	);
 };
 
-export default RequestEngTest;
+export default PlagiarismReport;

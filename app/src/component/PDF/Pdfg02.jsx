@@ -14,7 +14,7 @@ async function fillPdf(data) {
 
 	/* drawGrid(page); */
 
-	let Exam_date;
+	let ET_exam_date;
 	try {
 		const token = localStorage.getItem("token");
 		const requestRes = await fetch("http://localhost:8080/api/allRequestExamInfo", {
@@ -24,7 +24,7 @@ async function fillPdf(data) {
 		});
 		const requestData = await requestRes.json();
 		if (Array.isArray(requestData) && requestData.length > 0) {
-			Exam_date = requestData[0].exam_date;
+			ET_exam_date = requestData[0].ET_exam_date;
 			data.term = requestData[0].term;
 		}
 	} catch (e) {
@@ -32,11 +32,11 @@ async function fillPdf(data) {
 	}
 
 	const [request_date_day, request_date_month, request_date_year] = formatThaiDate(data?.request_date);
-	const [exam_date_day, exam_date_month, exam_date_year] = formatThaiDate(Exam_date);
+	const [exam_date_day, exam_date_month, exam_date_year] = formatThaiDate(ET_exam_date);
 	const [advisor_approvals_date_day, advisor_approvals_date_month, advisor_approvals_date_year] = formatThaiDateShort(data?.advisor_approvals_date);
 	const [chairpersons_approvals_date_day, chairpersons_approvals_date_month, chairpersons_approvals_date_year] = formatThaiDateShort(data?.chairpersons_approvals_date);
 	const [registrar_approvals_date_day, registrar_approvals_date_month, registrar_approvals_date_year] = formatThaiDateShort(data?.registrar_approvals_date);
-	const [receipt_pay_date_day, receipt_pay_date_month, receipt_pay_date_year] = formatThaiDate(data?.receipt_pay_date);
+	const [receipt_pay_date_day, receipt_pay_date_month, receipt_pay_date_year] = formatThaiDateShort(data?.receipt_pay_date);
 
 	let y = 760;
 	let space = 20;
@@ -140,15 +140,15 @@ async function fillPdf(data) {
 	return new Blob([pdfBytes], { type: "application/pdf" });
 }
 
-export default function Pdfg02({ data, showType, exam_date }) {
+export default function Pdfg02({ data, showType }) {
 	const handleOpen = async () => {
-		const blob = await fillPdf(data, exam_date);
+		const blob = await fillPdf(data);
 		const url = URL.createObjectURL(blob);
 		window.open(url, "_blank");
 	};
 
 	const handlePrint = async () => {
-		const blob = await fillPdf(data, exam_date);
+		const blob = await fillPdf(data);
 		const url = URL.createObjectURL(blob);
 
 		const iframe = document.createElement("iframe");
