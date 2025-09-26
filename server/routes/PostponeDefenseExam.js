@@ -106,11 +106,11 @@ router.post("/allPostponeDefenseExam", authenticateToken, async (req, res) => {
 					...item,
 					...studentInfo,
 					thesis_exam_date: item.thesis_exam_date,
-					request_date: formatDateThaiBE(item.request_date),
-					advisor_approvals_date: formatDateThaiBE(item.advisor_approvals_date),
-					chairpersons_approvals_date: formatDateThaiBE(item.chairpersons_approvals_date),
-					registrar_approvals_date: formatDateThaiBE(item.registrar_approvals_date),
-					receipt_pay_date: formatDateThaiBE(item.receipt_pay_date),
+					request_date: item.request_date,
+					advisor_approvals_date: item.advisor_approvals_date,
+					chairpersons_approvals_date: item.chairpersons_approvals_date,
+					registrar_approvals_date: item.registrar_approvals_date,
+					receipt_pay_date: item.receipt_pay_date,
 					status_text: statusMap[item.status?.toString()],
 					request_type: item.request_type,
 				};
@@ -160,10 +160,10 @@ router.post("/addPostponeDefenseExam", authenticateToken, async (req, res) => {
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()],
-				thesis_exam_date: formatDateThaiBE(result.recordset[0].thesis_exam_date),
-				request_date: formatDateThaiBE(result.recordset[0].request_date),
-				advisor_approvals_date: formatDateThaiBE(result.recordset[0].advisor_approvals_date),
-				chairpersons_approvals_date: formatDateThaiBE(result.recordset[0].chairpersons_approvals_date),
+				thesis_exam_date: result.recordset[0].thesis_exam_date,
+				request_date: result.recordset[0].request_date,
+				advisor_approvals_date: result.recordset[0].advisor_approvals_date,
+				chairpersons_approvals_date: result.recordset[0].chairpersons_approvals_date,
 			},
 		});
 	} catch (err) {
@@ -222,10 +222,25 @@ router.post("/approvePostponeDefenseExam", authenticateToken, async (req, res) =
 					${selected !== "approve" ? ", comment = @comment" : ""}
 				OUTPUT INSERTED.* WHERE postpone_defense_exam_id = @postpone_defense_exam_id
 			`);
-		await request.input("request_thesis_defense_id", request_thesis_defense_id).input("thesis_exam_date", thesis_exam_date).input("status", status).query(`
+			
+		if (role === "chairpersons" && selected === "approve") {
+			console.log(1);
+			console.log(status);
+			console.log(request_thesis_defense_id);
+			
+			await request.input("request_thesis_defense_id", request_thesis_defense_id).input("thesis_exam_date", thesis_exam_date).input("status", status).query(`
 				UPDATE request_thesis_defense
 				SET status = @status, thesis_exam_date = @thesis_exam_date
 				OUTPUT INSERTED.* WHERE request_thesis_defense_id = @request_thesis_defense_id`);
+		} else {
+			console.log(2);
+			console.log(status);
+			await request.input("request_thesis_defense_id", request_thesis_defense_id).input("status", status).query(`
+				UPDATE request_thesis_defense
+				SET status = @status
+				OUTPUT INSERTED.* WHERE request_thesis_defense_id = @request_thesis_defense_id`);
+		}
+
 		await transaction.commit();
 
 		res.status(200).json({
@@ -233,10 +248,10 @@ router.post("/approvePostponeDefenseExam", authenticateToken, async (req, res) =
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()],
-				thesis_exam_date: formatDateThaiBE(result.recordset[0].thesis_exam_date),
-				request_date: formatDateThaiBE(result.recordset[0].request_date),
-				advisor_approvals_date: formatDateThaiBE(result.recordset[0].advisor_approvals_date),
-				chairpersons_approvals_date: formatDateThaiBE(result.recordset[0].chairpersons_approvals_date),
+				thesis_exam_date: result.recordset[0].thesis_exam_date,
+				request_date: result.recordset[0].request_date,
+				advisor_approvals_date: result.recordset[0].advisor_approvals_date,
+				chairpersons_approvals_date: result.recordset[0].chairpersons_approvals_date,
 			},
 		});
 	} catch (err) {

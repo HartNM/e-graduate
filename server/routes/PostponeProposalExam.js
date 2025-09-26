@@ -10,13 +10,6 @@ const timezone = require("dayjs/plugin/timezone");
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-function formatDateThaiBE(date) {
-	if (!date) return null;
-	const d = dayjs(date).tz("Asia/Bangkok");
-	const buddhistYear = d.year() + 543;
-	return `${buddhistYear}-${(d.month() + 1).toString().padStart(2, "0")}-${d.date().toString().padStart(2, "0")}`;
-}
-
 function formatDateForDB(date = new Date()) {
 	return dayjs(date).tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss");
 }
@@ -106,11 +99,11 @@ router.post("/allPostponeProposalExam", authenticateToken, async (req, res) => {
 					...item,
 					...studentInfo,
 					thesis_exam_date: item.thesis_exam_date,
-					request_date: formatDateThaiBE(item.request_date),
-					advisor_approvals_date: formatDateThaiBE(item.advisor_approvals_date),
-					chairpersons_approvals_date: formatDateThaiBE(item.chairpersons_approvals_date),
-					registrar_approvals_date: formatDateThaiBE(item.registrar_approvals_date),
-					receipt_pay_date: formatDateThaiBE(item.receipt_pay_date),
+					request_date: item.request_date,
+					advisor_approvals_date: item.advisor_approvals_date,
+					chairpersons_approvals_date: item.chairpersons_approvals_date,
+					registrar_approvals_date: item.registrar_approvals_date,
+					receipt_pay_date: item.receipt_pay_date,
 					status_text: statusMap[item.status?.toString()],
 					request_type: item.request_type,
 				};
@@ -160,10 +153,10 @@ router.post("/addPostponeProposalExam", authenticateToken, async (req, res) => {
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()],
-				thesis_exam_date: formatDateThaiBE(result.recordset[0].thesis_exam_date),
-				request_date: formatDateThaiBE(result.recordset[0].request_date),
-				advisor_approvals_date: formatDateThaiBE(result.recordset[0].advisor_approvals_date),
-				chairpersons_approvals_date: formatDateThaiBE(result.recordset[0].chairpersons_approvals_date),
+				thesis_exam_date: result.recordset[0].thesis_exam_date,
+				request_date: result.recordset[0].request_date,
+				advisor_approvals_date: result.recordset[0].advisor_approvals_date,
+				chairpersons_approvals_date: result.recordset[0].chairpersons_approvals_date,
 			},
 		});
 	} catch (err) {
@@ -176,7 +169,7 @@ router.post("/addPostponeProposalExam", authenticateToken, async (req, res) => {
 router.post("/approvePostponeProposalExam", authenticateToken, async (req, res) => {
 	const { postpone_proposal_exam_id, request_thesis_proposal_id, name, selected, comment, thesis_exam_date } = req.body;
 	const { role } = req.user;
-	console.log(thesis_exam_date);
+	console.log(req.body);
 
 	const pool = await poolPromise;
 	let statusCancel;
@@ -219,13 +212,22 @@ router.post("/approvePostponeProposalExam", authenticateToken, async (req, res) 
 				UPDATE postpone_proposal_exam
 				SET ${roleFields[role]},
 					status = @statusCancel
-					${selected !== "approve" ? ", comment = @comment" : ""}
+					${selected === "approve" ? "" : ", comment = @comment"}	
 				OUTPUT INSERTED.* WHERE postpone_proposal_exam_id = @postpone_proposal_exam_id
 			`);
-		await request.input("request_thesis_proposal_id", request_thesis_proposal_id).input("thesis_exam_date", thesis_exam_date).input("status", status).query(`
-				UPDATE request_thesis_proposal
-				SET status = @status, thesis_exam_date = @thesis_exam_date
-				OUTPUT INSERTED.* WHERE request_thesis_proposal_id = @request_thesis_proposal_id`);
+		if (role === "chairpersons" && selected === "approve") {
+			await request.input("request_thesis_proposal_id", request_thesis_proposal_id).input("thesis_exam_date", thesis_exam_date).input("status", status).query(`
+			UPDATE request_thesis_proposal
+			SET status = @status, thesis_exam_date = @thesis_exam_date
+			OUTPUT INSERTED.* WHERE request_thesis_proposal_id = @request_thesis_proposal_id
+		`);
+		} else {
+			await request.input("request_thesis_proposal_id", request_thesis_proposal_id).input("status", status).query(`
+			UPDATE request_thesis_proposal
+			SET status = @status
+			OUTPUT INSERTED.* WHERE request_thesis_proposal_id = @request_thesis_proposal_id
+		`);
+		}
 		await transaction.commit();
 
 		res.status(200).json({
@@ -233,10 +235,10 @@ router.post("/approvePostponeProposalExam", authenticateToken, async (req, res) 
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()],
-				thesis_exam_date: formatDateThaiBE(result.recordset[0].thesis_exam_date),
-				request_date: formatDateThaiBE(result.recordset[0].request_date),
-				advisor_approvals_date: formatDateThaiBE(result.recordset[0].advisor_approvals_date),
-				chairpersons_approvals_date: formatDateThaiBE(result.recordset[0].chairpersons_approvals_date),
+				thesis_exam_date: result.recordset[0].thesis_exam_date,
+				request_date: result.recordset[0].request_date,
+				advisor_approvals_date: result.recordset[0].advisor_approvals_date,
+				chairpersons_approvals_date: result.recordset[0].chairpersons_approvals_date,
 			},
 		});
 	} catch (err) {

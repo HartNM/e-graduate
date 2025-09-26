@@ -6,7 +6,7 @@ import { useParams } from "react-router-dom";
 import ModalAddRequestGraduation from "../component/Modal/ModalAddPlagiarismReport";
 import ModalApprove from "../component/Modal/ModalApprove";
 import ModalInform from "../component/Modal/ModalInform";
-import Pdfg06 from "../component/PDF/Pdfg01";
+import Pdfg06 from "../component/PDF/Pdfg06";
 
 const PlagiarismReport = () => {
 	const token = localStorage.getItem("token");
@@ -40,13 +40,6 @@ const PlagiarismReport = () => {
 		return null;
 	};
 
-	const examTypeMap = {
-		ขอสอบโครงร่างวิทยานิพนธ์: "โครงร่าง",
-		ขอสอบโครงร่างการค้นคว้าอิสระ: "โครงร่าง",
-		ขอสอบวิทยานิพนธ์: "",
-		ขอสอบการค้นคว้าอิสระ: "",
-	};
-
 	const form = useForm({
 		initialValues: {
 			student_name: "",
@@ -74,12 +67,7 @@ const PlagiarismReport = () => {
 			if (!values.inspection_date) {
 				errors.inspection_date = "กรุณาระบุวันที่ปิด";
 			}
-			let fieldsToCheck = [];
-			if (!values.request_type) {
-				fieldsToCheck = ["chapter_1", "chapter_2", "chapter_3", "chapter_4", "chapter_5"];
-			} else if (examTypeMap[values.request_type] === "โครงร่าง") {
-				fieldsToCheck = ["chapter_1", "chapter_2", "chapter_3"];
-			}
+			let fieldsToCheck = ["chapter_1", "chapter_2", "chapter_3", "chapter_4", "chapter_5"];
 			fieldsToCheck.forEach((field) => {
 				const error = validateChapter(values[field]);
 				if (error) errors[field] = error;
@@ -314,7 +302,7 @@ const PlagiarismReport = () => {
 			/>
 			<ModalAddRequestGraduation opened={openAdd} onClose={() => setOpenAdd(false)} form={form} handleAdd={handleAdd} title={`เพิ่มรายงานผลการตรวจสอบการคัดลอกผลงานทางวิชาการ`} />
 			<Text size="1.5rem" fw={900} mb="md">
-				รายงานผลการตรวจสอบการคัดลอกผลงานทางวิชาการ
+				รายงานตรวจสอบวิทยานิพนธ์/การค้นคว้าอิสระ
 			</Text>
 			<Group justify="space-between">
 				<Box>

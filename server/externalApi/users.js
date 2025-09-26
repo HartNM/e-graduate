@@ -4,7 +4,7 @@ const authenticateToken = require("../middleware/authenticateToken");
 const { poolPromise } = require("../db");
 
 router.get("/user_idGetUser_name/:user_id", async (req, res) => {
-	const user_id = req.params.user_id;
+	const user_id = req.params.user_id;	
 	try {
 		const pool = await poolPromise;
 		const result = await pool.request().input("user_id", user_id).query(`

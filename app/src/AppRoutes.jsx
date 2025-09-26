@@ -80,6 +80,8 @@ function AppRoutes() {
 						<Route path="PostponeDefenseExam" element={<PostponeDefenseExam />} />
 						<Route path="PlagiarismReport" element={<PlagiarismReport />} />
 						<Route path="RequestGraduation" element={<RequestGraduation />} />
+						<Route path="PlagiarismProposal" element={<PlagiarismProposal />} />
+						<Route path="PlagiarismDefense" element={<PlagiarismDefense />} />
 					</Route>
 
 					<Route path="/chairpersons" element={<Chairpersons />}>
@@ -92,6 +94,8 @@ function AppRoutes() {
 						<Route path="PostponeDefenseExam" element={<PostponeDefenseExam />} />
 						<Route path="PlagiarismReport" element={<PlagiarismReport />} />
 						<Route path="RequestGraduation" element={<RequestGraduation />} />
+						<Route path="PlagiarismProposal" element={<PlagiarismProposal />} />
+						<Route path="PlagiarismDefense" element={<PlagiarismDefense />} />
 					</Route>
 
 					<Route path="/dean" element={<Dean />}>

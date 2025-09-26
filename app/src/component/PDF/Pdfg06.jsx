@@ -40,7 +40,13 @@ async function fillPdf(data) {
 
 	let total = Number(data?.chapter_1) + Number(data?.chapter_2) + Number(data?.chapter_3) + Number(data?.chapter_4) + Number(data?.chapter_5);
 
-	let divisor = data?.chapter_4 !== "" ? 5 : 3;
+	if (data?.chapter_4 !== undefined) {
+		total = Number(data?.chapter_1) + Number(data?.chapter_2) + Number(data?.chapter_3) + Number(data?.chapter_4) + Number(data?.chapter_5);
+	} else {
+		total = Number(data?.chapter_1) + Number(data?.chapter_2) + Number(data?.chapter_3);
+	}
+
+	let divisor = data?.chapter_4 !== undefined ? 5 : 3;
 	let percent = total / divisor;
 
 	const drawItems = [
@@ -58,12 +64,12 @@ async function fillPdf(data) {
 		{ text: `${data?.chapter_2}%`, x: 350, y: y + 2 },
 		{ text: `บทที่ 3 มีความคล้ายคลึง กับผลงานผู้อื่น ร้อยละ .............................`, x: 150, y: (y -= space) },
 		{ text: `${data?.chapter_3}%`, x: 350, y: y + 2 },
-		{ text: `บทที่ 4 มีความคล้ายคลึง กับผลงานผู้อื่น ร้อยละ .............................`, x: 150, y: (y -= space), show: data?.chapter_4 !== "" },
-		{ text: `${data?.chapter_4}%`, x: 350, y: y + 2, show: data?.chapter_4 !== "" },
-		{ text: `บทที่ 5 มีความคล้ายคลึง กับผลงานผู้อื่น ร้อยละ .............................`, x: 150, y: (y -= space), show: data?.chapter_5 !== "" },
-		{ text: `${data?.chapter_5}%`, x: 350, y: y + 2, show: data?.chapter_5 !== "" },
-		{ text: "", x: 350, y: y + 2, show: data?.chapter_5 !== "" },
-		{ text: `รวมความคล้ายคลึงกับผลงานผู้อื่น ร้อยละ ..........................`, x: 180, y: data?.chapter_4 !== "" ? (y -= space) : (y += space) },
+		{ text: `บทที่ 4 มีความคล้ายคลึง กับผลงานผู้อื่น ร้อยละ .............................`, x: 150, y: (y -= space), show: data?.chapter_4 !== undefined },
+		{ text: `${data?.chapter_4}%`, x: 350, y: y + 2, show: data?.chapter_4 !== undefined },
+		{ text: `บทที่ 5 มีความคล้ายคลึง กับผลงานผู้อื่น ร้อยละ .............................`, x: 150, y: (y -= space), show: data?.chapter_5 !== undefined },
+		{ text: `${data?.chapter_5}%`, x: 350, y: y + 2, show: data?.chapter_5 !== undefined },
+		{ text: "", x: 350, y: y + 2, show: data?.chapter_5 !== undefined },
+		{ text: `รวมความคล้ายคลึงกับผลงานผู้อื่น ร้อยละ ..........................`, x: 180, y: data?.chapter_4 !== undefined ? (y -= space) : (y += space) },
 		{ text: `${percent.toFixed(2)}%`, x: 350, y: y + 2 },
 		{ text: `ตรวจสอบเมื่อวันที่ ............... เดือน ......................... พ.ศ. ................`, x: 150, y: (y -= space), show: type === "" },
 		{ text: inspection_date_day, x: 230, y: y + 2 },
@@ -98,8 +104,7 @@ async function fillPdf(data) {
 		{ text: `(.........................................................................)`, x: 330, y: (y -= space) },
 		{ text: data?.chairpersons_approvals_name, x: 370, y: y + 2 },
 		{ text: `ประธานกรรมการบัณฑิตศึกษาประจำสาขาวิชา`, x: 330, y: (y -= space) },
-		{ text: `ประจำสาขาวิชา.......................................`, x: 330, y: (y -= space) },
-		{ text: data?.major_name, x: 400, y: y + 2 },
+		{ text: `ประจำสาขาวิชา${data?.major_name}`, x: 330, y: (y -= space) },
 		{ text: `วันที่................/........................../......................`, x: 330, y: (y -= space) },
 		{ text: chairpersons_approvals_date_day, x: 360, y: y + 2 },
 		{ text: chairpersons_approvals_date_month, x: 410, y: y + 2 },
@@ -137,10 +142,16 @@ async function mergePdfFiles(files) {
 async function generateMergedPdf(data) {
 	const token = localStorage.getItem("token");
 	const reportId = data?.plagiarism_report_id;
+	let type;
+	if (data?.request_thesis_proposal_id) {
+		type = "proposal";
+	} else {
+		type = "defense";
+	}
 	const cover = await fillPdf(data);
 	const blobs = [cover];
 	if (reportId) {
-		const [plagiarismRes, fullReportRes] = await Promise.allSettled([fetchPdfBlob(`${API_BASE}/plagiarism-report/${reportId}/plagiarism-file`, token), fetchPdfBlob(`${API_BASE}/plagiarism-report/${reportId}/full-report-file`, token)]);
+		const [plagiarismRes, fullReportRes] = await Promise.allSettled([fetchPdfBlob(`${API_BASE}/plagiarism-${type}/${reportId}/plagiarism-file`, token), fetchPdfBlob(`${API_BASE}/plagiarism-${type}/${reportId}/full-report-file`, token)]);
 		if (plagiarismRes.status === "fulfilled") blobs.push(plagiarismRes.value);
 		if (fullReportRes.status === "fulfilled") blobs.push(fullReportRes.value);
 	}

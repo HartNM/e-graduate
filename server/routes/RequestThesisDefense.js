@@ -29,12 +29,11 @@ const statusMap = {
 	4: "รอการชำระค่าธรรมเนียม",
 	5: "อนุมัติ",
 	6: "ไม่อนุมัติ",
-	7: "ขอยกเลิก",
-	8: "ขอยกเลิก",
-	9: "ขอยกเลิก",
+	7: "ขอเลื่อน",
+	8: "ขอเลื่อน",
+	9: "ขอเลื่อน",
 };
 
-// ดึงรายชื่ออาจารย์
 router.post("/getAdvisors", authenticateToken, async (req, res) => {
 	try {
 		const pool = await poolPromise;
@@ -78,12 +77,12 @@ router.post("/allRequestThesisDefense", authenticateToken, async (req, res) => {
 				return {
 					...item,
 					...studentInfo,
-					thesis_exam_date: formatDateThaiBE(item.thesis_exam_date),
-					request_date: formatDateThaiBE(item.request_date),
-					advisor_approvals_date: formatDateThaiBE(item.advisor_approvals_date),
-					chairpersons_approvals_date: formatDateThaiBE(item.chairpersons_approvals_date),
-					registrar_approvals_date: formatDateThaiBE(item.registrar_approvals_date),
-					receipt_pay_date: formatDateThaiBE(item.receipt_pay_date),
+					thesis_exam_date: item.thesis_exam_date,
+					request_date: item.request_date,
+					advisor_approvals_date: item.advisor_approvals_date,
+					chairpersons_approvals_date: item.chairpersons_approvals_date,
+					registrar_approvals_date: item.registrar_approvals_date,
+					receipt_pay_date: item.receipt_pay_date,
 					status_text: statusMap[item.status?.toString()],
 					request_type: item.request_type,
 				};
@@ -101,7 +100,10 @@ router.post("/addRequestThesisDefense", authenticateToken, async (req, res) => {
 	const { student_id, study_group_id, major_id, faculty_name, thesis_exam_date } = req.body;
 	try {
 		const pool = await poolPromise;
-		const infoRes = await pool.request().query(`SELECT term FROM request_exam_info ORDER BY request_exam_info_id DESC`);
+		const infoRes = await pool.request().query(`SELECT TOP 1 *
+			FROM request_exam_info
+			WHERE CAST(GETDATE() AS DATE) BETWEEN term_open_date AND term_close_date
+			ORDER BY request_exam_info_id DESC`);
 		const infoProposal = await pool
 			.request()
 			.input("student_id", student_id)
@@ -150,12 +152,12 @@ router.post("/addRequestThesisDefense", authenticateToken, async (req, res) => {
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()],
-				thesis_exam_date: formatDateThaiBE(result.recordset[0].thesis_exam_date),
-				request_date: formatDateThaiBE(result.recordset[0].request_date),
-				advisor_approvals_date: formatDateThaiBE(result.recordset[0].advisor_approvals_date),
-				chairpersons_approvals_date: formatDateThaiBE(result.recordset[0].chairpersons_approvals_date),
-				registrar_approvals_date: formatDateThaiBE(result.recordset[0].registrar_approvals_date),
-				receipt_pay_date: formatDateThaiBE(result.recordset[0].receipt_pay_date),
+				thesis_exam_date: result.recordset[0].thesis_exam_date,
+				request_date: result.recordset[0].request_date,
+				advisor_approvals_date: result.recordset[0].advisor_approvals_date,
+				chairpersons_approvals_date: result.recordset[0].chairpersons_approvals_date,
+				registrar_approvals_date: result.recordset[0].registrar_approvals_date,
+				receipt_pay_date: result.recordset[0].receipt_pay_date,
 			},
 		});
 	} catch (err) {
@@ -225,12 +227,12 @@ router.post("/approveRequestThesisDefense", authenticateToken, async (req, res) 
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()],
-				thesis_exam_date: formatDateThaiBE(result.recordset[0].thesis_exam_date),
-				request_date: formatDateThaiBE(result.recordset[0].request_date),
-				advisor_approvals_date: formatDateThaiBE(result.recordset[0].advisor_approvals_date),
-				chairpersons_approvals_date: formatDateThaiBE(result.recordset[0].chairpersons_approvals_date),
-				registrar_approvals_date: formatDateThaiBE(result.recordset[0].registrar_approvals_date),
-				receipt_pay_date: formatDateThaiBE(result.recordset[0].receipt_pay_date),
+				thesis_exam_date: result.recordset[0].thesis_exam_date,
+				request_date: result.recordset[0].request_date,
+				advisor_approvals_date: result.recordset[0].advisor_approvals_date,
+				chairpersons_approvals_date: result.recordset[0].chairpersons_approvals_date,
+				registrar_approvals_date: result.recordset[0].registrar_approvals_date,
+				receipt_pay_date: result.recordset[0].receipt_pay_date,
 			},
 		});
 	} catch (err) {
@@ -264,12 +266,12 @@ router.post("/payRequestThesisDefense", authenticateToken, async (req, res) => {
 			data: {
 				...row,
 				status_text: statusMap[row.status?.toString()],
-				thesis_exam_date: formatDateThaiBE(row.thesis_exam_date),
-				request_date: formatDateThaiBE(row.request_date),
-				advisor_approvals_date: formatDateThaiBE(row.advisor_approvals_date),
-				chairpersons_approvals_date: formatDateThaiBE(row.chairpersons_approvals_date),
-				registrar_approvals_date: formatDateThaiBE(row.registrar_approvals_date),
-				receipt_pay_date: formatDateThaiBE(row.receipt_pay_date),
+				thesis_exam_date: row.thesis_exam_date,
+				request_date: row.request_date,
+				advisor_approvals_date: row.advisor_approvals_date,
+				chairpersons_approvals_date: row.chairpersons_approvals_date,
+				registrar_approvals_date: row.registrar_approvals_date,
+				receipt_pay_date: row.receipt_pay_date,
 			},
 		});
 	} catch (err) {

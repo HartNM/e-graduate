@@ -33,8 +33,6 @@ const RequestThesisProposal = () => {
 	//student //advisor //chairpersons //officer_registrar
 	const [request, setRequest] = useState([]);
 	const [search, setSearch] = useState("");
-	const { type } = useParams();
-	const [selectedType, setSelectedType] = useState("");
 
 	const form = useForm({
 		initialValues: {
@@ -75,14 +73,9 @@ const RequestThesisProposal = () => {
 		fetchProfile();
 	}, []);
 
-	useEffect(() => {
-		setSelectedType(type);
-	}, [type]);
-
 	const [latestRequest, setLatestRequest] = useState(null);
 
 	useEffect(() => {
-		if (!user) return;
 		const fetchRequestExam = async () => {
 			try {
 				const requestRes = await fetch("http://localhost:8080/api/allRequestThesisProposal", {
@@ -99,7 +92,7 @@ const RequestThesisProposal = () => {
 			}
 		};
 		fetchRequestExam();
-	}, [user]);
+	}, []);
 
 	const handleOpenAdd = async () => {
 		try {
@@ -196,8 +189,8 @@ const RequestThesisProposal = () => {
 
 	const filteredData = sortedData.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
-		const matchesType = selectedType ? p.request_type === `ขอสอบโครงร่าง${selectedType}` : true;
-		return matchesSearch && matchesType;
+
+		return matchesSearch;
 	});
 
 	const rows = filteredData.map((item) => (
@@ -311,7 +304,6 @@ const RequestThesisProposal = () => {
 				<Box>
 					<Flex align="flex-end" gap="sm">
 						{role !== "student" && <TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
-						{role === "chairpersons" && <Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
 					</Flex>
 				</Box>
 				<Box>

@@ -33,8 +33,6 @@ const RequestThesisDefense = () => {
 	//student //advisor //chairpersons //officer_registrar
 	const [request, setRequest] = useState([]);
 	const [search, setSearch] = useState("");
-	const { type } = useParams();
-	const [selectedType, setSelectedType] = useState("");
 
 	const form = useForm({
 		initialValues: {
@@ -63,7 +61,7 @@ const RequestThesisDefense = () => {
 				const requestData = await requestRes.json();
 				if (!requestRes.ok) throw new Error(requestData.message);
 				setUser(requestData);
-				console.log(requestData); 
+				console.log(requestData);
 			} catch (e) {
 				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 				console.error("Error fetching profile:", e);
@@ -72,25 +70,17 @@ const RequestThesisDefense = () => {
 		fetchProfile();
 	}, [token]);
 
-	useEffect(() => {
-		setSelectedType(type);
-	}, [type]);
-
 	const [latestRequest, setLatestRequest] = useState(null);
 
 	useEffect(() => {
-		if (!user) return;
 		const fetchRequestExam = async () => {
 			try {
 				const requestRes = await fetch("http://localhost:8080/api/allRequestThesisDefense", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-					body: JSON.stringify({ role: role, id: user.id }),
 				});
 				const requestData = await requestRes.json();
-				if (!requestRes.ok) {
-					throw new Error(requestData.message);
-				}
+				if (!requestRes.ok) throw new Error(requestData.message);
 				setRequest(requestData);
 				setLatestRequest(requestData[0]);
 			} catch (e) {
@@ -99,7 +89,7 @@ const RequestThesisDefense = () => {
 			}
 		};
 		fetchRequestExam();
-	}, [user]);
+	}, []);
 
 	const handleOpenAdd = async () => {
 		try {
@@ -196,8 +186,7 @@ const RequestThesisDefense = () => {
 
 	const filteredData = sortedData.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
-		const matchesType = selectedType ? p.request_type === `ขอสอบโครงร่าง${selectedType}` : true;
-		return matchesSearch && matchesType;
+		return matchesSearch;
 	});
 
 	const rows = filteredData.map((item) => (
@@ -311,7 +300,6 @@ const RequestThesisDefense = () => {
 				<Box>
 					<Flex align="flex-end" gap="sm">
 						{role !== "student" && <TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
-						{role === "chairpersons" && <Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
 					</Flex>
 				</Box>
 				<Box>

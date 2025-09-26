@@ -47,14 +47,18 @@ const RequestThesisProposal = require("./routes/RequestThesisProposal");
 app.use("/api", RequestThesisProposal);
 const PostponeProposalExam = require("./routes/PostponeProposalExam");
 app.use("/api", PostponeProposalExam);
+const PlagiarismProposal = require("./routes/PlagiarismProposal");
+app.use("/api", PlagiarismProposal);
 
 const RequestThesisDefense = require("./routes/RequestThesisDefense");
 app.use("/api", RequestThesisDefense);
 const PostponeDefenseExam = require("./routes/PostponeDefenseExam");
 app.use("/api", PostponeDefenseExam);
+const PlagiarismDefense = require("./routes/PlagiarismDefense");
+app.use("/api", PlagiarismDefense);
 
-const PlagiarismReport = require("./routes/PlagiarismReport");
-app.use("/api", PlagiarismReport);
+/* const PlagiarismReport = require("./routes/PlagiarismReport");
+app.use("/api", PlagiarismReport); */
 
 const RequestGraduation = require("./routes/RequestGraduation");
 app.use("/api", RequestGraduation);

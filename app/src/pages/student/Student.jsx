@@ -22,28 +22,28 @@ const Student = () => {
 				}
 				data.education_level === "ปริญญาเอก" && newMenu.push({ label: "คำร้องขอทดสอบความรู้ทางภาษาอังกฤษ", icon: IconCertificate, links: "/student/RequestEngTest" });
 				if (data.RequestThesisProposal) {
-					newMenu.push({ label: `คำร้องขอสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconReport, links: "/student/RequestThesisProposal" });
+					newMenu.push({ label: `คำร้องขอสอบโครงร่างการวิจัย`, icon: IconReport, links: "/student/RequestThesisProposal" });
 				}
 				if (data.PostponeProposalExam) {
-					newMenu.push({ label: `คำร้องขอเลื่อนสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconCalendarClock, links: "/student/PostponeProposalExam" });
+					newMenu.push({ label: `คำร้องขอเลื่อนสอบโครงร่างการวิจัย`, icon: IconCalendarClock, links: "/student/PostponeProposalExam" });
 				}
 				if (data.PlagiarismProposal) {
-					newMenu.push({ label: "รายงานผลการตรวจสอบการคัดลอกผลงานทางวิชาการ", icon: IconSearch, links: "/student/PlagiarismProposal" });
+					newMenu.push({ label: "รายงานตรวจสอบโครงร่างการวิจัย", icon: IconSearch, links: "/student/PlagiarismProposal" });
 				}
 				if (data.RequestThesisDefense) {
-					newMenu.push({ label: `คำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconFileText, links: "/student/RequestThesisDefense" });
+					newMenu.push({ label: `คำร้องขอสอบการวิจัย`, icon: IconFileText, links: "/student/RequestThesisDefense" });
 				}
 				if (data.PostponeDefenseExam) {
-					newMenu.push({ label: `คำร้องขอเลื่อนสอบวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconCalendarClock, links: "/student/PostponeDefenseExam" });
+					newMenu.push({ label: `คำร้องขอเลื่อนสอบการวิจัย`, icon: IconCalendarClock, links: "/student/PostponeDefenseExam" });
 				}
 				if (data.PlagiarismDefense) {
-					newMenu.push({ label: "รายงานผลการตรวจสอบการคัดลอกผลงานทางวิชาการ", icon: IconSearch, links: "/student/PlagiarismDefense" });
+					newMenu.push({ label: "รายงานตรวจสอบการวิจัย", icon: IconSearch, links: "/student/PlagiarismDefense" });
 				}
 				/* if (data.PlagiarismReport) {
 					newMenu.push({ label: "รายงานผลการตรวจสอบการคัดลอกผลงานทางวิชาการ", icon: IconSearch, links: "/student/PlagiarismReport" });
 				} */
 				if (data.RequestGraduation) {
-					newMenu.push({ label: "คำร้องขอสำเร็จการศึกษาระดับบัณฑิตศึกษา", icon: IconSchool, links: "/student/RequestGraduation" });
+					newMenu.push({ label: "คำร้องขอสำเร็จการศึกษา", icon: IconSchool, links: "/student/RequestGraduation" });
 				}
 				setMenu(newMenu);
 			} catch (e) {

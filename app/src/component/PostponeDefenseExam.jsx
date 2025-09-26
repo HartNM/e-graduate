@@ -1,7 +1,6 @@
 //คำร้องขอเลื่อนสอบวิทยานิพนธ์/การค้นคว้าอิสระ
 import { useState, useEffect } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
-import { useParams } from "react-router-dom";
 import ModalAddPostponeProposalExam from "../component/Modal/ModalAddPostponeProposalExam";
 import ModalApprove from "../component/Modal/ModalApprove";
 import ModalInform from "../component/Modal/ModalInform";
@@ -31,8 +30,6 @@ const PostponeDefenseExam = () => {
 	//student //advisor //chairpersons //officer_registrar //dean
 	const [request, setRequest] = useState([]);
 	const [search, setSearch] = useState("");
-	const { type } = useParams();
-	const [selectedType, setSelectedType] = useState("");
 
 	const formAdd = useForm({
 		initialValues: {
@@ -163,7 +160,7 @@ const PostponeDefenseExam = () => {
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify({
 					postpone_defense_exam_id: item.postpone_defense_exam_id,
-					request_thesis_proposal_id: item.request_thesis_proposal_id,
+					request_thesis_defense_id: item.request_thesis_defense_id,
 					thesis_exam_date: item.thesis_exam_date,
 					name: user.name,
 					selected: selected,
@@ -208,11 +205,26 @@ const PostponeDefenseExam = () => {
 		<Table.Tr key={item.postpone_defense_exam_id}>
 			<Table.Td>{item.student_name}</Table.Td>
 			<Table.Td style={{ textAlign: "center" }}>
-				<Pill>{item.status_text}</Pill>
+				{item.status == 5 && (
+					<Pill variant="filled" style={{ backgroundColor: "#ccffcc", color: "#006600" }}>
+						{item.status_text}
+					</Pill>
+				)}
+				{item.status == 6 && (
+					<>
+						<Pill variant="filled" style={{ backgroundColor: "#ffcccc", color: "#b30000" }}>
+							{item.status_text}
+						</Pill>
+						<br />
+						{!item.advisor_approvals && "อาจารย์ที่ปรึกษา"}
+						{item.advisor_approvals && !item.chairpersons_approvals && "ประธานหลักสูตร"}
+					</>
+				)}
+				{item.status > 6 && <Pill>{item.status_text}</Pill>}
 			</Table.Td>
 			<Table.Td style={{ maxWidth: "150px" }}>
 				<Group>
-					<Pdfg07 data={item} showType={item.status == 5 || item.status == 0 ? undefined : (role === "advisor" && item.status <= 7) || (role === "chairpersons" && item.status <= 8) ? "view" : undefined} />
+					<Pdfg07 data={item} showType={item.status == 5 || item.status == 6 ? undefined : (role === "advisor" && item.status <= 7) || (role === "chairpersons" && item.status <= 8) ? "view" : undefined} />
 					{((role === "advisor" && item.status === "7") || (role === "chairpersons" && item.status === "8")) && (
 						<Button
 							size="xs"
@@ -274,8 +286,8 @@ const PostponeDefenseExam = () => {
 				<Table horizontalSpacing="sm" verticalSpacing="sm" highlightOnHover>
 					<Table.Thead>
 						<Table.Tr>
-							<Table.Th style={{ minWidth: 100 }}>ชื่อ</Table.Th>
-							<Table.Th style={{ minWidth: 110 }}>สถานะ</Table.Th>
+							<Table.Th>ชื่อ</Table.Th>
+							<Table.Th>สถานะ</Table.Th>
 							<Table.Th>การดำเนินการ</Table.Th>
 						</Table.Tr>
 					</Table.Thead>
