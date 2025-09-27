@@ -80,9 +80,9 @@ const PostponeProposalExam = () => {
 					body: JSON.stringify({ lastRequest: true }),
 				});
 				const requestData = await requestRes.json();
-				if (!requestRes.ok) throw new Error(requestData.message);
+				if (!requestRes.ok) throw new Error(requestData	.message);
 				setLatestRequest(requestData[0]);
-				if (requestData[0].status === "5") {
+				if (requestData[0]?.status === "6") {
 					setButtonAdd(false);
 				} else {
 					setButtonAdd(true);

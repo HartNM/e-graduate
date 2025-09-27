@@ -211,7 +211,10 @@ router.post(
 			} = req.body;
 
 			const pool = await poolPromise;
-			const infoRes = await pool.request().query(`SELECT TOP 1 term FROM request_exam_info ORDER BY request_exam_info_id DESC`);
+			const infoRes = await pool.request().query(`SELECT TOP 1 *
+			FROM request_exam_info
+			WHERE CAST(GETDATE() AS DATE) BETWEEN term_open_date AND term_close_date
+			ORDER BY request_exam_info_id DESC`);
 			const result = await pool
 				.request()
 				.input("request_thesis_id", request_thesis_id)

@@ -141,7 +141,7 @@ router.post(
 			const pool = await poolPromise;
 			const infoRes = await pool.request().query(`SELECT TOP 1 *
 			FROM request_exam_info
-			WHERE CAST(GETDATE() AS DATE) BETWEEN KQ_open_date AND KQ_close_date
+			WHERE CAST(GETDATE() AS DATE) BETWEEN term_open_date AND term_close_date
 			ORDER BY request_exam_info_id DESC`);
 
 			const result = await pool

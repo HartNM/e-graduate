@@ -106,31 +106,32 @@ const PlagiarismReport = () => {
 	useEffect(() => {
 		const fetchRequestExam = async () => {
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/AllPlagiarismReport", {
+				const requestRes = await fetch("http://localhost:8080/api/AllPlagiarismDefense", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
 				const requestData = await requestRes.json();
 				if (!requestRes.ok) throw new Error(requestData.message);
-				const buttonRes = await fetch("http://localhost:8080/api/buttonCheck", {
-					method: "POST",
-					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				});
-				const buttonData = await buttonRes.json();
-				console.log(buttonData);
-
-				if (!buttonRes.ok) throw new Error(buttonData.message);
-				console.log(requestData);
 				setRequest(requestData);
-				if (buttonData.length == 1) {
-					if (requestData.length == 2) {
-						setLatestRequest(requestData[0]);
+
+				if (role == "student") {
+					const lastThesisDefenseRes = await fetch("http://localhost:8080/api/allRequestThesisDefense", {
+						method: "POST",
+						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+						body: JSON.stringify({ lastRequest: true }),
+					});
+					const lastThesisDefenseData = await lastThesisDefenseRes.json();
+					if (!lastThesisDefenseRes.ok) throw new Error(lastThesisDefenseData.message);
+
+					if (lastThesisDefenseData.length == 1) {
+						if (requestData[0]?.status < 6) {
+							setLatestRequest(true);
+						} else {
+							setLatestRequest(false);
+						}
 					} else {
-						setLatestRequest(false);
+						setLatestRequest(true);
 					}
-				} else {
-					setLatestRequest(requestData[0]);
-					console.log(false);
 				}
 			} catch (e) {
 				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
@@ -148,17 +149,16 @@ const PlagiarismReport = () => {
 			});
 			const InfoData = await InfoRes.json();
 			if (!InfoRes.ok) throw new Error(InfoData.message);
-			const ThesisRes = await fetch("http://localhost:8080/api/openCheckThesis", {
+
+			const ThesisDefenseRes = await fetch("http://localhost:8080/api/allRequestThesisDefense", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				body: JSON.stringify({ lastRequest: true }),
 			});
-			const ThesisData = await ThesisRes.json();
-			if (!ThesisRes.ok) throw new Error(ThesisData.message);
-			console.log(ThesisData);
+			const ThesisDefenseData = await ThesisDefenseRes.json();
+			if (!ThesisDefenseRes.ok) throw new Error(ThesisDefenseData.message);
 			form.reset();
-			form.setValues({ ...InfoData, ...ThesisData });
-			console.log({ ...InfoData, ...ThesisData });
-
+			form.setValues({ ...InfoData, ...ThesisDefenseData[0] });
 			setOpenAdd(true);
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
@@ -167,7 +167,6 @@ const PlagiarismReport = () => {
 	};
 
 	const handleAdd = async () => {
-		console.log(form.values);
 		try {
 			const formData = new FormData();
 			Object.entries(form.values).forEach(([key, value]) => {
@@ -175,7 +174,7 @@ const PlagiarismReport = () => {
 				else if (value instanceof File) formData.append(key, value, value.name);
 				else formData.append(key, value ?? "");
 			});
-			const requestRes = await fetch("http://localhost:8080/api/addPlagiarismReport", {
+			const requestRes = await fetch("http://localhost:8080/api/addPlagiarismDefense", {
 				method: "POST",
 				headers: { Authorization: `Bearer ${token}` },
 				body: formData,
@@ -198,7 +197,7 @@ const PlagiarismReport = () => {
 			return;
 		}
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/approvePlagiarismReport", {
+			const requestRes = await fetch("http://localhost:8080/api/approvePlagiarismDefense", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify({ plagiarism_report_id: item.plagiarism_report_id, selected: selected, comment: comment }),
@@ -312,7 +311,7 @@ const PlagiarismReport = () => {
 				</Box>
 				<Box>
 					{role === "student" && (
-						<Button onClick={() => handleOpenAdd()} disabled={latestRequest ? latestRequest.status !== "0" && latestRequest.status !== "6" && latestRequest.exam_results !== false : false}>
+						<Button onClick={() => handleOpenAdd()} disabled={latestRequest}>
 							เพิ่มคำร้อง
 						</Button>
 					)}

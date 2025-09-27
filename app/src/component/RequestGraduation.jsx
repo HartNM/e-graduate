@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import ModalAddRequestGraduation from "../component/Modal/ModalAddRequestGraduation";
-import ModalApprove from "../component/Modal/ModalApprove";
+import ModalApprove from "../component/Modal/ModalApprove";	
 import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
 import Pdfg01 from "../component/PDF/Pdfg05";

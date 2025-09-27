@@ -38,7 +38,7 @@ router.post("/allRequestGraduation", authenticateToken, async (req, res) => {
 		let query = "SELECT * FROM request_graduation";
 		if (role === "student") {
 			if (lastRequest) {
-				query = "SELECT TOP 1 * FROM request_exam";
+				query = "SELECT TOP 1 * FROM request_graduation";
 			}
 			query += " WHERE student_id = @user_id";
 		} else if (role === "advisor") {
@@ -61,10 +61,10 @@ router.post("/allRequestGraduation", authenticateToken, async (req, res) => {
 				return {
 					...item,
 					...studentInfo,
-					request_date: formatDateThaiBE(item.request_date),
-					advisor_approvals_date: formatDateThaiBE(item.advisor_approvals_date),
-					chairpersons_approvals_date: formatDateThaiBE(item.chairpersons_approvals_date),
-					receipt_pay_date: formatDateThaiBE(item.receipt_pay_date),
+					request_date: item.request_date,
+					advisor_approvals_date: item.advisor_approvals_date,
+					chairpersons_approvals_date: item.chairpersons_approvals_date,
+					receipt_pay_date: item.receipt_pay_date,
 					status_text: statusMap[item.status?.toString()],
 					request_type: item.request_type,
 				};
@@ -109,8 +109,10 @@ router.post("/addRequestGraduation", authenticateToken, async (req, res) => {
 
 	try {
 		const pool = await poolPromise;
-		const infoRes = await pool.request().query(`SELECT TOP 1 term FROM request_exam_info ORDER BY request_exam_info_id DESC`);
-
+		const infoRes = await pool.request().query(`SELECT TOP 1 *
+			FROM request_exam_info
+			WHERE CAST(GETDATE() AS DATE) BETWEEN term_open_date AND term_close_date
+			ORDER BY request_exam_info_id DESC`);
 		const insertData = {
 			student_id,
 			study_group_id,
@@ -162,10 +164,10 @@ router.post("/addRequestGraduation", authenticateToken, async (req, res) => {
 				...result.recordset[0],
 				major_name,
 				status_text: statusMap[result.recordset[0].status?.toString()],
-				request_date: formatDateThaiBE(result.recordset[0].request_date),
-				advisor_approvals_date: formatDateThaiBE(result.recordset[0].advisor_approvals_date),
-				chairpersons_approvals_date: formatDateThaiBE(result.recordset[0].chairpersons_approvals_date),
-				receipt_pay_date: formatDateThaiBE(result.recordset[0].receipt_pay_date),
+				request_date: result.recordset[0].request_date,
+				advisor_approvals_date: result.recordset[0].advisor_approvals_date,
+				chairpersons_approvals_date: result.recordset[0].chairpersons_approvals_date,
+				receipt_pay_date: result.recordset[0].receipt_pay_date,
 			},
 		});
 	} catch (err) {
@@ -226,10 +228,10 @@ router.post("/approveRequestGraduation", authenticateToken, async (req, res) => 
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()],
-				request_date: formatDateThaiBE(result.recordset[0].request_date),
-				advisor_approvals_date: formatDateThaiBE(result.recordset[0].advisor_approvals_date),
-				chairpersons_approvals_date: formatDateThaiBE(result.recordset[0].chairpersons_approvals_date),
-				receipt_pay_date: formatDateThaiBE(result.recordset[0].receipt_pay_date),
+				request_date: result.recordset[0].request_date,
+				advisor_approvals_date: result.recordset[0].advisor_approvals_date,
+				chairpersons_approvals_date: result.recordset[0].chairpersons_approvals_date,
+				receipt_pay_date: result.recordset[0].receipt_pay_date,
 			},
 		});
 	} catch (err) {
@@ -257,10 +259,10 @@ router.post("/payRequestGraduation", authenticateToken, async (req, res) => {
 			data: {
 				...row,
 				status_text: statusMap[row.status?.toString()],
-				request_date: formatDateThaiBE(row.request_date),
-				advisor_approvals_date: formatDateThaiBE(row.advisor_approvals_date),
-				chairpersons_approvals_date: formatDateThaiBE(row.chairpersons_approvals_date),
-				receipt_pay_date: formatDateThaiBE(row.receipt_pay_date),
+				request_date: row.request_date,
+				advisor_approvals_date: row.advisor_approvals_date,
+				chairpersons_approvals_date: row.chairpersons_approvals_date,
+				receipt_pay_date: row.receipt_pay_date,
 			},
 		});
 	} catch (err) {

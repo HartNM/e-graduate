@@ -49,7 +49,7 @@ router.post("/AllPlagiarismDefense", authenticateToken, async (req, res) => {
 		const pool = await poolPromise;
 		const request = pool.request().input("user_id", user_id);
 		let query = "SELECT * FROM plagiarism_defense";
-		if (role === "student") {	
+		if (role === "student") {
 			query += " WHERE student_id = @user_id";
 		} else if (role === "advisor") {
 			query += " WHERE thesis_advisor_id = @user_id";
@@ -134,14 +134,28 @@ router.post(
 		try {
 			const plagiarismFilePath = req.files["plagiarism_file"]?.[0]?.path || null;
 			const fullReportFilePath = req.files["full_report_file"]?.[0]?.path || null;
-			const { student_id, study_group_id, major_id, faculty_name, request_type, research_name, thesis_advisor_id, chapter_1, chapter_2, chapter_3, inspection_date, request_thesis_defense_id } =
-				req.body;
+			const {
+				student_id,
+				study_group_id,
+				major_id,
+				faculty_name,
+				request_type,
+				research_name,
+				thesis_advisor_id,
+				chapter_1,
+				chapter_2,
+				chapter_3,
+				chapter_4,
+				chapter_5,
+				inspection_date,
+				request_thesis_defense_id,
+			} = req.body;
 			console.log(req.body);
 
 			const pool = await poolPromise;
 			const infoRes = await pool.request().query(`SELECT TOP 1 *
 			FROM request_exam_info
-			WHERE CAST(GETDATE() AS DATE) BETWEEN KQ_open_date AND KQ_close_date
+			WHERE CAST(GETDATE() AS DATE) BETWEEN term_open_date AND term_close_date
 			ORDER BY request_exam_info_id DESC`);
 
 			const result = await pool
@@ -165,7 +179,7 @@ router.post(
 				.input("inspection_date", inspection_date)
 				.input("plagiarism_file", plagiarismFilePath)
 				.input("full_report_file", fullReportFilePath).query(`INSERT INTO plagiarism_defense (
-					request_thesis_defense_id,
+					request_thesis_defense_id,	
 					student_id,
 					study_group_id,
 					research_name,

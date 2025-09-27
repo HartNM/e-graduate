@@ -1,7 +1,7 @@
 import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument, rgb } from "pdf-lib";
 import { Button } from "@mantine/core";
-import { setDefaultFont, drawGrid, draw, drawRect, drawCenterXText, drawLine, formatThaiDate, formatThaiDateShort, formatBdateDate } from "./PdfUtils.js";
+import { setDefaultFont, drawGrid, draw, drawRect, drawCenterXText, drawLine, formatThaiDate, formatThaiDateShort } from "./PdfUtils.js";
 
 async function fillPdf(data) {
 	const pdfDoc = await PDFDocument.create();
@@ -16,7 +16,15 @@ async function fillPdf(data) {
 	const logoImage = await pdfDoc.embedPng(logoBytes);
 	const pngDims = logoImage.scale(0.085);
 
-	drawGrid(page);
+	function formatBdateDate(dateStr) {
+		if (!dateStr) return ["", "", ""];	
+		const [day, month, year] = dateStr.split("/");
+		const monthsFull = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+		const monthName = monthsFull[parseInt(month, 10) - 1] || "";
+		return [day, monthName, year];
+	}
+
+	/* drawGrid(page); */
 
 	let y = 760;
 	let space = 20;
@@ -87,7 +95,7 @@ async function fillPdf(data) {
 		{ text: "ศึกษารายวิชาและจำนวนหน่วยกิตครบตามหลักสูตรเรียบร้อยแล้ว ", x: 100, y: (y -= space) },
 		{ text: `${data?.education_level === "ปริญญาโท" ? "สอบประมวลความรู้" : "สอบวัดคุณสมบัติ"} ผ่านเรียบร้อย`, x: 100, y: (y -= space) },
 		{ text: "กำลังดำเนินการทำวิทยานิพนธ์  ในขั้น…………………………………….", x: 100, y: (y -= space) },
-		{ text: "100%", x: 250, y: y + 2 },
+		{ text: "100%", x: 250, y: y + 2, show: data.advisor_approvals_id != null },
 		{ text: "ลงชื่อ.........................................................อาจารย์ที่ปรึกษา         ลงชื่อ.........................................................ประธานคณะกรรมการ ", x: 60, y: (y -= space * 2) },
 		{ text: data?.advisor_approvals_id, x: 100, y: y + 2 },
 		{ text: data?.chairpersons_approvals_id, x: 340, y: y + 2 },
@@ -97,9 +105,9 @@ async function fillPdf(data) {
 		{ text: "ชำระเงิน", x: 60, y: (y -= space) },
 		{ text: "ทางฝ่ายการเงินได้รับเงินค่าลงทะเบียนบัณฑิต  จำนวน  1,000  บาท  ในใบเสร็จรับเงิน……………./…………....", x: 100, y: (y -= space) },
 		{ text: "ลงชื่อ........................................................ผู้รับเงิน", x: 240, y: (y -= space) },
-		{ text: "นายณัฐวุฒิ มาตกาง", x: 280, y: y + 2 , show: data?.receipt_vol_No != null},
+		{ text: "นายณัฐวุฒิ มาตกาง", x: 280, y: y + 2, show: data?.receipt_vol_No != null },
 		{ text: "(........................................................)", x: 260, y: (y -= space) },
-		{ text: "นายณัฐวุฒิ มาตกาง", x: 280, y: y + 2 , show: data?.receipt_vol_No != null},
+		{ text: "นายณัฐวุฒิ มาตกาง", x: 280, y: y + 2, show: data?.receipt_vol_No != null },
 		{ text: "------------------------------------------------------------------------------------------------------------------------------------------------------------------ ", x: 60, y: (y -= space) },
 		{ text: "กรุณานำส่ง", x: 240, y: (y -= space * 2), font: THSarabunNewBold },
 		{ text: "สถานที่ติดต่อเพื่อแจ้งรายละเอียด", x: 60, y: (y -= space) },

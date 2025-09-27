@@ -7,7 +7,6 @@ const ExamResultsPrint = () => {
 	const token = localStorage.getItem("token");
 	const [group, setGroup] = useState([]);
 	const [term, setTerm] = useState([]);
-	const [dateExam, setDateExam] = useState([]);
 	const [selectedTerm, setSelectedTerm] = useState("");
 	const [selectedType, setSelectedType] = useState("");
 
@@ -26,8 +25,20 @@ const ExamResultsPrint = () => {
 				const data = await res.json();
 				if (!res.ok) throw new Error(data.message);
 				setTerm(data.map((item) => item.term));
-				setSelectedTerm(data[0]?.term);
-				setDateExam(data[0].KQ_exam_date);
+				const today = new Date();
+				// หา term ที่อยู่ในช่วง open-close
+				let currentTerm = data.find((item) => {
+					const open = new Date(item.term_open_date);
+					const close = new Date(item.term_close_date);
+					return today >= open && today <= close;
+				});
+				if (!currentTerm && data.length > 0) {
+					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก close_date
+					currentTerm = [...data].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
+				}
+				if (currentTerm) {
+					setSelectedTerm(currentTerm.term);
+				}
 			} catch (e) {
 				notify("error", e.message);
 			}
@@ -85,7 +96,7 @@ const ExamResultsPrint = () => {
 								<Table.Td>{students[0].term}</Table.Td>
 								<Table.Td>{[...new Set(students.map((s) => s.request_type))].join(", ")}</Table.Td>
 								<Table.Td>
-									<Button size="xs" onClick={() => PDFExamResultsPrint(students, dateExam)}>
+									<Button size="xs" onClick={() => PDFExamResultsPrint(students)}>
 										พิมพ์
 									</Button>
 								</Table.Td>

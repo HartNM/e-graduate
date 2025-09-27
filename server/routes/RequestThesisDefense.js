@@ -74,9 +74,17 @@ router.post("/allRequestThesisDefense", authenticateToken, async (req, res) => {
 				} catch {
 					console.warn(`ไม่สามารถดึงข้อมูลนักศึกษา ${item.student_id}`);
 				}
+				let advisorInfo = null;
+				try {
+					const advisorRes = await axios.get(`http://localhost:8080/externalApi/user_idGetUser_name/${item.thesis_advisor_id}`);
+					advisorInfo = advisorRes.data;
+				} catch (e) {
+					console.warn(item.thesis_advisor_id, e);
+				}
 				return {
 					...item,
 					...studentInfo,
+					thesis_advisor_name: advisorInfo.name,
 					thesis_exam_date: item.thesis_exam_date,
 					request_date: item.request_date,
 					advisor_approvals_date: item.advisor_approvals_date,

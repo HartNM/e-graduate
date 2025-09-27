@@ -73,19 +73,38 @@ const RequestThesisProposal = () => {
 		fetchProfile();
 	}, []);
 
-	const [latestRequest, setLatestRequest] = useState(null);
+	const [latestRequest, setLatestRequest] = useState(true);
 
 	useEffect(() => {
 		const fetchRequestExam = async () => {
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/allRequestThesisProposal", {
+				const ThesisProposalRes = await fetch("http://localhost:8080/api/allRequestThesisProposal", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
-				const requestData = await requestRes.json();
-				if (!requestRes.ok) throw new Error(requestData.message);
-				setRequest(requestData);
-				setLatestRequest(requestData[0]);
+				const ThesisProposalData = await ThesisProposalRes.json();
+				if (!ThesisProposalRes.ok) throw new Error(ThesisProposalData.message);
+				setRequest(ThesisProposalData);
+
+				const RequestExamRes = await fetch("http://localhost:8080/api/requestExamAll", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+					body: JSON.stringify({ lastRequest: true }),
+				});
+				const RequestExamData = await RequestExamRes.json();
+				if (!RequestExamRes.ok) throw new Error(RequestExamData.message);
+				console.log(ThesisProposalData[0]?.status);
+				console.log(RequestExamData);
+
+				if (RequestExamData[0]?.status === "5" && RequestExamData[0]?.exam_results === "ผ่าน") {
+					if (ThesisProposalData[0]?.status === "6" || ThesisProposalData[0]?.status === undefined) {
+						setLatestRequest(false);
+					} else {
+						setLatestRequest(true);
+					}
+				} else {
+					setLatestRequest(true);
+				}
 			} catch (e) {
 				notify("error", e.message);
 				console.error("Error fetching requestExamAll:", e);

@@ -21,8 +21,8 @@ router.post("/allCoures", authenticateToken, async (req, res) => {
 router.post("/officerGetMajor_id", authenticateToken, async (req, res) => {
 	const { user_id } = req.body;
 	try {
-		const pool = await poolPromise;
-		const result = await pool.request().input("user_id", user_id).query(`SELECT major_id FROM officerMajor_id WHERE user_id = @user_id`);
+		const pool = await poolPromise;	
+		const result = await pool.request().input("user_id", user_id).query(`SELECT major_id FROM users WHERE user_id = @user_id`);
 		res.status(200).json(result.recordset[0]);
 	} catch (e) {
 		console.error("addCourseRegistration:", e);
