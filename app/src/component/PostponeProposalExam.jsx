@@ -82,7 +82,9 @@ const PostponeProposalExam = () => {
 				const requestData = await requestRes.json();
 				if (!requestRes.ok) throw new Error(requestData	.message);
 				setLatestRequest(requestData[0]);
-				if (requestData[0]?.status === "6") {
+				console.log(requestData);
+				
+				if (requestData[0]?.status === "5") {
 					setButtonAdd(false);
 				} else {
 					setButtonAdd(true);
@@ -93,7 +95,7 @@ const PostponeProposalExam = () => {
 			}
 		};
 		if (role === "student") {
-			fetchLatestRequestThesisProposal();
+			fetchLatestRequestThesisProposal();	
 		}
 
 		const fetchRequestExamCancel = async () => {
