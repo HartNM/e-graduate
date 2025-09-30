@@ -80,12 +80,24 @@ const PostponeProposalExam = () => {
 					body: JSON.stringify({ lastRequest: true }),
 				});
 				const requestData = await requestRes.json();
-				if (!requestRes.ok) throw new Error(requestData	.message);
+				if (!requestRes.ok) throw new Error(requestData.message);
 				setLatestRequest(requestData[0]);
 				console.log(requestData);
-				
+
+				const PlagiarismRes = await fetch("http://localhost:8080/api/AllPlagiarismProposal", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				});
+				const PlagiarismData = await PlagiarismRes.json();
+				if (!PlagiarismRes.ok) throw new Error(PlagiarismData.message);
+				console.log(PlagiarismData[0]);
+
 				if (requestData[0]?.status === "5") {
-					setButtonAdd(false);
+					if (PlagiarismData[0]) {
+						setButtonAdd(true);
+					} else {
+						setButtonAdd(false);
+					}
 				} else {
 					setButtonAdd(true);
 				}
@@ -95,7 +107,7 @@ const PostponeProposalExam = () => {
 			}
 		};
 		if (role === "student") {
-			fetchLatestRequestThesisProposal();	
+			fetchLatestRequestThesisProposal();
 		}
 
 		const fetchRequestExamCancel = async () => {

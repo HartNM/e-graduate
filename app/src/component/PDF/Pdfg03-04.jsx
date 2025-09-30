@@ -28,7 +28,7 @@ async function fillPdf(data) {
 		for (let i = 0; i < len; i++) {
 			let digit = parseInt(numStr.charAt(i));
 			let position = len - i - 1;
-			if (digit !== 0) {
+			if (digit !== 0) {	
 				if (position === 1 && digit === 1) result += "สิบ";
 				else if (position === 1 && digit === 2) result += "ยี่สิบ";
 				else if (position === 1) result += thNumbers[digit] + "สิบ";
@@ -38,7 +38,7 @@ async function fillPdf(data) {
 		}
 		return result;
 	}
-	const feeMap = {
+	const feeMap = {	
 		ปริญญาโท: { โครงร่าง: 2000, สอบจริง: 3000 },
 		ปริญญาเอก: { โครงร่าง: 5000, สอบจริง: 7000 },
 	};
