@@ -32,7 +32,7 @@ function AsyncCourseSelect({ form, disabled = false }) {
   // search filter client-side
   const handleSearchChange = useCallback(
     debounce((query) => {
-      if (!query) return setData(fullData.slice(0, 0)); // แสดง top 200 ถ้า search ว่าง
+      if (!query) return setData(fullData.slice(0, 0));
       const filtered = fullData
         .filter(
           (item) =>

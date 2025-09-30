@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Outlet, useLocation, useNavigate, Navigate } from "react-router-dom";
-import { AppShell, Box, Burger, Text, Image, Space } from "@mantine/core";
+import { AppShell, Box, Burger, Text, Image, Space, Select } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { NavbarNested } from "../component/Navbar";
 import myImage from "../assets/logo.png";
@@ -8,6 +8,7 @@ import { Suspense } from "react";
 import LoadingScreen from "../component/LoadingScreen.jsx";
 import { ActionIcon, useMantineColorScheme, useComputedColorScheme } from "@mantine/core";
 import { IconSun, IconMoon } from "@tabler/icons-react";
+import { jwtDecode } from "jwt-decode";
 
 const UserLayout = (item) => {
 	const navigate = useNavigate();
@@ -19,27 +20,24 @@ const UserLayout = (item) => {
 	}, [location]);
 
 	const token = localStorage.getItem("token");
-	if (!token) {
-		// ถ้าไม่มี token, redirect ไป /login โดยไม่เก็บตำแหน่งเดิม
-		return <Navigate to="/login" replace />;
-	}
 
 	try {
-		// แยก payload ออกมา (Base64 -> JSON)
-		const payload = JSON.parse(atob(token.split(".")[1]));
+		const decoded = jwtDecode(token);
 		const now = Date.now() / 1000; // วินาทีปัจจุบัน
-
-		if (payload.exp && payload.exp < now) {
+		if (decoded.exp && decoded.exp < now) {
 			// ถ้า token หมดอายุ
 			localStorage.removeItem("token"); // ลบออกไปด้วย
-			return <Navigate to="/login" replace />;
+			return navigate("/login");
+			<Navigate to="/login" replace />;
 		}
 	} catch (e) {
 		// token ไม่ถูกต้อง
+		console.log(e);
 		localStorage.removeItem("token");
-		return <Navigate to="/login" replace />;
+		return navigate("/login");
+		<Navigate to="/login" replace />;
 	}
-	
+
 	const { setColorScheme } = useMantineColorScheme();
 	const computedColorScheme = useComputedColorScheme("light", { getInitialValueInEffect: true });
 

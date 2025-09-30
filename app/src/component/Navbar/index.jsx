@@ -1,4 +1,4 @@
-import { Box, ScrollArea } from "@mantine/core";
+import { Box, ScrollArea, Select } from "@mantine/core";
 import { IconLogout } from "@tabler/icons-react";
 import { LinksGroup } from "../NavbarLinksGroup";
 import { UserButton } from "../UserButton";
@@ -11,14 +11,12 @@ export function NavbarNested(menu) {
 	const navigate = useNavigate();
 
 	return (
-		<nav>
+		<nav className={classes.nav}>
 			<Box>
-				<Box>
-					<UserButton />
-				</Box>
+				<UserButton />
 			</Box>
 
-			<ScrollArea style={{ height: "calc(100vh - 115px - 80px" }}>
+			<ScrollArea style={{ flex: 1 }}>
 				<Box>{links}</Box>
 			</ScrollArea>
 

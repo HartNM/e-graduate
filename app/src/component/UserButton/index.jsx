@@ -1,38 +1,94 @@
 import { useEffect, useState } from "react";
-import { Avatar, Group, Text, UnstyledButton } from "@mantine/core";
+import { Avatar, Group, Text, UnstyledButton, Select } from "@mantine/core";
 import classes from "./UserButton.module.css";
+import { jwtDecode } from "jwt-decode";
+import { useNavigate } from "react-router-dom";
 
-export function UserButton() {
-	const [user, setUser] = useState("");
+export function UserButton({ onSwitchRole }) {
+	const navigate = useNavigate();
+	const [userName, setUserName] = useState("");
+	const [roles, setRoles] = useState([]);
+	const [activeRole, setActiveRole] = useState("");
 
-	const token = localStorage.getItem("token");
+	// Mapping role -> label ภาษาไทย
+	const roleLabels = {
+		student: "นักศึกษา",
+		advisor: "อาจารย์ที่ปรึกษา",
+		chairpersons: "ประธานกรรมการ",
+		officer_registrar: "เจ้าหน้าที่ทะเบียน",
+		officer_major: "เจ้าหน้าที่สาขา",
+		dean: "คณบดี",
+	};
+
 	useEffect(() => {
 		const fetchProfile = async () => {
+			const token = localStorage.getItem("token");
+			if (!token) return;
 			try {
-				const res = await fetch("http://localhost:8080/api/profile", {
+				const req = await fetch("http://localhost:8080/api/profile", {
 					method: "GET",
 					headers: { Authorization: `Bearer ${token}` },
 				});
-				if (!res.ok) throw new Error("Failed to fetch profile");
-				const data = await res.json();
-				setUser(data.name);
+				const res = await req.json();
+				if (!req.ok) throw new Error(res.message);
+				setUserName(res.name);
+
+				const decoded = jwtDecode(token);
+				setRoles(decoded.roles || []);
+				setActiveRole(decoded.role || (decoded.roles ? decoded.roles[0] : ""));
 			} catch (err) {
-				console.error("Error fetching profile:", err);
+				console.error("Failed to fetch profile or decode token:", err);
 			}
 		};
+
 		fetchProfile();
 	}, []);
 
+	const handleSwitch = async (role) => {
+		if (!role || role === activeRole) {
+			return;
+		}
+
+		const res = await fetch("http://localhost:8080/api/switchRole", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${localStorage.getItem("token")}`,
+			},
+			body: JSON.stringify({ role }),
+		});
+		const data = await res.json();
+		if (!res.ok) throw new Error(data.message);
+
+		localStorage.setItem("token", data.token);
+
+		// redirect ไป path ของ role
+		if (role === "student") navigate("/student");
+		if (role === "advisor") navigate("/advisor");
+		if (role === "chairpersons") navigate("/chairpersons");
+		if (role === "registrar-officer") navigate("/registrar-officer");
+		if (role === "major-officer") navigate("/major-officer");
+		if (role === "dean") navigate("/dean");
+	};
+
+	// สร้าง data สำหรับ Select: value = role key, label = ภาษาไทย
+	const selectData = roles.map((r) => ({
+		value: r,
+		label: roleLabels[r] || r, // ถ้าไม่มี mapping ใช้ role เดิม
+	}));
+
 	return (
 		<UnstyledButton className={classes.user}>
-			<Group>
-				<Avatar radius="xl" />
-				<div style={{ flex: 1 }}>
+			<div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+				<Group align="center" spacing="sm">
+					<Avatar radius="xl" />
 					<Text size="sm" fw={500}>
-						{user}
+						{userName}
 					</Text>
-				</div>
-			</Group>
+				</Group>
+
+				{/* <Select value={activeRole} onChange={handleSwitch} data={selectData} placeholder="เลือกบทบาท" style={{ width: "100%" }} size="xs" variant="default" /> */}
+			</div>
 		</UnstyledButton>
 	);
 }

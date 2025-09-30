@@ -6,6 +6,7 @@ const bcrypt = require("bcrypt");
 const { poolPromise } = require("../db"); // เชื่อมต่อฐานข้อมูล MSSQL
 const axios = require("axios");
 const SECRET_KEY = process.env.SECRET_KEY;
+const authenticateToken = require("../middleware/authenticateToken");
 
 /* router.post("/login", async (req, res) => {
 	const { username, password } = req.body;
@@ -61,7 +62,7 @@ router.post("/login", async (req, res) => {
 			//if (result.BDATE !== password) {
 			//return res.status(401).json({ message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" });
 			//}
-			const token = jwt.sign({ user_id: username, role: `student` }, SECRET_KEY, { expiresIn: "1h" });
+			const token = jwt.sign({ user_id: username, role: `student`, roles: [`student`] }, SECRET_KEY, { expiresIn: "1h" });
 			console.log(token);
 			res.status(200).json({ message: "เข้าสู่ระบบสำเร็จ", token, role: `student` });
 		} catch (e) {
@@ -80,13 +81,37 @@ router.post("/login", async (req, res) => {
 			if (!isMatch) {
 				return res.status(401).json({ message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" });
 			}
-			const token = jwt.sign({ user_id: u.user_id, role: u.role }, SECRET_KEY, { expiresIn: "1h" });
+			let roles = [];
+
+			for (let i = 0; i < uRes.recordset.length; i++) {
+				const role = uRes.recordset[i].role;
+				if (role) {
+					roles.push(role);
+				}
+			}
+
+			console.log(roles);
+
+			const token = jwt.sign({ user_id: u.user_id.toString(), role: u.role, roles: roles }, SECRET_KEY, { expiresIn: "1h" });
 			res.status(200).json({ message: "เข้าสู่ระบบสำเร็จ", token, role: u.role });
 		} catch (e) {
 			console.error("Login error:", e);
 			res.status(500).json({ message: "Internal Server Error" });
 		}
 	}
+});
+
+router.post("/switchRole", authenticateToken, (req, res) => {
+	const { role } = req.body;
+	const { user_id, roles, name } = req.user;
+	console.log(roles, role);
+
+	if (!roles.includes(role)) {
+		return res.status(403).json({ message: "ไม่มีสิทธิ์ role นี้" });
+	}
+	const newToken = jwt.sign({ user_id, roles, name, role: role }, process.env.SECRET_KEY, { expiresIn: "1h" });
+
+	res.json({ token: newToken, activeRole: role });
 });
 
 module.exports = router;

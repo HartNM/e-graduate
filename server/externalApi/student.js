@@ -41,11 +41,12 @@ router.get("/subject-pass/:student_id", async (req, res) => {
 			},
 			{
 				headers: {
-					"Content-Type": "application/json",ฃ
+					"Content-Type": "application/json",
+					ฃ,
 				},
 			}
 		);
-ฃ
+		ฃ;
 		const subjects = response.data;
 
 		res.json(subjects);
@@ -79,7 +80,8 @@ router.get("/student/:student_id", async (req, res) => {
 			res.json(result.recordset[0]);
 		} else {
 			res.status(404).json({ error: "Student not found" });
-		} */ res.json(result.recordset[0]);
+		} */
+		res.json(result.recordset[0]);
 	} catch (e) {
 		console.error("DB query error:", e);
 		res.status(500).json({ error: "Internal server error" });
