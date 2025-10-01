@@ -17,7 +17,7 @@ const statusMap = {
 	9: "ขอยกเลิก",
 };
 
-router.post("/check_openKQ", authenticateToken, async (req, res) => {
+router.post("/checkOpenKQ", authenticateToken, async (req, res) => {
 	try {
 		const pool = await poolPromise;
 		const result = await pool.query(`

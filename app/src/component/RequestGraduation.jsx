@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import ModalAddRequestGraduation from "../component/Modal/ModalAddRequestGraduation";
-import ModalApprove from "../component/Modal/ModalApprove";	
+import ModalApprove from "../component/Modal/ModalApprove";
 import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
 import Pdfg01 from "../component/PDF/Pdfg05";
@@ -125,6 +125,14 @@ const RequestGraduation = () => {
 	useEffect(() => {
 		const fetchRequestExam = async () => {
 			try {
+				const PlagiarismDefenseRes = await fetch("http://localhost:8080/api/AllPlagiarismDefense", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				});
+				const PlagiarismDefenseData = await PlagiarismDefenseRes.json();
+				if (!PlagiarismDefenseRes.ok) throw new Error(PlagiarismDefenseData.message);
+				console.log(PlagiarismDefenseData);
+
 				const requestRes = await fetch("http://localhost:8080/api/allRequestGraduation", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -133,7 +141,12 @@ const RequestGraduation = () => {
 				if (!requestRes.ok) throw new Error(requestData.message);
 				setRequest(requestData);
 				console.log(requestData);
-				setLatestRequest(requestData[0]);
+
+				if (PlagiarismDefenseData[0]?.status === "5") {
+					setLatestRequest(requestData[0]);
+				} else {
+					setLatestRequest(true);
+				}
 			} catch (e) {
 				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 				console.error("Error fetching requestExamAll:", e);
@@ -250,9 +263,7 @@ const RequestGraduation = () => {
 					<Stepper active={item.status === "4" ? item.status - 2 : item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
 						{[...Array(3)].map((_, i) => (
 							<Stepper.Step key={i}>
-								<Pill>
-									{item.status_text}
-								</Pill>
+								<Pill>{item.status_text}</Pill>
 							</Stepper.Step>
 						))}
 					</Stepper>

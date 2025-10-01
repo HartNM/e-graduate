@@ -61,14 +61,29 @@ const RequestExamCancel = () => {
 	useEffect(() => {
 		const fetchRequestExam = async () => {
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/requestExamAll", {
+				const requestExamRes = await fetch("http://localhost:8080/api/requestExamAll", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 					body: JSON.stringify({ lastRequest: true }),
 				});
-				const requestData = await requestRes.json();
-				if (!requestRes.ok) throw new Error(requestData.message);
-				setLatestRequest([...requestData].sort((a, b) => new Date(b.request_exam_id) - new Date(a.request_exam_id))[0]);
+				const requestExamData = await requestExamRes.json();
+				if (!requestExamRes.ok) throw new Error(requestExamData.message);
+				console.log(requestExamData[0]);
+
+				const CheckOpenRECRes = await fetch("http://localhost:8080/api/CheckOpenREC", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+					body: JSON.stringify({ lastRequest: true }),
+				});
+				const CheckOpenRECData = await CheckOpenRECRes.json();
+				if (!CheckOpenRECRes.ok) throw new Error(CheckOpenRECData.message);
+				console.log(CheckOpenRECData);
+
+				if (CheckOpenRECData.status) {
+					setLatestRequest(requestExamData[0]);
+				} else {
+					setLatestRequest(true);
+				}
 			} catch (e) {
 				notify("error", e.message);
 				console.error("Error fetching requestExamAll:", e);

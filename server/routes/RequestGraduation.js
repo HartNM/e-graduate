@@ -113,6 +113,9 @@ router.post("/addRequestGraduation", authenticateToken, async (req, res) => {
 			FROM request_exam_info
 			WHERE CAST(GETDATE() AS DATE) BETWEEN term_open_date AND term_close_date
 			ORDER BY request_exam_info_id DESC`);
+
+		console.log(infoRes);
+
 		const insertData = {
 			student_id,
 			study_group_id,

@@ -91,7 +91,7 @@ const RequestExam = () => {
 		};
 		const fetchStudentData = async () => {
 			try {
-				const res = await fetch("http://localhost:8080/api/check_openKQ", {
+				const res = await fetch("http://localhost:8080/api/checkOpenKQ", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});

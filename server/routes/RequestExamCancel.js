@@ -30,6 +30,29 @@ const statusMap = {
 	9: "รอคณบดีอนุญาต",
 };
 
+router.post("/CheckOpenREC", authenticateToken, async (req, res) => {
+	try {
+		const pool = await poolPromise;
+		const result = await pool.query(`
+			SELECT 
+				KQ_exam_date,
+				CAST(GETDATE() AS DATE) AS today,
+				CASE 
+					WHEN CAST(GETDATE() AS DATE) <= DATEADD(DAY, -3, KQ_exam_date) 
+						THEN CAST(1 AS BIT)
+					ELSE CAST(0 AS BIT)
+				END AS status
+			FROM request_exam_info
+			ORDER BY request_exam_info_id DESC
+		`);
+
+		res.status(200).json(result.recordset[0]);
+	} catch (err) {
+		console.error("check_beforeExam:", err);
+		res.status(500).json({ message: "เกิดข้อผิดพลาด" });
+	}
+});
+
 router.post("/AllRequestExamCancel", authenticateToken, async (req, res) => {
 	const { user_id, role } = req.user;
 	try {
@@ -105,7 +128,7 @@ router.post("/AddRequestExamCancel", authenticateToken, async (req, res) => {
 	const { user_id } = req.user;
 	try {
 		const pool = await poolPromise;
-		
+
 		const result = await pool.request().input("student_id", user_id).query(`SELECT TOP 1 request_exam_id FROM request_exam WHERE student_id = @student_id 
 			ORDER BY request_exam_id DESC`);
 		if (result.recordset.length === 0) {

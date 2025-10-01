@@ -57,7 +57,7 @@ const PostponeDefenseExam = () => {
 					method: "GET",
 					headers: { Authorization: `Bearer ${token}` },
 				});
-				const requestData = await requestRes.json();
+				const requestData = await requestRes.json();	
 				if (!requestRes.ok) throw new Error(requestData.message);
 				setUser(requestData);
 			} catch (e) {
@@ -67,7 +67,7 @@ const PostponeDefenseExam = () => {
 		};
 		fetchProfile();
 	}, [token]);
-
+  
 	const [latestRequest, setLatestRequest] = useState(true);
 	const [buttonAdd, setButtonAdd] = useState(true);
 
@@ -82,8 +82,22 @@ const PostponeDefenseExam = () => {
 				const requestData = await requestRes.json();
 				if (!requestRes.ok) throw new Error(requestData.message);
 				setLatestRequest(requestData[0]);
+				console.log(requestData);
+				
+				const DefenseRes = await fetch("http://localhost:8080/api/AllPlagiarismDefense", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				});
+				const DefenseData = await DefenseRes.json();
+				if (!DefenseRes.ok) throw new Error(DefenseData.message);
+				console.log(DefenseData);
+
 				if (requestData[0]?.status === "5") {
-					setButtonAdd(false);
+					if (DefenseData[0]) {
+						setButtonAdd(true);
+					} else {
+						setButtonAdd(false);
+					}
 				} else {
 					setButtonAdd(true);
 				}
