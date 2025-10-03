@@ -2,7 +2,6 @@ import { Routes, Route, BrowserRouter } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import LoadingScreen from "./component/LoadingScreen.jsx";
 
-const Personnel = lazy(() => import("./pages/personnel"));
 
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AuthenticationForm = lazy(() => import("./pages/AuthenticationTitle/login.jsx"));

@@ -25,7 +25,7 @@ const Student = () => {
 					newMenu.push({ label: `คำร้องขอสอบโครงร่างการวิจัย`, icon: IconReport, links: "/student/RequestThesisProposal" });
 				}
 				if (data.PostponeProposalExam) {
-					newMenu.push({ label: `คำร้องขอเลื่อนสอบโครงร่างการวิจัย`, icon: IconCalendarClock, links: "/student/PostponeProposalExam" });
+					data.education_level === "ปริญญาเอก" && newMenu.push({ label: `คำร้องขอเลื่อนสอบโครงร่างการวิจัย`, icon: IconCalendarClock, links: "/student/PostponeProposalExam" });
 				}
 				if (data.PlagiarismProposal) {
 					newMenu.push({ label: "รายงานตรวจสอบโครงร่างการวิจัย", icon: IconSearch, links: "/student/PlagiarismProposal" });

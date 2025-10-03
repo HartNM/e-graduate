@@ -24,7 +24,6 @@ export function NavbarNested(menu) {
 				<Text
 					className={classes.link}
 					onClick={() => {
-						localStorage.removeItem("token");
 						navigate("/login");
 					}}
 					style={{ cursor: "pointer" }}

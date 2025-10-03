@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button, Group, Paper, PasswordInput, Stack, Text, TextInput, Center, Space, Image, LoadingOverlay } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useNavigate } from "react-router-dom";
@@ -22,6 +22,10 @@ const AuthenticationForm = () => {
 			password: (value) => (value.trim().length > 0 ? null : "กรอกรหัสผ่าน"),
 		},
 	});
+
+	useEffect(() => {
+		localStorage.removeItem("token");
+	}, []);
 
 	const handleLogin = async () => {
 		try {

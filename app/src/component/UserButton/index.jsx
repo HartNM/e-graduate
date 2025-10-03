@@ -4,7 +4,7 @@ import classes from "./UserButton.module.css";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 
-export function UserButton({ onSwitchRole }) {
+export function UserButton() {
 	const navigate = useNavigate();
 	const [userName, setUserName] = useState("");
 	const [roles, setRoles] = useState([]);

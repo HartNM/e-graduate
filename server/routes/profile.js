@@ -123,12 +123,29 @@ router.get("/studentInfo", authenticateToken, async (req, res) => {
 	}
 });
 
+router.post("/personnelInfo", authenticateToken, async (req, res) => {
+	const { user_id } = req.body;
+	try {
+		const pool = await poolPromise;
+		const result = await pool.request().input("user_id", user_id).query(`SELECT * FROM users WHERE user_id = @user_id`);
+		
+		if (!user) return res.status(200).json(null);
+		const user = result.recordset[0];
+		const { password, ...userWithoutPassword } = user;
+
+		return res.status(200).json(userWithoutPassword);
+	} catch (err) {
+		console.error("เกิดข้อผิดพลาด:", err);
+		return res.status(502).json({ message: "ไม่สามารถเชื่อมต่อกับระบบภายนอกได้" });
+	}
+});
+
 router.get("/checkStudent", authenticateToken, async (req, res) => {
 	const { user_id } = req.user;
 	try {
 		const pool = await poolPromise;
 		const student = await axios.get(`http://localhost:8080/externalApi/student/${user_id}`);
-		const request_exam = await pool.request().input("user_id", user_id).query(`SELECT status, exam_results FROM request_exam WHERE student_id = @user_id ORDER BY request_exam_id DESC`);
+		/* const request_exam = await pool.request().input("user_id", user_id).query(`SELECT status, exam_results FROM request_exam WHERE student_id = @user_id ORDER BY request_exam_id DESC`);
 		const latest_request_exam = request_exam.recordset[0] || null;
 
 		const Proposal = await pool.request().input("user_id", user_id).query(`SELECT status FROM request_thesis_proposal WHERE student_id = @user_id ORDER BY request_thesis_proposal_id DESC`);
@@ -138,7 +155,7 @@ router.get("/checkStudent", authenticateToken, async (req, res) => {
 		const latest_defense = Defense.recordset[0] || null;
 
 		const Plagiarism = await pool.request().input("user_id", user_id).query(`SELECT status FROM plagiarism_report WHERE student_id = @user_id ORDER BY plagiarism_report_id DESC`);
-		const latest_Plagiarism = Plagiarism.recordset[0] || null;
+		const latest_Plagiarism = Plagiarism.recordset[0] || null; */
 
 		return res.status(200).json({
 			/* education_level: student.data.education_level,

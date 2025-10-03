@@ -57,7 +57,7 @@ const PostponeDefenseExam = () => {
 					method: "GET",
 					headers: { Authorization: `Bearer ${token}` },
 				});
-				const requestData = await requestRes.json();	
+				const requestData = await requestRes.json();
 				if (!requestRes.ok) throw new Error(requestData.message);
 				setUser(requestData);
 			} catch (e) {
@@ -67,7 +67,7 @@ const PostponeDefenseExam = () => {
 		};
 		fetchProfile();
 	}, [token]);
-  
+
 	const [latestRequest, setLatestRequest] = useState(true);
 	const [buttonAdd, setButtonAdd] = useState(true);
 
@@ -83,7 +83,7 @@ const PostponeDefenseExam = () => {
 				if (!requestRes.ok) throw new Error(requestData.message);
 				setLatestRequest(requestData[0]);
 				console.log(requestData);
-				
+
 				const DefenseRes = await fetch("http://localhost:8080/api/AllPlagiarismDefense", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -106,7 +106,9 @@ const PostponeDefenseExam = () => {
 				console.error("Error fetching requestExamAll:", e);
 			}
 		};
-		fetchLatestRequestThesisProposal();
+		if (role === "student") {
+			fetchLatestRequestThesisProposal();
+		}
 
 		const fetchRequestExamCancel = async () => {
 			try {

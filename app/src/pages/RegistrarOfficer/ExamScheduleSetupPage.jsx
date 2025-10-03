@@ -110,9 +110,11 @@ const ExamScheduleSetupPage = () => {
 	const Rows = requestExamInfo.map((item, index) => (
 		<Table.Tr key={item.request_exam_info_id}>
 			<Table.Td>{item.term}</Table.Td>
-			<Table.Td>{formatThaiDate(item.KQ_open_date)}</Table.Td>
+			<Table.Td>{formatThaiDate(item.term_open_date)}</Table.Td>
+			<Table.Td>{formatThaiDate(item.term_close_date)}</Table.Td>
+			{/* <Table.Td>{formatThaiDate(item.KQ_open_date)}</Table.Td>
 			<Table.Td>{formatThaiDate(item.KQ_close_date)}</Table.Td>
-			<Table.Td>{formatThaiDate(item.KQ_exam_date)}</Table.Td>
+			<Table.Td>{formatThaiDate(item.KQ_exam_date)}</Table.Td> */}
 			<Table.Td>
 				<Group>
 					<Button
@@ -162,7 +164,8 @@ const ExamScheduleSetupPage = () => {
 			</Modal>
 
 			<Text size="1.5rem" fw={900} mb="md">
-				กำหนดวันสอบประมวลความรู้/สอบวัดคุณสมบัติ
+				กรอกข้อมูลภาคเรียน
+				{/* กำหนดวันสอบประมวลความรู้/สอบวัดคุณสมบัติ */}
 			</Text>
 			<Space h="xl" />
 			<Box>
@@ -184,10 +187,12 @@ const ExamScheduleSetupPage = () => {
 				<Table horizontalSpacing="sm" verticalSpacing="sm" highlightOnHover>
 					<Table.Thead>
 						<Table.Tr>
-							<Table.Th>ปีการศึกษา</Table.Th>
-							<Table.Th>วันเปิดการยื่นคำร้อง</Table.Th>
+							<Table.Th>ภาคเรียน</Table.Th>
+							<Table.Th>วันเปิดภาคเรียน</Table.Th>
+							<Table.Th>วันปิดภาคเรียน</Table.Th>
+							{/* <Table.Th>วันเปิดการยื่นคำร้อง</Table.Th>
 							<Table.Th>วันปิดการยื่นคำร้อง</Table.Th>
-							<Table.Th>วันสอบ</Table.Th>
+							<Table.Th>วันสอบ</Table.Th> */}
 							<Table.Th>จัดการ</Table.Th>
 						</Table.Tr>
 					</Table.Thead>

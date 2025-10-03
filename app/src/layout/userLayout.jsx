@@ -25,17 +25,11 @@ const UserLayout = (item) => {
 		const decoded = jwtDecode(token);
 		const now = Date.now() / 1000; // วินาทีปัจจุบัน
 		if (decoded.exp && decoded.exp < now) {
-			// ถ้า token หมดอายุ
-			localStorage.removeItem("token"); // ลบออกไปด้วย
 			return navigate("/login");
-			<Navigate to="/login" replace />;
 		}
 	} catch (e) {
-		// token ไม่ถูกต้อง
 		console.log(e);
-		localStorage.removeItem("token");
 		return navigate("/login");
-		<Navigate to="/login" replace />;
 	}
 
 	const { setColorScheme } = useMantineColorScheme();

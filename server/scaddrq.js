@@ -27,18 +27,18 @@ async function main() {
 		/* const startId = 684140101;
 		const endId = 684140130;
 		const type = "ขอสอบประมวลความรู้";
-		const term = "3/68";
-		const advisor = "นางสาวพรทิพย์ ขยันดี";
-		const chairpersons = "นายวิทยา พัฒน์";
-		const registrar = "นายธนกร ศรีสุวรรณ"; */
+		const term = "2/68";
+		const advisor = "5000000000002";
+		const chairpersons = "4000000000001";		
+		const registrar = "2000000000001"; */
 
-		const startId = 684270201;
+		/* const startId = 684270201;
 		const endId = 684270215;
 		const type = "ขอสอบวัดคุณสมบัติ";
-		const term = "3/68";
-		const advisor = "นายเอกชัย ตั้งใจเรียน";
-		const chairpersons = "นายวิทยา พัฒน์";
-		const registrar = "นายธนกร ศรีสุวรรณ";
+		const term = "2/68";
+		const advisor = "5000000000001";
+		const chairpersons = "4000000000001";
+		const registrar = "2000000000001"; */
 
 		for (let id = startId; id <= endId; id++) {
 			try {

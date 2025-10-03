@@ -54,6 +54,9 @@ const RequestExam = () => {
 		setSelectedType(type);
 	}, [type]);
 
+	const [term, setTerm] = useState([]);
+	const [selectedTerm, setSelectedTerm] = useState("");
+
 	useEffect(() => {
 		const fetchProfile = async () => {
 			try {
@@ -63,12 +66,48 @@ const RequestExam = () => {
 				});
 				const res = await req.json();
 				if (!req.ok) throw new Error(res.message);
+				console.log(res);
 				setUser(res);
 			} catch (e) {
 				notify("error", e.message);
-				console.error("Error fetchProfile:", e);
+				console.error(e);
 			}
 		};
+		fetchProfile();
+
+		const fetchTerm = async () => {
+			try {
+				const res = await fetch("http://localhost:8080/api/allRequestExamInfo", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				});
+				const data = await res.json();
+				if (!res.ok) throw new Error(data.message);
+				console.log(data);
+				setTerm(data.map((item) => item.term));
+				const today = new Date();
+				// หา term ที่อยู่ในช่วง open-close
+				let currentTerm = data.find((item) => {
+					const open = new Date(item.term_open_date);
+					const close = new Date(item.term_close_date);
+					return today >= open && today <= close;
+				});
+				if (!currentTerm && data.length > 0) {
+					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก close_date
+					currentTerm = [...data].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
+				}
+				if (currentTerm) {
+					setSelectedTerm(currentTerm.term);
+				}
+			} catch (e) {
+				notify("error", e.message);
+				console.error(e);
+			}
+		};
+		if (role !== "student") {
+			fetchTerm();
+		}
+
 		const fetchRequestExam = async () => {
 			try {
 				const req = await fetch("http://localhost:8080/api/requestExamAll", {
@@ -77,6 +116,7 @@ const RequestExam = () => {
 				});
 				const res = await req.json();
 				if (!req.ok) throw new Error(res.message);
+				console.log(res);
 				setRequest(res);
 
 				const countFailOrAbsent = res.filter((row) => row.exam_results === "ไม่ผ่าน" || row.exam_results === "ขาดสอบ").length;
@@ -91,14 +131,14 @@ const RequestExam = () => {
 		};
 		const fetchStudentData = async () => {
 			try {
-				const res = await fetch("http://localhost:8080/api/checkOpenKQ", {
+				const checkOpenKQRes = await fetch("http://localhost:8080/api/checkOpenKQ", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
-				const data = await res.json();
-				if (!res.ok) throw new Error(data.message);
-				if (data.message) throw new Error(data.message);
-				console.log(data);
+				const checkOpenKQData = await checkOpenKQRes.json();
+				if (!checkOpenKQRes.ok) throw new Error(checkOpenKQData.message);
+				if (checkOpenKQData.message) throw new Error(checkOpenKQData.message);
+				console.log(checkOpenKQData);
 
 				const registrationRes = await fetch("http://localhost:8080/api/allStudyGroupIdCourseRegistration", {
 					method: "POST",
@@ -112,9 +152,7 @@ const RequestExam = () => {
 				const registerCoursesRes = await fetch("http://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectPass", {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({
-						ID_NO: user_id,
-					}),
+					body: JSON.stringify({ ID_NO: user_id }),
 				});
 				const registerCoursesData = await registerCoursesRes.json();
 				if (!registerCoursesRes.ok) throw new Error(registerCoursesData.message);
@@ -146,7 +184,7 @@ const RequestExam = () => {
 						course_name: subjMap.get(course_id) || "ไม่พบข้อมูล",
 					}));
 					console.log(coursesData);
-					
+
 					setMissingCoures(coursesData);
 					setOpenCheckCourse(true);
 					return;
@@ -155,10 +193,10 @@ const RequestExam = () => {
 			} catch (e) {
 				setTimeout(10000);
 				notify("error", e.message);
-				console.error("Error fetching CourseCheck:", e);
+				console.error(e);
 			}
 		};
-		fetchProfile();
+
 		if (role === "student") {
 			/* user_id === "684270201" ? fetchStudentData() : fetchRequestExam(); */
 			user_id === "674140101" ? fetchStudentData() : fetchRequestExam();
@@ -264,7 +302,8 @@ const RequestExam = () => {
 	const filteredData = sortedData.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
 		const matchesType = selectedType ? p.request_type === selectedType : true;
-		return matchesSearch && matchesType;
+		const matchesTerm = selectedTerm ? p.term === selectedTerm : true;
+		return matchesSearch && matchesType && matchesTerm;
 	});
 
 	const rows = filteredData.map((item) => (
@@ -379,10 +418,11 @@ const RequestExam = () => {
 			</Text>
 			<Group justify="space-between">
 				<Box>
-					<Flex align="flex-end" gap="sm">
-						{role !== "student" && <TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
-						{role === "chairpersons" && <Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
-					</Flex>
+					<Group>
+						{role !== "student" && <TextInput placeholder="ค้นหา ชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
+						{(role === "chairpersons" || role === "advisor") && <Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
+						{role !== "student" && <Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} />}
+					</Group>
 				</Box>
 				<Box>
 					{role === "student" && (
@@ -397,12 +437,18 @@ const RequestExam = () => {
 				<Table horizontalSpacing="sm" verticalSpacing="sm" highlightOnHover>
 					<Table.Thead>
 						<Table.Tr>
-							<Table.Th style={{ minWidth: 100 }}>ชื่อ</Table.Th>
-							<Table.Th style={{ minWidth: 100 }}>ภาคเรียน</Table.Th>
-							{["advisor", "officer_registrar", "chairpersons"].includes(role) && <Table.Th style={{ minWidth: 100 }}>เรื่อง</Table.Th>}
-							<Table.Th style={{ minWidth: 110 }}>สถานะ</Table.Th>
+							{/* <Table.Th style={{ minWidth: 200 }}>ชื่อ</Table.Th>
+							<Table.Th style={{ minWidth: 80 }}>ภาคเรียน</Table.Th>
+							{["advisor", "officer_registrar", "chairpersons"].includes(role) && <Table.Th style={{ minWidth: 150 }}>เรื่อง</Table.Th>}
+							<Table.Th style={{ minWidth: 100 }}>สถานะ</Table.Th>
+							<Table.Th style={{ minWidth: 100 }}>การดำเนินการ</Table.Th>
+							{request.some((it) => it.exam_results !== null) && <Table.Th style={{ minWidth: 75 }}>ผลสอบ</Table.Th>} */}
+							<Table.Th>ชื่อ</Table.Th>
+							<Table.Th>ภาคเรียน</Table.Th>
+							{["advisor", "officer_registrar", "chairpersons"].includes(role) && <Table.Th>เรื่อง</Table.Th>}
+							<Table.Th>สถานะ</Table.Th>
 							<Table.Th>การดำเนินการ</Table.Th>
-							{request.some((it) => it.exam_results !== null) && <Table.Th style={{ minWidth: 110 }}>ผลสอบ</Table.Th>}
+							{request.some((it) => it.exam_results !== null) && <Table.Th>ผลสอบ</Table.Th>}
 						</Table.Tr>
 					</Table.Thead>
 					<Table.Tbody>{rows}</Table.Tbody>

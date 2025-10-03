@@ -73,13 +73,12 @@ const RequestExamCancel = () => {
 				const CheckOpenRECRes = await fetch("http://localhost:8080/api/CheckOpenREC", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-					body: JSON.stringify({ lastRequest: true }),
 				});
 				const CheckOpenRECData = await CheckOpenRECRes.json();
 				if (!CheckOpenRECRes.ok) throw new Error(CheckOpenRECData.message);
-				console.log(CheckOpenRECData);
+				console.log(CheckOpenRECData[0]);
 
-				if (CheckOpenRECData.status) {
+				if (CheckOpenRECData[0]?.status) {
 					setLatestRequest(requestExamData[0]);
 				} else {
 					setLatestRequest(true);
@@ -89,8 +88,9 @@ const RequestExamCancel = () => {
 				console.error("Error fetching requestExamAll:", e);
 			}
 		};
-		fetchRequestExam();
-
+		if (role === "student") {
+			fetchRequestExam();
+		}
 		const fetchRequestExamCancel = async () => {
 			try {
 				const requestRes = await fetch("http://localhost:8080/api/AllRequestExamCancel", {

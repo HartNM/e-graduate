@@ -13,9 +13,9 @@ const NotFound = () => {
 			<Text size="lg" color="dimmed">
 				ขออภัย ไม่พบหน้าที่คุณกำลังค้นหา
 			</Text>
-			{/* <Group justify="center" mt="xl">
+			<Group justify="center" mt="xl">
         <Button onClick={() => navigate("/login")}>กลับหน้าหลัก</Button>
-      </Group> */}
+      </Group>
 		</Container>
 	);
 };

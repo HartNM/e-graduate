@@ -13,10 +13,9 @@ async function fillPdf(data) {
 	const THSarabunNewBold = await pdfDoc.embedFont(THSarabunNewBytesBold);
 
 	/* drawGrid(page); */
-
+	const token = localStorage.getItem("token");
 	let KQ_exam_date;
 	try {
-		const token = localStorage.getItem("token");
 		const requestRes = await fetch("http://localhost:8080/api/allRequestExamInfo", {
 			method: "POST",
 			headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -29,6 +28,29 @@ async function fillPdf(data) {
 		}
 	} catch (e) {
 		console.error("Error fetch allRequestExamInfo:", e);
+	}
+
+	const ids = {
+		advisor: "advisor_approvals_id",
+		chairpersons: "chairpersons_approvals_id",
+		registrar: "registrar_approvals_id",
+	};
+	try {
+		for (const [role, prop] of Object.entries(ids)) {
+			const id = data?.[prop];
+			if (!id) continue;
+			const res = await fetch("http://localhost:8080/api/personnelInfo", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				body: JSON.stringify({ user_id: id }),
+			});
+			const person = await res.json();
+			if (person) {
+				data[prop] = person.name;
+			}
+		}
+	} catch (e) {
+		console.error("Error fetch personnelInfo:", e);
 	}
 
 	const [request_date_day, request_date_month, request_date_year] = formatThaiDate(data?.request_date);

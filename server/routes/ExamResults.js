@@ -5,12 +5,12 @@ const { poolPromise } = require("../db");
 const axios = require("axios");
 
 router.post("/AddExamResults", authenticateToken, async (req, res) => {
-	const studentIdsObj = req.body;
+	const { term, ...studentIdsObj } = req.body;
 	try {
 		const pool = await poolPromise;
 		for (const [id, examResult] of Object.entries(studentIdsObj)) {
 			const request = pool.request();
-			await request.input("id", id).input("exam_result", examResult).query("UPDATE request_exam SET exam_results = @exam_result WHERE student_id = @id AND status = 5");
+			await request.input("id", id).input("term", term).input("exam_result", examResult).query("UPDATE request_exam SET exam_results = @exam_result WHERE student_id = @id AND status = 5 AND term = @term");
 		}
 		res.status(200).json({ message: "บันทึกผลสอบเรียบร้อยแล้ว" });
 	} catch (err) {

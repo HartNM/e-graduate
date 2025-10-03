@@ -9,7 +9,7 @@ const menu = [
 	{ label: "คำร้องขอสอบโครงร่างการวิจัย", icon: IconReport, links: "/registrar-officer/RequestThesisProposal" },
 	{ label: "คำร้องขอสอบการวิจัย", icon: IconReport, links: "/registrar-officer/RequestThesisDefense" },
 	{ label: "พิมพ์ผลการสอบประมวลความรู้/สอบวัดคุณสมบัติ", icon: IconCertificate, links: "/registrar-officer/exam-results-print" },
-	{ label: "กำหนดวันสอบประมวลความรู้/สอบวัดคุณสมบัติ", icon: IconCalendar, links: "/registrar-officer/ExamScheduleSetupPage" },
+	{ label: "กรอกข้อมูลภาคเรียน", icon: IconCalendar, links: "/registrar-officer/ExamScheduleSetupPage" },
 	{ label: "กรอกข้อมูลเจ้าหน้าที่ประจำสาขาวิชา", icon: IconUserCheck, links: "/registrar-officer/assign-major-officer" },
 ];
 

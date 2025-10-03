@@ -97,7 +97,7 @@ const ExamResults = () => {
 			const req = await fetch("http://localhost:8080/api/AddExamResults", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify(form.values),
+				body: JSON.stringify({ ...form.values, term: selectedTerm }),
 			});
 			const res = await req.json();
 			if (!req.ok) throw new Error(res.message);

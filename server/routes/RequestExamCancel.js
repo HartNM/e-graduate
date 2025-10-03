@@ -34,19 +34,27 @@ router.post("/CheckOpenREC", authenticateToken, async (req, res) => {
 	try {
 		const pool = await poolPromise;
 		const result = await pool.query(`
-			SELECT 
-				KQ_exam_date,
+			SELECT TOP 1
+				term,
 				CAST(GETDATE() AS DATE) AS today,
+				KQ_exam_date,
 				CASE 
 					WHEN CAST(GETDATE() AS DATE) <= DATEADD(DAY, -3, KQ_exam_date) 
-						THEN CAST(1 AS BIT)
-					ELSE CAST(0 AS BIT)
+						THEN CAST(1 AS BIT) 
+					ELSE CAST(0 AS BIT) 
 				END AS status
 			FROM request_exam_info
-			ORDER BY request_exam_info_id DESC
+			WHERE CAST(GETDATE() AS DATE) BETWEEN term_open_date AND term_close_date
+			ORDER BY term_close_date DESC
 		`);
 
-		res.status(200).json(result.recordset[0]);
+		console.log(result.recordset);
+		
+		if (result.recordset.length === 0) {
+			return res.status(200).json({ status: 0, message: "ไม่อยู่ในช่วงเทอม" });
+		}
+
+		res.status(200).json(result.recordset);
 	} catch (err) {
 		console.error("check_beforeExam:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาด" });
