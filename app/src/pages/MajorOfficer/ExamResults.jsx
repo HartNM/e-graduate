@@ -137,7 +137,7 @@ const ExamResults = () => {
 		<Box>
 			<ModalInform opened={inform.open} onClose={close} message={inform.message} type={inform.type} />
 			<Text size="1.5rem" fw={900} mb="md">
-				กรอกผลการสอบ
+				กรอกผลการสอบประมวลความรู้/สอบวัดคุณสมบัติ
 			</Text>
 
 			{!selectedGroupId ? (

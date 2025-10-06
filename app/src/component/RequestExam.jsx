@@ -17,10 +17,12 @@ const RequestExam = () => {
 	const role = payload.role;
 	const user_id = payload.user_id;
 	// Modal Info
-	const [inform, setInform] = useState({ open: false, type: "", message: "" });
-	const notify = (type, message) => setInform({ open: true, type, message });
+	/* const [inform, setInform] = useState({ open: false, type: "", message: "" }); 
+	const notify = (type, message) => setInform({ open: true, type, message });*/
+
+	const [inform, setInform] = useState({ open: false, type: "", message: "", timeout: 3000 });
+	const notify = (type, message, timeout = 3000) => setInform({ open: true, type, message, timeout });
 	const close = () => setInform((s) => ({ ...s, open: false }));
-	const [timeout, setTimeout] = useState(3000);
 	// Modal states
 	const [openAdd, setOpenAdd] = useState(false);
 	const [openApprove, setOpenApprove] = useState(false);
@@ -138,6 +140,7 @@ const RequestExam = () => {
 				const checkOpenKQData = await checkOpenKQRes.json();
 				if (!checkOpenKQRes.ok) throw new Error(checkOpenKQData.message);
 				if (checkOpenKQData.message) throw new Error(checkOpenKQData.message);
+				notify("error", checkOpenKQData.message, null);
 				console.log(checkOpenKQData);
 
 				const registrationRes = await fetch("http://localhost:8080/api/allStudyGroupIdCourseRegistration", {
@@ -191,7 +194,6 @@ const RequestExam = () => {
 				}
 				fetchRequestExam();
 			} catch (e) {
-				setTimeout(10000);
 				notify("error", e.message);
 				console.error(e);
 			}
@@ -206,7 +208,6 @@ const RequestExam = () => {
 	}, []);
 
 	const handleOpenAdd = async () => {
-		setTimeout(3000);
 		try {
 			const req = await fetch("http://localhost:8080/api/studentInfo", {
 				method: "GET",
@@ -223,7 +224,6 @@ const RequestExam = () => {
 	};
 
 	const handleAdd = async () => {
-		setTimeout(3000);
 		try {
 			const requestRes = await fetch("http://localhost:8080/api/addRequestExam", {
 				method: "POST",
@@ -243,7 +243,6 @@ const RequestExam = () => {
 	};
 
 	const handleApprove = async (item) => {
-		setTimeout(3000);
 		if (selected === "noapprove" && comment.trim() === "") {
 			setError("กรุณาระบุเหตุผล");
 			return;
@@ -268,7 +267,6 @@ const RequestExam = () => {
 	};
 
 	const handlePay = async (item) => {
-		setTimeout(3000);
 		try {
 			const requestRes = await fetch("http://localhost:8080/api/payRequestExam", {
 				method: "POST",
@@ -310,7 +308,7 @@ const RequestExam = () => {
 		<Table.Tr key={item.request_exam_id}>
 			<Table.Td>{item.student_name}</Table.Td>
 			<Table.Td style={{ textAlign: "center" }}>{item.term}</Table.Td>
-			{["advisor", "officer_registrar", "chairpersons"].includes(role) && <Table.Td>{item.request_type}</Table.Td>}
+			{["advisor", "chairpersons"].includes(role) && <Table.Td>{item.request_type}</Table.Td>}
 			<Table.Td style={{ textAlign: "center" }}>
 				{item.status <= 4 && item.status > 0 && (
 					<Stepper active={item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
@@ -394,8 +392,8 @@ const RequestExam = () => {
 
 	return (
 		<Box>
-			<ModalCheckCourse opened={openCheckCourse} onClose={() => setOpenCheckCourse(false)} missingCoures={missingCoures} />
-			<ModalInform opened={inform.open} onClose={close} message={inform.message} type={inform.type} timeout={timeout} />
+			<ModalCheckCourse opened={openCheckCourse} onClose={() => setOpenCheckCourse(false)} missingCoures={missingCoures} type={user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"} />
+			<ModalInform opened={inform.open} onClose={close} message={inform.message} type={inform.type} timeout={inform.timeout} />
 			<ModalApprove
 				opened={openApprove}
 				onClose={() => setOpenApprove(false)}
@@ -445,7 +443,7 @@ const RequestExam = () => {
 							{request.some((it) => it.exam_results !== null) && <Table.Th style={{ minWidth: 75 }}>ผลสอบ</Table.Th>} */}
 							<Table.Th>ชื่อ</Table.Th>
 							<Table.Th>ภาคเรียน</Table.Th>
-							{["advisor", "officer_registrar", "chairpersons"].includes(role) && <Table.Th>เรื่อง</Table.Th>}
+							{["advisor", "chairpersons"].includes(role) && <Table.Th>เรื่อง</Table.Th>}
 							<Table.Th>สถานะ</Table.Th>
 							<Table.Th>การดำเนินการ</Table.Th>
 							{request.some((it) => it.exam_results !== null) && <Table.Th>ผลสอบ</Table.Th>}

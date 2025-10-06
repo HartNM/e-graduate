@@ -52,7 +52,7 @@ async function fillPdf(students) {
 		const type = students[0].request_type.split("ขอ")[1];
 
 		let y = 600;
-		drawCenterXText(newPage, `รายการผล${type}`, 680, font, 16);
+		drawCenterXText(newPage, `ผล${type}`, 680, font, 16);
 		drawCenterXText(newPage, `สาขาวิชา${students[0].major_name}`, 660, font, 16);
 		drawCenterXText(newPage, `ประจำภาคเรียนที่ ${students[0].term} สอบวันที่ ${exam_date_day} ${exam_date_month} ${exam_date_year} `, 640, font, 16);
 

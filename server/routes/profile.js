@@ -125,12 +125,13 @@ router.get("/studentInfo", authenticateToken, async (req, res) => {
 
 router.post("/personnelInfo", authenticateToken, async (req, res) => {
 	const { user_id } = req.body;
+	console.log(user_id);
+	
 	try {
 		const pool = await poolPromise;
 		const result = await pool.request().input("user_id", user_id).query(`SELECT * FROM users WHERE user_id = @user_id`);
-		
+		const user = result.recordset[0];		
 		if (!user) return res.status(200).json(null);
-		const user = result.recordset[0];
 		const { password, ...userWithoutPassword } = user;
 
 		return res.status(200).json(userWithoutPassword);

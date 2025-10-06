@@ -13,10 +13,11 @@ export function UserButton() {
 	// Mapping role -> label ภาษาไทย
 	const roleLabels = {
 		student: "นักศึกษา",
-		advisor: "อาจารย์ที่ปรึกษา",
-		chairpersons: "ประธานกรรมการ",
-		officer_registrar: "เจ้าหน้าที่ทะเบียน",
-		officer_major: "เจ้าหน้าที่สาขา",
+		advisor: "อาจารย์ที่ปรึกษาหมู่เรียน",
+		research_advisor: "อาจารย์ที่ปรึกษาวิทยานิพนธ์/การค้นคว้าอิสระ",
+		chairpersons: "ประธานกรรมการบัณฑิตศึกษา",
+		officer_registrar: "เจ้าหน้าที่งานทะเบียน",
+		officer_major: "เจ้าหน้าที่ประจำสาขา",
 		dean: "คณบดี",
 	};
 
@@ -48,7 +49,6 @@ export function UserButton() {
 		if (!role || role === activeRole) {
 			return;
 		}
-
 		const res = await fetch("http://localhost:8080/api/switchRole", {
 			method: "POST",
 			headers: {
@@ -86,8 +86,7 @@ export function UserButton() {
 						{userName}
 					</Text>
 				</Group>
-
-				{/* <Select value={activeRole} onChange={handleSwitch} data={selectData} placeholder="เลือกบทบาท" style={{ width: "100%" }} size="xs" variant="default" /> */}
+				{activeRole !== "student" && <Select value={activeRole} onChange={handleSwitch} data={selectData} placeholder="เลือกบทบาท" style={{ width: "100%" }} size="xs" variant="default" />}
 			</div>
 		</UnstyledButton>
 	);

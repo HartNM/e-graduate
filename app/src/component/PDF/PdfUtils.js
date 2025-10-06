@@ -46,7 +46,6 @@ export const drawGrid = (page) => {
 };
 
 export const draw = (page, text, x, y, font = THSarabunNewFont, size = 14) => {
-	if (!font) throw new Error("Font not loaded. Call setDefaultFont(pdfDoc) first.");
 	if (text !== undefined && text !== null) {
 		page.drawText(String(text), { x, y, size, font });
 	}
@@ -64,7 +63,6 @@ export const drawRect = (page, x, y, w, h, lineW = 1) => {
 };
 
 export const drawCenterXText = (page, text, y, font = THSarabunNewFont, size = 14) => {
-	if (!font) throw new Error("Font not loaded. Call setDefaultFont(pdfDoc) first.");
 	if (text !== undefined && text !== null) {
 		const pageWidth = page.getWidth();
 		const textWidth = font.widthOfTextAtSize(text, size);
@@ -78,11 +76,10 @@ export const drawLine = (page, x1, y1, x2, y2, w = 1) => {
 };
 
 export function formatThaiDate(dateStr) {
-	console.log(dateStr);
-	if (!dateStr) return "";
+	if (!dateStr) return ["", "", ""];
 	const months = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
 	const d = dayjs.utc(dateStr).tz("Asia/Bangkok");
-	const day = d.date().toString().padStart(2, "0");
+	const day = d.date();
 	const month = months[d.month()];
 	const year = d.year() + 543;
 	return [day, month, year];
@@ -93,13 +90,12 @@ export function formatThaiDateShort(dateStr) {
 	const monthsShort = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
 	const d = dayjs.utc(dateStr).tz("Asia/Bangkok");
 	const day = d.date();
-	const thaiMonthShort = monthsShort[d.month()];
+	const monthShort = monthsShort[d.month()];
 	const year = (d.year() + 543) % 100;
-	return [day, thaiMonthShort, year];
+	return [day, monthShort, year];
 }
 
 export const drawCenteredText = (page, text, x, y, width, height, font = THSarabunNewFont, size = 14) => {
-	if (!font) throw new Error("Font not loaded. Call setDefaultFont(pdfDoc) first.");
 	if (!text) return;
 
 	const textWidth = font.widthOfTextAtSize(text, size);
@@ -112,7 +108,6 @@ export const drawCenteredText = (page, text, x, y, width, height, font = THSarab
 };
 
 export const drawMiddleText = (page, text, x, y, height, font = THSarabunNewFont, size = 14) => {
-	if (!font) throw new Error("Font not loaded. Call setDefaultFont(pdfDoc) first.");
 	if (!text) return;
 
 	const textHeight = size; // approximate

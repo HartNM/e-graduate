@@ -17,7 +17,7 @@ const CourseRegistration = () => {
 	const [tableData, setTableData] = useState([]);
 	const [reloadTable, setReloadTable] = useState(false);
 	const [modalType, setModalType] = useState("");
-	const [openCoures, setOpenCoures] = useState(false);
+	const [openCourses, setOpenCourses] = useState(false);
 	const [courses, setCourses] = useState([]);
 
 	const Form = useForm({
@@ -32,24 +32,26 @@ const CourseRegistration = () => {
 			course_id: (value) => (value.length > 0 ? null : "กรุณาเลือกรหัสวิชา"),
 		},
 	});
-/* 	useEffect(() => {
-		const fetchAllCoures = async () => {
+
+	const [fullCourses, setFullCourses] = useState([]);
+	useEffect(() => {
+		const fetchAll = async () => {
 			try {
-				const allCouresReq = await fetch("http://localhost:8080/api/allCoures", {
+				const res = await fetch("http://localhost:8080/api/allCourses", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
-				const allCouresData = await allCouresReq.json();
-				if (!allCouresReq.ok) throw new Error(allCouresData.message);
-				setCourses(allCouresData);
-				console.log(allCouresData);
+				const allCoursesData = await res.json();
+				if (!res.ok) throw new Error(allCoursesData.message);
+				console.log(fullCourses);
+
+				setFullCourses(allCoursesData);
 			} catch (e) {
-				notify("error", e.message);
-				console.log(e);
+				console.error(e);
 			}
 		};
-		fetchAllCoures();
-	}, []); */
+		fetchAll();
+	}, []);
 
 	useEffect(() => {
 		const fetchMajorNameAndData = async () => {
@@ -88,17 +90,17 @@ const CourseRegistration = () => {
 	const handleOpenAdd = () => {
 		Form.setValues({ study_group_id: "", course_id: [] });
 		setModalType("add");
-		setOpenCoures(true);
+		setOpenCourses(true);
 	};
 	const handleOpenEdit = (item) => {
 		Form.setValues(item);
 		setModalType("edit");
-		setOpenCoures(true);
+		setOpenCourses(true);
 	};
 	const handleOpenDelete = (item) => {
 		Form.setValues(item);
 		setModalType("delete");
-		setOpenCoures(true);
+		setOpenCourses(true);
 	};
 
 	const handleSubmit = async () => {
@@ -118,7 +120,7 @@ const CourseRegistration = () => {
 				throw new Error(res.message);
 			}
 			notify("success", res.message);
-			setOpenCoures(false);
+			setOpenCourses(false);
 			setReloadTable(true);
 		} catch (e) {
 			notify("error", e.message);
@@ -130,6 +132,14 @@ const CourseRegistration = () => {
 		<Table.Tr key={index}>
 			<Table.Td>{Form.values.major_name}</Table.Td>
 			<Table.Td>{item.study_group_id}</Table.Td>
+			<Table.Td style={{ whiteSpace: "pre-line" }}>
+				{item.course_id.map((id, index) => {
+					const found = fullCourses.find((c) => c.value === id);
+					const text = found ? found.label : id;
+					return <div key={index}>{text}</div>;
+				})}
+			</Table.Td>
+
 			<Table.Td>
 				<Group>
 					<Button color="green" size="xs" onClick={() => handleOpenEdit(item)}>
@@ -146,14 +156,14 @@ const CourseRegistration = () => {
 	return (
 		<Box>
 			<ModalInform opened={inform.open} onClose={close} message={inform.message} type={inform.type} />
-			<Modal opened={openCoures} onClose={() => setOpenCoures(false)} title="กรอกข้อมูลรายวิชาประจำสาขา" centered closeOnClickOutside={false}>
+			<Modal opened={openCourses} onClose={() => setOpenCourses(false)} title="กรอกข้อมูลรายวิชาสำหรับสอบประมวลความรู้/สอบวัดคุณสมบัติ" centered closeOnClickOutside={false}>
 				<Box>
 					<form onSubmit={Form.onSubmit(handleSubmit)}>
 						<Text size="2xl" fw={800}>
 							สาขา{Form.values.major_name}
 						</Text>
 						<NumberInput label="หมู่เรียน" hideControls disabled={modalType === "add" ? false : true} {...Form.getInputProps("study_group_id")} />
-						<AsyncCourseSelect form={Form} disabled={modalType === "delete"} />
+						<AsyncCourseSelect form={Form} disabled={modalType === "delete"} fullCourses={fullCourses} />
 						{/* <MultiSelect label="รหัสวิชาที่ต้องเรียน" searchable hidePickedOptions data={courses} disabled={modalType === "delete" ? true : false} {...Form.getInputProps("course_id")} /> */}
 						<Space h="md" />
 						<Button color={modalType === "delete" ? "red" : "green"} type="submit" fullWidth>
@@ -163,7 +173,7 @@ const CourseRegistration = () => {
 				</Box>
 			</Modal>
 			<Text size="1.5rem" fw={900} mb="md">
-				กรอกข้อมูลรายวิชาประจำสาขา{Form.values.major_name}
+				กรอกข้อมูลรายวิชาสำหรับสอบประมวลความรู้/สอบวัดคุณสมบัติ
 			</Text>
 			<Space h="sm" />
 			<Box>
@@ -180,6 +190,7 @@ const CourseRegistration = () => {
 						<Table.Tr>
 							<Table.Th>สาขา</Table.Th>
 							<Table.Th>หมู่เรียน</Table.Th>
+							<Table.Th>รายวิชา</Table.Th>
 							<Table.Th>การดำเนินการ</Table.Th>
 						</Table.Tr>
 					</Table.Thead>

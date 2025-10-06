@@ -109,12 +109,15 @@ const ExamScheduleSetupPage = () => {
 	};
 	const Rows = requestExamInfo.map((item, index) => (
 		<Table.Tr key={item.request_exam_info_id}>
-			<Table.Td>{item.term}</Table.Td>
-			<Table.Td>{formatThaiDate(item.term_open_date)}</Table.Td>
-			<Table.Td>{formatThaiDate(item.term_close_date)}</Table.Td>
-			{/* <Table.Td>{formatThaiDate(item.KQ_open_date)}</Table.Td>
-			<Table.Td>{formatThaiDate(item.KQ_close_date)}</Table.Td>
-			<Table.Td>{formatThaiDate(item.KQ_exam_date)}</Table.Td> */}
+			<Table.Td style={{ textAlign: "center" }}>{item.term}</Table.Td>
+			<Table.Td>
+				{formatThaiDate(item.term_open_date)} - {formatThaiDate(item.term_close_date)}
+			</Table.Td>
+			<Table.Td>
+				{formatThaiDate(item.KQ_open_date)} - {formatThaiDate(item.KQ_close_date)}
+			</Table.Td>
+			<Table.Td>{formatThaiDate(item.KQ_exam_date)}</Table.Td>
+			<Table.Td>{formatThaiDate(item.ET_exam_date)}</Table.Td>
 			<Table.Td>
 				<Group>
 					<Button
@@ -147,9 +150,9 @@ const ExamScheduleSetupPage = () => {
 	return (
 		<Box>
 			<ModalInform opened={openInform} onClose={() => setOpenInform(false)} message={informMessage} type={informtype} />
-			<Modal opened={openedPickDate} onClose={() => setOpenPickDate(false)} title={modalType === "delete" ? "ลบวันสอบประมวลความรู้/สอบวัดคุณสมบัติ" : "กำหนดวันสอบประมวลความรู้/สอบวัดคุณสมบัติ"} centered>
+			<Modal opened={openedPickDate} onClose={() => setOpenPickDate(false)} title={"กรอกข้อมูลภาคเรียน"} centered>
 				<form onSubmit={Form.onSubmit(handleSubmit)}>
-					<TextInput label="ปีการศึกษา" {...Form.getInputProps("term")} disabled={modalType === "delete" ? true : false} />
+					<TextInput label="ภาคเรียน" {...Form.getInputProps("term")} disabled={modalType === "delete" ? true : false} />
 					<DatePickerInput label="วันเปิดภาคเรียน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" {...Form.getInputProps("term_open_date")} disabled={modalType === "delete" ? true : false} />
 					<DatePickerInput label="วันปิดภาคเรียน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" {...Form.getInputProps("term_close_date")} disabled={modalType === "delete" ? true : false} />
 					<DatePickerInput label="วันเปิดยื่นคำร้องสอบประมวลความรู้/สอบวัดคุณสมบัติ" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" {...Form.getInputProps("KQ_open_date")} disabled={modalType === "delete" ? true : false} />
@@ -165,7 +168,6 @@ const ExamScheduleSetupPage = () => {
 
 			<Text size="1.5rem" fw={900} mb="md">
 				กรอกข้อมูลภาคเรียน
-				{/* กำหนดวันสอบประมวลความรู้/สอบวัดคุณสมบัติ */}
 			</Text>
 			<Space h="xl" />
 			<Box>
@@ -188,11 +190,10 @@ const ExamScheduleSetupPage = () => {
 					<Table.Thead>
 						<Table.Tr>
 							<Table.Th>ภาคเรียน</Table.Th>
-							<Table.Th>วันเปิดภาคเรียน</Table.Th>
-							<Table.Th>วันปิดภาคเรียน</Table.Th>
-							{/* <Table.Th>วันเปิดการยื่นคำร้อง</Table.Th>
-							<Table.Th>วันปิดการยื่นคำร้อง</Table.Th>
-							<Table.Th>วันสอบ</Table.Th> */}
+							<Table.Th>วันเปิด-ปิดภาคเรียน</Table.Th>
+							<Table.Th>วันเปิด-ปิดการยื่นคำร้องขอสอบประมวลความรู้/สอบวัดคุณสมบัติ</Table.Th>
+							<Table.Th>วันสอบประมวลความรู้/สอบวัดคุณสมบัติ</Table.Th>
+							<Table.Th>วันสอบความรู้ทางภาษาอังกฤษ</Table.Th>
 							<Table.Th>จัดการ</Table.Th>
 						</Table.Tr>
 					</Table.Thead>

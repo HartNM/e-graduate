@@ -21,10 +21,9 @@ async function fillPdf(data) {
 			headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 			body: JSON.stringify({ term: data?.term }),
 		});
-		const requestData = await requestRes.json();
+		const requestData = await requestRes.json();	
 		if (Array.isArray(requestData) && requestData.length > 0) {
 			KQ_exam_date = requestData[0].KQ_exam_date;
-			data.term = requestData[0].term;
 		}
 	} catch (e) {
 		console.error("Error fetch allRequestExamInfo:", e);
@@ -38,7 +37,7 @@ async function fillPdf(data) {
 	try {
 		for (const [role, prop] of Object.entries(ids)) {
 			const id = data?.[prop];
-			if (!id) continue;
+			if (!id || isNaN(Number(id))) continue;
 			const res = await fetch("http://localhost:8080/api/personnelInfo", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },

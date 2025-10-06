@@ -3,7 +3,7 @@ const router = express.Router();
 const authenticateToken = require("../middleware/authenticateToken");
 const { poolPromise } = require("../db");
 
-router.post("/allCoures", authenticateToken, async (req, res) => {
+router.post("/allCourses", authenticateToken, async (req, res) => {
 	try {
 		const pool = await poolPromise;
 		const result = await pool.request().query(`SELECT * FROM courses`);

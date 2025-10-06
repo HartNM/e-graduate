@@ -45,6 +45,9 @@ const theme = createTheme({
 				th: {
 					textAlign: "center",
 				},
+				td: {
+					textAlign: "center",
+				},
 			},
 		}),
 	},

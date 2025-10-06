@@ -17,7 +17,7 @@ router.post("/allExamResultsPrint", authenticateToken, async (req, res) => {
 				return { ...rest, student_id, name: NAME, major_name };
 			})
 		);
-		console.log(examsWithStudentData);
+		/* console.log(examsWithStudentData); */
 		res.status(200).json(examsWithStudentData);
 	} catch (err) {
 		console.error("requestExamInfoAll:", err);

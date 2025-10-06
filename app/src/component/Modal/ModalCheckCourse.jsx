@@ -1,6 +1,6 @@
 import { Modal, Box, Text, List, ThemeIcon, Title } from "@mantine/core";
 
-const ModalCheckCourse = ({ opened, onClose, missingCoures }) => (
+const ModalCheckCourse = ({ opened, onClose, missingCoures, type }) => (
 	<Modal
 		opened={opened}
 		onClose={onClose}
@@ -15,7 +15,7 @@ const ModalCheckCourse = ({ opened, onClose, missingCoures }) => (
 	>
 		<Box>
 			<Text mb="sm" c="dimmed">
-				คุณยังขาดการลงทะเบียนในรายวิชาต่อไปนี้
+				คุณยังขาดการลงทะเบียนในรายวิชาต่อไปนี้จึงจะสามารถยื่นคำร้องขอสอบ{type}
 			</Text>
 
 			<List

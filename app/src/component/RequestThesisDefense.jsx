@@ -75,14 +75,36 @@ const RequestThesisDefense = () => {
 	useEffect(() => {
 		const fetchRequestExam = async () => {
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/allRequestThesisDefense", {
+				const ThesisDefenseRes = await fetch("http://localhost:8080/api/allRequestThesisDefense", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
-				const requestData = await requestRes.json();
-				if (!requestRes.ok) throw new Error(requestData.message);
-				setRequest(requestData);
-				setLatestRequest(requestData[0]);
+				const ThesisDefenseData = await ThesisDefenseRes.json();
+				if (!ThesisDefenseRes.ok) throw new Error(ThesisDefenseData.message);
+				setRequest(ThesisDefenseData);
+				console.log(ThesisDefenseData);
+				
+
+				const PlagiarismProposalRes = await fetch("http://localhost:8080/api/AllPlagiarismProposal", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+					body: JSON.stringify({ lastRequest: true }),
+				});
+				const PlagiarismProposalData = await PlagiarismProposalRes.json();
+				if (!PlagiarismProposalRes.ok) throw new Error(PlagiarismProposalData.message);
+				console.log(PlagiarismProposalData);
+
+				if (PlagiarismProposalData[0]?.status === "5") {
+					if (ThesisDefenseRes[0]?.status === "6" || ThesisDefenseRes[0]?.status === undefined) {
+						setLatestRequest(false);
+					} else {
+						setLatestRequest(true);
+					}
+				} else {
+					setLatestRequest(true);
+				}
+
+				/* setLatestRequest(requestData[0]); */
 			} catch (e) {
 				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 				console.error("Error fetching requestExamAll:", e);

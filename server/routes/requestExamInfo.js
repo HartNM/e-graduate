@@ -14,7 +14,7 @@ router.post("/allRequestExamInfo", authenticateToken, async (req, res) => {
 			request.input("term", term);
 		}
 		query += " ORDER BY request_exam_info_id DESC";
-		const result = await request.query(query);
+		const result = await request.query(query);		
 		res.status(200).json(result.recordset);
 	} catch (err) {
 		console.error("requestExamInfoAll:", err);
