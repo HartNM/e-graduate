@@ -43,11 +43,13 @@ const RequestThesisProposal = () => {
 			major_name: "",
 			faculty_name: "",
 			request_type: "",
+			research_name: "",
 			thesis_advisor_id: "",
 			thesis_exam_date: null,
 		},
 		validate: {
 			request_type: (value) => (value === "" ? "กรุณาเลือกชนิดโครงร่างงานวิจัย" : null),
+			research_name: (value) => (value === "" ? "กรุณากรอกชื่องานวิจัย" : null),
 			thesis_advisor_id: (value) => (value === "" ? "กรุณาเลือกอาจารย์ที่ปรึกษางานวิจัย" : null),
 			thesis_exam_date: (v) => {
 				if (!v) return "กรุณาระบุวันที่สอบ";
@@ -93,8 +95,6 @@ const RequestThesisProposal = () => {
 				});
 				const RequestExamData = await RequestExamRes.json();
 				if (!RequestExamRes.ok) throw new Error(RequestExamData.message);
-				console.log(ThesisProposalData[0]?.status);
-				console.log(RequestExamData);
 
 				if (RequestExamData[0]?.status === "5" && RequestExamData[0]?.exam_results === "ผ่าน") {
 					if (ThesisProposalData[0]?.status === "6" || ThesisProposalData[0]?.status === undefined) {
@@ -142,7 +142,7 @@ const RequestThesisProposal = () => {
 			notify("success", requestData.message);
 			setOpenAdd(false);
 			setRequest((prev) => [...prev, { ...requestData.data, ...form.values }]);
-			setLatestRequest({ ...requestData.data, ...form.values });
+			setLatestRequest(true);
 		} catch (e) {
 			notify("error", e.message);
 			console.error("Error fetching addRequestExam:", e);

@@ -27,8 +27,6 @@ const CourseRegistration = require("./routes/CourseRegistration");
 app.use("/api", CourseRegistration);
 const ExamResults = require("./routes/ExamResults");
 app.use("/api", ExamResults);
-const ExamResultsPrint = require("./routes/ExamResultsPrint");
-app.use("/api", ExamResultsPrint);
 const ExamEligibleListPrint = require("./routes/ExamEligibleListPrint");
 app.use("/api", ExamEligibleListPrint);
 
@@ -49,6 +47,8 @@ const PostponeProposalExam = require("./routes/PostponeProposalExam");
 app.use("/api", PostponeProposalExam);
 const PlagiarismProposal = require("./routes/PlagiarismProposal");
 app.use("/api", PlagiarismProposal);
+const ExamProposalResults = require("./routes/ExamProposalResults");
+app.use("/api", ExamProposalResults);
 
 const RequestThesisDefense = require("./routes/RequestThesisDefense");
 app.use("/api", RequestThesisDefense);
@@ -56,9 +56,8 @@ const PostponeDefenseExam = require("./routes/PostponeDefenseExam");
 app.use("/api", PostponeDefenseExam);
 const PlagiarismDefense = require("./routes/PlagiarismDefense");
 app.use("/api", PlagiarismDefense);
-
-/* const PlagiarismReport = require("./routes/PlagiarismReport");
-app.use("/api", PlagiarismReport); */
+const ExamDefenseResults = require("./routes/ExamDefenseResults");
+app.use("/api", ExamDefenseResults);
 
 const RequestGraduation = require("./routes/RequestGraduation");
 app.use("/api", RequestGraduation);

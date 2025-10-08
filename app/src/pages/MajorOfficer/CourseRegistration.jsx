@@ -132,7 +132,7 @@ const CourseRegistration = () => {
 		<Table.Tr key={index}>
 			<Table.Td>{Form.values.major_name}</Table.Td>
 			<Table.Td>{item.study_group_id}</Table.Td>
-			<Table.Td style={{ whiteSpace: "pre-line" }}>
+			<Table.Td style={{ whiteSpace: "pre-line", textAlign: "left" }}>
 				{item.course_id.map((id, index) => {
 					const found = fullCourses.find((c) => c.value === id);
 					const text = found ? found.label : id;
@@ -164,7 +164,6 @@ const CourseRegistration = () => {
 						</Text>
 						<NumberInput label="หมู่เรียน" hideControls disabled={modalType === "add" ? false : true} {...Form.getInputProps("study_group_id")} />
 						<AsyncCourseSelect form={Form} disabled={modalType === "delete"} fullCourses={fullCourses} />
-						{/* <MultiSelect label="รหัสวิชาที่ต้องเรียน" searchable hidePickedOptions data={courses} disabled={modalType === "delete" ? true : false} {...Form.getInputProps("course_id")} /> */}
 						<Space h="md" />
 						<Button color={modalType === "delete" ? "red" : "green"} type="submit" fullWidth>
 							{modalType === "delete" ? "ลบ" : "บันทึก"}
@@ -173,7 +172,7 @@ const CourseRegistration = () => {
 				</Box>
 			</Modal>
 			<Text size="1.5rem" fw={900} mb="md">
-				กรอกข้อมูลรายวิชาสำหรับสอบประมวลความรู้/สอบวัดคุณสมบัติ
+				กรอกข้อมูลรายวิชาสำหรับสอบประมวลควา มรู้/สอบวัดคุณสมบัติ
 			</Text>
 			<Space h="sm" />
 			<Box>

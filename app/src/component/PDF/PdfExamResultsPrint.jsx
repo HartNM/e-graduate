@@ -17,25 +17,25 @@ async function fillPdf(students) {
 	const ROW_HEIGHT = 20;
 	let pageIndex = 0;
 
-	let KQ_exam_date;
-	try {
-		const token = localStorage.getItem("token");
-		const requestRes = await fetch("http://localhost:8080/api/allRequestExamInfo", {
-			method: "POST",
-			headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-			body: JSON.stringify({ term: students[0].term }),
-		});
-		const requestData = await requestRes.json();
-		if (Array.isArray(requestData) && requestData.length > 0) {
-			KQ_exam_date = requestData[0].KQ_exam_date;
-		}
-		console.log(KQ_exam_date);
-	} catch (e) {
-		console.error("Error fetch allRequestExamInfo:", e);
-	}
+	let date_exam = `ประจำภาคเรียนที่ ${students[0].term}`;
 
-	const [exam_date_day, exam_date_month, exam_date_year] = formatThaiDate(KQ_exam_date);
-	console.log(exam_date_day, exam_date_month, exam_date_year);
+	if (students[0].request_type === "ขอสอบประมวลความรู้" || students[0].request_type === "ขอสอบวัดคุณสมบัติ") {
+		try {
+			const token = localStorage.getItem("token");
+			const requestRes = await fetch("http://localhost:8080/api/allRequestExamInfo", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				body: JSON.stringify({ term: students[0].term }),
+			});
+			const requestData = await requestRes.json();
+			if (Array.isArray(requestData) && requestData.length > 0) {
+				const [exam_date_day, exam_date_month, exam_date_year] = formatThaiDate(requestData[0].KQ_exam_date);
+				date_exam += ` สอบวันที่ ${exam_date_day} ${exam_date_month} ${exam_date_year}`;
+			}
+		} catch (e) {
+			console.error("Error fetch allRequestExamInfo:", e);
+		}
+	}
 
 	while (pageIndex * STUDENTS_PER_PAGE < students.length) {
 		const newPage = pageIndex === 0 ? page : pdfDoc.addPage([595, 842]);
@@ -54,7 +54,7 @@ async function fillPdf(students) {
 		let y = 600;
 		drawCenterXText(newPage, `ผล${type}`, 680, font, 16);
 		drawCenterXText(newPage, `สาขาวิชา${students[0].major_name}`, 660, font, 16);
-		drawCenterXText(newPage, `ประจำภาคเรียนที่ ${students[0].term} สอบวันที่ ${exam_date_day} ${exam_date_month} ${exam_date_year} `, 640, font, 16);
+		drawCenterXText(newPage, date_exam, 640, font, 16);
 
 		drawRect(newPage, 60, y, 490, ROW_HEIGHT);
 		drawLine(newPage, 100, y + ROW_HEIGHT, 100, y - (end - start) * ROW_HEIGHT);

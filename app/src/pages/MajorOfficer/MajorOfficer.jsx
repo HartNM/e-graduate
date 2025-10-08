@@ -4,7 +4,9 @@ import UserLayout from "../../layout/userLayout.jsx";
 
 const menu = [
 	{ label: "พิมพ์ใบรายชื่อผู้มีสิทธิสอบประมวลความรู้/สอบวัดคุณสมบัติ", icon: IconFileText, links: "/major-officer/ExamEligibleListPrint" },
-	{ label: "กรอกผลการสอบประมวลความรู้/สอบวัดคุณสมบัติ", icon: IconEdit, links: "/major-officer/examResults" },
+	{ label: "กรอกผลการสอบประมวลความรู้/สอบวัดคุณสมบัติ", icon: IconEdit, links: "/major-officer/ExamResults" },
+	{ label: "กรอกผลการสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ", icon: IconEdit, links: "/major-officer/ExamProposalResults" },
+	{ label: "กรอกผลการสอบวิทยานิพนธ์/การค้นคว้าอิสระ", icon: IconEdit, links: "/major-officer/ExamDefenseResults" },
 	{ label: "กรอกข้อมูลรายวิชาสำหรับสอบประมวลความรู้/สอบวัดคุณสมบัติ", icon: IconBooks, links: "/major-officer/CourseRegistration" },
 	{ label: "กรอกข้อมูลประธานกรรมการบัณฑิตศึกษาประจำสาขาวิชา", icon: IconUserCheck, links: "/major-officer/AssignChairpersons" },
 ];

@@ -8,7 +8,6 @@ const ExamResultsPrint = () => {
 	const [group, setGroup] = useState([]);
 	const [term, setTerm] = useState([]);
 	const [selectedTerm, setSelectedTerm] = useState("");
-	const [selectedType, setSelectedType] = useState("");
 
 	const parseTerm = (termStr) => {
 		const [semester, year] = termStr.split("/").map(Number);
@@ -43,7 +42,7 @@ const ExamResultsPrint = () => {
 				notify("error", e.message);
 			}
 			try {
-				const res = await fetch("http://localhost:8080/api/allExamResultsPrint", {
+				const res = await fetch("http://localhost:8080/api/allExamDefenseResultsPrint", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
@@ -60,11 +59,10 @@ const ExamResultsPrint = () => {
 	return (
 		<Box>
 			<Text size="1.5rem" fw={900} mb="md">
-				พิมพ์ผลการสอบประมวลความรู้/สอบวัดคุณสมบัติ
+				พิมพ์ผลการสอบวิทยานิพนธ์/การค้นคว้าอิสระ
 			</Text>
 			<Group justify="space-between">
 				<Group>
-					<Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />
 					<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} />
 				</Group>
 			</Group>
@@ -82,7 +80,7 @@ const ExamResultsPrint = () => {
 					<Table.Tbody>
 						{Object.entries(
 							group
-								.filter((item) => (!selectedTerm || item.term === selectedTerm) && (!selectedType || item.request_type === selectedType))
+								.filter((item) => !selectedTerm || item.term === selectedTerm)
 								.sort((a, b) => parseTerm(b.term) - parseTerm(a.term))
 								.reduce((acc, item) => {
 									const key = `${item.study_group_id}-${item.term}`;

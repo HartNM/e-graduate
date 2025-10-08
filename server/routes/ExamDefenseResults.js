@@ -4,17 +4,13 @@ const authenticateToken = require("../middleware/authenticateToken");
 const { poolPromise } = require("../db");
 const axios = require("axios");
 
-router.post("/AddExamResults", authenticateToken, async (req, res) => {
+router.post("/AddExamDefenseResults", authenticateToken, async (req, res) => {
 	const { term, ...studentIdsObj } = req.body;
 	try {
 		const pool = await poolPromise;
 		for (const [id, examResult] of Object.entries(studentIdsObj)) {
 			const request = pool.request();
-			await request
-				.input("id", id)
-				.input("term", term)
-				.input("exam_result", examResult)
-				.query("UPDATE request_exam SET exam_results = @exam_result WHERE student_id = @id AND status = 5 AND term = @term");
+			await request.input("id", id).input("term", term).input("exam_result", examResult).query("UPDATE request_thesis_defense SET exam_results = @exam_result WHERE student_id = @id AND status = 5 AND term = @term");
 		}
 		res.status(200).json({ message: "บันทึกผลสอบเรียบร้อยแล้ว" });
 	} catch (err) {
@@ -23,12 +19,12 @@ router.post("/AddExamResults", authenticateToken, async (req, res) => {
 	}
 });
 
-router.post("/AllExamResults", authenticateToken, async (req, res) => {
+router.post("/AllExamDefenseResults", authenticateToken, async (req, res) => {
 	const { user_id } = req.user;
 	try {
 		const { recordset: exams } = await (await poolPromise).request().input("user_id", user_id).query(`
 			SELECT study_group_id, student_id, exam_results, term, request_type
-			FROM request_exam 
+			FROM request_thesis_defense 
 			WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND status = 5
     	`);
 		const examsWithStudentData = await Promise.all(
@@ -44,11 +40,11 @@ router.post("/AllExamResults", authenticateToken, async (req, res) => {
 	}
 });
 
-router.post("/allExamResultsPrint", authenticateToken, async (req, res) => {
+router.post("/allExamDefenseResultsPrint", authenticateToken, async (req, res) => {
 	try {
 		const { recordset: exams } = await (await poolPromise).request().query(`
 			SELECT study_group_id, student_id, exam_results, term, request_type
-			FROM request_exam 
+			FROM request_thesis_defense 
 			WHERE status = 5
 		`);
 		const examsWithStudentData = await Promise.all(

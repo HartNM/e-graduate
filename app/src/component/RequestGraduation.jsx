@@ -125,14 +125,6 @@ const RequestGraduation = () => {
 	useEffect(() => {
 		const fetchRequestExam = async () => {
 			try {
-				const PlagiarismDefenseRes = await fetch("http://localhost:8080/api/AllPlagiarismDefense", {
-					method: "POST",
-					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				});
-				const PlagiarismDefenseData = await PlagiarismDefenseRes.json();
-				if (!PlagiarismDefenseRes.ok) throw new Error(PlagiarismDefenseData.message);
-				console.log(PlagiarismDefenseData);
-
 				const requestRes = await fetch("http://localhost:8080/api/allRequestGraduation", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -142,7 +134,15 @@ const RequestGraduation = () => {
 				setRequest(requestData);
 				console.log(requestData);
 
-				if (PlagiarismDefenseData[0]?.status === "5") {
+				const ThesisDefenseRes = await fetch("http://localhost:8080/api/allRequestThesisDefense", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				});
+				const ThesisDefenseData = await ThesisDefenseRes.json();
+				if (!ThesisDefenseRes.ok) throw new Error(ThesisDefenseData.message);
+				console.log(ThesisDefenseData);
+
+				if (ThesisDefenseData[0]?.status === "5" && ThesisDefenseData[0]?.exam_results === "ผ่าน") {
 					setLatestRequest(requestData[0]);
 				} else {
 					setLatestRequest(true);

@@ -21,12 +21,13 @@ const PlagiarismDefense = lazy(() => import("./component/PlagiarismDefense.jsx")
 const Chairpersons = lazy(() => import("./pages/chairpersons/Chairpersons.jsx"));
 
 const Advisor = lazy(() => import("./pages/Advisor/Advisor.jsx"));
-const ExamResults = lazy(() => import("./pages/MajorOfficer/ExamResults.jsx"));
 
 const RegistrarOfficer = lazy(() => import("./pages/RegistrarOfficer/RegistrarOfficer.jsx"));
 const ExamScheduleSetupPage = lazy(() => import("./pages/RegistrarOfficer/ExamScheduleSetupPage.jsx"));
 const AssignMajorOfficer = lazy(() => import("./pages/RegistrarOfficer/AssignMajorOfficer.jsx"));
 const ExamResultsPrint = lazy(() => import("./pages/RegistrarOfficer/ExamResultsPrint.jsx"));
+const ExamProposalResultsPrint = lazy(() => import("./pages/RegistrarOfficer/ExamProposalResultsPrint.jsx"));
+const ExamDefenseResultsPrint = lazy(() => import("./pages/RegistrarOfficer/ExamDefenseResultsPrint.jsx"));
 
 const Student = lazy(() => import("./pages/student/Student.jsx"));
 
@@ -36,7 +37,9 @@ const MajorOfficer = lazy(() => import("./pages/MajorOfficer/MajorOfficer.jsx"))
 const AssignChairpersons = lazy(() => import("./pages/MajorOfficer/AssignChairpersons.jsx"));
 const CourseRegistration = lazy(() => import("./pages/MajorOfficer/CourseRegistration.jsx"));
 const ExamEligibleListPrint = lazy(() => import("./pages/MajorOfficer/ExamEligibleListPrint.jsx"));
-
+const ExamResults = lazy(() => import("./pages/MajorOfficer/ExamResults.jsx"));
+const ExamProposalResults = lazy(() => import("./pages/MajorOfficer/ExamProposalResults.jsx"));
+const ExamDefenseResults = lazy(() => import("./pages/MajorOfficer/ExamDefenseResults.jsx"));
 function AppRoutes() {
 	return (
 		<BrowserRouter>
@@ -52,7 +55,9 @@ function AppRoutes() {
 						<Route path="RequestThesisDefense" element={<RequestThesisDefense />} />
 						<Route path="ExamScheduleSetupPage" element={<ExamScheduleSetupPage />} />
 						<Route path="assign-major-officer" element={<AssignMajorOfficer />} />
-						<Route path="exam-results-print" element={<ExamResultsPrint />} />
+						<Route path="ExamResultsPrint" element={<ExamResultsPrint />} />
+						<Route path="ExamProposalResultsPrint" element={<ExamProposalResultsPrint />} />
+						<Route path="ExamDefenseResultsPrint" element={<ExamDefenseResultsPrint />} />
 					</Route>
 
 					<Route path="/student" element={<Student />}>
@@ -105,8 +110,10 @@ function AppRoutes() {
 					<Route path="/major-officer" element={<MajorOfficer />}>
 						<Route path="CourseRegistration" element={<CourseRegistration />} />
 						<Route path="AssignChairpersons" element={<AssignChairpersons />} />
-						<Route path="examResults" element={<ExamResults />} />
 						<Route path="ExamEligibleListPrint" element={<ExamEligibleListPrint />} />
+						<Route path="ExamResults" element={<ExamResults />} />
+						<Route path="ExamProposalResults" element={<ExamProposalResults />} />
+						<Route path="ExamDefenseResults" element={<ExamDefenseResults />} />
 					</Route>
 				</Routes>
 			</Suspense>

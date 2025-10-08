@@ -4,7 +4,7 @@ const authenticateToken = require("../middleware/authenticateToken");
 const { poolPromise } = require("../db");
 const axios = require("axios");
 
-router.post("/AddExamResults", authenticateToken, async (req, res) => {
+router.post("/AddExamProposalResults", authenticateToken, async (req, res) => {
 	const { term, ...studentIdsObj } = req.body;
 	try {
 		const pool = await poolPromise;
@@ -14,7 +14,7 @@ router.post("/AddExamResults", authenticateToken, async (req, res) => {
 				.input("id", id)
 				.input("term", term)
 				.input("exam_result", examResult)
-				.query("UPDATE request_exam SET exam_results = @exam_result WHERE student_id = @id AND status = 5 AND term = @term");
+				.query("UPDATE request_thesis_proposal SET exam_results = @exam_result WHERE student_id = @id AND status = 5 AND term = @term");
 		}
 		res.status(200).json({ message: "บันทึกผลสอบเรียบร้อยแล้ว" });
 	} catch (err) {
@@ -23,12 +23,12 @@ router.post("/AddExamResults", authenticateToken, async (req, res) => {
 	}
 });
 
-router.post("/AllExamResults", authenticateToken, async (req, res) => {
+router.post("/AllExamProposalResults", authenticateToken, async (req, res) => {
 	const { user_id } = req.user;
 	try {
 		const { recordset: exams } = await (await poolPromise).request().input("user_id", user_id).query(`
 			SELECT study_group_id, student_id, exam_results, term, request_type
-			FROM request_exam 
+			FROM request_thesis_proposal 
 			WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND status = 5
     	`);
 		const examsWithStudentData = await Promise.all(
@@ -44,11 +44,11 @@ router.post("/AllExamResults", authenticateToken, async (req, res) => {
 	}
 });
 
-router.post("/allExamResultsPrint", authenticateToken, async (req, res) => {
+router.post("/allExamProposalResultsPrint", authenticateToken, async (req, res) => {
 	try {
 		const { recordset: exams } = await (await poolPromise).request().query(`
 			SELECT study_group_id, student_id, exam_results, term, request_type
-			FROM request_exam 
+			FROM request_thesis_proposal 
 			WHERE status = 5
 		`);
 		const examsWithStudentData = await Promise.all(
