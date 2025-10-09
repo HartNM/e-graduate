@@ -99,7 +99,7 @@ router.post("/AllPlagiarismReport", authenticateToken, async (req, res) => {
 			query += " WHERE thesis_advisor_id = @user_id";
 		} else if (role === "chairpersons") {
 			query +=
-				" WHERE major_id IN (SELECT major_id FROM chairpersonsMajor_id WHERE user_id = @user_id) AND (status IN (0, 2, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL))";
+				" WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND (status IN (0, 2, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL))";
 		}
 		query += " ORDER BY plagiarism_report_id DESC";
 		const result = await request.query(query);

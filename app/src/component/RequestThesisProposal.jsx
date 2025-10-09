@@ -289,8 +289,9 @@ const RequestThesisProposal = () => {
 			</Table.Td>
 			{item.exam_results !== null && (
 				<Table.Td style={{ textAlign: "center" }}>
-					{item.exam_results === true && <Text c="green">ผ่าน</Text>}
-					{item.exam_results === false && <Text c="red">ไม่ผ่าน</Text>}
+					{item.exam_results === "ผ่าน" && <Text c="green">ผ่าน</Text>}
+					{item.exam_results === "ไม่ผ่าน" && <Text c="red">ไม่ผ่าน</Text>}
+					{item.exam_results === "ขาดสอบ" && <Text c="gray">ขาดสอบ</Text>}
 				</Table.Td>
 			)}
 		</Table.Tr>

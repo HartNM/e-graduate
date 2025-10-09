@@ -50,6 +50,8 @@ router.post("/getAdvisors", authenticateToken, async (req, res) => {
 router.post("/allRequestThesisProposal", authenticateToken, async (req, res) => {
 	const { lastRequest } = req.body;
 	const { user_id, role } = req.user;
+	console.log(lastRequest, user_id, role);
+
 	try {
 		const pool = await poolPromise;
 		const request = pool.request().input("user_id", user_id);
@@ -60,7 +62,7 @@ router.post("/allRequestThesisProposal", authenticateToken, async (req, res) => 
 		} else if (role === "advisor") {
 			query += " WHERE thesis_advisor_id = @user_id";
 		} else if (role === "chairpersons") {
-			query += ` WHERE major_id IN (SELECT major_id FROM chairpersonsMajor_id WHERE user_id = @user_id) AND (status IN (0, 2, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL))`;
+			query += ` WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND (status IN (0, 2, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL))`;
 		} else if (role === "officer_registrar") {
 			query += ` WHERE (status IN (0, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL AND registrar_approvals_id IS NOT NULL))`;
 		}
@@ -86,14 +88,7 @@ router.post("/allRequestThesisProposal", authenticateToken, async (req, res) => 
 					...item,
 					...studentInfo,
 					thesis_advisor_name: advisorInfo.name,
-					thesis_exam_date: item.thesis_exam_date,
-					request_date: item.request_date,
-					advisor_approvals_date: item.advisor_approvals_date,
-					chairpersons_approvals_date: item.chairpersons_approvals_date,
-					registrar_approvals_date: item.registrar_approvals_date,
-					receipt_pay_date: item.receipt_pay_date,
 					status_text: statusMap[item.status?.toString()],
-					request_type: item.request_type,
 				};
 			})
 		);
@@ -156,12 +151,6 @@ router.post("/addRequestThesisProposal", authenticateToken, async (req, res) => 
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()],
-				thesis_exam_date: result.recordset[0].thesis_exam_date,
-				request_date: result.recordset[0].request_date,
-				advisor_approvals_date: result.recordset[0].advisor_approvals_date,
-				chairpersons_approvals_date: result.recordset[0].chairpersons_approvals_date,
-				registrar_approvals_date: result.recordset[0].registrar_approvals_date,
-				receipt_pay_date: result.recordset[0].receipt_pay_date,
 			},
 		});
 	} catch (err) {
@@ -171,7 +160,9 @@ router.post("/addRequestThesisProposal", authenticateToken, async (req, res) => 
 });
 
 router.post("/approveRequestThesisProposal", authenticateToken, async (req, res) => {
-	const { request_thesis_proposal_id, name, role, selected, comment } = req.body;
+	const { request_thesis_proposal_id, role, selected, comment } = req.body;
+	const { user_id } = req.user;
+
 	if (!["advisor", "chairpersons", "officer_registrar"].includes(role)) {
 		return res.status(400).json({ message: "สิทธิ์ในการเข้าถึงไม่ถูกต้อง" });
 	}
@@ -193,22 +184,22 @@ router.post("/approveRequestThesisProposal", authenticateToken, async (req, res)
 			.request()
 			.input("request_thesis_proposal_id", request_thesis_proposal_id)
 			.input("status", statusValue)
-			.input("name", name)
+			.input("user_id", user_id)
 			.input("approve", selected === "approve" ? 1 : 0)
 			.input("comment", comment);
 		const roleFields = {
 			advisor: `
-				advisor_approvals_id = @name,
+				advisor_approvals_id = @user_id,
 				advisor_approvals = @approve,
 				advisor_approvals_date = GETDATE()
 			`,
 			chairpersons: `
-				chairpersons_approvals_id = @name,
+				chairpersons_approvals_id = @user_id,
 				chairpersons_approvals = @approve,
 				chairpersons_approvals_date = GETDATE()
 			`,
 			officer_registrar: `
-				registrar_approvals_id = @name,
+				registrar_approvals_id = @user_id,
 				registrar_approvals = @approve,
 				registrar_approvals_date = GETDATE()
 			`,
@@ -227,12 +218,6 @@ router.post("/approveRequestThesisProposal", authenticateToken, async (req, res)
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()],
-				thesis_exam_date: result.recordset[0].thesis_exam_date,
-				request_date: result.recordset[0].request_date,
-				advisor_approvals_date: result.recordset[0].advisor_approvals_date,
-				chairpersons_approvals_date: result.recordset[0].chairpersons_approvals_date,
-				registrar_approvals_date: result.recordset[0].registrar_approvals_date,
-				receipt_pay_date: result.recordset[0].receipt_pay_date,
 			},
 		});
 	} catch (err) {

@@ -13,7 +13,7 @@ const ModalAddRequestThesisProposal = ({ opened, onClose, title, form, handleAdd
 				<TextInput label="สาขาวิชา" disabled {...form.getInputProps("major_name")} />
 				<TextInput label="คณะ" disabled {...form.getInputProps("faculty_name")} />
 				<Textarea label="เนื่องจาก" minRows={2} {...form.getInputProps("reason")} />
-				<DatePickerInput label="เลือกวันที่สอบใหม่" placeholder="เลื่อกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" withAsterisk {...form.getInputProps("thesis_exam_date")} />
+				<DatePickerInput label="เลือกวันที่สอบใหม่" placeholder="เลื่อกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" minDate={form.values.thesis_exam_date} withAsterisk {...form.getInputProps("thesis_exam_date")} />
 				<Space h="lg" />
 				<Flex justify="flex-end">
 					<Button type="submit" color="green">

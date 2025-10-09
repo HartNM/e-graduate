@@ -90,6 +90,7 @@ const RequestThesisDefense = () => {
 				});
 				const ThesisProposalData = await ThesisProposalRes.json();
 				if (!ThesisProposalRes.ok) throw new Error(ThesisProposalData.message);
+				console.log(ThesisProposalData);
 
 				if (ThesisProposalData[0]?.status === "5" && ThesisProposalData[0]?.exam_results === "ผ่าน") {
 					if (ThesisDefenseRes[0]?.status === "6" || ThesisDefenseRes[0]?.status === undefined) {
@@ -283,8 +284,9 @@ const RequestThesisDefense = () => {
 			</Table.Td>
 			{item.exam_results !== null && (
 				<Table.Td style={{ textAlign: "center" }}>
-					{item.exam_results === true && <Text c="green">ผ่าน</Text>}
-					{item.exam_results === false && <Text c="red">ไม่ผ่าน</Text>}
+					{item.exam_results === "ผ่าน" && <Text c="green">ผ่าน</Text>}
+					{item.exam_results === "ไม่ผ่าน" && <Text c="red">ไม่ผ่าน</Text>}
+					{item.exam_results === "ขาดสอบ" && <Text c="gray">ขาดสอบ</Text>}
 				</Table.Td>
 			)}
 		</Table.Tr>
@@ -307,7 +309,7 @@ const RequestThesisDefense = () => {
 				role={role}
 				title={`${role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}คำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`}
 			/>
-			<ModalAddRequestThesisDefense opened={openAdd} onClose={() => setOpenAdd(false)} form={form} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`} />
+			<ModalAddRequestThesisDefense opened={openAdd} onClose={() => setOpenAdd(false)} form={form} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ`} />
 			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} />
 
 			<Text size="1.5rem" fw={900} mb="md">

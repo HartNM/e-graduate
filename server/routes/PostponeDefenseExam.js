@@ -66,7 +66,7 @@ router.post("/allPostponeDefenseExam", authenticateToken, async (req, res) => {
 			query += ` 
 				WHERE rq.major_id IN (
 						SELECT major_id 
-						FROM chairpersonsMajor_id 
+						FROM users 
 						WHERE user_id = @user_id
 					)
 				AND (
