@@ -143,7 +143,11 @@ const RequestGraduation = () => {
 				console.log(ThesisDefenseData);
 
 				if (ThesisDefenseData[0]?.status === "5" && ThesisDefenseData[0]?.exam_results === "ผ่าน") {
-					setLatestRequest(requestData[0]);
+					if (requestData[0]?.status === "6" || requestData[0]?.status === undefined) {
+						setLatestRequest(false);
+					} else {
+						setLatestRequest(true);
+					}
 				} else {
 					setLatestRequest(true);
 				}

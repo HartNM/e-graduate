@@ -39,7 +39,7 @@ const ModalAddRequestThesisProposal = ({ opened, onClose, title, form, handleAdd
 						<TextInput label="คณะ" disabled {...form.getInputProps("faculty_name")} />
 					</Grid.Col>
 					<Grid.Col span={{ base: 12, md: 6 }}>
-						<TextInput label="อาจารย์ที่ปรึกษางานวิจัย" {...form.getInputProps("thesis_advisor_id")} />
+						<TextInput label="อาจารย์ที่ปรึกษางานวิจัย" disabled {...form.getInputProps("thesis_advisor_name")} />
 						<TextInput label="ชื่องานวิจัย" placeholder="กรอกชื่องานวิจัย" {...form.getInputProps("research_name")} />
 						<DatePickerInput label="เลือกวันที่สอบ" placeholder="เลื่อกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" withAsterisk {...form.getInputProps("thesis_exam_date")} />
 					</Grid.Col>

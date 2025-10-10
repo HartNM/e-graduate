@@ -62,7 +62,7 @@ router.post("/login", async (req, res) => {
 			//if (result.BDATE !== password) {
 			//return res.status(401).json({ message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" });
 			//}
-			const token = jwt.sign({ user_id: username, role: `student`, roles: [`student`] }, SECRET_KEY, { expiresIn: "1h" });
+			const token = jwt.sign({ user_id: username, roles: [`student`], role: `student` }, SECRET_KEY, { expiresIn: "1h" });
 			console.log(token);
 			res.status(200).json({ message: "เข้าสู่ระบบสำเร็จ", token, role: `student` });
 		} catch (e) {
@@ -90,9 +90,14 @@ router.post("/login", async (req, res) => {
 				}
 			}
 
+			const check_thesis = await db.request().input("user_id", u.user_id).query("SELECT TOP 1 * FROM request_thesis_proposal WHERE thesis_advisor_id = @user_id");
+			if (check_thesis.recordset[0]) {
+				roles.push("research_advisor");
+			}
+
 			console.log(roles);
 
-			const token = jwt.sign({ user_id: u.user_id.toString(), role: u.role, roles: roles }, SECRET_KEY, { expiresIn: "1h" });
+			const token = jwt.sign({ user_id: u.user_id.toString(), roles: roles, role: u.role }, SECRET_KEY, { expiresIn: "1h" });
 			res.status(200).json({ message: "เข้าสู่ระบบสำเร็จ", token, role: u.role });
 		} catch (e) {
 			console.error("Login error:", e);
@@ -103,13 +108,13 @@ router.post("/login", async (req, res) => {
 
 router.post("/switchRole", authenticateToken, (req, res) => {
 	const { role } = req.body;
-	const { user_id, roles, name } = req.user;
+	const { user_id, roles } = req.user;
 	console.log(roles, role);
 
 	if (!roles.includes(role)) {
 		return res.status(403).json({ message: "ไม่มีสิทธิ์ role นี้" });
 	}
-	const newToken = jwt.sign({ user_id, roles, name, role: role }, process.env.SECRET_KEY, { expiresIn: "1h" });
+	const newToken = jwt.sign({ user_id, roles, role: role }, process.env.SECRET_KEY, { expiresIn: "1h" });
 
 	res.json({ token: newToken, activeRole: role });
 });

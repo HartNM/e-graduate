@@ -91,9 +91,10 @@ const RequestThesisDefense = () => {
 				const ThesisProposalData = await ThesisProposalRes.json();
 				if (!ThesisProposalRes.ok) throw new Error(ThesisProposalData.message);
 				console.log(ThesisProposalData);
+				console.log(ThesisDefenseData);
 
 				if (ThesisProposalData[0]?.status === "5" && ThesisProposalData[0]?.exam_results === "ผ่าน") {
-					if (ThesisDefenseRes[0]?.status === "6" || ThesisDefenseRes[0]?.status === undefined) {
+					if (ThesisDefenseData[0]?.status === "6" || ThesisDefenseData[0]?.status === undefined) {
 						setLatestRequest(false);
 					} else {
 						setLatestRequest(true);
@@ -111,14 +112,16 @@ const RequestThesisDefense = () => {
 
 	const handleOpenAdd = async () => {
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/studentInfo", {
-				method: "GET",
-				headers: { Authorization: `Bearer ${token}` },
+			const ThesisProposalRes = await fetch("http://localhost:8080/api/allRequestThesisProposal", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				body: JSON.stringify({ lastRequest: true }),
 			});
-			const requestData = await requestRes.json();
-			if (!requestRes.ok) throw new Error(requestData.message);
+			const ThesisProposalData = await ThesisProposalRes.json();
+			if (!ThesisProposalRes.ok) throw new Error(ThesisProposalData.message);
+			console.log(ThesisProposalData[0]);
+			form.setValues(ThesisProposalData[0]);
 			form.setValues({ thesis_exam_date: null });
-			form.setValues(requestData);
 			setOpenAdd(true);
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
@@ -137,8 +140,8 @@ const RequestThesisDefense = () => {
 			if (!requestRes.ok) throw new Error(requestData.message);
 			notify("success", requestData.message || "สำเร็จ");
 			setOpenAdd(false);
-			setRequest((prev) => [...prev, { ...requestData.data, ...form.values }]);
-			setLatestRequest({ ...requestData.data, ...form.values });
+			setRequest((prev) => [...prev, { ...form.values, ...requestData.data }]);
+			setLatestRequest(true);
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching addRequestExam:", e);

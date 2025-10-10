@@ -106,6 +106,7 @@ router.post("/addRequestGraduation", authenticateToken, async (req, res) => {
 		work_phone,
 		work_department,
 	} = req.body;
+	console.log(req.body);
 
 	try {
 		const pool = await poolPromise;
@@ -153,13 +154,13 @@ router.post("/addRequestGraduation", authenticateToken, async (req, res) => {
 			requestBuilder = requestBuilder.input(key, value);
 		}
 
-		const result = await requestBuilder.query(`
+		/* const result = await requestBuilder.query(`
 			INSERT INTO request_graduation (${Object.keys(insertData).join(", ")})
 			OUTPUT INSERTED.*
 			VALUES (${Object.keys(insertData)
 				.map((k) => `@${k}`)
 				.join(", ")})
-		`);
+		`); */
 
 		res.status(200).json({
 			message: "บันทึกคำร้องขอสอบเรียบร้อยแล้ว",

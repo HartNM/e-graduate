@@ -105,27 +105,23 @@ router.post("/allRequestThesisDefense", authenticateToken, async (req, res) => {
 });
 
 router.post("/addRequestThesisDefense", authenticateToken, async (req, res) => {
-	const { student_id, study_group_id, major_id, faculty_name, thesis_exam_date } = req.body;
+	const { student_id, study_group_id, major_id, faculty_name, thesis_exam_date, thesis_advisor_id, research_name, request_type } = req.body;
 	try {
 		const pool = await poolPromise;
 		const infoRes = await pool.request().query(`SELECT TOP 1 *
 			FROM request_exam_info
 			WHERE CAST(GETDATE() AS DATE) BETWEEN term_open_date AND term_close_date
 			ORDER BY request_exam_info_id DESC`);
-		const infoProposal = await pool
-			.request()
-			.input("student_id", student_id)
-			.query(`SELECT thesis_advisor_id, request_type, research_name FROM request_thesis_proposal WHERE student_id = @student_id ORDER BY request_thesis_proposal_id DESC`);
 		const result = await pool
 			.request()
 			.input("student_id", student_id)
 			.input("study_group_id", study_group_id)
-			.input("thesis_advisor_id", infoProposal.recordset[0].thesis_advisor_id)
+			.input("thesis_advisor_id", thesis_advisor_id)
 			.input("thesis_exam_date", thesis_exam_date)
 			.input("major_id", major_id)
 			.input("faculty_name", faculty_name)
-			.input("research_name", infoProposal.recordset[0].research_name)
-			.input("request_type", infoProposal.recordset[0].request_type.replace("โครงร่าง", ""))
+			.input("research_name", research_name)
+			.input("request_type", request_type.replace("โครงร่าง", ""))
 			.input("term", infoRes.recordset[0].term)
 			.input("request_date", formatDateForDB())
 			.input("status", "1").query(`
@@ -160,12 +156,6 @@ router.post("/addRequestThesisDefense", authenticateToken, async (req, res) => {
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()],
-				thesis_exam_date: result.recordset[0].thesis_exam_date,
-				request_date: result.recordset[0].request_date,
-				advisor_approvals_date: result.recordset[0].advisor_approvals_date,
-				chairpersons_approvals_date: result.recordset[0].chairpersons_approvals_date,
-				registrar_approvals_date: result.recordset[0].registrar_approvals_date,
-				receipt_pay_date: result.recordset[0].receipt_pay_date,
 			},
 		});
 	} catch (err) {

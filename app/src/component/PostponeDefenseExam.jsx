@@ -92,7 +92,7 @@ const PostponeDefenseExam = () => {
 				if (!DefenseRes.ok) throw new Error(DefenseData.message);
 				console.log(DefenseData);
 
-				if (requestData[0]?.status === "5") {
+				if (requestData[0]?.status === "5" && requestData[0]?.exam_results === null && new Date().setHours(0, 0, 0, 0) < new Date(new Date(requestData[0]?.thesis_exam_date).getTime() - 7 * 24 * 60 * 60 * 1000)) {
 					if (DefenseData[0]) {
 						setButtonAdd(true);
 					} else {

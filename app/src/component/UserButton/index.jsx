@@ -65,6 +65,7 @@ export function UserButton() {
 		// redirect ไป path ของ role
 		if (role === "student") navigate("/student");
 		if (role === "advisor") navigate("/advisor");
+		if (role === "research_advisor") navigate("/research_advisor");
 		if (role === "chairpersons") navigate("/chairpersons");
 		if (role === "registrar-officer") navigate("/registrar-officer");
 		if (role === "major-officer") navigate("/major-officer");

@@ -2,7 +2,6 @@ import { Routes, Route, BrowserRouter } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import LoadingScreen from "./component/LoadingScreen.jsx";
 
-
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AuthenticationForm = lazy(() => import("./pages/AuthenticationTitle/login.jsx"));
 
@@ -21,6 +20,8 @@ const PlagiarismDefense = lazy(() => import("./component/PlagiarismDefense.jsx")
 const Chairpersons = lazy(() => import("./pages/chairpersons/Chairpersons.jsx"));
 
 const Advisor = lazy(() => import("./pages/Advisor/Advisor.jsx"));
+
+const Research_advisor = lazy(() => import("./pages/research_advisor/research_advisor.jsx"));
 
 const RegistrarOfficer = lazy(() => import("./pages/RegistrarOfficer/RegistrarOfficer.jsx"));
 const ExamScheduleSetupPage = lazy(() => import("./pages/RegistrarOfficer/ExamScheduleSetupPage.jsx"));
@@ -78,6 +79,17 @@ function AppRoutes() {
 						<Route path="RequestExam" element={<RequestExam />} />
 						<Route path="RequestExamCancel" element={<RequestExamCancel />} />
 						<Route path="RequestEngTest" element={<RequestEngTest />} />
+						<Route path="RequestThesisProposal" element={<RequestThesisProposal />} />
+						<Route path="PostponeProposalExam" element={<PostponeProposalExam />} />
+						<Route path="RequestThesisDefense" element={<RequestThesisDefense />} />
+						<Route path="PostponeDefenseExam" element={<PostponeDefenseExam />} />
+						<Route path="PlagiarismReport" element={<PlagiarismReport />} />
+						<Route path="RequestGraduation" element={<RequestGraduation />} />
+						<Route path="PlagiarismProposal" element={<PlagiarismProposal />} />
+						<Route path="PlagiarismDefense" element={<PlagiarismDefense />} />
+					</Route>
+
+					<Route path="/research_advisor" element={<Research_advisor />}>
 						<Route path="RequestThesisProposal" element={<RequestThesisProposal />} />
 						<Route path="PostponeProposalExam" element={<PostponeProposalExam />} />
 						<Route path="RequestThesisDefense" element={<RequestThesisDefense />} />
