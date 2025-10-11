@@ -36,7 +36,7 @@ export function UserButton() {
 
 				const decoded = jwtDecode(token);
 				setRoles(decoded.roles || []);
-				setActiveRole(decoded.role || (decoded.roles ? decoded.roles[0] : ""));
+				setActiveRole(decoded.role);
 			} catch (err) {
 				console.error("Failed to fetch profile or decode token:", err);
 			}
@@ -67,8 +67,8 @@ export function UserButton() {
 		if (role === "advisor") navigate("/advisor");
 		if (role === "research_advisor") navigate("/research_advisor");
 		if (role === "chairpersons") navigate("/chairpersons");
-		if (role === "registrar-officer") navigate("/registrar-officer");
-		if (role === "major-officer") navigate("/major-officer");
+		if (role === "officer_registrar") navigate("/registrar-officer");
+		if (role === "officer_major") navigate("/major-officer");
 		if (role === "dean") navigate("/dean");
 	};
 

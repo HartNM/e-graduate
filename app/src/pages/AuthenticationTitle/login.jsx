@@ -30,7 +30,7 @@ const AuthenticationForm = () => {
 	const handleLogin = async () => {
 		try {
 			setLoading(true);
-			const routeMap = {
+			/* const routeMap = {
 				student: "/student",
 				dean: "/dean",
 				officer_major: "/major-officer",
@@ -38,7 +38,7 @@ const AuthenticationForm = () => {
 				officer_registrar: "/registrar-officer",
 				advisor: "/advisor",
 			};
-
+ */
 			const response = await fetch("http://localhost:8080/api/login", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
@@ -52,7 +52,13 @@ const AuthenticationForm = () => {
 			setInformMessage(data.message);
 			setInformtype("success");
 			setTimeout(() => {
-				navigate(routeMap[data.role] || "/");
+				if (data.role === "student") {
+					navigate("/student");
+				} else {
+					navigate("/personnel");
+				}
+
+				/* navigate(routeMap[data.role] || "/"); */
 			}, 1000);
 		} catch (error) {
 			console.error("Login error:", error);

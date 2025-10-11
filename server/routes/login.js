@@ -97,7 +97,7 @@ router.post("/login", async (req, res) => {
 
 			console.log(roles);
 
-			const token = jwt.sign({ user_id: u.user_id.toString(), roles: roles, role: u.role }, SECRET_KEY, { expiresIn: "1h" });
+			const token = jwt.sign({ user_id: u.user_id.toString(), roles: roles /* ,role: u.role */}, SECRET_KEY, { expiresIn: "1h" });
 			res.status(200).json({ message: "เข้าสู่ระบบสำเร็จ", token, role: u.role });
 		} catch (e) {
 			console.error("Login error:", e);

@@ -79,6 +79,7 @@ router.post("/allRequestGraduation", authenticateToken, async (req, res) => {
 
 router.post("/addRequestGraduation", authenticateToken, async (req, res) => {
 	const {
+		request_graduation_id, // 👈 เพิ่มมารับค่า id
 		student_id,
 		study_group_id,
 		major_id,
@@ -106,26 +107,26 @@ router.post("/addRequestGraduation", authenticateToken, async (req, res) => {
 		work_phone,
 		work_department,
 	} = req.body;
-	console.log(req.body);
 
 	try {
 		const pool = await poolPromise;
-		const infoRes = await pool.request().query(`SELECT TOP 1 *
+
+		// ดึงข้อมูลเทอมเปิด-ปิด
+		const infoRes = await pool.request().query(`
+			SELECT TOP 1 * 
 			FROM request_exam_info
 			WHERE CAST(GETDATE() AS DATE) BETWEEN term_open_date AND term_close_date
-			ORDER BY request_exam_info_id DESC`);
+			ORDER BY request_exam_info_id DESC
+		`);
 
-		console.log(infoRes);
+		const currentTerm = infoRes.recordset?.[0]?.term || null;
 
-		const insertData = {
+		// ข้อมูลที่ใช้ทั้ง insert และ update
+		const data = {
 			student_id,
 			study_group_id,
 			major_id,
 			faculty_name,
-			request_type: "ขอสำเร็จการศึกษาระดับบัณฑิตศึกษา",
-			term: infoRes.recordset[0].term,
-			request_date: formatDateForDB(),
-			status: "1",
 			bachelor_major,
 			bachelor_university,
 			master_major,
@@ -149,34 +150,60 @@ router.post("/addRequestGraduation", authenticateToken, async (req, res) => {
 			work_department,
 		};
 
-		let requestBuilder = pool.request();
-		for (const [key, value] of Object.entries(insertData)) {
-			requestBuilder = requestBuilder.input(key, value);
+		let result;
+
+		if (request_graduation_id) {
+			// ✅ กรณีแก้ไขข้อมูล
+			let requestBuilder = pool.request().input("request_graduation_id", request_graduation_id);
+			for (const [key, value] of Object.entries(data)) {
+				requestBuilder = requestBuilder.input(key, value);
+			}
+
+			const updateFields = Object.keys(data)
+				.map((key) => `${key} = @${key}`)
+				.join(", ");
+
+			result = await requestBuilder.query(`
+				UPDATE request_graduation
+				SET ${updateFields}
+				OUTPUT INSERTED.*
+				WHERE request_graduation_id = @request_graduation_id
+			`);
+		} else {
+			// ✅ กรณีเพิ่มใหม่
+			const insertData = {
+				...data,
+				request_type: "ขอสำเร็จการศึกษาระดับบัณฑิตศึกษา",
+				term: currentTerm,
+				request_date: formatDateForDB(),
+				status: "1",
+			};
+
+			let requestBuilder = pool.request();
+			for (const [key, value] of Object.entries(insertData)) {
+				requestBuilder = requestBuilder.input(key, value);
+			}
+
+			result = await requestBuilder.query(`
+				INSERT INTO request_graduation (${Object.keys(insertData).join(", ")})
+				OUTPUT INSERTED.*
+				VALUES (${Object.keys(insertData)
+					.map((k) => `@${k}`)
+					.join(", ")})
+			`);
 		}
 
-		/* const result = await requestBuilder.query(`
-			INSERT INTO request_graduation (${Object.keys(insertData).join(", ")})
-			OUTPUT INSERTED.*
-			VALUES (${Object.keys(insertData)
-				.map((k) => `@${k}`)
-				.join(", ")})
-		`); */
-
 		res.status(200).json({
-			message: "บันทึกคำร้องขอสอบเรียบร้อยแล้ว",
+			message: request_graduation_id ? "แก้ไขคำร้องขอสำเร็จการศึกษาเรียบร้อยแล้ว" : "บันทึกคำร้องขอสำเร็จการศึกษาเรียบร้อยแล้ว",
 			data: {
 				...result.recordset[0],
 				major_name,
 				status_text: statusMap[result.recordset[0].status?.toString()],
-				request_date: result.recordset[0].request_date,
-				advisor_approvals_date: result.recordset[0].advisor_approvals_date,
-				chairpersons_approvals_date: result.recordset[0].chairpersons_approvals_date,
-				receipt_pay_date: result.recordset[0].receipt_pay_date,
 			},
 		});
 	} catch (err) {
-		console.error("addRequestExam:", err);
-		res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกคำร้องขอสอบ" });
+		console.error("addRequestGraduation:", err);
+		res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกคำร้องขอสำเร็จการศึกษา" });
 	}
 });
 

@@ -68,13 +68,6 @@ const RequestGraduation = () => {
 			work_department: "",
 		},
 		validate: {
-			student_name: (value) => (value.trim() === "" ? "กรุณากรอกชื่อ-นามสกุล" : null),
-			student_id: (value) => (value.trim() === "" ? "กรุณากรอกรหัสประจำตัว" : null),
-			education_level: (value) => (value.trim() === "" ? "กรุณาระบุระดับการศึกษา" : null),
-			program: (value) => (value.trim() === "" ? "กรุณากรอกหลักสูตร" : null),
-			major_name: (value) => (value.trim() === "" ? "กรุณากรอกสาขาวิชา" : null),
-			faculty_name: (value) => (value.trim() === "" ? "กรุณากรอกชื่อคณะ" : null),
-
 			bachelor_major: (value) => (value.trim() === "" ? "กรุณากรอกสาขาป.ตรี" : null),
 			bachelor_university: (value) => (value.trim() === "" ? "กรุณากรอกมหาวิทยาลัยป.ตรี" : null),
 			master_major: (value, values) => (values.education_level === "ปริญญาเอก" && value.trim() === "" ? "กรุณากรอกสาขาป.โท" : null),
@@ -177,7 +170,6 @@ const RequestGraduation = () => {
 	};
 
 	const handleAdd = async () => {
-		console.log(form.values);
 		try {
 			const requestRes = await fetch("http://localhost:8080/api/addRequestGraduation", {
 				method: "POST",
@@ -188,12 +180,27 @@ const RequestGraduation = () => {
 			if (!requestRes.ok) throw new Error(requestData.message);
 			notify("success", requestData.message || "สำเร็จ");
 			setOpenAdd(false);
-			setRequest((prev) => [...prev, { ...requestData.data, ...form.values }]);
+
+			setRequest((prev) => {
+				// ✅ ถ้ามี id แปลว่า update → แก้ไขข้อมูลแถวเดิม
+				if (form.values.request_graduation_id) {
+					return prev.map((item) => (item.request_graduation_id === form.values.request_graduation_id ? { ...item, ...requestData.data, ...form.values } : item));
+				}
+
+				// ✅ ถ้าไม่มี id แปลว่า insert → เพิ่มบรรทัดใหม่
+				return [...prev, { ...requestData.data, ...form.values }];
+			});
+
 			setLatestRequest({ ...requestData.data, ...form.values });
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-			console.error("Error fetching addRequestExam:", e);
+			console.error("Error fetching addRequestGraduation:", e);
 		}
+	};
+
+	const handleOpenEdit = async (item) => {
+		form.setValues(item);
+		setOpenAdd(true);
 	};
 
 	const handleApprove = async (item) => {
@@ -297,6 +304,11 @@ const RequestGraduation = () => {
 				<Group>
 					{role === "student" && (
 						<>
+							{item.status != 5 && (
+								<Button size="xs" color="yellow" onClick={() => handleOpenEdit(item)}>
+									แก้ไข
+								</Button>
+							)}
 							{item.status === "4" && (
 								<Button
 									size="xs"

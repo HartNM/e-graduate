@@ -4,6 +4,7 @@ import LoadingScreen from "./component/LoadingScreen.jsx";
 
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AuthenticationForm = lazy(() => import("./pages/AuthenticationTitle/login.jsx"));
+const Personnel = lazy(() => import("./pages/personnel.jsx"));
 
 const RequestExam = lazy(() => import("./component/RequestExam.jsx"));
 const RequestExamCancel = lazy(() => import("./component/RequestExamCancel.jsx"));
@@ -48,6 +49,7 @@ function AppRoutes() {
 				<Routes>
 					<Route path="*" element={<NotFound />} />
 					<Route path="/login" element={<AuthenticationForm />} />
+					<Route path="/personnel" element={<Personnel />} />
 
 					<Route path="/registrar-officer" element={<RegistrarOfficer />}>
 						<Route path="RequestExam/:type" element={<RequestExam />} />

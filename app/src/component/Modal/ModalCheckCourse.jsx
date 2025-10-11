@@ -15,7 +15,7 @@ const ModalCheckCourse = ({ opened, onClose, missingCoures, type }) => (
 	>
 		<Box>
 			<Text mb="sm" c="dimmed">
-				คุณยังขาดการลงทะเบียนในรายวิชาต่อไปนี้จึงจะสามารถยื่นคำร้องขอสอบ{type}
+				คุณยังขาดการลงทะเบียนในรายวิชาต่อไปนี้ จึงจะสามารถยื่นคำร้องขอสอบ{type}
 			</Text>
 
 			<List
