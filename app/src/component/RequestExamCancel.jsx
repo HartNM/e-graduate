@@ -35,40 +35,99 @@ const RequestExamCancel = () => {
 	const [selectedType, setSelectedType] = useState("");
 
 	useEffect(() => {
-		const fetchProfile = async () => {
-			try {
-				const requestRes = await fetch("http://localhost:8080/api/profile", {
-					method: "GET",
-					headers: { Authorization: `Bearer ${token}` },
-				});
-				const requestData = await requestRes.json();
-				if (!requestRes.ok) throw new Error(requestData.message);
-				setUser(requestData);
-			} catch (e) {
-				notify("error", e.message);
-				console.error("Error fetching profile:", e);
-			}
-		};
-		fetchProfile();
-	}, [token]);
-
-	useEffect(() => {
 		setSelectedType(type);
 	}, [type]);
 
+	const [term, setTerm] = useState([]);
+	const [selectedTerm, setSelectedTerm] = useState("");
+
+	useEffect(() => {
+		const getProfile = async () => {
+			try {
+				const req = await fetch("http://localhost:8080/api/profile", {
+					method: "GET",
+					headers: { Authorization: `Bearer ${token}` },
+				});
+				const res = await req.json();
+				if (!req.ok) throw new Error(res.message);
+				console.log(res);
+				setUser(res);
+			} catch (e) {
+				notify("error", e.message);
+				console.error(e);
+			}
+		};
+		getProfile();
+
+		const getTerm = async () => {
+			try {
+				const termInfoReq = await fetch("http://localhost:8080/api/allRequestExamInfo", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				});
+				const termInfodata = await termInfoReq.json();
+				if (!termInfoReq.ok) throw new Error(termInfodata.message);
+				setTerm(termInfodata.map((item) => item.term));
+
+				console.log(termInfodata);
+
+				const today = new Date();
+				// หา term ที่อยู่ในช่วง open-close
+				let currentTerm = termInfodata.find((item) => {
+					const open = new Date(item.term_open_date);
+					const close = new Date(item.term_close_date);
+					return today >= open && today <= close;
+				});
+				if (!currentTerm && termInfodata.length > 0) {
+					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก close_date
+					currentTerm = [...termInfodata].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
+				}
+				if (role !== "student") setSelectedTerm(currentTerm.term);
+			} catch (e) {
+				notify("error", e.message);
+				console.error("Error fetching allRequestExamInfo:", e);
+			}
+		};
+		getTerm();
+	}, []);
+
+	useEffect(() => {
+		console.log(selectedTerm);
+
+		const getRequestCancel = async () => {
+			try {
+				const requestExamReq = await fetch("http://localhost:8080/api/AllRequestExamCancel", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+					body: JSON.stringify({ term: selectedTerm }),
+				});
+				const requestExamData = await requestExamReq.json();
+				if (!requestExamReq.ok) throw new Error(requestExamData.message);
+				setRequest(requestExamData);
+
+				console.log(requestExamData);
+			} catch (e) {
+				notify("error", e.message);
+				console.error("Error fetching requestExamAll:", e);
+			}
+		};
+		getRequestCancel();
+	}, [selectedTerm]);
+
 	const [latestRequest, setLatestRequest] = useState(null);
-	const [reloadTable, setReloadTable] = useState(false);
+
 	useEffect(() => {
 		const fetchRequestExam = async () => {
 			try {
-				const requestExamRes = await fetch("http://localhost:8080/api/requestExamAll", {
+				const requestReq = await fetch("http://localhost:8080/api/requestExamAll", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 					body: JSON.stringify({ lastRequest: true }),
 				});
-				const requestExamData = await requestExamRes.json();
-				if (!requestExamRes.ok) throw new Error(requestExamData.message);
-				console.log(requestExamData[0]);
+				const requestData = await requestReq.json();
+				if (!requestReq.ok) throw new Error(requestData.message);
+
+				console.log(requestData[0]);
 
 				const CheckOpenRECRes = await fetch("http://localhost:8080/api/CheckOpenREC", {
 					method: "POST",
@@ -76,10 +135,11 @@ const RequestExamCancel = () => {
 				});
 				const CheckOpenRECData = await CheckOpenRECRes.json();
 				if (!CheckOpenRECRes.ok) throw new Error(CheckOpenRECData.message);
+
 				console.log(CheckOpenRECData[0]);
 
 				if (CheckOpenRECData[0]?.status) {
-					setLatestRequest(requestExamData[0]);
+					setLatestRequest(requestData[0]);
 				} else {
 					setLatestRequest(true);
 				}
@@ -88,26 +148,11 @@ const RequestExamCancel = () => {
 				console.error("Error fetching requestExamAll:", e);
 			}
 		};
+
 		if (role === "student") {
 			fetchRequestExam();
 		}
-		const fetchRequestExamCancel = async () => {
-			try {
-				const requestRes = await fetch("http://localhost:8080/api/AllRequestExamCancel", {
-					method: "POST",
-					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				});
-				const requestData = await requestRes.json();
-				if (!requestRes.ok) throw new Error(requestData.message);
-				setRequest(requestData);
-			} catch (e) {
-				notify("error", e.message);
-				console.error("Error fetching AllRequestExamCancel:", e);
-			}
-		};
-		fetchRequestExamCancel();
-		setReloadTable(false);
-	}, [reloadTable]);
+	}, []);
 
 	const handleOpenAddCancel = async () => {
 		try {
@@ -141,7 +186,7 @@ const RequestExamCancel = () => {
 			if (!requestRes.ok) throw new Error(requestData.message);
 			notify("success", requestData.message || "สำเร็จ");
 			setOpenAddCancel(false);
-			setReloadTable(true);
+			setRequest((prev) => [...prev, { ...selectedRow, ...requestData.data }]);
 		} catch (e) {
 			notify("error", e.message);
 			console.error("Error fetching cancelRequestExam:", e);
@@ -198,12 +243,14 @@ const RequestExamCancel = () => {
 	const filteredData = sortedData.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
 		const matchesType = selectedType ? p.request_type === selectedType : true;
-		return matchesSearch && matchesType;
+		const matchesTerm = selectedTerm ? p.term === selectedTerm : true;
+		return matchesSearch && matchesType && matchesTerm;
 	});
 
 	const rows = filteredData.map((item) => (
 		<Table.Tr key={item.request_cancel_exam_id}>
 			<Table.Td>{item.student_name}</Table.Td>
+			<Table.Td>{item.term}</Table.Td>
 			{["advisor", "chairpersons", "dean"].includes(role) && <Table.Td>{role === "dean" ? `ขอยกเลิก${item.request_type.replace("ขอ", "")}` : item.request_type}</Table.Td>}
 			<Table.Td style={{ textAlign: "center" }}>
 				{item.status == 0 && (
@@ -265,7 +312,8 @@ const RequestExamCancel = () => {
 				<Box>
 					<Flex align="flex-end" gap="sm">
 						{role !== "student" && <TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
-						{role === "chairpersons" && <Select placeholder="ชนิดคำขอ" data={["ขอยกเลิกการเข้าสอบประมวลความรู้", "ขอยกเลิกการเข้าสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
+						{(role === "chairpersons" || role === "advisor") && <Select placeholder="ชนิดคำขอ" data={["ขอยกเลิกการเข้าสอบประมวลความรู้", "ขอยกเลิกการเข้าสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
+						{role !== "student" && <Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} allowDeselect={false} />}
 					</Flex>
 				</Box>
 				<Box>
@@ -284,6 +332,7 @@ const RequestExamCancel = () => {
 					<Table.Thead>
 						<Table.Tr>
 							<Table.Th style={{ minWidth: 100 }}>ชื่อ</Table.Th>
+							<Table.Th>ภาคเรียน</Table.Th>
 							{["advisor", "chairpersons", "dean"].includes(role) && <Table.Th style={{ minWidth: 100 }}>เรื่อง</Table.Th>}
 							<Table.Th style={{ minWidth: 110 }}>สถานะ</Table.Th>
 							<Table.Th>การดำเนินการ</Table.Th>

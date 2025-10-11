@@ -31,6 +31,30 @@ async function fillPdf(data) {
 		console.error("Error fetch allRequestExamInfo:", e);
 	}
 
+	const token = localStorage.getItem("token");
+	const ids = {
+		advisor: "advisor_approvals_id",
+		chairpersons: "chairpersons_approvals_id",
+		registrar: "registrar_approvals_id",
+	};
+	try {
+		for (const [role, prop] of Object.entries(ids)) {
+			const id = data?.[prop];
+			if (!id || isNaN(Number(id))) continue;
+			const res = await fetch("http://localhost:8080/api/personnelInfo", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				body: JSON.stringify({ user_id: id }),
+			});
+			const person = await res.json();
+			if (person) {
+				data[prop] = person.name;
+			}
+		}
+	} catch (e) {
+		console.error("Error fetch personnelInfo:", e);
+	}
+
 	const [request_date_day, request_date_month, request_date_year] = formatThaiDate(data?.request_date);
 	const [exam_date_day, exam_date_month, exam_date_year] = formatThaiDate(ET_exam_date);
 	const [advisor_approvals_date_day, advisor_approvals_date_month, advisor_approvals_date_year] = formatThaiDateShort(data?.advisor_approvals_date);
@@ -64,7 +88,7 @@ async function fillPdf(data) {
 		{ text: data?.faculty_name, x: 100, y: y + 2 },
 		{ text: `ในภาคเรียนที่ .........................ในวันที่.....................................................`, x: 60, y: (y -= space) },
 		{ text: data?.term, x: 130, y: y + 2 },
-		{ text: `${exam_date_day} ${exam_date_month} ${exam_date_year }`, x: 210, y: y + 2 },
+		{ text: `${exam_date_day} ${exam_date_month} ${exam_date_year}`, x: 210, y: y + 2 },
 		{ text: `จึงเรียนมาเพื่อโปรดพิจารณา`, x: 100, y: (y -= space) },
 		{ text: `ลงชื่อ...........................................................................`, x: 310, y: (y -= space * 2) },
 		{ text: data?.student_name, x: 370, y: y + 2 },

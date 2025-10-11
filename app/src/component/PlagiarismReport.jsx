@@ -146,7 +146,7 @@ const PlagiarismReport = () => {
 				}
 			} catch (e) {
 				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-				console.error("Error fetching requestExamAll:", e);
+				console.error("Error fetching AllPlagiarismReport:", e);
 			}
 		};
 		fetchRequestExam();
@@ -224,7 +224,7 @@ const PlagiarismReport = () => {
 			setRequest((prev) => prev.map((row) => (row.plagiarism_report_id === item.plagiarism_report_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-			console.error("Error fetching approveRequestExam:", e);
+			console.error("Error fetching approvePlagiarismReport:", e);
 		}
 	};
 

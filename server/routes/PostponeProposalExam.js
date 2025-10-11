@@ -111,7 +111,7 @@ router.post("/allPostponeProposalExam", authenticateToken, async (req, res) => {
 		);
 		res.status(200).json(enrichedData);
 	} catch (err) {
-		console.error("requestExamAll:", err);
+		console.error("allPostponeProposalExam:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลคำร้อง" });
 	}
 });

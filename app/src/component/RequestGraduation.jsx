@@ -146,7 +146,7 @@ const RequestGraduation = () => {
 				}
 			} catch (e) {
 				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-				console.error("Error fetching requestExamAll:", e);
+				console.error("Error fetching allRequestGraduation:", e);
 			}
 		};
 		fetchRequestExam();
@@ -225,7 +225,7 @@ const RequestGraduation = () => {
 			setRequest((prev) => prev.map((row) => (row.request_graduation_id === item.request_graduation_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-			console.error("Error fetching approveRequestExam:", e);
+			console.error("Error fetching approveRequestGraduation:", e);
 		}
 	};
 

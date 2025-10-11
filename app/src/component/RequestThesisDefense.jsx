@@ -104,7 +104,7 @@ const RequestThesisDefense = () => {
 				}
 			} catch (e) {
 				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-				console.error("Error fetching requestExamAll:", e);
+				console.error("Error fetching allRequestThesisDefense:", e);
 			}
 		};
 		fetchRequestExam();
@@ -170,7 +170,7 @@ const RequestThesisDefense = () => {
 			setRequest((prev) => prev.map((row) => (row.request_thesis_defense_id === item.request_thesis_defense_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-			console.error("Error fetching approveRequestExam:", e);
+			console.error("Error fetching approveRequestThesisDefense:", e);
 		}
 	};
 

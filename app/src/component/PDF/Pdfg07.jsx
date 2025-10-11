@@ -13,6 +13,29 @@ async function fillPdf(data) {
 	const THSarabunNewBold = await pdfDoc.embedFont(THSarabunNewBytesBold);
 
 	/* drawGrid(page); */
+	const token = localStorage.getItem("token");
+	const ids = {
+		advisor: "advisor_cancel_id",
+		chairpersons: "chairpersons_cancel_id",
+		registrar: "dean_cancel_id",
+	};
+	try {
+		for (const [role, prop] of Object.entries(ids)) {
+			const id = data?.[prop];
+			if (!id || isNaN(Number(id))) continue;
+			const res = await fetch("http://localhost:8080/api/personnelInfo", {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				body: JSON.stringify({ user_id: id }),
+			});
+			const person = await res.json();
+			if (person) {
+				data[prop] = person.name;
+			}
+		}
+	} catch (e) {
+		console.error("Error fetch personnelInfo:", e);
+	}
 
 	const [request_date_day, request_date_month, request_date_year] = formatThaiDate(data?.request_date);
 	const [advisor_cancel_date_day, advisor_cancel_date_month, advisor_cancel_date_year] = formatThaiDateShort(data?.advisor_cancel_date);

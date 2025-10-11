@@ -1,6 +1,6 @@
 //ตารางคำร้องขอ
 import { useState, useEffect } from "react";
-import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Flex, Stepper, Pill } from "@mantine/core";
+import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Flex, Stepper, Pill, Select } from "@mantine/core";
 import ModalApprove from "../component/Modal/ModalApprove";
 import ModalAdd from "../component/Modal/ModalAdd";
 import ModalPay from "../component/Modal/ModalPay";
@@ -34,49 +34,87 @@ const RequestEngTest = () => {
 	const [search, setSearch] = useState("");
 	const [latestRequest, setLatestRequest] = useState(null);
 
-	const form = useForm({
-		initialValues: {},
-		validate: {},
-	});
+	const form = useForm({});
+
+	const [term, setTerm] = useState([]);
+	const [selectedTerm, setSelectedTerm] = useState("");
 
 	useEffect(() => {
-		const fetchProfile = async () => {
+		const getProfile = async () => {
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/profile", {
+				const req = await fetch("http://localhost:8080/api/profile", {
 					method: "GET",
 					headers: { Authorization: `Bearer ${token}` },
 				});
-				const requestData = await requestRes.json();
-				if (!requestRes.ok) throw new Error(requestData.message);
-				setUser(requestData);
+				const res = await req.json();
+				if (!req.ok) throw new Error(res.message);
+				console.log(res);
+				setUser(res);
 			} catch (e) {
-				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-				console.error("Error fetching profile:", e);
+				notify("error", e.message);
+				console.error(e);
 			}
 		};
-		fetchProfile();
-	}, [token]);
-	const [reloadTable, setReloadTable] = useState(false);
-	useEffect(() => {
-		if (!user) return;
-		const fetchRequestExam = async () => {
+		getProfile();
+
+		const getTerm = async () => {
+			if (role === "student") return;
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/allRequestEngTest", {
+				const termInfoReq = await fetch("http://localhost:8080/api/allRequestExamInfo", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
-				const requestData = await requestRes.json();
-				if (!requestRes.ok) throw new Error(requestData.message);
+				const termInfodata = await termInfoReq.json();
+				if (!termInfoReq.ok) throw new Error(termInfodata.message);
+				setTerm(termInfodata.map((item) => item.term));
+
+				console.log(termInfodata);
+
+				const today = new Date();
+				// หา term ที่อยู่ในช่วง open-close
+				let currentTerm = termInfodata.find((item) => {
+					const open = new Date(item.term_open_date);
+					const close = new Date(item.term_close_date);
+					return today >= open && today <= close;
+				});
+				if (!currentTerm && termInfodata.length > 0) {
+					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก close_date
+					currentTerm = [...termInfodata].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
+				}
+				setSelectedTerm(currentTerm.term);
+			} catch (e) {
+				notify("error", e.message);
+				console.error("Error fetching allRequestExamInfo:", e);
+			}
+		};
+		getTerm();
+	}, []);
+
+	useEffect(() => {
+		console.log(selectedTerm);
+
+		const getRequest = async () => {
+			try {
+				const requestReq = await fetch("http://localhost:8080/api/allRequestEngTest", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+					body: JSON.stringify({ term: selectedTerm }),
+				});
+				const requestData = await requestReq.json();
+				if (!requestReq.ok) throw new Error(requestData.message);
 				setRequest(requestData);
 				setLatestRequest(requestData[0]);
+
+				console.log(requestData);
 			} catch (e) {
-				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
+				notify("error", e.message);
 				console.error("Error fetching requestExamAll:", e);
 			}
 		};
-		fetchRequestExam();
-		setReloadTable(false);
-	}, [user, reloadTable]);
+		getRequest();
+	}, [selectedTerm]);
+
+	const [reloadTable, setReloadTable] = useState(false);
 
 	const handleOpenAdd = async () => {
 		try {
@@ -105,7 +143,7 @@ const RequestEngTest = () => {
 			if (!requestRes.ok) throw new Error(requestData.message);
 			notify("success", requestData.message || "สำเร็จ");
 			setOpenAdd(false);
-			setReloadTable(true);
+			setRequest((prev) => [...prev, { ...form.values, ...requestData.data }]);
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching addRequestExam:", e);
@@ -169,6 +207,7 @@ const RequestEngTest = () => {
 	const rows = filteredData.map((item) => (
 		<Table.Tr key={item.request_eng_test_id}>
 			<Table.Td>{item.student_name}</Table.Td>
+			<Table.Td>{item.term}</Table.Td>
 			{["advisor", "officer_registrar", "chairpersons", "dean"].includes(role) && <Table.Td>ขอทดสอบความรู้ทางภาษาอังกฤษ</Table.Td>}
 			<Table.Td style={{ textAlign: "center" }}>
 				{item.status < 5 && item.status > 0 && (
@@ -275,6 +314,7 @@ const RequestEngTest = () => {
 				<Box>
 					<Flex align="flex-end" gap="sm">
 						{role !== "student" && <TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
+						{role !== "student" && <Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} allowDeselect={false} />}
 					</Flex>
 				</Box>
 				<Box>
@@ -291,6 +331,7 @@ const RequestEngTest = () => {
 					<Table.Thead>
 						<Table.Tr>
 							<Table.Th style={{ minWidth: 100 }}>ชื่อ</Table.Th>
+							<Table.Th style={{ minWidth: 100 }}>ภาคเรียน</Table.Th>
 							{["advisor", "officer_registrar", "chairpersons", "dean"].includes(role) && <Table.Th style={{ minWidth: 100 }}>เรื่อง</Table.Th>}
 							<Table.Th style={{ minWidth: 110 }}>สถานะ</Table.Th>
 							<Table.Th>การดำเนินการ</Table.Th>

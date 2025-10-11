@@ -103,7 +103,7 @@ const PostponeProposalExam = () => {
 				}
 			} catch (e) {
 				notify("error", e.message);
-				console.error("Error fetching requestExamAll:", e);
+				console.error("Error fetching allRequestThesisProposal:", e);
 			}
 		};
 		if (role === "student") {

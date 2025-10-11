@@ -107,7 +107,7 @@ const RequestThesisProposal = () => {
 				}
 			} catch (e) {
 				notify("error", e.message);
-				console.error("Error fetching requestExamAll:", e);
+				console.error("Error fetching allRequestThesisProposal:", e);
 			}
 		};
 		fetchRequestExam();
@@ -171,7 +171,7 @@ const RequestThesisProposal = () => {
 			setRequest((prev) => prev.map((row) => (row.request_thesis_proposal_id === item.request_thesis_proposal_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
 			notify("error", e.message);
-			console.error("Error fetching approveRequestExam:", e);
+			console.error("Error fetching approveRequestThesisProposal:", e);
 		}
 	};
 

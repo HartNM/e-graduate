@@ -37,11 +37,11 @@ router.post("/checkOpenKQ", authenticateToken, async (req, res) => {
 });
 
 router.post("/requestExamAll", authenticateToken, async (req, res) => {
-	const { lastRequest } = req.body;
+	const { lastRequest, term } = req.body;
 	const { user_id, role } = req.user;
 	try {
 		const pool = await poolPromise;
-		const request = pool.request().input("user_id", user_id);
+		const request = pool.request().input("user_id", user_id).input("term", term);
 		let query = "SELECT * FROM request_exam";
 		if (role === "student") {
 			if (lastRequest) {
@@ -49,36 +49,22 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 			}
 			query += " WHERE student_id = @user_id";
 		} else if (role === "advisor") {
-			query += ` WHERE study_group_id IN (SELECT group_no FROM advisorGroup_no WHERE user_id = @user_id)`;
+			query += ` WHERE study_group_id IN (SELECT group_no FROM advisorGroup_no WHERE user_id = @user_id) AND term = @term`;
 		} else if (role === "chairpersons") {
 			query +=
-				" WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND (status IN (0, 2, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL))";
+				" WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND (status IN (0, 2, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL) AND term = @term)";
 		} else if (role === "officer_registrar") {
-			query += " WHERE (status IN (0, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL AND registrar_approvals_id IS NOT NULL))";
+			query +=
+				" WHERE (status IN (0, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL AND registrar_approvals_id IS NOT NULL)) AND term = @term";
 		}
 		query += " ORDER BY request_exam_id DESC";
 		const result = await request.query(query);
 		const enrichedData = await Promise.all(
 			result.recordset.map(async (item) => {
 				let student;
-				let advisor;
-				let chairpersons;
-				let registrar;
 				try {
 					const studentRes = await axios.get(`http://localhost:8080/externalApi/student/${item.student_id}`);
 					student = studentRes.data;
-					if (item.advisor_approvals_id) {
-						const advisorRes = await pool.request().input("user_id", item.advisor_approvals_id).query(`SELECT * FROM users WHERE user_id = @user_id`);
-						advisor = advisorRes.recordset[0];
-					}
-					if (item.chairpersons_approvals_id) {
-						const chairpersonsRes = await pool.request().input("user_id", item.chairpersons_approvals_id).query(`SELECT * FROM users WHERE user_id = @user_id`);
-						chairpersons = chairpersonsRes.recordset[0];
-					}
-					if (item.registrar_approvals_id) {
-						const registrarRes = await pool.request().input("user_id", item.registrar_approvals_id).query(`SELECT * FROM users WHERE user_id = @user_id`);
-						registrar = registrarRes.recordset[0];
-					}
 				} catch (err) {
 					console.warn(`ไม่สามารถดึงข้อมูลนักศึกษา ${item.student_id}`);
 				}
@@ -86,12 +72,6 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 					...item,
 					...student,
 					status_text: statusMap[item.status?.toString()],
-
-					/* advisor_approvals_id: advisor?.name,
-
-					chairpersons_approvals_id: chairpersons?.name,
-
-					registrar_approvals_id: registrar?.name, */
 				};
 			})
 		);
@@ -158,7 +138,7 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 });
 
 router.post("/approveRequestExam", authenticateToken, async (req, res) => {
-	const { request_exam_id, name, selected, comment } = req.body;
+	const { request_exam_id, selected, comment } = req.body;
 	const { role, user_id } = req.user;
 	if (!["advisor", "chairpersons", "officer_registrar"].includes(role)) {
 		return res.status(400).json({ message: "สิทธิ์ในการเข้าถึงไม่ถูกต้อง" });
@@ -210,36 +190,11 @@ router.post("/approveRequestExam", authenticateToken, async (req, res) => {
 			WHERE request_exam_id = @request_exam_id
 			`;
 		const result = await request.query(query);
-		let advisor;
-		let chairpersons;
-		let registrar;
-		try {
-			if (result.recordset[0].advisor_approvals_id) {
-				const advisorRes = await pool.request().input("user_id", result.recordset[0].advisor_approvals_id).query(`SELECT * FROM users WHERE user_id = @user_id`);
-				advisor = advisorRes.recordset[0];
-			}
-			if (result.recordset[0].chairpersons_approvals_id) {
-				const chairpersonsRes = await pool.request().input("user_id", result.recordset[0].chairpersons_approvals_id).query(`SELECT * FROM users WHERE user_id = @user_id`);
-				chairpersons = chairpersonsRes.recordset[0];
-			}
-			if (result.recordset[0].registrar_approvals_id) {
-				const registrarRes = await pool.request().input("user_id", result.recordset[0].registrar_approvals_id).query(`SELECT * FROM users WHERE user_id = @user_id`);
-				registrar = registrarRes.recordset[0];
-			}
-		} catch (err) {
-			console.warn(`ไม่สามารถดึงข้อมูลนักศึกษา ${item.student_id}`);
-		}
 		res.status(200).json({
 			message: "บันทึกผลการอนุมัติคำร้องขอสอบเรียบร้อยแล้ว",
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()],
-
-				advisor_approvals_id: advisor?.name,
-
-				chairpersons_approvals_id: chairpersons?.name,
-
-				registrar_approvals_id: registrar?.name,
 			},
 		});
 	} catch (err) {
@@ -266,11 +221,6 @@ router.post("/payRequestExam", authenticateToken, async (req, res) => {
 			data: {
 				...row,
 				status_text: statusMap[row.status?.toString()],
-				request_date: row.request_date,
-				advisor_approvals_date: row.advisor_approvals_date,
-				chairpersons_approvals_date: row.chairpersons_approvals_date,
-				registrar_approvals_date: row.registrar_approvals_date,
-				receipt_pay_date: row.receipt_pay_date,
 			},
 		});
 	} catch (err) {
