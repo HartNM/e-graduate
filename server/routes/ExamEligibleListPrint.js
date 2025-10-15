@@ -12,7 +12,7 @@ router.post("/allExamEligibleListPrint", authenticateToken, async (req, res) => 
 		let query = `
 			SELECT study_group_id, student_id, exam_results, term, request_type
 			FROM request_exam 
-			WHERE major_id IN (SELECT major_id FROM officerMajor_id WHERE user_id = @user_id) AND status = 5
+			WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND status = 5
 		`;
 		const result = await request.query(query);
 		const output = {};

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Box, Text, ScrollArea, Table, Space, Button, Modal, MultiSelect, Group, Flex, Select, TextInput, NumberInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import ModalInform from "../../component/Modal/ModalInform";
-import AsyncCourseSelect from "../../component/AsyncCourseSelect";
+import AsyncCourseSelect from "./AsyncCourseSelect";
 
 const CourseRegistration = () => {
 	const token = localStorage.getItem("token");
@@ -37,15 +37,28 @@ const CourseRegistration = () => {
 	useEffect(() => {
 		const fetchAll = async () => {
 			try {
-				const res = await fetch("http://localhost:8080/api/allCourses", {
+				const ListSubjectAll = await fetch("http://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectAll");
+				const subjects = await ListSubjectAll.json();
+
+				const formattedSubjects = subjects.map((item) => ({
+					value: item.SUBJCODE,
+					label: `${item.SUBJCODE} - ${item.SUBJNAME}`,
+				}));
+
+				console.log(formattedSubjects);
+				setFullCourses(formattedSubjects);
+
+				/* const allCourses = await fetch("http://localhost:8080/api/allCourses", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
-				const allCoursesData = await res.json();
-				if (!res.ok) throw new Error(allCoursesData.message);
-				console.log(fullCourses);
+				console.log();
 
-				setFullCourses(allCoursesData);
+				const allCoursesData = await allCourses.json();
+				if (!allCourses.ok) throw new Error(allCoursesData.message);
+				console.log(allCoursesData);
+
+				setFullCourses(allCoursesData); */
 			} catch (e) {
 				console.error(e);
 			}

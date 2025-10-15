@@ -241,7 +241,7 @@ const PostponeProposalExam = () => {
 			<Table.Td style={{ maxWidth: "150px" }}>
 				<Group>
 					<Pdfg07 data={item} showType={item.status == 5 || item.status == 6 ? undefined : (role === "advisor" && item.status == 7) || (role === "chairpersons" && item.status == 8) ? "view" : undefined} />
-					{((role === "advisor" && item.status === "7") || (role === "chairpersons" && item.status === "8")) && (
+					{((role === "research_advisor" && item.status === "7") || (role === "chairpersons" && item.status === "8")) && (
 						<Button
 							size="xs"
 							color="green"

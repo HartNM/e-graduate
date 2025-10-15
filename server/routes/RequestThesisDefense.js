@@ -166,13 +166,10 @@ router.post("/addRequestThesisDefense", authenticateToken, async (req, res) => {
 
 router.post("/approveRequestThesisDefense", authenticateToken, async (req, res) => {
 	const { request_thesis_defense_id, name, role, selected, comment } = req.body;
-	if (!["advisor", "chairpersons", "officer_registrar"].includes(role)) {
-		return res.status(400).json({ message: "สิทธิ์ในการเข้าถึงไม่ถูกต้อง" });
-	}
 	try {
 		let statusValue = "";
 		if (selected === "approve") {
-			if (role === "advisor") {
+			if (role === "research_advisor") {
 				statusValue = "2";
 			} else if (role === "chairpersons") {
 				statusValue = "3";
@@ -193,7 +190,7 @@ router.post("/approveRequestThesisDefense", authenticateToken, async (req, res) 
 			.input("comment", comment);
 
 		const roleFields = {
-			advisor: `
+			research_advisor: `
 				advisor_approvals_id = @name,
 				advisor_approvals = @approve,
 				advisor_approvals_date = @date

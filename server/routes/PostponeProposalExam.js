@@ -175,7 +175,7 @@ router.post("/approvePostponeProposalExam", authenticateToken, async (req, res) 
 	let statusCancel;
 	let status;
 	if (selected === "approve") {
-		if (role === "advisor") {
+		if (role === "research_advisor") {
 			status = "8";
 			statusCancel = "8";
 		} else if (role === "chairpersons") {
@@ -187,7 +187,7 @@ router.post("/approvePostponeProposalExam", authenticateToken, async (req, res) 
 		statusCancel = "6";
 	}
 	const roleFields = {
-		advisor: `
+		research_advisor: `
 				advisor_approvals_id = @name,
 				advisor_approvals = @approve,
 				advisor_approvals_date = @date

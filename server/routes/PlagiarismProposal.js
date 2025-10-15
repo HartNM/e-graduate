@@ -225,7 +225,7 @@ router.post("/approvePlagiarismProposal", authenticateToken, async (req, res) =>
 	try {
 		let statusValue = "";
 		if (selected === "approve") {
-			if (role === "advisor") {
+			if (role === "research_advisor") {
 				statusValue = "2";
 			} else {
 				statusValue = "5";
@@ -243,7 +243,7 @@ router.post("/approvePlagiarismProposal", authenticateToken, async (req, res) =>
 			.input("date", formatDateForDB())
 			.input("comment", comment);
 		const roleFields = {
-			advisor: `
+			research_advisor: `
 				advisor_approvals_id = @user_id,
 				advisor_approvals = @approve,
 				advisor_approvals_date = @date

@@ -4,8 +4,7 @@ import debounce from "lodash.debounce";
 
 function AsyncCourseSelect({ form, disabled = false, fullCourses }) {
 	const [data, setData] = useState([]);
-	// โหลดข้อมูลครั้งเดียว
-	// search filter client-side
+
 	const handleSearchChange = useCallback(
 		debounce((query) => {
 			if (!query) return setData(fullCourses.slice(0, 0));

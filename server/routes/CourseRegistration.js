@@ -120,7 +120,7 @@ router.post("/allMajorCourseRegistration", authenticateToken, async (req, res) =
 	const { user_id } = req.user;
 	try {
 		const pool = await poolPromise;
-		const result = await pool.request().input("user_id", user_id).query(`SELECT * FROM course_registration WHERE major_id IN (SELECT major_id FROM officerMajor_id WHERE user_id = @user_id)`);
+		const result = await pool.request().input("user_id", user_id).query(`SELECT * FROM course_registration WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id)`);
 
 		const data = result.recordset;
 		if (data.length === 0) {

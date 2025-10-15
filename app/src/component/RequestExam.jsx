@@ -48,10 +48,7 @@ const RequestExam = () => {
 		initialValues: {},
 		validate: {},
 	});
-
-	/* const [registerCourses, setRegisterCourses] = useState([]); */
-	/* const [registerCoursesData, setRegisterCourses] = useState(() => (user_id === "684270201" ? ["1065208R", "1065222R", "1065208R", "1065222R", "1066205R"] : ["1065208R", "1066205R", "1065222R", "1065204R", "1065232R", "1065202R", "1065201R", "1065206R", "1065208R", "1065231R"])); */
-
+	
 	useEffect(() => {
 		setSelectedType(type);
 	}, [type]);
@@ -167,18 +164,7 @@ const RequestExam = () => {
 				const missing = registrationData.course_id.filter((code) => !allCodes.includes(code));
 				console.log(missing);
 
-				/* const missing = registrationData.course_id.filter((code) => !registerCoursesData.includes(code));
-				console.log(missing); */
-
 				if (missing.length > 0) {
-					/* const coursesRes = await fetch("http://localhost:8080/api/Course", {
-						method: "POST",
-						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-						body: JSON.stringify({ course_id: missing }),
-					});
-					const coursesData = await coursesRes.json();
-					if (!coursesRes.ok) throw new Error(coursesData.message); */
-
 					const res = await fetch("http://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectAll");
 					const subjects = await res.json();
 					console.log(subjects);
@@ -194,6 +180,12 @@ const RequestExam = () => {
 					setOpenCheckCourse(true);
 					return;
 				}
+
+				const countFailOrAbsent = request.filter((row) => row.exam_results === "ไม่ผ่าน" || row.exam_results === "ขาดสอบ").length;
+				if (!request.length) setLatestRequest(false);
+				else if (countFailOrAbsent > 2) setLatestRequest(true);
+				else if (request[0].exam_results === "ไม่ผ่าน" || request[0].exam_results === "ขาดสอบ") setLatestRequest(false);
+				else setLatestRequest(request[0]);
 			} catch (e) {
 				notify("error", e.message);
 				console.error(e);
@@ -201,12 +193,6 @@ const RequestExam = () => {
 		};
 		if (role === "student") {
 			user_id === "674140101" && fetchStudentData();
-
-			const countFailOrAbsent = request.filter((row) => row.exam_results === "ไม่ผ่าน" || row.exam_results === "ขาดสอบ").length;
-			if (!request.length) setLatestRequest(false);
-			else if (countFailOrAbsent > 2) setLatestRequest(true);
-			else if (request[0].exam_results === "ไม่ผ่าน" || request[0].exam_results === "ขาดสอบ") setLatestRequest(false);
-			else setLatestRequest(request[0]);
 		}
 	}, []);
 

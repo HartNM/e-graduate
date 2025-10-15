@@ -33,9 +33,9 @@ const Student = () => {
 				if (data.PostponeDefenseExam) {
 					newMenu.push({ label: `คำร้องขอเลื่อนสอบวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconCalendarClock, links: "/student/PostponeDefenseExam" });
 				}
-				if (data.RequestGraduation) {
+				/* if (data.RequestGraduation) {
 					newMenu.push({ label: "คำร้องขอสำเร็จการศึกษา", icon: IconSchool, links: "/student/RequestGraduation" });
-				}
+				} */
 				setMenu(newMenu);
 			} catch (e) {
 				console.error("Error fetching checkStudent:", e);
