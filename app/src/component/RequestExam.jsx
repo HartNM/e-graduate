@@ -143,7 +143,7 @@ const RequestExam = () => {
 				console.log(checkOpenKQData);
 
 				const registrationRes = await fetch("http://localhost:8080/api/allStudyGroupIdCourseRegistration", {
-					method: "POST",
+					method: "POST", 
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
 				const registrationData = await registrationRes.json();

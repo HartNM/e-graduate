@@ -145,9 +145,7 @@ const AssignMajorOfficer = () => {
 				<Box>
 					<form onSubmit={Form.onSubmit(handleSubmit)}>
 						<Select label="เลือกสาขา" data={majors} {...Form.getInputProps("major_id")} disabled={modalType === "delete" ? true : false}></Select>
-						{/* <TextInput label="รหัสบัตร" {...Form.getInputProps("user_id")} disabled={modalType === "add" ? false : true} /> */}
 						<TextInput label="ชื่อ" {...Form.getInputProps("name")} disabled={modalType === "delete" ? true : false} />
-						{/* {modalType === "add" && <PasswordInput label="รหัสผ่าน" {...Form.getInputProps("password")} />} */}
 						<Space h="md" />
 						<Button color={modalType === "delete" ? "red" : "green"} type="submit" fullWidth>
 							{modalType === "delete" ? "ลบ" : "บันทึก"}

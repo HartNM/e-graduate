@@ -18,12 +18,13 @@ const AssignChairpersons = () => {
 
 	const [assignChairpersons, setAssignChairpersons] = useState([]);
 
-	const [chairpersons, setChairpersons] = useState([
-		{ value: "4000000000007", label: "นายกิตติพงษ์ ศรีสวัสดิ์" },
-		{ value: "4000000000008", label: "นางสุชาดา แก้วมณี" },
-		{ value: "4000000000009", label: "นายธนกฤต พูนสุข" },
-	]);
+	const [chairpersons, setChairpersons] = useState([]);
+
 	const save = [
+		{ value: "4000000000001", label: "นางสาวมณีรัตน์ ทองมาก" },
+		{ value: "4000000000002", label: "นายปิยะพงษ์ ชาญชัย" },
+		{ value: "4000000000003", label: "นางสาวศศิธร บุญเรือง" },
+		{ value: "4000000000004", label: "นายอนันต์ รุ่งเรืองสกุล" },
 		{ value: "4000000000007", label: "นายกิตติพงษ์ ศรีสวัสดิ์" },
 		{ value: "4000000000008", label: "นางสุชาดา แก้วมณี" },
 		{ value: "4000000000009", label: "นายธนกฤต พูนสุข" },
@@ -53,15 +54,7 @@ const AssignChairpersons = () => {
 				});
 				const profileData = await profileRes.json();
 				setUser(profileData);
-				console.log(profileData);
-
-				const marjorRes = await fetch("http://localhost:8080/api/getMajor_name", {
-					method: "POST",
-					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				});
-				const marjorData = await marjorRes.json();
-				setMajorName(marjorData);
-				console.log(marjorData);
+				console.log("user :", profileData);
 			} catch (e) {
 				notify("error", e.message);
 				console.error("Error fetching profile:", e);
@@ -73,17 +66,31 @@ const AssignChairpersons = () => {
 	useEffect(() => {
 		const fetchRequestExamInfoAll = async () => {
 			try {
-				setChairpersons(save);
-				const requestRes = await fetch("http://localhost:8080/api/allAssignChairpersons", {
+				console.log("candidate :", save);
+
+				const marjorRes = await fetch("http://localhost:8080/api/getMajor_name", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
-				const requestData = await requestRes.json();
-				if (!requestRes.ok) throw new Error(requestData.message);
-				setAssignChairpersons(requestData);
-				console.log(requestData);
-				const assignedIds = assignChairpersons.map((item) => item.chairpersons_id);
-				setChairpersons((prev) => prev.filter((c) => !assignedIds.includes(c.value)));
+				const marjorData = await marjorRes.json();
+				setMajorName(marjorData);
+				console.log("marjor :", marjorData);
+
+				const ChairpersonsRes = await fetch("http://localhost:8080/api/allAssignChairpersons", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				});
+				const ChairpersonsData = await ChairpersonsRes.json();
+				if (!ChairpersonsRes.ok) throw new Error(ChairpersonsData.message);
+				console.log("Chairpersons :", ChairpersonsData);
+
+				const Chairpersons_filtered = ChairpersonsData.filter((item) => item.major_id === marjorData.major_id);
+				setAssignChairpersons(Chairpersons_filtered);
+				console.log("Chairpersons filtered :", Chairpersons_filtered);
+
+				const candidate_filtered = save.filter((person) => !ChairpersonsData.some((chair) => chair.user_id === person.value));
+				setChairpersons(candidate_filtered);
+				console.log("candidate_filtered :", candidate_filtered);
 			} catch (e) {
 				notify("error", e.message);
 				console.error("Error fetch allAssignChairpersons:", e);
@@ -151,7 +158,7 @@ const AssignChairpersons = () => {
 				<form onSubmit={Form.onSubmit(handleSubmit)}>
 					<Text>สาขา{majorName.major_name}</Text>
 					{modalType === "delete" ? (
-						<TextInput label="ชื่อ" {...Form.getInputProps("chairpersons_name")} disabled={true} />
+						<TextInput label="ชื่อ" {...Form.getInputProps("name")} disabled={true} />
 					) : (
 						<Select
 							label="ชื่อ"
