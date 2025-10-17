@@ -12,6 +12,7 @@ export function UserButton() {
 
 	// Mapping role -> label ภาษาไทย
 	const roleLabels = {
+		admin: "admin",
 		student: "นักศึกษา",
 		advisor: "อาจารย์ที่ปรึกษาหมู่เรียน",
 		research_advisor: "อาจารย์ที่ปรึกษาวิทยานิพนธ์/การค้นคว้าอิสระ",
@@ -64,6 +65,7 @@ export function UserButton() {
 
 		// redirect ไป path ของ role
 		if (role === "student") navigate("/student");
+		if (role === "admin") navigate("/admin");
 		if (role === "advisor") navigate("/advisor");
 		if (role === "research_advisor") navigate("/research_advisor");
 		if (role === "chairpersons") navigate("/chairpersons");

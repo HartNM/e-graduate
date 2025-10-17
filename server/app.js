@@ -62,6 +62,11 @@ app.use("/api", ExamDefenseResults);
 const RequestGraduation = require("./routes/RequestGraduation");
 app.use("/api", RequestGraduation);
 
+const AssignFinanceOfficer = require("./routes/AssignFinanceOfficer");
+app.use("/api", AssignFinanceOfficer);
+const AssignRegistrarOfficer = require("./routes/AssignRegistrarOfficer");
+app.use("/api", AssignRegistrarOfficer);
+
 app.listen(PORT, () => {
 	console.log(`Server is running on port ${PORT}`);
 });

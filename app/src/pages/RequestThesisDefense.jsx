@@ -2,10 +2,10 @@
 import { useState, useEffect } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
 import { useParams } from "react-router-dom";
-import ModalAddRequestThesisDefense from "../component/Modal/ModalAddRequestThesisDefense";
-import ModalApprove from "../component/Modal/ModalApprove";
-import ModalPay from "../component/Modal/ModalPay";
-import ModalInform from "../component/Modal/ModalInform";
+import ModalAddRequestThesisDefense from "../component/Modal/ModalAddRequestThesisDefense.jsx";
+import ModalApprove from "../component/Modal/ModalApprove.jsx";
+import ModalPay from "../component/Modal/ModalPay.jsx";
+import ModalInform from "../component/Modal/ModalInform.jsx";
 import Pdfg01 from "../component/PDF/Pdfg03-04.jsx";
 import { useForm } from "@mantine/form";
 

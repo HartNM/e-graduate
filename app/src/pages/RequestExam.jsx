@@ -2,12 +2,12 @@
 import { useState, useEffect } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
 import { useParams } from "react-router-dom";
-import ModalAdd from "./Modal/ModalAdd";
-import ModalApprove from "./Modal/ModalApprove";
-import ModalPay from "./Modal/ModalPay";
-import ModalInform from "./Modal/ModalInform";
-import ModalCheckCourse from "./Modal/ModalCheckCourse";
-import Pdfg01 from "./PDF/Pdfg01";
+import ModalAdd from "../component/Modal/ModalAdd";
+import ModalApprove from "../component/Modal/ModalApprove";
+import ModalPay from "../component/Modal/ModalPay";
+import ModalInform from "../component/Modal/ModalInform";
+import ModalCheckCourse from "../component/Modal/ModalCheckCourse";
+import Pdfg01 from "../component/PDF/Pdfg01";
 import { useForm } from "@mantine/form";
 
 const RequestExam = () => {
@@ -17,9 +17,6 @@ const RequestExam = () => {
 	const role = payload.role;
 	const user_id = payload.user_id;
 	// Modal Info
-	/* const [inform, setInform] = useState({ open: false, type: "", message: "" }); 
-	const notify = (type, message) => setInform({ open: true, type, message });*/
-
 	const [inform, setInform] = useState({ open: false, type: "", message: "", timeout: 3000 });
 	const notify = (type, message, timeout = 3000) => setInform({ open: true, type, message, timeout });
 	const close = () => setInform((s) => ({ ...s, open: false }));
@@ -48,7 +45,7 @@ const RequestExam = () => {
 		initialValues: {},
 		validate: {},
 	});
-	
+
 	useEffect(() => {
 		setSelectedType(type);
 	}, [type]);
@@ -97,7 +94,7 @@ const RequestExam = () => {
 					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก close_date
 					currentTerm = [...termInfodata].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
 				}
-				if (role !== "student") setSelectedTerm(currentTerm.term);
+				setSelectedTerm(currentTerm.term);
 			} catch (e) {
 				notify("error", e.message);
 				console.error("Error fetching allRequestExamInfo:", e);
@@ -120,7 +117,7 @@ const RequestExam = () => {
 				if (!requestReq.ok) throw new Error(requestData.message);
 				setRequest(requestData);
 
-				console.log(requestData);
+				console.log("all request :", requestData);
 			} catch (e) {
 				notify("error", e.message);
 				console.error("Error fetching requestExamAll:", e);
@@ -143,7 +140,7 @@ const RequestExam = () => {
 				console.log(checkOpenKQData);
 
 				const registrationRes = await fetch("http://localhost:8080/api/allStudyGroupIdCourseRegistration", {
-					method: "POST", 
+					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
 				const registrationData = await registrationRes.json();
@@ -182,19 +179,54 @@ const RequestExam = () => {
 				}
 
 				const countFailOrAbsent = request.filter((row) => row.exam_results === "ไม่ผ่าน" || row.exam_results === "ขาดสอบ").length;
-				if (!request.length) setLatestRequest(false);
-				else if (countFailOrAbsent > 2) setLatestRequest(true);
-				else if (request[0].exam_results === "ไม่ผ่าน" || request[0].exam_results === "ขาดสอบ") setLatestRequest(false);
-				else setLatestRequest(request[0]);
+
+				if (!request.length) {
+					console.log("ลำดับ :", 1);
+					setLatestRequest(false);
+				} else if (countFailOrAbsent > 2) {
+					console.log("ลำดับ :", 2);
+					setLatestRequest(true);
+				} else if (request[0].exam_results === "ไม่ผ่าน" || request[0].exam_results === "ขาดสอบ") {
+					console.log("ลำดับ :", 3);
+					setLatestRequest(false);
+				} else if (selectedTerm === request[0].term) {
+					console.log("ลำดับ :", 4);
+					setLatestRequest(true);
+				} else {
+					console.log("ลำดับ :", 5);
+					setLatestRequest(request[0]);
+				}
 			} catch (e) {
 				notify("error", e.message);
 				console.error(e);
 			}
 		};
+
 		if (role === "student") {
-			user_id === "674140101" && fetchStudentData();
+			if (user_id === "674140101") {
+				fetchStudentData();
+			} else {
+				const countFailOrAbsent = request.filter((row) => row.exam_results === "ไม่ผ่าน" || row.exam_results === "ขาดสอบ").length;
+
+				if (!request.length) {
+					console.log("ลำดับ :", 1);
+					setLatestRequest(false);
+				} else if (countFailOrAbsent > 2) {
+					console.log("ลำดับ :", 2);
+					setLatestRequest(true);
+				} else if (request[0].exam_results === "ไม่ผ่าน" || request[0].exam_results === "ขาดสอบ") {
+					console.log("ลำดับ :", 3);
+					setLatestRequest(false);
+				} else if (selectedTerm === request[0].term) {
+					console.log("ลำดับ :", 4);
+					setLatestRequest(true);
+				} else {
+					console.log("ลำดับ :", 5);
+					setLatestRequest(request[0]);
+				}
+			}
 		}
-	}, []);
+	}, [request]);
 
 	const handleOpenAdd = async () => {
 		try {
@@ -290,7 +322,11 @@ const RequestExam = () => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
 		const matchesType = selectedType ? p.request_type === selectedType : true;
 		const matchesTerm = selectedTerm ? p.term === selectedTerm : true;
-		return matchesSearch && matchesType && matchesTerm;
+		if (role === "student") {
+			return matchesSearch && matchesType;
+		} else {
+			return matchesSearch && matchesType && matchesTerm;
+		}
 	});
 
 	const rows = filteredData.map((item) => (

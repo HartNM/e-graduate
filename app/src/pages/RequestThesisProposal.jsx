@@ -6,7 +6,7 @@ import ModalAddRequestThesisProposal from "../component/Modal/ModalAddRequestThe
 import ModalApprove from "../component/Modal/ModalApprove";
 import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
-import Pdfg01 from "./PDF/Pdfg03-04";
+import Pdfg01 from "../component/PDF/Pdfg03-04";
 import { useForm } from "@mantine/form";
 
 const RequestThesisProposal = () => {

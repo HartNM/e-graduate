@@ -6,17 +6,21 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const AuthenticationForm = lazy(() => import("./pages/AuthenticationTitle/login.jsx"));
 const Personnel = lazy(() => import("./pages/personnel.jsx"));
 
-const RequestExam = lazy(() => import("./component/RequestExam.jsx"));
-const RequestExamCancel = lazy(() => import("./component/RequestExamCancel.jsx"));
-const RequestEngTest = lazy(() => import("./component/RequestEngTest.jsx"));
-const RequestThesisProposal = lazy(() => import("./component/RequestThesisProposal.jsx"));
-const PostponeProposalExam = lazy(() => import("./component/PostponeProposalExam.jsx"));
-const RequestThesisDefense = lazy(() => import("./component/RequestThesisDefense.jsx"));
-const PostponeDefenseExam = lazy(() => import("./component/PostponeDefenseExam.jsx"));
-const PlagiarismReport = lazy(() => import("./component/PlagiarismReport.jsx"));
-const RequestGraduation = lazy(() => import("./component/RequestGraduation.jsx"));
-const PlagiarismProposal = lazy(() => import("./component/PlagiarismProposal.jsx"));
-const PlagiarismDefense = lazy(() => import("./component/PlagiarismDefense.jsx"));
+const RequestExam = lazy(() => import("./pages/RequestExam.jsx"));
+const RequestExamCancel = lazy(() => import("./pages/RequestExamCancel.jsx"));
+const RequestEngTest = lazy(() => import("./pages/RequestEngTest.jsx"));
+const RequestThesisProposal = lazy(() => import("./pages/RequestThesisProposal.jsx"));
+const PostponeProposalExam = lazy(() => import("./pages/PostponeProposalExam.jsx"));
+const RequestThesisDefense = lazy(() => import("./pages/RequestThesisDefense.jsx"));
+const PostponeDefenseExam = lazy(() => import("./pages/PostponeDefenseExam.jsx"));
+const PlagiarismReport = lazy(() => import("./pages/PlagiarismReport.jsx"));
+const RequestGraduation = lazy(() => import("./pages/RequestGraduation.jsx"));
+const PlagiarismProposal = lazy(() => import("./pages/PlagiarismProposal.jsx"));
+const PlagiarismDefense = lazy(() => import("./pages/PlagiarismDefense.jsx"));
+
+const Admin = lazy(() => import("./pages/Admin/Admin.jsx"));
+const AssignFinanceOfficer = lazy(() => import("./pages/Admin/AssignFinanceOfficer.jsx"));
+const AssignRegistrarOfficer = lazy(() => import("./pages/Admin/AssignRegistrarOfficer.jsx"));
 
 const Chairpersons = lazy(() => import("./pages/chairpersons/Chairpersons.jsx"));
 
@@ -51,6 +55,11 @@ function AppRoutes() {
 					<Route path="/login" element={<AuthenticationForm />} />
 					<Route path="/personnel" element={<Personnel />} />
 
+					<Route path="/admin" element={<Admin />}>
+						<Route path="AssignFinanceOfficer" element={<AssignFinanceOfficer />} />
+						<Route path="AssignRegistrarOfficer" element={<AssignRegistrarOfficer />} />
+					</Route>
+
 					<Route path="/registrar-officer" element={<RegistrarOfficer />}>
 						<Route path="RequestExam/:type" element={<RequestExam />} />
 						<Route path="RequestEngTest" element={<RequestEngTest />} />
@@ -62,7 +71,6 @@ function AppRoutes() {
 						<Route path="ExamProposalResultsPrint" element={<ExamProposalResultsPrint />} />
 						<Route path="ExamDefenseResultsPrint" element={<ExamDefenseResultsPrint />} />
 					</Route>
-
 					<Route path="/student" element={<Student />}>
 						<Route path="RequestExam" element={<RequestExam />} />
 						<Route path="RequestExamCancel" element={<RequestExamCancel />} />
@@ -76,7 +84,6 @@ function AppRoutes() {
 						<Route path="PlagiarismProposal" element={<PlagiarismProposal />} />
 						<Route path="PlagiarismDefense" element={<PlagiarismDefense />} />
 					</Route>
-
 					<Route path="/advisor" element={<Advisor />}>
 						<Route path="RequestExam" element={<RequestExam />} />
 						<Route path="RequestExamCancel" element={<RequestExamCancel />} />
@@ -90,7 +97,6 @@ function AppRoutes() {
 						<Route path="PlagiarismProposal" element={<PlagiarismProposal />} />
 						<Route path="PlagiarismDefense" element={<PlagiarismDefense />} />
 					</Route>
-
 					<Route path="/research_advisor" element={<Research_advisor />}>
 						<Route path="RequestThesisProposal" element={<RequestThesisProposal />} />
 						<Route path="PostponeProposalExam" element={<PostponeProposalExam />} />
@@ -101,7 +107,6 @@ function AppRoutes() {
 						<Route path="PlagiarismProposal" element={<PlagiarismProposal />} />
 						<Route path="PlagiarismDefense" element={<PlagiarismDefense />} />
 					</Route>
-
 					<Route path="/chairpersons" element={<Chairpersons />}>
 						<Route path="RequestExam" element={<RequestExam />} />
 						<Route path="RequestExamCancel" element={<RequestExamCancel />} />
@@ -115,12 +120,10 @@ function AppRoutes() {
 						<Route path="PlagiarismProposal" element={<PlagiarismProposal />} />
 						<Route path="PlagiarismDefense" element={<PlagiarismDefense />} />
 					</Route>
-
 					<Route path="/dean" element={<Dean />}>
 						<Route path="RequestExam" element={<RequestExam />} />
 						<Route path="RequestExamCancel" element={<RequestExamCancel />} />
 					</Route>
-
 					<Route path="/major-officer" element={<MajorOfficer />}>
 						<Route path="CourseRegistration" element={<CourseRegistration />} />
 						<Route path="AssignChairpersons" element={<AssignChairpersons />} />

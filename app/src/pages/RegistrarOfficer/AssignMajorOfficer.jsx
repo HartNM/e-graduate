@@ -5,78 +5,81 @@ import { useForm } from "@mantine/form";
 import ModalInform from "../../component/Modal/ModalInform";
 
 const AssignMajorOfficer = () => {
+	// Modal Info
+	const [inform, setInform] = useState({ open: false, type: "", message: "" });
+	const notify = (type, message) => setInform({ open: true, type, message });
+	const close = () => setInform((s) => ({ ...s, open: false }));
+
 	const [reloadTable, setReloadTable] = useState(false);
 	const token = localStorage.getItem("token");
 	const [assignMajorOfficer, setAssignMajorOfficer] = useState([]);
 	const [openModal, setOpenModal] = useState(false);
 	const [modalType, setModalType] = useState(false);
-	const [majors, setMajors] = useState([]);
-	const [openInform, setOpenInform] = useState(false);
-	const [informMessage, setInformMessage] = useState("");
-	const [informtype, setInformtype] = useState("");
+
+
+	const save = [
+		{ value: "1000000000001", label: "นายกิตติพงษ์ วัฒนากูล" },
+		{ value: "1000000000002", label: "นางสาวธนพร สุขเจริญ" },
+		{ value: "1000000000003", label: "นายวรากร ศรีสวัสดิ์" },
+		{ value: "1000000000004", label: "นางสุภาพร จิตต์ภักดี" },
+		{ value: "1000000000005", label: "นางสาวพิมพ์ชนก แสงสุวรรณ" },
+		{ value: "1000000000006", label: "นายณัฐวุฒิ เกษมสุข" },
+		{ value: "1000000000007", label: "นางรัตนาวดี มีศิลป์" },
+	];
 
 	const Form = useForm({
 		initialValues: {
 			user_id: "",
 			name: "",
 			major_id: "",
-			password: "",
+			password: "123456",
 		},
 		validate: {
-			user_id: (value) => (value.trim().length > 0 ? null : "กรุณากรอกรหัสบัตร"),
 			name: (value) => (value.trim().length > 0 ? null : "กรุณากรอกชื่อ"),
 			major_id: (value) => (value.trim().length > 0 ? null : "กรุณาเลือกสาขา"),
-			password: (value) => {
-				if (modalType === "delete" || modalType === "edit") return null;
-				return value.trim().length > 0 ? null : "กรุณากรอกรหัสผ่าน";
-			},
 		},
 	});
+
+	const [majorName, setMajorName] = useState([]);
+	const [MajorOfficer, setMajorOfficer] = useState([]);
 
 	useEffect(() => {
 		const fetchRequestExamInfoAll = async () => {
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/allAssignMajorOfficer", {
+				console.log("candidate :", save);
+
+				const MajorOfficerRes = await fetch("http://localhost:8080/api/allAssignMajorOfficer", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
-				const requestData = await requestRes.json();
-				if (!requestRes.ok) {
-					throw new Error(requestData.message);
-				}
-				setAssignMajorOfficer(requestData);
-				console.log(requestData);
-			} catch (error) {
-				setInformtype("error");
-				setInformMessage(error.message);
-				setOpenInform(true);
-				console.error("Error fetch requestExamInfoAll:", err);
+				const MajorOfficerData = await MajorOfficerRes.json();
+				if (!MajorOfficerRes.ok) throw new Error(MajorOfficerData.message);
+				setAssignMajorOfficer(MajorOfficerData);
+				console.log("MajorOfficer :", MajorOfficerData);
+
+				const majorsRes = await fetch("http://localhost:8080/api/majors", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				});
+				const majorsData = await majorsRes.json();
+				if (!majorsRes.ok) throw new Error(majorsData.message);
+				const majorOptions = majorsData.map((m) => ({
+					value: m.major_id,
+					label: m.major_name,
+				}));
+				setMajorName(majorOptions);
+				console.log("marjor :", majorOptions);
+
+				const candidate_filtered = save.filter((person) => !MajorOfficerData.some((item) => item.user_id === person.value));
+				setMajorOfficer(candidate_filtered);
+				console.log("candidate_filtered :", candidate_filtered);
+			} catch (e) {
+				notify("error", e.message);
+				console.error("Error fetch requestExamInfoAll:", e);
 			}
 			setReloadTable(false);
 		};
 		fetchRequestExamInfoAll();
-		const fetchMajors = async () => {
-			try {
-				const requestRes = await fetch("http://localhost:8080/api/majors", {
-					method: "POST",
-					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				});
-				const requestData = await requestRes.json();
-				if (!requestRes.ok) throw new Error(requestData.message);
-				const formatted = requestData.map((item) => ({
-					value: item.major_id,
-					label: item.major_name,
-				}));
-				setMajors(formatted);
-				console.log(formatted);
-			} catch (e) {
-				setInformtype("error");
-				setInformMessage(e.message);
-				setOpenInform(true);
-				console.error(e);
-			}
-		};
-		fetchMajors();
 	}, [reloadTable]);
 
 	const handleOpenAdd = () => {
@@ -105,47 +108,55 @@ const AssignMajorOfficer = () => {
 				body: JSON.stringify(Form.values),
 			});
 			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
-			setInformtype("success");
-			setInformMessage(requestData.message);
-			setOpenInform(true);
+			if (!requestRes.ok) throw new Error(requestData.message);
+			notify("success", requestData.message);
 			setReloadTable(true);
 			setOpenModal(false);
-		} catch (err) {
-			setInformtype("error");
-			setInformMessage(err.message);
-			setOpenInform(true);
-			console.error("Error fetch deleteAssignChairpersons:", err);
+		} catch (e) {
+			notify("error", e.message);
+			console.error("Error fetch deleteAssignChairpersons:", e);
 		}
 	};
 
-	const classRows = assignMajorOfficer.map((item) => (
-		<Table.Tr key={item.user_id}>
-			<Table.Td>{item.major_name}</Table.Td>
-			<Table.Td>{item.name}</Table.Td>
-			<Table.Td>
-				<Group>
-					{/* <Button color="yellow" size="xs" onClick={() => handleOpenEdit(item)}>
-						แก้ไข
-					</Button> */}
-					<Button color="red" size="xs" onClick={() => handleOpenDelete(item)}>
-						ลบ
-					</Button>
-				</Group>
-			</Table.Td>
-		</Table.Tr>
-	));
+	const classRows = assignMajorOfficer.map((item) => {
+		const major = majorName.find((m) => m.value === item.major_id);
+		return (
+			<Table.Tr key={item.user_id}>
+				<Table.Td>{major ? major.label : "-"}</Table.Td>
+				<Table.Td>{item.name}</Table.Td>
+				<Table.Td>
+					<Group>
+						<Button color="red" size="xs" onClick={() => handleOpenDelete(item)}>
+							ลบ
+						</Button>
+					</Group>
+				</Table.Td>
+			</Table.Tr>
+		);
+	});
 
 	return (
 		<Box>
-			<ModalInform opened={openInform} onClose={() => setOpenInform(false)} message={informMessage} type={informtype} />
+			<ModalInform opened={inform.open} onClose={close} message={inform.message} type={inform.type} />
 			<Modal opened={openModal} onClose={() => setOpenModal(false)} title="กรอกข้อมูลเจ้าหน้าที่ประจำสาขาวิชา" centered>
 				<Box>
 					<form onSubmit={Form.onSubmit(handleSubmit)}>
-						<Select label="เลือกสาขา" data={majors} {...Form.getInputProps("major_id")} disabled={modalType === "delete" ? true : false}></Select>
-						<TextInput label="ชื่อ" {...Form.getInputProps("name")} disabled={modalType === "delete" ? true : false} />
+						<Select label="เลือกสาขา" data={majorName} {...Form.getInputProps("major_id")} disabled={modalType === "delete" ? true : false}></Select>
+						{modalType === "delete" ? (
+							<TextInput label="ชื่อ" {...Form.getInputProps("name")} disabled={true} />
+						) : (
+							<Select
+								label="ชื่อ"
+								searchable
+								data={MajorOfficer}
+								value={Form.values.user_id}
+								onChange={(value) => {
+									Form.setFieldValue("user_id", value);
+									const selected = MajorOfficer.find((c) => c.value === value);
+									Form.setFieldValue("name", selected ? selected.label : "");
+								}}
+							/>
+						)}
 						<Space h="md" />
 						<Button color={modalType === "delete" ? "red" : "green"} type="submit" fullWidth>
 							{modalType === "delete" ? "ลบ" : "บันทึก"}

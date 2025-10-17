@@ -4,7 +4,7 @@ import { Box, Text, TextInput, Table, Button, Modal, Space, ScrollArea, Password
 import { useForm } from "@mantine/form";
 import ModalInform from "../../component/Modal/ModalInform";
 
-const AssignChairpersons = () => {
+const AssignRegistrarOfficer = () => {
 	// Modal Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
@@ -16,18 +16,18 @@ const AssignChairpersons = () => {
 	const [reloadTable, setReloadTable] = useState(false);
 	const token = localStorage.getItem("token");
 
-	const [assignChairpersons, setAssignChairpersons] = useState([]);
+	const [assignRegistrarOfficer, setAssignRegistrarOfficer] = useState([]);
 
-	const [chairpersons, setChairpersons] = useState([]);
+	const [RegistrarOfficer, setRegistrarOfficer] = useState([]);
 
 	const save = [
-		{ value: "4000000000001", label: "นางสาวมณีรัตน์ ทองมาก" },
-		{ value: "4000000000002", label: "นายปิยะพงษ์ ชาญชัย" },
-		{ value: "4000000000003", label: "นางสาวศศิธร บุญเรือง" },
-		{ value: "4000000000004", label: "นายอนันต์ รุ่งเรืองสกุล" },
-		{ value: "4000000000005", label: "นายกิตติพงษ์ ศรีสวัสดิ์" },
-		{ value: "4000000000006", label: "นางสุชาดา แก้วมณี" },
-		{ value: "4000000000007", label: "นายธนกฤต พูนสุข" },
+		{ value: "2000000000001", label: "นายธนกร ศรีสุวรรณ" },
+		{ value: "2000000000002", label: "นายปิยะพงษ์ ชาญชัย" },
+		{ value: "2000000000003", label: "นางสาวศศิธร บุญเรือง" },
+		{ value: "2000000000004", label: "นายอนันต์ รุ่งเรืองสกุล" },
+		{ value: "2000000000005", label: "นายกิตติพงษ์ ศรีสวัสดิ์" },
+		{ value: "2000000000006", label: "นางสุชาดา แก้วมณี" },
+		{ value: "2000000000007", label: "นายธนกฤต พูนสุข" },
 	];
 
 	const Form = useForm({
@@ -42,59 +42,26 @@ const AssignChairpersons = () => {
 		},
 	});
 
-	/* const [user, setUser] = useState(""); */
-
-	/* useEffect(() => {
-		const fetchProfile = async () => {
-			try {
-				const profileRes = await fetch("http://localhost:8080/api/profile", {
-					method: "GET",
-					headers: { Authorization: `Bearer ${token}` },
-				});
-				const profileData = await profileRes.json();
-				setUser(profileData);
-				console.log("user :", profileData);
-			} catch (e) {
-				notify("error", e.message);
-				console.error("Error fetching profile:", e);
-			}
-		};
-		fetchProfile();
-	}, []); */
-
-	const [majorName, setMajorName] = useState("");
-
 	useEffect(() => {
 		const fetchRequestExamInfoAll = async () => {
 			try {
 				console.log("candidate :", save);
 
-				const marjorRes = await fetch("http://localhost:8080/api/getMajor_name", {
+				const RegistrarOfficerRes = await fetch("http://localhost:8080/api/allAssignRegistrarOfficer", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
-				const marjorData = await marjorRes.json();
-				setMajorName(marjorData);
-				console.log("marjor :", marjorData);
+				const RegistrarOfficerData = await RegistrarOfficerRes.json();
+				if (!RegistrarOfficerRes.ok) throw new Error(RegistrarOfficerData.message);
+				setAssignRegistrarOfficer(RegistrarOfficerData);
+				console.log("RegistrarOfficer :", RegistrarOfficerData);
 
-				const ChairpersonsRes = await fetch("http://localhost:8080/api/allAssignChairpersons", {
-					method: "POST",
-					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				});
-				const ChairpersonsData = await ChairpersonsRes.json();
-				if (!ChairpersonsRes.ok) throw new Error(ChairpersonsData.message);
-				console.log("Chairpersons :", ChairpersonsData);
-
-				const Chairpersons_filtered = ChairpersonsData.filter((item) => item.major_id === marjorData.major_id);
-				setAssignChairpersons(Chairpersons_filtered);
-				console.log("Chairpersons filtered :", Chairpersons_filtered);
-
-				const candidate_filtered = save.filter((person) => !ChairpersonsData.some((item) => item.user_id === person.value));
-				setChairpersons(candidate_filtered);
+				const candidate_filtered = save.filter((person) => !RegistrarOfficerData.some((item) => item.user_id === person.value));
+				setRegistrarOfficer(candidate_filtered);
 				console.log("candidate_filtered :", candidate_filtered);
 			} catch (e) {
 				notify("error", e.message);
-				console.error("Error fetch allAssignChairpersons:", e);
+				console.error("Error fetch allAssignRegistrarOfficer:", e);
 			}
 			setReloadTable(false);
 		};
@@ -115,14 +82,14 @@ const AssignChairpersons = () => {
 
 	const handleSubmit = async () => {
 		const url = {
-			add: "http://localhost:8080/api/addAssignChairpersons",
-			delete: "http://localhost:8080/api/deleteAssignChairpersons",
+			add: "http://localhost:8080/api/addAssignRegistrarOfficer",
+			delete: "http://localhost:8080/api/deleteAssignRegistrarOfficer",
 		};
 		try {
 			const req = await fetch(url[modalType], {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ ...Form.values, major_id: majorName.major_id }),
+				body: JSON.stringify({ ...Form.values }),
 			});
 			const res = await req.json();
 			if (!req.ok) {
@@ -133,13 +100,12 @@ const AssignChairpersons = () => {
 			setOpenModal(false);
 		} catch (e) {
 			notify("error", e.message);
-			console.error("Error fetch AssignChairpersons:", e);
+			console.error("Error fetch AssignRegistrarOfficer:", e);
 		}
 	};
 
-	const classRows = assignChairpersons.map((item) => (
+	const classRows = assignRegistrarOfficer.map((item) => (
 		<Table.Tr key={item.user_id}>
-			<Table.Td>{majorName.major_name}</Table.Td>
 			<Table.Td>{item.name}</Table.Td>
 			<Table.Td>
 				<Group>
@@ -156,18 +122,17 @@ const AssignChairpersons = () => {
 			<ModalInform opened={inform.open} onClose={close} message={inform.message} type={inform.type} />
 			<Modal opened={openModal} onClose={() => setOpenModal(false)} title="กรอกข้อมูลประธานกรรมการบัณฑิตศึกษาประจำสาขาวิชา" centered>
 				<form onSubmit={Form.onSubmit(handleSubmit)}>
-					<Text>สาขา{majorName.major_name}</Text>
 					{modalType === "delete" ? (
 						<TextInput label="ชื่อ" {...Form.getInputProps("name")} disabled={true} />
 					) : (
 						<Select
 							label="ชื่อ"
 							searchable
-							data={chairpersons}
-							value={Form.values.chairpersons_id}
+							data={RegistrarOfficer}
+							value={Form.values.RegistrarOfficer_id}
 							onChange={(value) => {
 								Form.setFieldValue("user_id", value);
-								const selected = chairpersons.find((c) => c.value === value);
+								const selected = RegistrarOfficer.find((c) => c.value === value);
 								Form.setFieldValue("name", selected ? selected.label : "");
 							}}
 						/>
@@ -181,7 +146,7 @@ const AssignChairpersons = () => {
 			</Modal>
 
 			<Text size="1.5rem" fw={900} mb="md">
-				กรอกข้อมูลประธานกรรมการบัณฑิตศึกษาประจำสาขาวิชา
+				AssignRegistrarOfficer
 			</Text>
 			<Space h="xl" />
 			<Box>
@@ -196,8 +161,7 @@ const AssignChairpersons = () => {
 				<Table horizontalSpacing="sm" verticalSpacing="sm" highlightOnHover>
 					<Table.Thead>
 						<Table.Tr>
-							<Table.Th>สาขา</Table.Th>
-							<Table.Th>อาจารย์</Table.Th>
+							<Table.Th>ชื่อ</Table.Th>
 							<Table.Th>การดำเนินการ</Table.Th>
 						</Table.Tr>
 					</Table.Thead>
@@ -208,4 +172,4 @@ const AssignChairpersons = () => {
 	);
 };
 
-export default AssignChairpersons;
+export default AssignRegistrarOfficer;
