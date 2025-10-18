@@ -71,6 +71,39 @@ router.post("/login", async (req, res) => {
 		}
 	} else {
 		try {
+			const loginReq = await fetch("https://mua.kpru.ac.th/FrontEnd_Mis/login/login/074726168", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ txtemail: username, txtpass: password }),
+			});
+			const loginData = await loginReq.json();
+
+			console.log(loginData[0]);
+
+			let roles = [];
+
+			if (loginData[0].organization_id === "0000000007") {
+				roles.push("officer_registrar");
+			}
+
+			if (loginData[0].AJStatus === "1") {
+				roles.push("advisor");
+			}
+
+			const db = await poolPromise;
+			const check_thesis = await db.request().input("user_id", username).query("SELECT TOP 1 * FROM request_thesis_proposal WHERE thesis_advisor_id = @user_id");
+			if (check_thesis.recordset[0]) {
+				roles.push("research_advisor");
+			}
+
+			const token = jwt.sign({ user_id: username, roles: roles, name: `${loginData[0].prefix_name}${loginData[0].frist_name} ${loginData[0].last_name}` }, SECRET_KEY, { expiresIn: "1h" });
+
+			res.status(200).json({ message: "เข้าสู่ระบบสำเร็จ", token });
+		} catch (e) {
+			console.error("Login error:", e);
+			res.status(500).json({ message: "Internal Server Error" });
+		}
+		/* try {
 			const db = await poolPromise;
 			const uRes = await db.request().input("username", username).query("SELECT * FROM users WHERE username = @username");
 			const u = uRes.recordset[0];
@@ -97,24 +130,31 @@ router.post("/login", async (req, res) => {
 
 			console.log(roles);
 
-			const token = jwt.sign({ user_id: u.user_id.toString(), roles: roles /* ,role: u.role */}, SECRET_KEY, { expiresIn: "1h" });
+			const token = jwt.sign(
+				{
+					user_id: u.user_id.toString(),
+					roles: roles, // ,role: u.role //
+				},
+				SECRET_KEY,
+				{ expiresIn: "1h" }
+			);
 			res.status(200).json({ message: "เข้าสู่ระบบสำเร็จ", token, role: u.role });
 		} catch (e) {
 			console.error("Login error:", e);
 			res.status(500).json({ message: "Internal Server Error" });
-		}
+		} */
 	}
 });
 
 router.post("/switchRole", authenticateToken, (req, res) => {
 	const { role } = req.body;
-	const { user_id, roles } = req.user;
+	const { user_id, roles, name } = req.user;
 	console.log(roles, role);
 
 	if (!roles.includes(role)) {
 		return res.status(403).json({ message: "ไม่มีสิทธิ์ role นี้" });
 	}
-	const newToken = jwt.sign({ user_id, roles, role: role }, process.env.SECRET_KEY, { expiresIn: "1h" });
+	const newToken = jwt.sign({ user_id, roles, role: role, name: name }, process.env.SECRET_KEY, { expiresIn: "1h" });
 
 	res.json({ token: newToken, activeRole: role });
 });

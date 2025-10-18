@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Avatar, Group, Text, UnstyledButton, Select } from "@mantine/core";
 import classes from "./UserButton.module.css";
-import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
 export function UserButton() {
 	const navigate = useNavigate();
@@ -27,17 +27,20 @@ export function UserButton() {
 			const token = localStorage.getItem("token");
 			if (!token) return;
 			try {
-				const req = await fetch("http://localhost:8080/api/profile", {
+				/* const req = await fetch("http://localhost:8080/api/profile", {
 					method: "GET",
 					headers: { Authorization: `Bearer ${token}` },
 				});
 				const res = await req.json();
 				if (!req.ok) throw new Error(res.message);
-				setUserName(res.name);
+				setUserName(res.name); */
 
 				const decoded = jwtDecode(token);
+
+				console.log(decoded);
 				setRoles(decoded.roles || []);
 				setActiveRole(decoded.role);
+				setUserName(decoded.name);
 			} catch (err) {
 				console.error("Failed to fetch profile or decode token:", err);
 			}
