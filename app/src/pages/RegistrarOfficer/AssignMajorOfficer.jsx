@@ -16,7 +16,6 @@ const AssignMajorOfficer = () => {
 	const [openModal, setOpenModal] = useState(false);
 	const [modalType, setModalType] = useState(false);
 
-
 	const save = [
 		{ value: "1000000000001", label: "นายกิตติพงษ์ วัฒนากูล" },
 		{ value: "1000000000002", label: "นางสาวธนพร สุขเจริญ" },
@@ -46,6 +45,17 @@ const AssignMajorOfficer = () => {
 	useEffect(() => {
 		const fetchRequestExamInfoAll = async () => {
 			try {
+				const personnelRes = await fetch("https://git.kpru.ac.th/FrontEnd_Admission/admissionnew2022/loadMember/1", {
+					method: "GET",
+					headers: { "Content-Type": "application/json" },
+				});
+				const personnelData = await personnelRes.json();
+				const personnelList = personnelData.map((item) => ({
+					value: item.employee_id,
+					label: `${item.prename_full_tha}${item.first_name_tha} ${item.last_name_tha}`,
+				}));
+				console.log("personnelList :", personnelList);
+
 				console.log("candidate :", save);
 
 				const MajorOfficerRes = await fetch("http://localhost:8080/api/allAssignMajorOfficer", {

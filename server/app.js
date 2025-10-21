@@ -16,9 +16,6 @@ app.use("/api", loginRoutes);
 const profileRoutes = require("./routes/profile");
 app.use("/api", profileRoutes);
 
-const majors = require("./routes/majors");
-app.use("/api", majors);
-
 const assignMajorOfficer = require("./routes/assignMajorOfficer");
 app.use("/api", assignMajorOfficer);
 const assignChairpersons = require("./routes/assignChairpersons");
