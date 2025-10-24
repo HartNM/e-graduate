@@ -96,7 +96,6 @@ router.post("/editCourseRegistration", authenticateToken, async (req, res) => {
 			VALUES (@major_id, @study_group_id, @course_id)
 			`);
 		}
-
 		res.status(200).json({ message: "แก้ไขข้อมูลเรียบร้อย" });
 	} catch (e) {
 		console.error("editCourseRegistration:", e);

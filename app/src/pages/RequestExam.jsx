@@ -9,13 +9,18 @@ import ModalInform from "../component/Modal/ModalInform";
 import ModalCheckCourse from "../component/Modal/ModalCheckCourse";
 import Pdfg01 from "../component/PDF/Pdfg01";
 import { useForm } from "@mantine/form";
+import { jwtDecode } from "jwt-decode";
 
 const RequestExam = () => {
 	const token = localStorage.getItem("token");
-	const payloadBase64 = token.split(".")[1];
-	const payload = JSON.parse(atob(payloadBase64));
+	/* const payloadBase64 = token.split(".")[1];
+	const payload = JSON.parse(atob(payloadBase64)); */
+
+	const payload = jwtDecode(token);
 	const role = payload.role;
 	const user_id = payload.user_id;
+	console.log("token :", payload);
+
 	// Modal Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "", timeout: 3000 });
 	const notify = (type, message, timeout = 3000) => setInform({ open: true, type, message, timeout });
@@ -137,7 +142,7 @@ const RequestExam = () => {
 				if (!checkOpenKQRes.ok) throw new Error(checkOpenKQData.message);
 				if (checkOpenKQData.message) throw new Error(checkOpenKQData.message);
 				notify("error", checkOpenKQData.message, null);
-				console.log(checkOpenKQData);
+				console.log("วันเปิด :", checkOpenKQData);
 
 				const registrationRes = await fetch("http://localhost:8080/api/allStudyGroupIdCourseRegistration", {
 					method: "POST",
@@ -146,32 +151,32 @@ const RequestExam = () => {
 				const registrationData = await registrationRes.json();
 				if (!registrationRes.ok) throw new Error(registrationData.message);
 				if (!registrationData) throw new Error("รอเจ้าหน้าที่กรอกราย วิชาที่ต้องเรียน");
-				console.log(registrationData);
+				console.log("ที่ต้องลง :", registrationData);
 
-				const registerCoursesRes = await fetch("http://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectPass", {
+				const registerCoursesRes = await fetch("https://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectPass", {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({ ID_NO: user_id }),
 				});
 				const registerCoursesData = await registerCoursesRes.json();
 				if (!registerCoursesRes.ok) throw new Error(registerCoursesData.message);
-				console.log(registerCoursesData);
+				console.log("ที่ลง :", registerCoursesData);
 
 				const allCodes = registerCoursesData.map((c) => c.SJCODE);
 				const missing = registrationData.course_id.filter((code) => !allCodes.includes(code));
-				console.log(missing);
+				console.log("ที่ขาด :", missing);
 
 				if (missing.length > 0) {
-					const res = await fetch("http://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectAll");
+					const res = await fetch("https://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectAll");
 					const subjects = await res.json();
-					console.log(subjects);
+					console.log("รายวิชาทั้งหมด :", subjects);
 
 					const subjMap = new Map(subjects.map((s) => [s.SUBJCODE, s.SUBJNAME]));
 					const coursesData = missing.map((course_id) => ({
 						course_id,
 						course_name: subjMap.get(course_id) || "ไม่พบข้อมูล",
 					}));
-					console.log(coursesData);
+					console.log("รายวิชาที่ขาด :", coursesData);
 
 					setMissingCoures(coursesData);
 					setOpenCheckCourse(true);
@@ -179,7 +184,6 @@ const RequestExam = () => {
 				}
 
 				const countFailOrAbsent = request.filter((row) => row.exam_results === "ไม่ผ่าน" || row.exam_results === "ขาดสอบ").length;
-
 				if (!request.length) {
 					console.log("ลำดับ :", 1);
 					setLatestRequest(false);
@@ -207,7 +211,6 @@ const RequestExam = () => {
 				fetchStudentData();
 			} else {
 				const countFailOrAbsent = request.filter((row) => row.exam_results === "ไม่ผ่าน" || row.exam_results === "ขาดสอบ").length;
-
 				if (!request.length) {
 					console.log("ลำดับ :", 1);
 					setLatestRequest(false);
@@ -292,7 +295,7 @@ const RequestExam = () => {
 			const requestRes = await fetch("http://localhost:8080/api/payRequestExam", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ request_exam_id: item.request_exam_id, receipt_vol_No: "10/54" }),
+				body: JSON.stringify({ request_exam_id: item.request_exam_id, receipt_vol: "2564", receipt_No: "1", receipt_pay: "1000" }),
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) {

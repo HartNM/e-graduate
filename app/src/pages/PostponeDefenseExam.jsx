@@ -6,12 +6,16 @@ import ModalApprove from "../component/Modal/ModalApprove";
 import ModalInform from "../component/Modal/ModalInform";
 import Pdfg07 from "../component/PDF/Pdfg08";
 import { useForm } from "@mantine/form";
-
+import { jwtDecode } from "jwt-decode";
 const PostponeDefenseExam = () => {
 	const token = localStorage.getItem("token");
-	const payloadBase64 = token.split(".")[1];
-	const payload = JSON.parse(atob(payloadBase64));
+	/* const payloadBase64 = token.split(".")[1];
+				const payload = JSON.parse(atob(payloadBase64)); */
+
+	const payload = jwtDecode(token);
 	const role = payload.role;
+	const user_id = payload.user_id;
+	console.log("token :", payload);
 	// Modal Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });

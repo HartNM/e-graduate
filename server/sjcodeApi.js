@@ -18,7 +18,7 @@ async function main() {
 		let pool = await sql.connect(config);
 
 		// เรียก API วิชาทั้งหมด
-		const response = await axios.get("http://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectAll");
+		const response = await axios.get("https://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectAll");
 
 		const subjects = response.data;
 

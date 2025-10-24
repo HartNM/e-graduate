@@ -359,7 +359,7 @@ router.post("/approvePlagiarismReport", authenticateToken, async (req, res) => {
 	}
 });
 
-router.post("/payRequestExam", authenticateToken, async (req, res) => {
+/* router.post("/payRequestExam", authenticateToken, async (req, res) => {
 	const { request_exam_id, receipt_vol_No } = req.body;
 	try {
 		const pool = await poolPromise;
@@ -389,6 +389,6 @@ router.post("/payRequestExam", authenticateToken, async (req, res) => {
 		console.error("SQL Error:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกการชำระเงิน" });
 	}
-});
+}); */
 
 module.exports = router;

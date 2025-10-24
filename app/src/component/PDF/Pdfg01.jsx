@@ -138,25 +138,25 @@ async function fillPdf(data) {
 		{ text: registrar_approvals_date_month, x: 170, y: y + 2, show: typeof data?.registrar_approvals === "boolean" },
 		{ text: registrar_approvals_date_year, x: 210, y: y + 2, show: typeof data?.registrar_approvals === "boolean" },
 
-		{ text: `4. ชำระค่าธรรมเนียมการสอบแล้ว ภาคเรียนที่ ${data?.term}`, x: 310, y: (y += space * 7), font: THSarabunNewBold, show: data?.receipt_vol_No !== null },
-		{ text: data?.education_level === "ปริญญาโท" ? "ปริญญาโท จำนวน 1,000 บาท (หนึ่งพันบาทถ้วน)" : "ปริญญาเอก จำนวน 1,500 บาท (หนึ่งพันห้าร้อยบาทถ้วน)", x: 330, y: (y -= space), show: data?.receipt_vol_No !== null },
-		{ text: `ตามใบเสร็จรับเงิน เล่มที่ ${data?.receipt_vol_No} เลขที่ ${data?.receipt_vol_No}`, x: 310, y: (y -= space), show: data?.receipt_vol_No !== null },
-		{ text: `ลงชื่อ.......................................................................`, x: 325, y: (y -= space * 2), show: data?.receipt_vol_No !== null },
-		{ text: "นายณัฐวุฒิ มาตกาง", x: 390, y: y + 2, show: data?.receipt_vol_No !== null },
-		{ text: `(.....................................................................) `, x: 345, y: (y -= space), show: data?.receipt_vol_No !== null },
-		{ text: "นายณัฐวุฒิ มาตกาง", x: 390, y: y + 2, show: data?.receipt_vol_No !== null },
-		{ text: `เจ้าหน้าที่การเงิน`, x: 395, y: (y -= space), show: data?.receipt_vol_No !== null },
-		{ text: `วันที่ ........../................./...................`, x: 360, y: (y -= space), show: data?.receipt_vol_No !== null },
-		{ text: receipt_pay_date_day, x: 385, y: y + 2, show: data?.receipt_vol_No !== null },
-		{ text: receipt_pay_date_month, x: 420, y: y + 2, show: data?.receipt_vol_No !== null },
-		{ text: receipt_pay_date_year, x: 460, y: y + 2, show: data?.receipt_vol_No !== null },
+		{ text: `4. ชำระค่าธรรมเนียมการสอบแล้ว ภาคเรียนที่ ${data?.term}`, x: 310, y: (y += space * 7), font: THSarabunNewBold, show: data?.receipt_vol !== null },
+		{ text: data?.education_level === "ปริญญาโท" ? "ปริญญาโท จำนวน 1,000 บาท (หนึ่งพันบาทถ้วน)" : "ปริญญาเอก จำนวน 1,500 บาท (หนึ่งพันห้าร้อยบาทถ้วน)", x: 330, y: (y -= space), show: data?.receipt_vol !== null },
+		{ text: `ตามใบเสร็จรับเงิน เล่มที่ ${data?.receipt_vol} เลขที่ ${data?.receipt_No}`, x: 310, y: (y -= space), show: data?.receipt_vol !== null },
+		{ text: `ลงชื่อ.......................................................................`, x: 325, y: (y -= space * 2), show: data?.receipt_vol !== null },
+		{ text: "นายณัฐวุฒิ มาตกาง", x: 390, y: y + 2, show: data?.receipt_vol !== null },
+		{ text: `(.....................................................................) `, x: 345, y: (y -= space), show: data?.receipt_vol !== null },
+		{ text: "นายณัฐวุฒิ มาตกาง", x: 390, y: y + 2, show: data?.receipt_vol !== null },
+		{ text: `เจ้าหน้าที่การเงิน`, x: 395, y: (y -= space), show: data?.receipt_vol !== null },
+		{ text: `วันที่ ........../................./...................`, x: 360, y: (y -= space), show: data?.receipt_vol !== null },
+		{ text: receipt_pay_date_day, x: 385, y: y + 2, show: data?.receipt_vol !== null },
+		{ text: receipt_pay_date_month, x: 420, y: y + 2, show: data?.receipt_vol !== null },
+		{ text: receipt_pay_date_year, x: 460, y: y + 2, show: data?.receipt_vol !== null },
 	];
 	drawItems.filter((item) => item.show !== false).forEach((item) => draw(page, item.text, item.x, item.y, item.font, item.size));
 
 	typeof data?.advisor_approvals === "boolean" && drawRect(page, 50, y + space * 8, 250, space * 8.5);
 	typeof data?.chairpersons_approvals === "boolean" && drawRect(page, 300, y + space * 8, 250, space * 8.5);
 	typeof data?.registrar_approvals === "boolean" && drawRect(page, 50, y - space * 0.5, 250, space * 8.5);
-	data?.receipt_vol_No !== null && drawRect(page, 300, y - space * 0.5, 250, space * 8.5);
+	data?.receipt_vol !== null && drawRect(page, 300, y - space * 0.5, 250, space * 8.5);
 
 	const pdfBytes = await pdfDoc.save();
 	return new Blob([pdfBytes], { type: "application/pdf" });

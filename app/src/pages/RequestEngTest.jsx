@@ -7,12 +7,17 @@ import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
 import Pdfg02 from "../component/PDF/Pdfg02";
 import { useForm } from "@mantine/form";
+import { jwtDecode } from "jwt-decode";
 
 const RequestEngTest = () => {
 	const token = localStorage.getItem("token");
-	const payloadBase64 = token.split(".")[1];
-	const payload = JSON.parse(atob(payloadBase64));
+	/* const payloadBase64 = token.split(".")[1];
+				const payload = JSON.parse(atob(payloadBase64)); */
+
+	const payload = jwtDecode(token);
 	const role = payload.role;
+	const user_id = payload.user_id;
+	console.log("token :", payload);
 	// Modal notify
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
@@ -188,7 +193,7 @@ const RequestEngTest = () => {
 			setRequest((prev) => prev.map((row) => (row.request_eng_test_id === item.request_eng_test_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-			console.error("Error fetching payRequestExam:", e);
+			console.error("Error fetching payRequestEngTest:", e);
 		}
 	};
 

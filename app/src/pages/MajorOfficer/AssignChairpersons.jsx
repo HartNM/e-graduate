@@ -42,31 +42,23 @@ const AssignChairpersons = () => {
 		},
 	});
 
-	/* const [user, setUser] = useState(""); */
-
-	/* useEffect(() => {
-		const fetchProfile = async () => {
-			try {
-				const profileRes = await fetch("http://localhost:8080/api/profile", {
-					method: "GET",
-					headers: { Authorization: `Bearer ${token}` },
-				});
-				const profileData = await profileRes.json();
-				setUser(profileData);
-				console.log("user :", profileData);
-			} catch (e) {
-				notify("error", e.message);
-				console.error("Error fetching profile:", e);
-			}
-		};
-		fetchProfile();
-	}, []); */
-
 	const [majorName, setMajorName] = useState("");
+	const [SelectlistCurr, SetSelectListCurr] = useState([]);
 
 	useEffect(() => {
 		const fetchRequestExamInfoAll = async () => {
 			try {
+				const ListCurrRes = await fetch("https://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListCurr");
+				const ListCurrData = await ListCurrRes.json();
+
+				SetSelectListCurr(
+					ListCurrData.map((item) => ({
+						value: item.curr_id,
+						label: `${item.curr_levnameth} (${item.curr_year})`,
+					}))
+				);
+				console.log("ListCurr :", ListCurrData);
+
 				console.log("candidate :", save);
 
 				const marjorRes = await fetch("http://localhost:8080/api/getMajor_name", {
@@ -157,20 +149,33 @@ const AssignChairpersons = () => {
 			<Modal opened={openModal} onClose={() => setOpenModal(false)} title="กรอกข้อมูลประธานกรรมการบัณฑิตศึกษาประจำสาขาวิชา" centered>
 				<form onSubmit={Form.onSubmit(handleSubmit)}>
 					<Text>สาขา{majorName.major_name}</Text>
+
 					{modalType === "delete" ? (
 						<TextInput label="ชื่อ" {...Form.getInputProps("name")} disabled={true} />
 					) : (
-						<Select
-							label="ชื่อ"
-							searchable
-							data={chairpersons}
-							value={Form.values.chairpersons_id}
-							onChange={(value) => {
-								Form.setFieldValue("user_id", value);
-								const selected = chairpersons.find((c) => c.value === value);
-								Form.setFieldValue("name", selected ? selected.label : "");
-							}}
-						/>
+						<>
+							<Select
+								label="หลักสูตร"
+								searchable
+								data={SelectlistCurr}
+								value={Form.values.chairpersons_id}
+								onChange={(value) => {
+									Form.setFieldValue("curr_id", value);
+								}}
+							/>
+
+							<Select
+								label="ชื่อ"
+								searchable
+								data={chairpersons}
+								value={Form.values.chairpersons_id}
+								onChange={(value) => {
+									Form.setFieldValue("user_id", value);
+									const selected = chairpersons.find((c) => c.value === value);
+									Form.setFieldValue("name", selected ? selected.label : "");
+								}}
+							/>
+						</>
 					)}
 
 					<Space h="md" />

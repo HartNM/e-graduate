@@ -92,15 +92,15 @@ router.post("/deleteAssignChairpersons", authenticateToken, async (req, res) => 
 });
 
 router.post("/addAssignChairpersons", authenticateToken, async (req, res) => {
-	const { user_id, name, major_id } = req.body;
+	const { user_id, name, major_id ,curr_id} = req.body;
 	console.log(req.body);
 
 	try {
 		const pool = await poolPromise;
-		const checkResult = await pool.request().input("user_id", user_id).query("SELECT * FROM roles WHERE user_id = @user_id AND role = 'chairpersons'");
-		if (checkResult.recordset.length > 0) {
-			return res.status(409).json({ message: "รหัสเจ้าหน้าที่นี้มีอยู่แล้วในระบบ" });
-		}
+		//const checkResult = await pool.request().input("user_id", user_id).query("SELECT * FROM roles WHERE user_id = @user_id AND role = 'chairpersons'");
+		//if (checkResult.recordset.length > 0) {
+		//	return res.status(409).json({ message: "รหัสเจ้าหน้าที่นี้มีอยู่แล้วในระบบ" });
+		//}
 		await pool.request().input("user_id", user_id).input("name", name).input("major_id", major_id).query(`
 		INSERT INTO roles (user_id, name, role, major_id
 		) VALUES (
@@ -121,7 +121,7 @@ router.post("/deleteAssignChairpersons", authenticateToken, async (req, res) => 
 	} catch (err) {
 		console.error("deleteAssignChairpersons:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการลบข้อมูล" });
-	}
-}); */
+	} 
+});*/
 
 module.exports = router;

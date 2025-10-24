@@ -1,3 +1,4 @@
+process.env.DEBUG = "mssql";
 const sql = require("mssql");
 
 const config = {

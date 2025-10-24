@@ -7,12 +7,17 @@ import ModalApprove from "../component/Modal/ModalApprove";
 import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
 import Pdfg01 from "../component/PDF/Pdfg05";
+import { jwtDecode } from "jwt-decode";
 
 const RequestGraduation = () => {
 	const token = localStorage.getItem("token");
-	const payloadBase64 = token.split(".")[1];
-	const payload = JSON.parse(atob(payloadBase64));
+	/* const payloadBase64 = token.split(".")[1];
+	const payload = JSON.parse(atob(payloadBase64)); */
+
+	const payload = jwtDecode(token);
 	const role = payload.role;
+	const user_id = payload.user_id;
+	console.log("token :", payload);
 	// Modal Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
@@ -245,7 +250,7 @@ const RequestGraduation = () => {
 			setRequest((prev) => prev.map((row) => (row.request_graduation_id === item.request_graduation_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-			console.error("Error fetching payRequestExam:", e);
+			console.error("Error fetching payRequestGraduation:", e);
 		}
 	};
 

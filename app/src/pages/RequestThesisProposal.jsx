@@ -8,12 +8,17 @@ import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
 import Pdfg01 from "../component/PDF/Pdfg03-04";
 import { useForm } from "@mantine/form";
+import { jwtDecode } from "jwt-decode";
 
 const RequestThesisProposal = () => {
 	const token = localStorage.getItem("token");
-	const payloadBase64 = token.split(".")[1];
-	const payload = JSON.parse(atob(payloadBase64));
+	/* const payloadBase64 = token.split(".")[1];
+		const payload = JSON.parse(atob(payloadBase64)); */
+
+	const payload = jwtDecode(token);
 	const role = payload.role;
+	const user_id = payload.user_id;
+	console.log("token :", payload);
 	// Modal Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
@@ -191,7 +196,7 @@ const RequestThesisProposal = () => {
 			setRequest((prev) => prev.map((row) => (row.request_thesis_proposal_id === item.request_thesis_proposal_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
 			notify("error", e.message);
-			console.error("Error fetching payRequestExam:", e);
+			console.error("Error fetching payRequestThesisProposal:", e);
 		}
 	};
 

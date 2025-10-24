@@ -3,12 +3,17 @@ import { Box, Text, ScrollArea, Table, Space, Button, Modal, MultiSelect, Group,
 import { useForm } from "@mantine/form";
 import ModalInform from "../../component/Modal/ModalInform";
 import AsyncCourseSelect from "./AsyncCourseSelect";
+import { jwtDecode } from "jwt-decode";
 
 const CourseRegistration = () => {
 	const token = localStorage.getItem("token");
-	const payloadBase64 = token.split(".")[1];
-	const payload = JSON.parse(atob(payloadBase64));
+	/* const payloadBase64 = token.split(".")[1];
+				const payload = JSON.parse(atob(payloadBase64)); */
+
+	const payload = jwtDecode(token);
+	const role = payload.role;
 	const user_id = payload.user_id;
+	console.log("token :", payload);
 	// Modal Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
@@ -37,7 +42,7 @@ const CourseRegistration = () => {
 	useEffect(() => {
 		const fetchAll = async () => {
 			try {
-				const ListSubjectAll = await fetch("http://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectAll");
+				const ListSubjectAll = await fetch("https://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectAll");
 				const subjects = await ListSubjectAll.json();
 
 				const formattedSubjects = subjects.map((item) => ({

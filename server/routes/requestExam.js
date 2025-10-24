@@ -1,8 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const authenticateToken = require("../middleware/authenticateToken");
-const { poolPromise } = require("../db");
+const { sql, poolPromise } = require("../db");
 const axios = require("axios");
+
+const convertToBool = (val) => {
+	if (val === null || val === undefined) return null;
+	return val === "1" || val === 1 || val === true;
+};
 
 const statusMap = {
 	0: "ยกเลิก",
@@ -68,13 +73,18 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 				} catch (err) {
 					console.warn(`ไม่สามารถดึงข้อมูลนักศึกษา ${item.student_id}`);
 				}
+
 				return {
 					...item,
 					...student,
 					status_text: statusMap[item.status?.toString()],
+					advisor_approvals: convertToBool(item.advisor_approvals),
+					chairpersons_approvals: convertToBool(item.chairpersons_approvals),
+					registrar_approvals: convertToBool(item.registrar_approvals),
 				};
 			})
 		);
+		console.log(enrichedData);
 		res.status(200).json(enrichedData);
 	} catch (err) {
 		console.error("requestExamAll:", err);
@@ -84,6 +94,7 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 
 router.post("/addRequestExam", authenticateToken, async (req, res) => {
 	const { student_id, study_group_id, major_id, major_name, faculty_name, education_level } = req.body;
+
 	try {
 		const pool = await poolPromise;
 
@@ -91,17 +102,21 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 			FROM request_exam_info
 			WHERE CAST(GETDATE() AS DATE) BETWEEN KQ_open_date AND KQ_close_date
 			ORDER BY request_exam_info_id DESC`);
-		console.log();
 
-		const result = await pool
+		const requestType = `ขอสอบ${education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`;
+		const request = await pool
 			.request()
 			.input("student_id", student_id)
 			.input("study_group_id", study_group_id)
 			.input("major_id", major_id)
 			.input("faculty_name", faculty_name)
-			.input("request_type", `ขอสอบ${education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`)
+			.input("request_type", requestType)
 			.input("term", infoRes.recordset[0].term)
-			.input("status", "1").query(`
+			.input("status", "1");
+
+		console.log("SQL Parameters:", request.parameters);
+
+		const result = await request.query(`
 				INSERT INTO request_exam (
 					student_id,
 					study_group_id,
@@ -129,6 +144,9 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 				...result.recordset[0],
 				major_name: major_name,
 				status_text: statusMap[result.recordset[0].status?.toString()],
+				advisor_approvals: convertToBool(result.recordset[0].advisor_approvals),
+				chairpersons_approvals: convertToBool(result.recordset[0].chairpersons_approvals),
+				registrar_approvals: convertToBool(result.recordset[0].registrar_approvals),
 			},
 		});
 	} catch (err) {
@@ -195,6 +213,9 @@ router.post("/approveRequestExam", authenticateToken, async (req, res) => {
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()],
+				advisor_approvals: convertToBool(result.recordset[0].advisor_approvals),
+				chairpersons_approvals: convertToBool(result.recordset[0].chairpersons_approvals),
+				registrar_approvals: convertToBool(result.recordset[0].registrar_approvals),
 			},
 		});
 	} catch (err) {
@@ -204,27 +225,38 @@ router.post("/approveRequestExam", authenticateToken, async (req, res) => {
 });
 
 router.post("/payRequestExam", authenticateToken, async (req, res) => {
-	const { request_exam_id, receipt_vol_No } = req.body;
+	const { request_exam_id, receipt_vol, receipt_No, receipt_pay } = req.body;
 	try {
 		const pool = await poolPromise;
-		const result = await pool.request().input("request_exam_id", request_exam_id).input("receipt_vol_No", receipt_vol_No).input("status", "5").query(`
+		const result = await pool
+			.request()
+			.input("request_exam_id", request_exam_id)
+			.input("receipt_vol", receipt_vol)
+			.input("receipt_No", receipt_No)
+			.input("receipt_pay", receipt_pay)
+			.input("status", "5").query(`
 			UPDATE request_exam
-			SET receipt_vol_No = @receipt_vol_No ,
+			SET receipt_vol = @receipt_vol,
+				receipt_No = @receipt_No,
+				receipt_pay = @receipt_pay,
 				receipt_pay_date = GETDATE(),
 				status = @status
 			OUTPUT INSERTED.*
 			WHERE request_exam_id = @request_exam_id
 		`);
-		const row = result.recordset[0];
+
 		res.status(200).json({
 			message: "บันทึกข้อมูลการชำระเงินเรียบร้อยแล้ว",
 			data: {
-				...row,
-				status_text: statusMap[row.status?.toString()],
+				...result,
+				status_text: statusMap[result.recordset[0].toString()],
+				advisor_approvals: convertToBool(result.recordset[0].advisor_approvals),
+				chairpersons_approvals: convertToBool(result.recordset[0].chairpersons_approvals),
+				registrar_approvals: convertToBool(result.recordset[0].registrar_approvals),
 			},
 		});
 	} catch (err) {
-		console.error("SQL Error:", err);
+		console.error("SQL Error payRequestExam:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกการชำระเงิน" });
 	}
 });
