@@ -50,7 +50,7 @@ router.post("/addAssignChairpersons", authenticateToken, async (req, res) => {
 			password,
 			name,
 			role,
-			major_id
+			major_id 
 		) VALUES (
 			@user_id,
 			@user_id,

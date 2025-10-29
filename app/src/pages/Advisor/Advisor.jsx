@@ -10,7 +10,7 @@ const menu = [
 	{ label: `คำร้องขอเลื่อนสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconCalendarClock, links: "/advisor/PostponeProposalExam" },
 	{ label: `คำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconReport, links: "/advisor/RequestThesisDefense" },
 	{ label: `คำร้องขอเลื่อนสอบวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconCalendarClock, links: "/advisor/PostponeDefenseExam" },*/
-	{ label: "คำร้องขอสำเร็จการศึกษาระดับบัณฑิตศึกษา", icon: IconSchool, links: "/advisor/RequestGraduation" },
+	/* { label: "คำร้องขอสำเร็จการศึกษาระดับบัณฑิตศึกษา", icon: IconSchool, links: "/advisor/RequestGraduation" }, */
 ];
 
 const Advisor = () => {

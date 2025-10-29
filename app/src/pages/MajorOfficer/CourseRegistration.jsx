@@ -13,7 +13,7 @@ const CourseRegistration = () => {
 	const payload = jwtDecode(token);
 	const role = payload.role;
 	const user_id = payload.user_id;
-	console.log("token :", payload);
+
 	// Modal Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
@@ -33,7 +33,12 @@ const CourseRegistration = () => {
 			course_id: [],
 		},
 		validate: {
-			study_group_id: (value) => (value !== "" ? null : "กรุณากรอกหมู่เรียน"),
+			study_group_id: (value) => {
+				if (value === "" || value == null) return "กรุณากรอกหมู่เรียน";
+				if (String(value).length !== 7) return "หมู่เรียนต้องมีจำนวน 7 ตัวอักษร";
+				return null;
+			},
+
 			course_id: (value) => (value.length > 0 ? null : "กรุณาเลือกรหัสวิชา"),
 		},
 	});
@@ -52,18 +57,6 @@ const CourseRegistration = () => {
 
 				console.log(formattedSubjects);
 				setFullCourses(formattedSubjects);
-
-				/* const allCourses = await fetch("http://localhost:8080/api/allCourses", {
-					method: "POST",
-					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				});
-				console.log();
-
-				const allCoursesData = await allCourses.json();
-				if (!allCourses.ok) throw new Error(allCoursesData.message);
-				console.log(allCoursesData);
-
-				setFullCourses(allCoursesData); */
 			} catch (e) {
 				console.error(e);
 			}
@@ -81,6 +74,7 @@ const CourseRegistration = () => {
 				const res1 = await req1.json();
 				if (!req1.ok) throw new Error(res1.message);
 				setTableData(res1);
+
 				const req2 = await fetch("http://localhost:8080/api/officerGetMajor_id", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -88,6 +82,7 @@ const CourseRegistration = () => {
 				});
 				const res2 = await req2.json();
 				if (!req2.ok) throw new Error(res2.message);
+
 				const req3 = await fetch("http://localhost:8080/api/major_idGetMajor_name", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -95,6 +90,7 @@ const CourseRegistration = () => {
 				});
 				const res3 = await req3.json();
 				if (!req3.ok) throw new Error(res3.message);
+
 				Form.setValues({ major_id: res2.major_id, major_name: res3.major_name });
 			} catch (e) {
 				notify("error", e.message);

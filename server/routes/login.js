@@ -51,6 +51,8 @@ const authenticateToken = require("../middleware/authenticateToken");
 
 router.post("/login", async (req, res) => {
 	const { username, password } = req.body;
+	console.log(req.body);
+	
 	if (username.length == 9) {
 		try {
 			const request = await axios.get(`http://localhost:8080/externalApi/student/${username}`);

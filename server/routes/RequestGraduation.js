@@ -272,13 +272,21 @@ router.post("/approveRequestGraduation", authenticateToken, async (req, res) => 
 });
 
 router.post("/payRequestGraduation", authenticateToken, async (req, res) => {
-	const { request_graduation_id, receipt_vol_No } = req.body;
+	const { request_graduation_id, receipt_vol, receipt_No, receipt_pay } = req.body;
 	try {
 		const pool = await poolPromise;
-		const result = await pool.request().input("request_graduation_id", request_graduation_id).input("receipt_vol_No", receipt_vol_No).input("receipt_pay_date", formatDateForDB()).input("status", "5")
-			.query(`
+		const result = await pool
+			.request()
+			.input("request_graduation_id", request_graduation_id)
+			.input("receipt_vol", receipt_vol)
+			.input("receipt_No", receipt_No)
+			.input("receipt_pay", receipt_pay)
+			.input("receipt_pay_date", formatDateForDB())
+			.input("status", "5").query(`
 			UPDATE request_graduation
-			SET receipt_vol_No = @receipt_vol_No ,
+			SET receipt_vol = @receipt_vol ,
+				receipt_No = @receipt_No ,
+				receipt_pay = @receipt_pay ,
 				receipt_pay_date = @receipt_pay_date,
 				status = @status
 			OUTPUT INSERTED.*

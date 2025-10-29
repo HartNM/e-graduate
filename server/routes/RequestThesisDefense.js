@@ -238,17 +238,21 @@ router.post("/approveRequestThesisDefense", authenticateToken, async (req, res) 
 
 // ชำระเงิน
 router.post("/payRequestThesisDefense", authenticateToken, async (req, res) => {
-	const { request_thesis_defense_id, receipt_vol_No } = req.body;
+	const { request_thesis_defense_id, receipt_vol, receipt_No, receipt_pay } = req.body;
 	try {
 		const pool = await poolPromise;
 		const result = await pool
 			.request()
 			.input("request_thesis_defense_id", request_thesis_defense_id)
-			.input("receipt_vol_No", receipt_vol_No)
+			.input("receipt_vol", receipt_vol)
+			.input("receipt_No", receipt_No)
+			.input("receipt_pay", receipt_pay)
 			.input("receipt_pay_date", formatDateForDB())
 			.input("status", "5").query(`
 				UPDATE request_thesis_defense
-				SET receipt_vol_No = @receipt_vol_No,
+				SET receipt_vol = @receipt_vol ,
+					receipt_No = @receipt_No ,
+					receipt_pay = @receipt_pay ,
 					receipt_pay_date = @receipt_pay_date,
 					status = @status
 				OUTPUT INSERTED.*

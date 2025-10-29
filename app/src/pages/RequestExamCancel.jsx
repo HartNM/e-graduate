@@ -16,7 +16,6 @@ const RequestExamCancel = () => {
 	const payload = jwtDecode(token);
 	const role = payload.role;
 	const user_id = payload.user_id;
-	console.log("token :", payload);
 	// Modal Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
@@ -87,7 +86,7 @@ const RequestExamCancel = () => {
 					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก close_date
 					currentTerm = [...termInfodata].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
 				}
-				if (role !== "student") setSelectedTerm(currentTerm.term);
+				setSelectedTerm(currentTerm.term);
 			} catch (e) {
 				notify("error", e.message);
 				console.error("Error fetching allRequestExamInfo:", e);
@@ -97,7 +96,8 @@ const RequestExamCancel = () => {
 	}, []);
 
 	useEffect(() => {
-		console.log(selectedTerm);
+		if (!selectedTerm) return;
+		console.log("เทอมนี้ ", selectedTerm);
 
 		const getRequestCancel = async () => {
 			try {
@@ -110,7 +110,7 @@ const RequestExamCancel = () => {
 				if (!requestExamReq.ok) throw new Error(requestExamData.message);
 				setRequest(requestExamData);
 
-				console.log(requestExamData);
+				console.log("คำร้องทังหมด", requestExamData);
 			} catch (e) {
 				notify("error", e.message);
 				console.error("Error fetching requestExamAll:", e);
@@ -131,7 +131,6 @@ const RequestExamCancel = () => {
 				});
 				const requestData = await requestReq.json();
 				if (!requestReq.ok) throw new Error(requestData.message);
-
 				console.log(requestData[0]);
 
 				const CheckOpenRECRes = await fetch("http://localhost:8080/api/CheckOpenREC", {
@@ -140,14 +139,8 @@ const RequestExamCancel = () => {
 				});
 				const CheckOpenRECData = await CheckOpenRECRes.json();
 				if (!CheckOpenRECRes.ok) throw new Error(CheckOpenRECData.message);
-
-				console.log(CheckOpenRECData[0]);
-
-				if (CheckOpenRECData[0]?.status) {
-					setLatestRequest(requestData[0]);
-				} else {
-					setLatestRequest(true);
-				}
+				console.log("วันที่ :", CheckOpenRECData);
+				setLatestRequest(requestData[0]);
 			} catch (e) {
 				notify("error", e.message);
 				console.error("Error fetching requestExamAll:", e);
@@ -189,6 +182,7 @@ const RequestExamCancel = () => {
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) throw new Error(requestData.message);
+			setLatestRequest(true);
 			notify("success", requestData.message || "สำเร็จ");
 			setOpenAddCancel(false);
 			setRequest((prev) => [...prev, { ...selectedRow, ...requestData.data }]);
@@ -264,11 +258,27 @@ const RequestExamCancel = () => {
 					</Pill>
 				)}
 				{item.status == 5 && (
-					<Pill variant="filled" style={{ backgroundColor: "#ffcccc", color: "#b30000" }}>
-						{item.status_text}
-					</Pill>
+					<>
+						<Pill variant="filled" style={{ backgroundColor: "#ffcccc", color: "#b30000" }}>
+							{item.status_text}
+						</Pill>
+						<br />
+						{!item.advisor_approvals && "อาจารย์ที่ปรึกษา"}
+						{item.advisor_approvals && !item.chairpersons_approvals && "ประธานกรรมการปะจำสาขาวิชา"}
+						{item.advisor_approvals && item.chairpersons_approvals && !item.registrar_approvals && "เจ้าหน้าที่ทะเบียน"}
+					</>
 				)}
-				{item.status > 6 && <Pill>{item.status_text}</Pill>}
+				{item.status > 6 && (
+					<Stepper active={item.status - 7} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
+						{[...Array(3)].map((_, i) => (
+							<Stepper.Step key={i}>
+								<Pill>{item.status_text}</Pill>
+							</Stepper.Step>
+						))}
+					</Stepper>
+				)}
+
+				{/* {item.status > 6 && <Pill>{item.status_text}</Pill>} */}
 			</Table.Td>
 
 			<Table.Td style={{ maxWidth: "150px" }}>

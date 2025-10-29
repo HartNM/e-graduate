@@ -148,6 +148,7 @@ const RequestEngTest = () => {
 			if (!requestRes.ok) throw new Error(requestData.message);
 			notify("success", requestData.message || "สำเร็จ");
 			setOpenAdd(false);
+			setLatestRequest(true);
 			setRequest((prev) => [...prev, { ...form.values, ...requestData.data }]);
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
@@ -184,7 +185,7 @@ const RequestEngTest = () => {
 			const requestRes = await fetch("http://localhost:8080/api/payRequestEngTest", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ request_eng_test_id: item.request_eng_test_id, receipt_vol_No: "10/54" }),
+				body: JSON.stringify({ request_eng_test_id: item.request_eng_test_id, receipt_vol: "154", receipt_No: "4", receipt_pay: "1000" }),
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) throw new Error(requestData.message);

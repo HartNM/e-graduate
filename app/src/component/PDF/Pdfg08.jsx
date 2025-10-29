@@ -1,3 +1,4 @@
+//คำร้องขอเลื่อนสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ และ สอบวิทยานิพนธ์/การค้นคว้าอิสระ
 import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument, rgb } from "pdf-lib";
 import { Button } from "@mantine/core";
@@ -15,8 +16,8 @@ async function fillPdf(data) {
 	drawGrid(page);
 
 	const [request_date_day, request_date_month, request_date_year] = formatThaiDate(data?.request_date);
-	const [advisor_cancel_date_day, advisor_cancel_date_month, advisor_cancel_date_year] = formatThaiDateShort(data?.advisor_approvals_date);
-	const [chairpersons_cancel_date_day, chairpersons_cancel_date_month, chairpersons_cancel_date_year] = formatThaiDateShort(data?.chairpersons_approvals_date);
+	const [advisor_approvals_date_day, advisor_approvals_date_month, advisor_approvals_date_year] = formatThaiDateShort(data?.advisor_approvals_date);
+	const [chairpersons_approvals_date_day, chairpersons_approvals_date_month, chairpersons_approvals_date_year] = formatThaiDateShort(data?.chairpersons_approvals_date);
 	let y = 760;
 	let space = 20;
 
@@ -64,9 +65,9 @@ async function fillPdf(data) {
 		{ text: data?.advisor_approvals_id, x: 140, y: y + 2, show: typeof data?.advisor_approvals === "boolean" },
 		{ text: `อาจารย์ที่ปรึกษา`, x: 145, y: (y -= space), show: typeof data?.advisor_approvals === "boolean" },
 		{ text: `วันที่ ........../................./...................`, x: 110, y: (y -= space), show: typeof data?.advisor_approvals === "boolean" },
-		{ text: advisor_cancel_date_day, x: 135, y: y + 2, show: typeof data?.advisor_approvals === "boolean" },
-		{ text: advisor_cancel_date_month, x: 170, y: y + 2, show: typeof data?.advisor_approvals === "boolean" },
-		{ text: advisor_cancel_date_year, x: 210, y: y + 2, show: typeof data?.advisor_approvals === "boolean" },
+		{ text: advisor_approvals_date_day, x: 135, y: y + 2, show: typeof data?.advisor_approvals === "boolean" },
+		{ text: advisor_approvals_date_month, x: 170, y: y + 2, show: typeof data?.advisor_approvals === "boolean" },
+		{ text: advisor_approvals_date_year, x: 210, y: y + 2, show: typeof data?.advisor_approvals === "boolean" },
 
 		{ text: `2. ความเห็นประธานกรรมการบัณฑิตศึกษาประจำสาขาวิชา`, x: 310, y: (y += space * 7), font: THSarabunNewBold, show: typeof data?.chairpersons_approvals === "boolean" },
 		{ text: data?.chairpersons_approvals ? "เห็นควรอนุญาต" : "ไม่อนุญาต", x: 330, y: (y -= space), show: typeof data?.chairpersons_approvals === "boolean" },
@@ -77,9 +78,9 @@ async function fillPdf(data) {
 		{ text: data?.chairpersons_approvals_id, x: 390, y: y + 2, show: typeof data?.chairpersons_approvals === "boolean" },
 		{ text: `ประธานกรรมการบัณฑิตศึกษาประจำสาขาวิชา`, x: 340, y: (y -= space), show: typeof data?.chairpersons_approvals === "boolean" },
 		{ text: `วันที่ ........../................./...................`, x: 360, y: (y -= space), show: typeof data?.chairpersons_approvals === "boolean" },
-		{ text: chairpersons_cancel_date_day, x: 385, y: y + 2, show: typeof data?.chairpersons_approvals === "boolean" },
-		{ text: chairpersons_cancel_date_month, x: 420, y: y + 2, show: typeof data?.chairpersons_approvals === "boolean" },
-		{ text: chairpersons_cancel_date_year, x: 460, y: y + 2, show: typeof data?.chairpersons_approvals === "boolean" },
+		{ text: chairpersons_approvals_date_day, x: 385, y: y + 2, show: typeof data?.chairpersons_approvals === "boolean" },
+		{ text: chairpersons_approvals_date_month, x: 420, y: y + 2, show: typeof data?.chairpersons_approvals === "boolean" },
+		{ text: chairpersons_approvals_date_year, x: 460, y: y + 2, show: typeof data?.chairpersons_approvals === "boolean" },
 	];
 
 	drawItems.filter((item) => item.show !== false).forEach((item) => draw(page, item.text, item.x, item.y, item.font, item.size));

@@ -45,6 +45,9 @@ router.post("/allRequestEngTest", authenticateToken, async (req, res) => {
 					...item,
 					...studentInfo,
 					status_text: statusMap[item.status?.toString()] || null,
+					advisor_approvals: item.advisor_approvals === null ? null : item.advisor_approvals === "1",
+					chairpersons_approvals: item.chairpersons_approvals === null ? null : item.chairpersons_approvals === "1",
+					registrar_approvals: item.registrar_approvals === null ? null : item.registrar_approvals === "1",
 				};
 			})
 		);
@@ -97,6 +100,9 @@ router.post("/addRequestEngTest", authenticateToken, async (req, res) => {
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()] || null,
+				advisor_approvals: result.recordset[0].advisor_approvals === null ? null : result.recordset[0].advisor_approvals === "1",
+				chairpersons_approvals: result.recordset[0].chairpersons_approvals === null ? null : result.recordset[0].chairpersons_approvals === "1",
+				registrar_approvals: result.recordset[0].registrar_approvals === null ? null : result.recordset[0].registrar_approvals === "1",
 			},
 		});
 	} catch (err) {
@@ -164,6 +170,9 @@ router.post("/approveRequestEngTest", authenticateToken, async (req, res) => {
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()] || null,
+				advisor_approvals: result.recordset[0].advisor_approvals === null ? null : result.recordset[0].advisor_approvals === "1",
+				chairpersons_approvals: result.recordset[0].chairpersons_approvals === null ? null : result.recordset[0].chairpersons_approvals === "1",
+				registrar_approvals: result.recordset[0].registrar_approvals === null ? null : result.recordset[0].registrar_approvals === "1",
 			},
 		});
 	} catch (err) {
@@ -173,17 +182,20 @@ router.post("/approveRequestEngTest", authenticateToken, async (req, res) => {
 });
 
 router.post("/payRequestEngTest", authenticateToken, async (req, res) => {
-	const { request_eng_test_id, receipt_vol_No } = req.body;
+	const { request_eng_test_id, receipt_vol, receipt_No, receipt_pay } = req.body;
 	try {
 		const pool = await poolPromise;
 		const result = await pool
 			.request()
 			.input("request_eng_test_id", request_eng_test_id)
-			.input("receipt_vol_No", receipt_vol_No)
-
+			.input("receipt_vol", receipt_vol)
+			.input("receipt_No", receipt_No)
+			.input("receipt_pay", receipt_pay)
 			.input("status", "5").query(`
 			UPDATE request_eng_test
-			SET receipt_vol_No = @receipt_vol_No ,
+			SET receipt_vol = @receipt_vol ,
+				receipt_No = @receipt_No ,
+				receipt_pay = @receipt_pay ,
 				receipt_pay_date = GETDATE(),
 				status = @status
 			OUTPUT INSERTED.* 
@@ -194,6 +206,9 @@ router.post("/payRequestEngTest", authenticateToken, async (req, res) => {
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()] || null,
+				advisor_approvals: result.recordset[0].advisor_approvals === null ? null : result.recordset[0].advisor_approvals === "1",
+				chairpersons_approvals: result.recordset[0].chairpersons_approvals === null ? null : result.recordset[0].chairpersons_approvals === "1",
+				registrar_approvals: result.recordset[0].registrar_approvals === null ? null : result.recordset[0].registrar_approvals === "1",
 			},
 		});
 	} catch (err) {

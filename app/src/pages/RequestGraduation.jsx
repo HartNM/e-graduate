@@ -239,7 +239,7 @@ const RequestGraduation = () => {
 			const requestRes = await fetch("http://localhost:8080/api/payRequestGraduation", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ request_graduation_id: item.request_graduation_id, receipt_vol_No: "10/54" }),
+				body: JSON.stringify({ request_graduation_id: item.request_graduation_id, receipt_vol: "154", receipt_No: "4", receipt_pay: "1000" }),
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) {

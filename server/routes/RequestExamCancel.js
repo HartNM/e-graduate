@@ -16,29 +16,29 @@ router.post("/CheckOpenREC", authenticateToken, async (req, res) => {
 	try {
 		const pool = await poolPromise;
 		const result = await pool.query(`
-			SELECT TOP 1
-				term,
-				CAST(GETDATE() AS DATE) AS today,
-				KQ_exam_date,
-				CASE 
-					WHEN CAST(GETDATE() AS DATE) <= DATEADD(DAY, -3, KQ_exam_date) 
-						THEN CAST(1 AS BIT) 
-					ELSE CAST(0 AS BIT) 
-				END AS status
+			SELECT *
 			FROM request_exam_info
 			WHERE CAST(GETDATE() AS DATE) BETWEEN term_open_date AND term_close_date
-			ORDER BY term_close_date DESC
 		`);
 
-		console.log(result.recordset);
+		console.log(result.recordset[0].KQ_exam_date);
 
-		if (result.recordset.length === 0) {
-			return res.status(200).json({ status: 0, message: "เกินกำหนดการขอยกเลิกแล้ว" });
+		const examDate = new Date(result.recordset[0].KQ_exam_date);
+		const today = new Date();
+		// คำนวณต่าง 3 วัน (หน่วยเป็น milliseconds)
+		const diffTime = examDate - today;
+		const diffDays = diffTime / (1000 * 60 * 60 * 24);
+
+		if (diffDays <= 3) {
+			// ทำงานถ้าเหลือ <= 3 วัน
+			console.log("เหลือก่อนวันสอบไม่เกิน 3 วัน");
+			res.status(401).json({ message: "เกินกำหนดการขอยกเลิกแล้ว" });
+		} else {
+			console.log("ยังไม่ถึงช่วง 3 วันก่อนสอบ");
+			res.status(200).json(result.recordset);
 		}
-
-		res.status(200).json(result.recordset);
 	} catch (err) {
-		console.error("check_beforeExam:", err);
+		console.error("CheckOpenREC:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาด" });
 	}
 });
@@ -61,15 +61,15 @@ router.post("/AllRequestExamCancel", authenticateToken, async (req, res) => {
 					rce.status,
 					rce.reason,
 					rce.request_date,
-					rce.advisor_cancel_id,
-					rce.advisor_cancel,
-					rce.advisor_cancel_date,
-					rce.chairpersons_cancel_id,
-					rce.chairpersons_cancel,
-					rce.chairpersons_cancel_date,
-					rce.dean_cancel_id,
-					rce.dean_cancel,
-					rce.dean_cancel_date,
+					rce.advisor_approvals_id,
+					rce.advisor_approvals,
+					rce.advisor_approvals_date,
+					rce.chairpersons_approvals_id,
+					rce.chairpersons_approvals,
+					rce.chairpersons_approvals_date,
+					rce.dean_approvals_id,
+					rce.dean_approvals,
+					rce.dean_approvals_date,
 					rce.comment
 			FROM [request_submission].[dbo].[request_exam_cancel] rce
 			INNER JOIN [request_submission].[dbo].[request_exam] re
@@ -81,10 +81,10 @@ router.post("/AllRequestExamCancel", authenticateToken, async (req, res) => {
 			query += " WHERE re.study_group_id IN (SELECT group_no FROM advisorGroup_no WHERE user_id = @user_id) AND re.term = @term";
 		} else if (role === "chairpersons") {
 			query +=
-				" WHERE re.major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND (rce.status IN (0, 8, 9) OR (rce.status = 5 AND rce.advisor_cancel_id IS NOT NULL AND rce.chairpersons_cancel_id IS NOT NULL)) AND re.term = @term";
+				" WHERE re.major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND (rce.status IN (0, 8, 9) OR (rce.status = 5 AND rce.advisor_approvals_id IS NOT NULL AND rce.chairpersons_approvals_id IS NOT NULL)) AND re.term = @term";
 		} else if (role === "dean") {
 			query +=
-				" WHERE re.faculty_name IN (SELECT faculty_name FROM users WHERE user_id = @user_id) AND (rce.status IN (0, 9) OR (rce.status = 5 AND rce.advisor_cancel_id IS NOT NULL AND rce.chairpersons_cancel_id IS NOT NULL AND rce.dean_cancel_id IS NOT NULL)) AND re.term = @term";
+				" WHERE re.faculty_name IN (SELECT faculty_name FROM users WHERE user_id = @user_id) AND (rce.status IN (0, 9) OR (rce.status = 5 AND rce.advisor_approvals_id IS NOT NULL AND rce.chairpersons_approvals_id IS NOT NULL AND rce.dean_approvals_id IS NOT NULL)) AND re.term = @term";
 		}
 		query += " ORDER BY request_cancel_exam_id DESC";
 		const result = await request.query(query);
@@ -101,6 +101,9 @@ router.post("/AllRequestExamCancel", authenticateToken, async (req, res) => {
 					...item,
 					...studentInfo,
 					status_text: statusMap[item.status?.toString()] || null,
+					advisor_approvals: item.advisor_approvals === null ? null : item.advisor_approvals === "1",
+					chairpersons_approvals: item.chairpersons_approvals === null ? null : item.chairpersons_approvals === "1",
+					registrar_approvals: item.registrar_approvals === null ? null : item.registrar_approvals === "1",
 				};
 			})
 		);
@@ -150,6 +153,9 @@ router.post("/AddRequestExamCancel", authenticateToken, async (req, res) => {
 					...request_exam.recordset[0],
 					...request_exam_cancel.recordset[0],
 					status_text: statusMap[request_exam_cancel.recordset[0].status?.toString()] || null,
+					advisor_approvals: request_exam.recordset[0].advisor_approvals === null ? null : request_exam.recordset[0].advisor_approvals === "1",
+					chairpersons_approvals: request_exam.recordset[0].chairpersons_approvals === null ? null : request_exam.recordset[0].chairpersons_approvals === "1",
+					registrar_approvals: request_exam.recordset[0].registrar_approvals === null ? null : request_exam.recordset[0].registrar_approvals === "1",
 				},
 			});
 		} catch (err) {
@@ -183,31 +189,31 @@ router.post("/ApproveRequestExamCancel", authenticateToken, async (req, res) => 
 			const checkStatus = await pool
 				.request()
 				.input("request_exam_id", request_exam_id)
-				.query("SELECT advisor_approvals, chairpersons_approvals,registrar_approvals,receipt_vol_No FROM request_exam WHERE request_exam_id = @request_exam_id");
+				.query("SELECT advisor_approvals, chairpersons_approvals,registrar_approvals,receipt_vol FROM request_exam WHERE request_exam_id = @request_exam_id");
 			if (checkStatus.recordset[0].advisor_approvals === null) status = "1";
 			else if (checkStatus.recordset[0].chairpersons_approvals === null) status = "2";
 			else if (checkStatus.recordset[0].registrar_approvals === null) status = "3";
-			else if (checkStatus.recordset[0].receipt_vol_No === null) status = "4";
+			else if (checkStatus.recordset[0].receipt_vol === null) status = "4";
 			else status = "5";
 			statusCancel = "5";
 		}
 		const roleFields = {
 			advisor: `
-				advisor_cancel_id = @user_id,
-				advisor_cancel = @approve,
-				advisor_cancel_date = GETDATE(),
+				advisor_approvals_id = @user_id,
+				advisor_approvals = @approve,
+				advisor_approvals_date = GETDATE(),
 				status = @statusCancel
 			`,
 			chairpersons: `
-				chairpersons_cancel_id = @user_id,
-				chairpersons_cancel = @approve,
-				chairpersons_cancel_date = GETDATE(),
+				chairpersons_approvals_id = @user_id,
+				chairpersons_approvals = @approve,
+				chairpersons_approvals_date = GETDATE(),
 				status = @statusCancel
 			`,
 			dean: `
-				dean_cancel_id = @user_id,
-				dean_cancel = @approve,
-				dean_cancel_date = GETDATE(),
+				dean_approvals_id = @user_id,
+				dean_approvals = @approve,
+				dean_approvals_date = GETDATE(),
 				status = @statusCancel
 			`,
 		};
@@ -237,6 +243,9 @@ router.post("/ApproveRequestExamCancel", authenticateToken, async (req, res) => 
 					...request_exam.recordset[0],
 					...request_exam_cancel.recordset[0],
 					status_text: statusMap[request_exam_cancel.recordset[0].status?.toString()] || null,
+					advisor_approvals: request_exam.recordset[0].advisor_approvals === null ? null : request_exam.recordset[0].advisor_approvals === "1",
+					chairpersons_approvals: request_exam.recordset[0].chairpersons_approvals === null ? null : request_exam.recordset[0].chairpersons_approvals === "1",
+					registrar_approvals: request_exam.recordset[0].registrar_approvals === null ? null : request_exam.recordset[0].registrar_approvals === "1",
 				},
 			});
 		} catch (err) {

@@ -3,21 +3,6 @@ const router = express.Router();
 const authenticateToken = require("../middleware/authenticateToken");
 const { poolPromise } = require("../db");
 
-router.post("/allCourses", authenticateToken, async (req, res) => {
-	try {
-		const pool = await poolPromise;
-		const result = await pool.request().query(`SELECT * FROM courses`);
-		const formatted = result.recordset.map((row) => ({
-			value: row.course_id, // ใช้เป็น key
-			label: `${row.course_id} - ${row.course_name}`, // แสดงผล
-		}));
-		res.status(200).json(formatted);
-	} catch (e) {
-		console.error("addCourseRegistration:", e);
-		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
-	}
-});
-
 router.post("/officerGetMajor_id", authenticateToken, async (req, res) => {
 	const { user_id } = req.body;
 	try {
@@ -25,7 +10,7 @@ router.post("/officerGetMajor_id", authenticateToken, async (req, res) => {
 		const result = await pool.request().input("user_id", user_id).query(`SELECT major_id FROM users WHERE user_id = @user_id`);
 		res.status(200).json(result.recordset[0]);
 	} catch (e) {
-		console.error("addCourseRegistration:", e);
+		console.error("officerGetMajor_id :", e);
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
 	}
 });
@@ -37,12 +22,12 @@ router.post("/major_idGetMajor_name", authenticateToken, async (req, res) => {
 		const result = await pool.request().input("major_id", major_id).query(`SELECT major_name FROM majors WHERE major_id = @major_id`);
 		res.status(200).json(result.recordset[0]);
 	} catch (e) {
-		console.error("addCourseRegistration:", e);
+		console.error("major_idGetMajor_name :", e);
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
 	}
 });
 
-router.post("/Course", authenticateToken, async (req, res) => {
+/* router.post("/Course", authenticateToken, async (req, res) => {
 	let { course_id } = req.body;
 	try {
 		const pool = await poolPromise;
@@ -62,7 +47,7 @@ router.post("/Course", authenticateToken, async (req, res) => {
 		console.error("Course:", e);
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
 	}
-});
+}); */
 
 router.post("/addCourseRegistration", authenticateToken, async (req, res) => {
 	const { course_id, major_id, study_group_id } = req.body;

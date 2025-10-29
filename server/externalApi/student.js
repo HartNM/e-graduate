@@ -4,34 +4,32 @@ const axios = require("axios");
 const { poolPromise, sql } = require("../db");
 
 /* major_name: item.mjcode, */
-/*  router.get("/student/:student_id", async (req, res) => {
-  const studentid = req.params.student_id;
-  try {
-    const response = await axios.get(
-      `https://mua.kpru.ac.th/FrontEnd_Tabian/petition/Showstudent/${studentid}`
-    );
-    const item = response.data[0];
-    const transformedData = {
-      student_id: item.OLDID,
-      PNAME: item.PNAME,
-      NAME: item.NAME,
-      BDATE: item.BDATE,
-      student_name: `${item.name} ${item.lname}`,
-      education_level: item.level_type,
-      program: `${item.level_name_long} (${item.level_name})`,
-      study_group_id: item.GROUP_NO,
-
-      major_name: item.t_mjname,
-      faculty_name: item.faculty_name,
-    };
-    res.json(transformedData);
-  } catch (err) {
-    console.error("API call error:", err);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});  */
-
 router.get("/student/:student_id", async (req, res) => {
+	const studentid = req.params.student_id;
+	try {
+		const response = await axios.get(`https://mua.kpru.ac.th/FrontEnd_Tabian/petition/Showstudent/${studentid}`);
+		const item = response.data[0];
+		const transformedData = {
+			student_id: item.OLDID,
+			PNAME: item.PNAME,
+			NAME: item.NAME,
+			BDATE: item.BDATE,
+			student_name: `${item.name} ${item.lname}`,
+			education_level: item.level_type,
+			program: `${item.level_name_long} (${item.level_name})`,
+			study_group_id: item.GROUP_NO,
+			major_id: item.mjcode,
+			major_name: item.t_mjname,
+			faculty_name: item.faculty_name,
+		};
+		res.json(transformedData);
+	} catch (err) {
+		console.error("API call error:", err);
+		res.status(500).json({ error: "Internal server error" });
+	}
+});
+
+/* router.get("/student/:student_id", async (req, res) => {
 	const studentid = req.params.student_id;
 	try {
 		const pool = await poolPromise;
@@ -51,16 +49,16 @@ router.get("/student/:student_id", async (req, res) => {
         FROM Api_students
         WHERE id = @id
       `);
-		/* if (result.recordset.length > 0) {
-			res.json(result.recordset[0]);
-		} else {
-			res.status(404).json({ error: "Student not found" });
-		} */
+		//if (result.recordset.length > 0) {
+		//	res.json(result.recordset[0]);
+		//} else {
+		//	res.status(404).json({ error: "Student not found" });
+		//}
 		res.json(result.recordset[0]);
 	} catch (e) {
 		console.error("DB query error:", e);
 		res.status(500).json({ error: "Internal server error" });
 	}
-});
+}); */
 
 module.exports = router;

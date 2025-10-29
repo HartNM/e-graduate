@@ -19,7 +19,6 @@ const RequestExam = () => {
 	const payload = jwtDecode(token);
 	const role = payload.role;
 	const user_id = payload.user_id;
-	console.log("token :", payload);
 
 	// Modal Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "", timeout: 3000 });
@@ -38,7 +37,7 @@ const RequestExam = () => {
 	const [error, setError] = useState("");
 	// System states
 	const [user, setUser] = useState("");
-	const [request, setRequest] = useState([]);
+	const [request, setRequest] = useState(null);
 	const [search, setSearch] = useState("");
 	const { type } = useParams();
 	const [selectedType, setSelectedType] = useState("");
@@ -109,6 +108,7 @@ const RequestExam = () => {
 	}, []);
 
 	useEffect(() => {
+		if (!selectedTerm) return;
 		console.log(selectedTerm);
 
 		const getRequest = async () => {
@@ -132,6 +132,9 @@ const RequestExam = () => {
 	}, [selectedTerm]);
 
 	useEffect(() => {
+		if (request === null || role !== "student") return;
+		console.log("student");
+
 		const fetchStudentData = async () => {
 			try {
 				const checkOpenKQRes = await fetch("http://localhost:8080/api/checkOpenKQ", {
@@ -141,94 +144,75 @@ const RequestExam = () => {
 				const checkOpenKQData = await checkOpenKQRes.json();
 				if (!checkOpenKQRes.ok) throw new Error(checkOpenKQData.message);
 				if (checkOpenKQData.message) throw new Error(checkOpenKQData.message);
-				notify("error", checkOpenKQData.message, null);
+				/* notify("error", checkOpenKQData.message, null); */
 				console.log("วันเปิด :", checkOpenKQData);
 
-				const registrationRes = await fetch("http://localhost:8080/api/allStudyGroupIdCourseRegistration", {
-					method: "POST",
-					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				});
-				const registrationData = await registrationRes.json();
-				if (!registrationRes.ok) throw new Error(registrationData.message);
-				if (!registrationData) throw new Error("รอเจ้าหน้าที่กรอกราย วิชาที่ต้องเรียน");
-				console.log("ที่ต้องลง :", registrationData);
+				if (user_id === "674140101") {
+					const registrationRes = await fetch("http://localhost:8080/api/allStudyGroupIdCourseRegistration", {
+						method: "POST",
+						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+					});
+					const registrationData = await registrationRes.json();
+					if (!registrationRes.ok) throw new Error(registrationData.message);
+					if (!registrationData) throw new Error("รอเจ้าหน้าที่กรอกราย วิชาที่ต้องเรียน");
+					console.log("ที่ต้องลง :", registrationData);
 
-				const registerCoursesRes = await fetch("https://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectPass", {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ ID_NO: user_id }),
-				});
-				const registerCoursesData = await registerCoursesRes.json();
-				if (!registerCoursesRes.ok) throw new Error(registerCoursesData.message);
-				console.log("ที่ลง :", registerCoursesData);
+					const registerCoursesRes = await fetch("https://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectPass", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ ID_NO: user_id }),
+					});
+					const registerCoursesData = await registerCoursesRes.json();
+					if (!registerCoursesRes.ok) throw new Error(registerCoursesData.message);
+					console.log("ที่ลง :", registerCoursesData);
 
-				const allCodes = registerCoursesData.map((c) => c.SJCODE);
-				const missing = registrationData.course_id.filter((code) => !allCodes.includes(code));
-				console.log("ที่ขาด :", missing);
+					const allCodes = registerCoursesData.map((c) => c.SJCODE);
+					const missing = registrationData.course_id.filter((code) => !allCodes.includes(code));
+					console.log("ที่ขาด :", missing);
 
-				if (missing.length > 0) {
-					const res = await fetch("https://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectAll");
-					const subjects = await res.json();
-					console.log("รายวิชาทั้งหมด :", subjects);
+					if (missing.length > 0) {
+						const res = await fetch("https://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectAll");
+						const subjects = await res.json();
 
-					const subjMap = new Map(subjects.map((s) => [s.SUBJCODE, s.SUBJNAME]));
-					const coursesData = missing.map((course_id) => ({
-						course_id,
-						course_name: subjMap.get(course_id) || "ไม่พบข้อมูล",
-					}));
-					console.log("รายวิชาที่ขาด :", coursesData);
+						const subjMap = new Map(subjects.map((s) => [s.SUBJCODE, s.SUBJNAME]));
+						const coursesData = missing.map((course_id) => ({
+							course_id,
+							course_name: subjMap.get(course_id) || "ไม่พบข้อมูล",
+						}));
+						console.log("รายวิชาที่ขาด :", coursesData);
 
-					setMissingCoures(coursesData);
-					setOpenCheckCourse(true);
-					return;
+						setMissingCoures(coursesData);
+						setOpenCheckCourse(true);
+						return;
+					}
 				}
-
 				const countFailOrAbsent = request.filter((row) => row.exam_results === "ไม่ผ่าน" || row.exam_results === "ขาดสอบ").length;
 				if (!request.length) {
-					console.log("ลำดับ :", 1);
+					console.log("ลำดับ : 1 ไม่มีคำร้อง (เปิด)");
 					setLatestRequest(false);
 				} else if (countFailOrAbsent > 2) {
-					console.log("ลำดับ :", 2);
+					console.log("ลำดับ : 2 ไม่ผ่านเกิน 3 ครั้ง (ปิด)");
+					setLatestRequest(true);
+				} else if (selectedTerm === request[0].term) {
+					console.log("ลำดับ : 3 เทอมนี้ลงแล้ว (ปิด)");
 					setLatestRequest(true);
 				} else if (request[0].exam_results === "ไม่ผ่าน" || request[0].exam_results === "ขาดสอบ") {
-					console.log("ลำดับ :", 3);
+					console.log("ลำดับ : 4 รอบที่แล้วไม่ผ่าน (เปิด)");
 					setLatestRequest(false);
-				} else if (selectedTerm === request[0].term) {
-					console.log("ลำดับ :", 4);
-					setLatestRequest(true);
 				} else {
-					console.log("ลำดับ :", 5);
+					console.log("ลำดับ : 5 (เปิด)");
 					setLatestRequest(request[0]);
 				}
 			} catch (e) {
-				notify("error", e.message);
+				notify("error", e.message, null);
 				console.error(e);
 			}
 		};
 
-		if (role === "student") {
-			if (user_id === "674140101") {
-				fetchStudentData();
-			} else {
-				const countFailOrAbsent = request.filter((row) => row.exam_results === "ไม่ผ่าน" || row.exam_results === "ขาดสอบ").length;
-				if (!request.length) {
-					console.log("ลำดับ :", 1);
-					setLatestRequest(false);
-				} else if (countFailOrAbsent > 2) {
-					console.log("ลำดับ :", 2);
-					setLatestRequest(true);
-				} else if (request[0].exam_results === "ไม่ผ่าน" || request[0].exam_results === "ขาดสอบ") {
-					console.log("ลำดับ :", 3);
-					setLatestRequest(false);
-				} else if (selectedTerm === request[0].term) {
-					console.log("ลำดับ :", 4);
-					setLatestRequest(true);
-				} else {
-					console.log("ลำดับ :", 5);
-					setLatestRequest(request[0]);
-				}
-			}
-		}
+		fetchStudentData();
+		/* if (role === "student") {
+			fetchStudentData();
+		} */
 	}, [request]);
 
 	const handleOpenAdd = async () => {
@@ -239,7 +223,7 @@ const RequestExam = () => {
 			});
 			const res = await req.json();
 			if (!req.ok) throw new Error(res.message);
-			form.setValues(res);
+			form.setValues({ ...res, term: selectedTerm });
 			setOpenAdd(true);
 		} catch (e) {
 			notify("error", e.message);
@@ -255,11 +239,15 @@ const RequestExam = () => {
 				body: JSON.stringify(form.values),
 			});
 			const requestData = await requestRes.json();
+			console.log(requestRes);
+			console.log(requestData);
 			if (!requestRes.ok) throw new Error(requestData.message);
-			notify("success", requestData.message || "สำเร็จ");
+
+			notify("success", requestData.message);
+
 			setOpenAdd(false);
 			setRequest((prev) => [...prev, { ...requestData.data, ...form.values }]);
-			setLatestRequest(true);
+			/* setLatestRequest(true); */
 		} catch (e) {
 			notify("error", e.message);
 			console.error("Error fetching addRequestExam:", e);
@@ -303,6 +291,8 @@ const RequestExam = () => {
 			}
 			notify("success", requestData.message || "สำเร็จ");
 			setOpenPay(false);
+			console.log("ข้อมูลตอบกลับ ", requestData);
+
 			setRequest((prev) => prev.map((row) => (row.request_exam_id === item.request_exam_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
 			notify("error", e.message);
@@ -319,7 +309,7 @@ const RequestExam = () => {
 		});
 	}
 
-	const sortedData = sortRequests(request, role);
+	const sortedData = sortRequests(request ?? [], role);
 
 	const filteredData = sortedData.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
@@ -385,7 +375,7 @@ const RequestExam = () => {
 									ชำระค่าธรรมเนียม
 								</Button>
 							)}
-							{item.receipt_vol_No != null && (
+							{item.receipt_vol != null && (
 								<Button size="xs" color="green">
 									พิมพ์ใบเสร็จ
 								</Button>
@@ -468,7 +458,7 @@ const RequestExam = () => {
 							{["advisor", "chairpersons"].includes(role) && <Table.Th>เรื่อง</Table.Th>}
 							<Table.Th>สถานะ</Table.Th>
 							<Table.Th>การดำเนินการ</Table.Th>
-							{request.some((it) => it.exam_results !== null) && <Table.Th>ผลสอบ</Table.Th>}
+							{request?.some((it) => it.exam_results !== null) && <Table.Th>ผลสอบ</Table.Th>}
 						</Table.Tr>
 					</Table.Thead>
 					<Table.Tbody>{rows}</Table.Tbody>

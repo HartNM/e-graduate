@@ -55,6 +55,9 @@ const PostponeProposalExam = () => {
 		},
 	});
 
+	const [term, setTerm] = useState([]);
+	const [selectedTerm, setSelectedTerm] = useState("");
+
 	useEffect(() => {
 		const fetchProfile = async () => {
 			try {
@@ -71,7 +74,38 @@ const PostponeProposalExam = () => {
 			}
 		};
 		fetchProfile();
-	}, [token]);
+
+		const getTerm = async () => {
+			try {
+				const termInfoReq = await fetch("http://localhost:8080/api/allRequestExamInfo", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				});
+				const termInfodata = await termInfoReq.json();
+				if (!termInfoReq.ok) throw new Error(termInfodata.message);
+				setTerm(termInfodata.map((item) => item.term));
+
+				console.log(termInfodata);
+
+				const today = new Date();
+				// หา term ที่อยู่ในช่วง open-close
+				let currentTerm = termInfodata.find((item) => {
+					const open = new Date(item.term_open_date);
+					const close = new Date(item.term_close_date);
+					return today >= open && today <= close;
+				});
+				if (!currentTerm && termInfodata.length > 0) {
+					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก close_date
+					currentTerm = [...termInfodata].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
+				}
+				setSelectedTerm(currentTerm.term);
+			} catch (e) {
+				notify("error", e.message);
+				console.error("Error fetching allRequestExamInfo:", e);
+			}
+		};
+		getTerm();
+	}, []);
 
 	const [latestRequest, setLatestRequest] = useState(true);
 	const [buttonAdd, setButtonAdd] = useState(true);
@@ -290,6 +324,7 @@ const PostponeProposalExam = () => {
 				<Box>
 					<Flex align="flex-end" gap="sm">
 						{role !== "student" && <TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
+						{role !== "student" && <Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} allowDeselect={false} />}
 					</Flex>
 				</Box>
 				<Box>

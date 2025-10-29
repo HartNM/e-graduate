@@ -36,7 +36,7 @@ router.post("/checkOpenKQ", authenticateToken, async (req, res) => {
 		}
 		res.status(200).json(result.recordset[0]);
 	} catch (err) {
-		console.error("check_openKQ:", err);
+		console.error("checkOpenKQ:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาด" });
 	}
 });
@@ -73,18 +73,17 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 				} catch (err) {
 					console.warn(`ไม่สามารถดึงข้อมูลนักศึกษา ${item.student_id}`);
 				}
-
 				return {
 					...item,
 					...student,
 					status_text: statusMap[item.status?.toString()],
-					advisor_approvals: convertToBool(item.advisor_approvals),
-					chairpersons_approvals: convertToBool(item.chairpersons_approvals),
-					registrar_approvals: convertToBool(item.registrar_approvals),
+					advisor_approvals: item.advisor_approvals === null ? null : item.advisor_approvals === "1",
+					chairpersons_approvals: item.chairpersons_approvals === null ? null : item.chairpersons_approvals === "1",
+					registrar_approvals: item.registrar_approvals === null ? null : item.registrar_approvals === "1",
 				};
 			})
 		);
-		console.log(enrichedData);
+		/* console.log(enrichedData); */
 		res.status(200).json(enrichedData);
 	} catch (err) {
 		console.error("requestExamAll:", err);
@@ -93,30 +92,26 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 });
 
 router.post("/addRequestExam", authenticateToken, async (req, res) => {
-	const { student_id, study_group_id, major_id, major_name, faculty_name, education_level } = req.body;
-
+	const { student_id, study_group_id, major_id, major_name, faculty_name, education_level, term } = req.body;
 	try {
 		const pool = await poolPromise;
 
-		const infoRes = await pool.request().query(`SELECT TOP 1 *
+		/* const infoRes = await pool.request().query(`SELECT TOP 1 *
 			FROM request_exam_info
 			WHERE CAST(GETDATE() AS DATE) BETWEEN KQ_open_date AND KQ_close_date
 			ORDER BY request_exam_info_id DESC`);
+		console.log(infoRes); */
 
 		const requestType = `ขอสอบ${education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`;
-		const request = await pool
+		const result = await pool
 			.request()
 			.input("student_id", student_id)
 			.input("study_group_id", study_group_id)
 			.input("major_id", major_id)
 			.input("faculty_name", faculty_name)
 			.input("request_type", requestType)
-			.input("term", infoRes.recordset[0].term)
-			.input("status", "1");
-
-		console.log("SQL Parameters:", request.parameters);
-
-		const result = await request.query(`
+			.input("term", term /* infoRes.recordset[0].term */)
+			.input("status", "1").query(`
 				INSERT INTO request_exam (
 					student_id,
 					study_group_id,
@@ -144,9 +139,9 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 				...result.recordset[0],
 				major_name: major_name,
 				status_text: statusMap[result.recordset[0].status?.toString()],
-				advisor_approvals: convertToBool(result.recordset[0].advisor_approvals),
-				chairpersons_approvals: convertToBool(result.recordset[0].chairpersons_approvals),
-				registrar_approvals: convertToBool(result.recordset[0].registrar_approvals),
+				advisor_approvals: result.recordset[0].advisor_approvals === null ? null : result.recordset[0].advisor_approvals === "1",
+				chairpersons_approvals: result.recordset[0].chairpersons_approvals === null ? null : result.recordset[0].chairpersons_approvals === "1",
+				registrar_approvals: result.recordset[0].registrar_approvals === null ? null : result.recordset[0].registrar_approvals === "1",
 			},
 		});
 	} catch (err) {
@@ -213,9 +208,9 @@ router.post("/approveRequestExam", authenticateToken, async (req, res) => {
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()],
-				advisor_approvals: convertToBool(result.recordset[0].advisor_approvals),
-				chairpersons_approvals: convertToBool(result.recordset[0].chairpersons_approvals),
-				registrar_approvals: convertToBool(result.recordset[0].registrar_approvals),
+				advisor_approvals: result.recordset[0].advisor_approvals === null ? null : result.recordset[0].advisor_approvals === "1",
+				chairpersons_approvals: result.recordset[0].chairpersons_approvals === null ? null : result.recordset[0].chairpersons_approvals === "1",
+				registrar_approvals: result.recordset[0].registrar_approvals === null ? null : result.recordset[0].registrar_approvals === "1",
 			},
 		});
 	} catch (err) {
@@ -248,11 +243,11 @@ router.post("/payRequestExam", authenticateToken, async (req, res) => {
 		res.status(200).json({
 			message: "บันทึกข้อมูลการชำระเงินเรียบร้อยแล้ว",
 			data: {
-				...result,
-				status_text: statusMap[result.recordset[0].toString()],
-				advisor_approvals: convertToBool(result.recordset[0].advisor_approvals),
-				chairpersons_approvals: convertToBool(result.recordset[0].chairpersons_approvals),
-				registrar_approvals: convertToBool(result.recordset[0].registrar_approvals),
+				...result.recordset[0],
+				status_text: statusMap[result.recordset[0].status?.toString()],
+				advisor_approvals: result.recordset[0].advisor_approvals === null ? null : result.recordset[0].advisor_approvals === "1",
+				chairpersons_approvals: result.recordset[0].chairpersons_approvals === null ? null : result.recordset[0].chairpersons_approvals === "1",
+				registrar_approvals: result.recordset[0].registrar_approvals === null ? null : result.recordset[0].registrar_approvals === "1",
 			},
 		});
 	} catch (err) {

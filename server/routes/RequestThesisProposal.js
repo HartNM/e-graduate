@@ -180,7 +180,7 @@ router.post("/approveRequestThesisProposal", authenticateToken, async (req, res)
 		const request = pool
 			.request()
 			.input("request_thesis_proposal_id", request_thesis_proposal_id)
-			.input("status", statusValue) 
+			.input("status", statusValue)
 			.input("user_id", user_id)
 			.input("approve", selected === "approve" ? 1 : 0)
 			.input("comment", comment);
@@ -224,12 +224,20 @@ router.post("/approveRequestThesisProposal", authenticateToken, async (req, res)
 });
 
 router.post("/payRequestThesisProposal", authenticateToken, async (req, res) => {
-	const { request_thesis_proposal_id, receipt_vol_No } = req.body;
+	const { request_thesis_proposal_id, receipt_vol, receipt_No, receipt_pay } = req.body;
 	try {
 		const pool = await poolPromise;
-		const result = await pool.request().input("request_thesis_proposal_id", request_thesis_proposal_id).input("receipt_vol_No", receipt_vol_No).input("status", "5").query(`
+		const result = await pool
+			.request()
+			.input("request_thesis_proposal_id", request_thesis_proposal_id)
+			.input("receipt_vol", receipt_vol)
+			.input("receipt_No", receipt_No)
+			.input("receipt_pay", receipt_pay)
+			.input("status", "5").query(`
 			UPDATE request_thesis_proposal
-			SET receipt_vol_No = @receipt_vol_No ,
+			SET receipt_vol = @receipt_vol ,
+				receipt_No = @receipt_No ,
+				receipt_pay = @receipt_pay ,
 				receipt_pay_date = GETDATE(),
 				status = @status
 			OUTPUT INSERTED.*
