@@ -1,4 +1,4 @@
-//ตารางคำร้องขอ
+//คำร้องขอยกเลิกประมวลความรู้/วัดคุณสมบัติ
 import { useState, useEffect } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
 import { useParams } from "react-router-dom";

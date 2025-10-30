@@ -1,4 +1,4 @@
-//คำร้องขอสอบ
+//คำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ
 import { useState, useEffect } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
 import { useParams } from "react-router-dom";

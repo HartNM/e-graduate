@@ -1,5 +1,5 @@
-//ตารางคำร้องขอ
-import { useState, useEffect } from "react";
+//คำร้องขอสอบประมวลความรู้/วัดคุณสมบัติ
+import { useState, useEffect, useMemo } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
 import { useParams } from "react-router-dom";
 import ModalAdd from "../component/Modal/ModalAdd";
@@ -13,10 +13,10 @@ import { jwtDecode } from "jwt-decode";
 
 const RequestExam = () => {
 	const token = localStorage.getItem("token");
-	/* const payloadBase64 = token.split(".")[1];
-	const payload = JSON.parse(atob(payloadBase64)); */
 
-	const payload = jwtDecode(token);
+	const payload = useMemo(() => {
+		return jwtDecode(token);
+	}, [token]);
 	const role = payload.role;
 	const user_id = payload.user_id;
 
@@ -427,7 +427,7 @@ const RequestExam = () => {
 				title={`${role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}คำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`}
 			/>
 			<ModalAdd opened={openAdd} onClose={() => setOpenAdd(false)} form={form.values} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`} />
-			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} />
+			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} MoneyRegis={user.education_level === "ปริญญาโท" ? 1000 : 1500} type={`คำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`} />
 
 			<Text size="1.5rem" fw={900} mb="md">
 				{`คำร้องขอสอบ${type ? type : `${user.education_level ? `${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` : "ประมวลความรู้/วัดคุณสมบัติ"}`}`}
