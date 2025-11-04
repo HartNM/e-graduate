@@ -6,7 +6,7 @@ const { poolPromise } = require("../db");
 router.post("/officerGetMajor_id", authenticateToken, async (req, res) => {
 	const { user_id } = req.body;
 	try {
-		const pool = await poolPromise;	
+		const pool = await poolPromise;
 		const result = await pool.request().input("user_id", user_id).query(`SELECT major_id FROM users WHERE user_id = @user_id`);
 		res.status(200).json(result.recordset[0]);
 	} catch (e) {
@@ -135,7 +135,7 @@ router.post("/allStudyGroupIdCourseRegistration", authenticateToken, async (req,
 		const pool = await poolPromise;
 		const result = await pool.request().input("study_group_id", study_group_id).query(`SELECT * FROM course_registration WHERE study_group_id = @study_group_id`);
 		const data = result.recordset;
-		if (data.length === 0) return res.status(200).json(null);
+		if (data.length === 0) return res.status(403).json({ message: "รอเจ้าหน้าที่ประจำสาขากรอกรายวิชาบังคับ" });
 		const formatted = {
 			major_id: data[0].major_id,
 			study_group_id: data[0].study_group_id,

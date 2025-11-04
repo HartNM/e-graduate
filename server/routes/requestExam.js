@@ -32,9 +32,9 @@ router.post("/checkOpenKQ", authenticateToken, async (req, res) => {
 			ORDER BY request_exam_info_id DESC
 		`);
 		if (result.recordset.length === 0) {
-			return res.status(200).json({ message: "ระบบคำร้องขอสอบประมวลความรู้/สอบวัดคุณสมบัติยังไม่เปิด" });
+			return res.status(403).json({ status: false, message: "ระบบคำร้องขอสอบประมวลความรู้/สอบวัดคุณสมบัติยังไม่เปิด" });
 		}
-		res.status(200).json(result.recordset[0]);
+		res.status(200).json({ status: true });
 	} catch (err) {
 		console.error("checkOpenKQ:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาด" });

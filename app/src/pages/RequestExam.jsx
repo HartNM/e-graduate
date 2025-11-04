@@ -19,6 +19,8 @@ const RequestExam = () => {
 	}, [token]);
 	const role = payload.role;
 	const user_id = payload.user_id;
+	const name = payload.name;
+	/* console.log(role, user_id, name); */
 
 	// Modal Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "", timeout: 3000 });
@@ -66,8 +68,8 @@ const RequestExam = () => {
 				});
 				const res = await req.json();
 				if (!req.ok) throw new Error(res.message);
-				console.log(res);
 				setUser(res);
+				console.log(res);
 			} catch (e) {
 				notify("error", e.message);
 				console.error(e);
@@ -84,7 +86,6 @@ const RequestExam = () => {
 				const termInfodata = await termInfoReq.json();
 				if (!termInfoReq.ok) throw new Error(termInfodata.message);
 				setTerm(termInfodata.map((item) => item.term));
-
 				console.log(termInfodata);
 
 				const today = new Date();
@@ -98,7 +99,13 @@ const RequestExam = () => {
 					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก close_date
 					currentTerm = [...termInfodata].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
 				}
-				setSelectedTerm(currentTerm.term);
+				if (currentTerm) {
+					setSelectedTerm(currentTerm.term);
+				} else {
+					// แจ้งเตือน หรือ set ค่า default ถ้าไม่มีเทอมเลย
+					console.warn("ไม่พบข้อมูลเทอม");
+					// setSelectedTerm(null); // หรือค่า default
+				}
 			} catch (e) {
 				notify("error", e.message);
 				console.error("Error fetching allRequestExamInfo:", e);
@@ -131,6 +138,7 @@ const RequestExam = () => {
 		getRequest();
 	}, [selectedTerm]);
 
+	const [openKQ, setOpenKQ] = useState(null);
 	useEffect(() => {
 		if (request === null || role !== "student") return;
 		console.log("student");
@@ -142,10 +150,8 @@ const RequestExam = () => {
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
 				const checkOpenKQData = await checkOpenKQRes.json();
+				setOpenKQ(checkOpenKQData.status);
 				if (!checkOpenKQRes.ok) throw new Error(checkOpenKQData.message);
-				if (checkOpenKQData.message) throw new Error(checkOpenKQData.message);
-				/* notify("error", checkOpenKQData.message, null); */
-				console.log("วันเปิด :", checkOpenKQData);
 
 				if (user_id === "674140101") {
 					const registrationRes = await fetch("http://localhost:8080/api/allStudyGroupIdCourseRegistration", {
@@ -154,7 +160,7 @@ const RequestExam = () => {
 					});
 					const registrationData = await registrationRes.json();
 					if (!registrationRes.ok) throw new Error(registrationData.message);
-					if (!registrationData) throw new Error("รอเจ้าหน้าที่กรอกราย วิชาที่ต้องเรียน");
+					/* if (!registrationData) throw new Error("รอเจ้าหน้าที่ประจำสาขากรอกรายวิชาบังคับ"); */
 					console.log("ที่ต้องลง :", registrationData);
 
 					const registerCoursesRes = await fetch("https://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectPass", {
@@ -186,6 +192,7 @@ const RequestExam = () => {
 						return;
 					}
 				}
+
 				const countFailOrAbsent = request.filter((row) => row.exam_results === "ไม่ผ่าน" || row.exam_results === "ขาดสอบ").length;
 				if (!request.length) {
 					console.log("ลำดับ : 1 ไม่มีคำร้อง (เปิด)");
@@ -193,6 +200,7 @@ const RequestExam = () => {
 				} else if (countFailOrAbsent > 2) {
 					console.log("ลำดับ : 2 ไม่ผ่านเกิน 3 ครั้ง (ปิด)");
 					setLatestRequest(true);
+					throw new Error("สอบไม่ผ่านเกิน 3 ครั้ง");
 				} else if (selectedTerm === request[0].term) {
 					console.log("ลำดับ : 3 เทอมนี้ลงแล้ว (ปิด)");
 					setLatestRequest(true);
@@ -204,7 +212,7 @@ const RequestExam = () => {
 					setLatestRequest(request[0]);
 				}
 			} catch (e) {
-				notify("error", e.message, null);
+				notify("error", e.message, 10000);
 				console.error(e);
 			}
 		};
@@ -263,7 +271,7 @@ const RequestExam = () => {
 			const requestRes = await fetch("http://localhost:8080/api/approveRequestExam", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ request_exam_id: item.request_exam_id, name: user.name, selected: selected, comment: comment }),
+				body: JSON.stringify({ request_exam_id: item.request_exam_id, name: name, selected: selected, comment: comment }),
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) throw new Error(requestData.message);

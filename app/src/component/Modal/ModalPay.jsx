@@ -1,31 +1,53 @@
-import { Modal, Box, Flex, Button } from "@mantine/core";
-/* import PayButton from "../ฺButton/ButtonPay"; */
-import { useMemo } from "react";
+import { Modal, Box, Text, Group, Image, Stack, Flex, Button } from "@mantine/core";
 
 const ModalPay = ({ opened, onClose, selectedRow, handlePay, MoneyRegis, stop_date }) => {
-	const paymentUrl = useMemo(() => {
-		return `https://e-payment.kpru.ac.th/pay/typepayment?comp=81914&orderRef1=${selectedRow?.student_id}&amount=${selectedRow?.receipt_pay}&endDate=${stop_date}&urlredirect=http://localhost:3000/student/RequestExam`;
-	}, [selectedRow?.student_id, selectedRow?.receipt_pay, stop_date]);
 
 	return (
-		<Modal opened={opened} onClose={onClose} title="ชำระค่าธรรมเนียม" centered>
+		<Modal opened={opened} onClose={onClose} title="ชำระค่าธรรมเนียม" centered size="500">
 			{selectedRow && (
 				<Box>
-					<a type="button" className="btn btn-warning btn-lg btn-block" href={paymentUrl} target="_blank" rel="noopener noreferrer">
-						ชำระเงิน {selectedRow?.request_type} ยอดเงินที่ต้องชำระ {Number(MoneyRegis).toLocaleString()} บาท
-						<br />
-						<img src="https://e-payment.kpru.ac.th/pay/public/images/Visa_Mastercard_jcb.jpg" alt="payment credit" />
-						<img src="https://e-payment.kpru.ac.th/pay/public/images/logo_ktb_next.png" alt="krungthai Next" />
-						<img src="https://e-payment.kpru.ac.th/pay/public/images/promtpay1.png" style={{ width: "100px" }} alt="promtpay" />
-						<br />
-						ผ่านช่องทางออนไลน์
+					<a href={`https://e-payment.kpru.ac.th/pay/typepayment?comp=81914&orderRef1=${selectedRow?.student_id}&amount=${selectedRow?.receipt_pay}&endDate=${stop_date}&urlredirect=http://localhost:3000/student/RequestExam`}>
+						{/* Stack ใช้จัด layout แนวตั้ง และจัดกลาง */}
+						<Stack align="center" gap="md">
+							{/* ใช้ Text component และกำหนดสไตล์ให้เหมือนลิงก์ */}
+							<Text fz="lg" fw={500} c="blue.7" td="underline">
+								ชำระเงิน {selectedRow?.request_type} ยอดเงินที่ต้องชำระ {Number(MoneyRegis).toLocaleString()} บาท
+							</Text>
+
+							{/* Group ใช้จัด layout แนวนอน (สำหรับโลโก้) */}
+							<Group justify="center" gap="md">
+								<Image
+									src="https://e-payment.kpru.ac.th/pay/public/images/Visa_Mastercard_jcb.jpg"
+									alt="payment credit"
+									h={30} // กำหนดความสูงให้ใกล้เคียงกัน
+									w="auto"
+								/>
+								<Image
+									src="https://e-payment.kpru.ac.th/pay/public/images/logo_ktb_next.png"
+									alt="krungthai Next"
+									h={35} // KTB อาจจะต้องสูงกว่านิดหน่อย
+									w="auto"
+								/>
+								<Image
+									src="https://e-payment.kpru.ac.th/pay/public/images/promtpay1.png"
+									alt="promtpay"
+									h={30} // กำหนดความสูง
+									w="auto"
+								/>
+							</Group>
+
+							{/* ข้อความบรรทัดล่าง */}
+							<Text fz="md" c="blue.7" td="underline">
+								ผ่านช่องทางออนไลน์
+							</Text>
+						</Stack>
 					</a>
-					{/* <PayButton Usernames={selectedRow?.student_id} MoneyRegis={selectedRow?.receipt_pay} stop_date="15/11/2568" type={selectedRow?.request_type} /> */}
-					{/* <Flex justify="flex-end" mt="md">
-					<Button color="green" onClick={() => handlePay(selectedRow)}>
-						บันทึก
-					</Button>
-				</Flex> */}
+
+					<Flex justify="flex-end" mt="md">
+						<Button color="green" onClick={() => handlePay(selectedRow)}>
+							ทดสอบ
+						</Button>
+					</Flex>
 				</Box>
 			)}
 		</Modal>

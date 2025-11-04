@@ -8,63 +8,38 @@ const axios = require("axios");
 const SECRET_KEY = process.env.SECRET_KEY;
 const authenticateToken = require("../middleware/authenticateToken");
 
-/* router.post("/login", async (req, res) => {
-	const { username, password } = req.body;
-	console.log(username, password);
-	if (username.length == 9) {
-		try {
-			const request = await axios.get(`http://localhost:8080/externalApi/student/${username}`);
-			const result = request.data;
-			console.log(result);
-			if (result.student_name === "undefined undefined" || (result.education_level !== "ปริญญาโท" && result.education_level !== "ปริญญาเอก")) {
-				return res.status(401).json({ message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" });
-			}
-			//if (result.BDATE !== password) {
-			//return res.status(401).json({ message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" });
-			//}
-			const token = jwt.sign({ reference_id: username, role: "student" }, SECRET_KEY, { expiresIn: "1h" });
-			res.status(200).json({ message: "เข้าสู่ระบบสำเร็จ", token, role: "student" });
-		} catch (err) {
-			console.error("Login error:", err);
-			res.status(500).json({ message: "Internal Server Error" });
-		}
-	} else {
-		try {
-			const pool = await poolPromise;
-			const result = await pool.request().input("username", username).query("SELECT * FROM user_account WHERE username = @username");
-			const user = result.recordset[0];
-			if (!user) {
-				return res.status(401).json({ message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" });
-			}
-			const isMatch = await bcrypt.compare(password, user.password);
-			if (!isMatch) {
-				return res.status(401).json({ message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" });
-			}
-			const token = jwt.sign({ reference_id: user.reference_id, role: user.role }, SECRET_KEY, { expiresIn: "1h" });
-			res.status(200).json({ message: "เข้าสู่ระบบสำเร็จ", token, role: user.role });
-		} catch (err) {
-			console.error("Login error:", err);
-			res.status(500).json({ message: "Internal Server Error" });
-		}
-	}
-}); */
-
 router.post("/login", async (req, res) => {
 	const { username, password } = req.body;
 	console.log(req.body);
-	
+
+	/* https://mua.kpru.ac.th/FrontEnd_Tabian/login/LoginsAdminTabian/481320117/13-06-30/074726168 */
+
+	/* if (username.length == 9) {
+		try {
+			const request = await axios.get(`https://mua.kpru.ac.th/FrontEnd_Tabian/login/LoginsAdminTabian/${username}/${password}/074726168`);
+			const result = request.data;
+			console.log(result[0]);
+			if (!result[0].OLDID) {
+				return res.status(401).json({ message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" });
+			}
+			const token = jwt.sign({ user_id: username, roles: [`student`], role: `student`, name: result[0].Pname + result[0].Name }, SECRET_KEY, { expiresIn: "1h" });
+			console.log(token);
+			res.status(200).json({ message: "เข้าสู่ระบบสำเร็จ", token, role: `student` });
+		} catch (e) {
+			console.error("Login error:", e);
+			res.status(500).json({ message: "Internal Server Error" });
+		}
+	} else */
+
 	if (username.length == 9) {
 		try {
 			const request = await axios.get(`http://localhost:8080/externalApi/student/${username}`);
 			const result = request.data;
 			console.log(result);
-			if (result.student_name === "undefined undefined" || (result.education_level !== "ปริญญาโท" && result.education_level !== "ปริญญาเอก")) {
+			if (result.student_name === "undefined undefined" || (result.education_level !== "ปริญญาโท" && result.education_level !== "ปริญญาเอก") /* || result.BDATE !== password */) {
 				return res.status(401).json({ message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" });
 			}
-			//if (result.BDATE !== password) {
-			//return res.status(401).json({ message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" });
-			//}
-			const token = jwt.sign({ user_id: username, roles: [`student`], role: `student`, name: result.NAME }, SECRET_KEY, { expiresIn: "1h" });
+			const token = jwt.sign({ user_id: username, roles: [`student`], role: `student`, name: result.PNAME + result.NAME }, SECRET_KEY, { expiresIn: "1h" });
 			console.log(token);
 			res.status(200).json({ message: "เข้าสู่ระบบสำเร็จ", token, role: `student` });
 		} catch (e) {

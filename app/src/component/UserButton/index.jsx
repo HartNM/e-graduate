@@ -29,7 +29,7 @@ export function UserButton() {
 			try {
 				/* const req = await fetch("http://localhost:8080/api/profile", {
 					method: "GET",
-					headers: { Authorization: `Bearer ${token}` },
+					headers: { Authorization: `Bearer ${token}` }, 
 				});
 				const res = await req.json();
 				if (!req.ok) throw new Error(res.message);

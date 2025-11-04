@@ -81,7 +81,7 @@ const ExamResultsPrint = () => {
 					</Table.Thead>
 					<Table.Tbody>
 						{Object.entries(
-							group
+							group  
 								.filter((item) => (!selectedTerm || item.term === selectedTerm) && (!selectedType || item.request_type === selectedType))
 								.sort((a, b) => parseTerm(b.term) - parseTerm(a.term))
 								.reduce((acc, item) => {
