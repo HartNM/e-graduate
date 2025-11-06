@@ -14,59 +14,115 @@ const ExamEligibleListPrint = () => {
 	const [term, setTerm] = useState([]);
 
 	const [group, setGroup] = useState([]);
+
+	const [selectedTerm, setSelectedTerm] = useState("");
+	const [selectedType, setSelectedType] = useState("");
+	const [selectedStatus, setSelectedStatus] = useState(JSON.stringify([5]));
+
+	const statusData = [
+		{ value: JSON.stringify([5]), label: "อนุญาต" }, // เก็บ Array เป็น string
+		{ value: JSON.stringify([6]), label: "ไม่อนุญาต" },
+		{ value: JSON.stringify([1, 2, 3, 4]), label: "กำลังดำเนินการ" },
+	];
+
 	useEffect(() => {
-		const fetchTermAndData = async () => {
+		const getTerm = async () => {
 			try {
-				const res = await fetch("http://localhost:8080/api/allRequestExamInfo", {
+				const termInfoReq = await fetch("http://localhost:8080/api/allRequestExamInfo", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
-				const data = await res.json();
-				if (!res.ok) throw new Error(data.message);
+				const termInfodata = await termInfoReq.json();
+				if (!termInfoReq.ok) throw new Error(termInfodata.message);
+				setTerm(termInfodata.map((item) => item.term));
+				console.log(termInfodata);
 
-				// เก็บ term ทั้งหมด
-				setTerm(data.map((item) => item.term));
-
-				// หาวันนี้
 				const today = new Date();
-
 				// หา term ที่อยู่ในช่วง open-close
-				let currentTerm = data.find((item) => {
+				let currentTerm = termInfodata.find((item) => {
 					const open = new Date(item.term_open_date);
 					const close = new Date(item.term_close_date);
 					return today >= open && today <= close;
 				});
-
-				if (!currentTerm && data.length > 0) {
+				if (!currentTerm && termInfodata.length > 0) {
 					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก close_date
-					currentTerm = [...data].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
+					currentTerm = [...termInfodata].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
 				}
-
 				if (currentTerm) {
 					setSelectedTerm(currentTerm.term);
+				} else {
+					// แจ้งเตือน หรือ set ค่า default ถ้าไม่มีเทอมเลย
+					console.warn("ไม่พบข้อมูลเทอม");
+					// setSelectedTerm(null); // หรือค่า default
 				}
 			} catch (e) {
 				notify("error", e.message);
-			}
-			try {
-				const res = await fetch("http://localhost:8080/api/allExamEligibleListPrint", {
-					method: "POST",
-					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				});
-				const data = await res.json();
-				if (!res.ok) throw new Error(data.message);
-				setGroup(data);
-			} catch (e) {
-				notify("error", e.message);
+				console.error("Error fetching allRequestExamInfo:", e);
 			}
 		};
-		fetchTermAndData();
+		getTerm();
 	}, []);
 
-	const [selectedTerm, setSelectedTerm] = useState("");
-	const [selectedType, setSelectedType] = useState("");
-	const filteredGroup =
-		selectedType || selectedTerm
+	useEffect(() => {
+		if (!selectedTerm) return;
+		console.log(selectedTerm);
+
+		const getRequest = async () => {
+			try {
+				const requestReq = await fetch("http://localhost:8080/api/allExamEligibleListPrint", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+					body: JSON.stringify({ term: selectedTerm }),
+				});
+				const requestData = await requestReq.json();
+				if (!requestReq.ok) throw new Error(requestData.message);
+				setGroup(requestData);
+
+				console.log("all request :", requestData);
+			} catch (e) {
+				notify("error", e.message);
+				console.error("Error fetching requestExamAll:", e);
+			}
+		};
+		getRequest();
+	}, [selectedTerm]);
+
+	const filteredGroup = (() => {
+		let statusNumbersToFilter = null;
+
+		if (selectedStatus) {
+			try {
+				statusNumbersToFilter = JSON.parse(selectedStatus);
+			} catch (e) {
+				console.error("Error parsing selectedStatus:", e);
+			}
+		}
+
+		if (!selectedType && !selectedTerm && !selectedStatus) {
+			return group;
+		}
+
+		return Object.fromEntries(
+			Object.entries(group)
+				.map(([groupId, students]) => [
+					groupId,
+					students.filter((student) => {
+						const studentStatusNumber = parseInt(student.status, 10);
+
+						const termMatch = !selectedTerm || student.term === selectedTerm;
+						const typeMatch = !selectedType || student.request_type === selectedType;
+
+						const statusMatch = !selectedStatus || (statusNumbersToFilter && statusNumbersToFilter.includes(studentStatusNumber));
+
+						return termMatch && typeMatch && statusMatch;
+					}),
+				])
+				.filter(([groupId, students]) => students.length > 0)
+		);
+	})();
+
+	/* const filteredGroup =
+		selectedType || selectedTerm || selectedStatus
 			? Object.fromEntries(
 					Object.entries(group).map(([groupId, students]) => [
 						groupId,
@@ -75,7 +131,7 @@ const ExamEligibleListPrint = () => {
 						}),
 					])
 			  )
-			: group;
+			: group; */
 
 	return (
 		<Box>
@@ -88,6 +144,7 @@ const ExamEligibleListPrint = () => {
 				<Group>
 					<Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />
 					<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} allowDeselect={false} onChange={setSelectedTerm} />
+					<Select placeholder="สถานะ" data={statusData} value={selectedStatus} onChange={setSelectedStatus} />
 				</Group>
 				<Box>
 					<SignatureForm data={filteredGroup} />
@@ -102,6 +159,7 @@ const ExamEligibleListPrint = () => {
 							<Table.Th>เทอมการศึกษา</Table.Th>
 							<Table.Th>ชื่อ</Table.Th>
 							<Table.Th>คำขอ</Table.Th>
+							<Table.Th>สถานะ</Table.Th>
 						</Table.Tr>
 					</Table.Thead>
 					<Table.Tbody>
@@ -111,6 +169,7 @@ const ExamEligibleListPrint = () => {
 									<Table.Td>{student.term}</Table.Td>
 									<Table.Td>{student.name}</Table.Td>
 									<Table.Td>{student.request_type}</Table.Td>
+									<Table.Td>{student.status_text}</Table.Td>
 								</Table.Tr>
 							))
 						)}

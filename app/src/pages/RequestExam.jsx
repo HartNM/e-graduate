@@ -208,8 +208,8 @@ const RequestExam = () => {
 					console.log("ลำดับ : 4 รอบที่แล้วไม่ผ่าน (เปิด)");
 					setLatestRequest(false);
 				} else {
-					console.log("ลำดับ : 5 (เปิด)");
-					setLatestRequest(request[0]);
+					console.log("ลำดับ : 5 (ปิด)");
+					setLatestRequest(true);
 				}
 			} catch (e) {
 				notify("error", e.message, 10000);
@@ -310,7 +310,7 @@ const RequestExam = () => {
 
 	function sortRequests(data, role) {
 		if (role === "student") return data;
-		return data.sort((a, b) => {
+		return [...data].sort((a, b) => {
 			const orderA = Number(a.status) === 0 ? 1 : 0;
 			const orderB = Number(b.status) === 0 ? 1 : 0;
 			return orderA - orderB || Number(a.status) - Number(b.status);

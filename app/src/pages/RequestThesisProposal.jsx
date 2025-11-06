@@ -65,7 +65,7 @@ const RequestThesisProposal = () => {
 	const [term, setTerm] = useState([]);
 	const [selectedTerm, setSelectedTerm] = useState("");
 
-	useEffect(() => {
+	useEffect(() => { 
 		const fetchProfile = async () => {
 			try {
 				const requestRes = await fetch("http://localhost:8080/api/profile", {
@@ -127,7 +127,7 @@ const RequestThesisProposal = () => {
 				});
 				const ThesisProposalData = await ThesisProposalRes.json();
 				if (!ThesisProposalRes.ok) throw new Error(ThesisProposalData.message);
-				setRequest(ThesisProposalData);	
+				setRequest(ThesisProposalData);
 
 				if (role === "student") {
 					const RequestExamRes = await fetch("http://localhost:8080/api/requestExamAll", {

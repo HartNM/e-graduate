@@ -162,7 +162,7 @@ const RequestThesisDefense = () => {
 			form.setValues(ThesisProposalData[0]);
 			form.setValues({ thesis_exam_date: null });
 			setOpenAdd(true);
-		} catch (e) {
+		} catch (e) { 
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching studentInfo:", e);
 		}
