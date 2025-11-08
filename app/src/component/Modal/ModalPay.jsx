@@ -1,6 +1,7 @@
 import { Modal, Box, Text, Group, Image, Stack, Flex, Button } from "@mantine/core";
 
 const ModalPay = ({ opened, onClose, selectedRow, handlePay, MoneyRegis, stop_date }) => {
+	console.log(selectedRow?.student_id, selectedRow?.receipt_pay, stop_date);
 
 	return (
 		<Modal opened={opened} onClose={onClose} title="ชำระค่าธรรมเนียม" centered size="500">

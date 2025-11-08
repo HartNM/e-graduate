@@ -22,25 +22,55 @@ export function UserButton() {
 		dean: "คณบดี",
 	};
 
+	const navigateToRoleDashboard = (role) => {
+		switch (role) {
+			case "student":
+				navigate("/student");
+				break;
+			case "admin":
+				navigate("/admin");
+				break;
+			case "advisor":
+				navigate("/advisor");
+				break;
+			case "research_advisor":
+				navigate("/research_advisor");
+				break;
+			case "chairpersons":
+				navigate("/chairpersons");
+				break;
+			case "officer_registrar":
+				navigate("/registrar-officer");
+				break;
+			case "officer_major":
+				navigate("/major-officer");
+				break;
+			case "dean":
+				navigate("/dean");
+				break;
+			default:
+				// กรณีไม่พบ role ที่ตรงกัน หรือ role เป็น null/undefined
+				console.warn(`No navigation path defined for role: ${role}`);
+			// คุณอาจต้องการ navigate ไปหน้าหลัก
+			// navigate('/');
+		}
+	};
+
 	useEffect(() => {
 		const fetchProfile = async () => {
 			const token = localStorage.getItem("token");
 			if (!token) return;
 			try {
-				/* const req = await fetch("http://localhost:8080/api/profile", {
-					method: "GET",
-					headers: { Authorization: `Bearer ${token}` }, 
-				});
-				const res = await req.json();
-				if (!req.ok) throw new Error(res.message);
-				setUserName(res.name); */
-
 				const decoded = jwtDecode(token);
 
 				console.log(decoded);
 				setRoles(decoded.roles || []);
 				setActiveRole(decoded.role);
 				setUserName(decoded.name);
+
+				if (decoded.role) {
+					navigateToRoleDashboard(decoded.role);
+				}
 			} catch (err) {
 				console.error("Failed to fetch profile or decode token:", err);
 			}
@@ -66,15 +96,7 @@ export function UserButton() {
 
 		localStorage.setItem("token", data.token);
 
-		// redirect ไป path ของ role
-		if (role === "student") navigate("/student");
-		if (role === "admin") navigate("/admin");
-		if (role === "advisor") navigate("/advisor");
-		if (role === "research_advisor") navigate("/research_advisor");
-		if (role === "chairpersons") navigate("/chairpersons");
-		if (role === "officer_registrar") navigate("/registrar-officer");
-		if (role === "officer_major") navigate("/major-officer");
-		if (role === "dean") navigate("/dean");
+		navigateToRoleDashboard(role);
 	};
 
 	// สร้าง data สำหรับ Select: value = role key, label = ภาษาไทย

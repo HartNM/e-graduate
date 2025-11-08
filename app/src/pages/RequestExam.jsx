@@ -159,8 +159,8 @@ const RequestExam = () => {
 						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 					});
 					const registrationData = await registrationRes.json();
-					if (!registrationRes.ok) throw new Error(registrationData.message);
-					/* if (!registrationData) throw new Error("รอเจ้าหน้าที่ประจำสาขากรอกรายวิชาบังคับ"); */
+					if (!registrationRes.ok) throw new Error(registrationData.message); 
+					/* if (!registrationData) throw new Error("รอเจ้าหน้าที่ประจำสาขากรอกรายวิชาบังคับ");  */
 					console.log("ที่ต้องลง :", registrationData);
 
 					const registerCoursesRes = await fetch("https://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectPass", {
@@ -435,7 +435,7 @@ const RequestExam = () => {
 				title={`${role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}คำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`}
 			/>
 			<ModalAdd opened={openAdd} onClose={() => setOpenAdd(false)} form={form.values} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`} />
-			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} MoneyRegis={user.education_level === "ปริญญาโท" ? 1000 : 1500} type={`คำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`} />
+			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} MoneyRegis={user.education_level === "ปริญญาโท" ? 1000 : 1500} type={`คำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`} stop_date={"15/11/2568"}/>
 
 			<Text size="1.5rem" fw={900} mb="md">
 				{`คำร้องขอสอบ${type ? type : `${user.education_level ? `${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` : "ประมวลความรู้/วัดคุณสมบัติ"}`}`}

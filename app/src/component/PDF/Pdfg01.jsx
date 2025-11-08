@@ -21,7 +21,7 @@ async function fillPdf(data) {
 			headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 			body: JSON.stringify({ term: data?.term }),
 		});
-		const requestData = await requestRes.json();	
+		const requestData = await requestRes.json();
 		if (Array.isArray(requestData) && requestData.length > 0) {
 			KQ_exam_date = requestData[0].KQ_exam_date;
 		}

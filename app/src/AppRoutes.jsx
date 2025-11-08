@@ -43,9 +43,11 @@ const MajorOfficer = lazy(() => import("./pages/MajorOfficer/MajorOfficer.jsx"))
 const AssignChairpersons = lazy(() => import("./pages/MajorOfficer/AssignChairpersons.jsx"));
 const CourseRegistration = lazy(() => import("./pages/MajorOfficer/CourseRegistration.jsx"));
 const ExamEligibleListPrint = lazy(() => import("./pages/MajorOfficer/ExamEligibleListPrint.jsx"));
+const PrintExam = lazy(() => import("./pages/MajorOfficer/PrintExam.jsx"));
 const ExamResults = lazy(() => import("./pages/MajorOfficer/ExamResults.jsx"));
 const ExamProposalResults = lazy(() => import("./pages/MajorOfficer/ExamProposalResults.jsx"));
 const ExamDefenseResults = lazy(() => import("./pages/MajorOfficer/ExamDefenseResults.jsx"));
+
 function AppRoutes() {
 	return (
 		<BrowserRouter>
@@ -125,7 +127,9 @@ function AppRoutes() {
 						<Route path="RequestExamCancel" element={<RequestExamCancel />} />
 					</Route>
 					<Route path="/major-officer" element={<MajorOfficer />}>
+						<Route path="PrintExam" element={<PrintExam />} />
 						<Route path="CourseRegistration" element={<CourseRegistration />} />
+						<Route path="RequestEngTest" element={<RequestEngTest />} />
 						<Route path="AssignChairpersons" element={<AssignChairpersons />} />
 						<Route path="ExamEligibleListPrint" element={<ExamEligibleListPrint />} />
 						<Route path="ExamResults" element={<ExamResults />} />

@@ -12,7 +12,7 @@ router.post("/getMajor_name", authenticateToken, async (req, res) => {
 		const major_name = await pool.request().input("major_id", officerResult.recordset[0].major_id).query(`SELECT * FROM majors WHERE major_id = @major_id`);
 		res.status(200).json(major_name.recordset[0]);
 	} catch (err) {
-		console.error("addRequestExamInfo:", err);
+		console.error("getMajor_name:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
 	}
 });

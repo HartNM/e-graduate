@@ -12,7 +12,7 @@ import { jwtDecode } from "jwt-decode";
 const RequestEngTest = () => {
 	const token = localStorage.getItem("token");
 	/* const payloadBase64 = token.split(".")[1];
-				const payload = JSON.parse(atob(payloadBase64)); */
+				const payload = JSON.parse(atob(payloadBase64));  */
 
 	const payload = jwtDecode(token);
 	const role = payload.role;

@@ -26,6 +26,8 @@ const ExamResults = require("./routes/ExamResults");
 app.use("/api", ExamResults);
 const ExamEligibleListPrint = require("./routes/ExamEligibleListPrint");
 app.use("/api", ExamEligibleListPrint);
+const PrintExam = require("./routes/PrintExam");
+app.use("/api", PrintExam);
 
 const requestExamInfoRouters = require("./routes/requestExamInfo");
 app.use("/api", requestExamInfoRouters);

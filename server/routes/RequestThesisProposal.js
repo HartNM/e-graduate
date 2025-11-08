@@ -89,6 +89,9 @@ router.post("/allRequestThesisProposal", authenticateToken, async (req, res) => 
 					...studentInfo,
 					thesis_advisor_name: advisorInfo.name,
 					status_text: statusMap[item.status?.toString()],
+					advisor_approvals: item.advisor_approvals === null ? null : item.advisor_approvals === "1",
+					chairpersons_approvals: item.chairpersons_approvals === null ? null : item.chairpersons_approvals === "1",
+					registrar_approvals: item.registrar_approvals === null ? null : item.registrar_approvals === "1",
 				};
 			})
 		);

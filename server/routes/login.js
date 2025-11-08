@@ -62,13 +62,11 @@ router.post("/login", async (req, res) => {
 					const db = await poolPromise;
 					const uRes = await db.request().input("username", username).query("SELECT * FROM users WHERE username = @username");
 					const u = uRes.recordset[0];
-					if (!u) {
-						return res.status(401).json({ message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" });
-					}
 					const isMatch = await bcrypt.compare(password, u.password);
-					if (!isMatch) {
+					if (!u || !isMatch) {
 						return res.status(401).json({ message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" });
 					}
+
 					let roles = [];
 
 					for (let i = 0; i < uRes.recordset.length; i++) {
@@ -85,8 +83,19 @@ router.post("/login", async (req, res) => {
 
 					console.log(roles);
 
-					const token = jwt.sign({ user_id: u.user_id.toString(), roles: roles, name: u.name }, SECRET_KEY, { expiresIn: "1h" });
-					return res.status(200).json({ message: "เข้าสู่ระบบสำเร็จ", token, role: u.role });
+					const jwtPayload = {
+						user_id: u.user_id.toString(),
+						roles: roles,
+						name: u.name,
+					};
+
+					if (roles.length === 1) {
+						// 3. เพิ่ม key 'role' (active role) เข้าไปใน Payload
+						jwtPayload.role = roles[0];
+					}
+
+					const token = jwt.sign(jwtPayload, SECRET_KEY, { expiresIn: "1h" });
+					return res.status(200).json({ message: "เข้าสู่ระบบสำเร็จ", token });
 				} catch (e) {
 					console.error("Login error:", e);
 					return res.status(500).json({ message: "Internal Server Error" });
