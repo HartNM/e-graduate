@@ -116,6 +116,7 @@ const RequestExam = () => {
 
 	useEffect(() => {
 		if (!selectedTerm) return;
+		if (request != null && role === "student") return;
 		console.log(selectedTerm);
 
 		const getRequest = async () => {
@@ -159,7 +160,7 @@ const RequestExam = () => {
 						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 					});
 					const registrationData = await registrationRes.json();
-					if (!registrationRes.ok) throw new Error(registrationData.message); 
+					if (!registrationRes.ok) throw new Error(registrationData.message);
 					/* if (!registrationData) throw new Error("รอเจ้าหน้าที่ประจำสาขากรอกรายวิชาบังคับ");  */
 					console.log("ที่ต้องลง :", registrationData);
 
@@ -323,18 +324,15 @@ const RequestExam = () => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
 		const matchesType = selectedType ? p.request_type === selectedType : true;
 		const matchesTerm = selectedTerm ? p.term === selectedTerm : true;
-		if (role === "student") {
-			return matchesSearch && matchesType;
-		} else {
-			return matchesSearch && matchesType && matchesTerm;
-		}
+
+		return matchesSearch && matchesType && matchesTerm;
 	});
 
 	const rows = filteredData.map((item) => (
 		<Table.Tr key={item.request_exam_id}>
 			<Table.Td>{item.student_name}</Table.Td>
 			<Table.Td style={{ textAlign: "center" }}>{item.term}</Table.Td>
-			{["advisor", "chairpersons"].includes(role) && <Table.Td>{item.request_type}</Table.Td>}
+			<Table.Td>{item.request_type}</Table.Td>
 			<Table.Td style={{ textAlign: "center" }}>
 				{item.status <= 4 && item.status > 0 && (
 					<Stepper active={item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
@@ -435,7 +433,7 @@ const RequestExam = () => {
 				title={`${role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}คำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`}
 			/>
 			<ModalAdd opened={openAdd} onClose={() => setOpenAdd(false)} form={form.values} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`} />
-			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} MoneyRegis={user.education_level === "ปริญญาโท" ? 1000 : 1500} type={`คำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`} stop_date={"15/11/2568"}/>
+			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} MoneyRegis={user.education_level === "ปริญญาโท" ? 1000 : 1500} type={`คำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`} stop_date={"15/11/2568"} />
 
 			<Text size="1.5rem" fw={900} mb="md">
 				{`คำร้องขอสอบ${type ? type : `${user.education_level ? `${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` : "ประมวลความรู้/วัดคุณสมบัติ"}`}`}
@@ -444,8 +442,8 @@ const RequestExam = () => {
 				<Box>
 					<Flex align="flex-end" gap="sm">
 						{role !== "student" && <TextInput placeholder="ค้นหา ชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
-						{(role === "chairpersons" || role === "advisor") && <Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
-						{role !== "student" && <Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} allowDeselect={false} />}
+						{!["student", "officer_registrar"].includes(role) && <Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
+						<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} allowDeselect={false} />
 					</Flex>
 				</Box>
 				<Box>
@@ -463,7 +461,7 @@ const RequestExam = () => {
 						<Table.Tr>
 							<Table.Th>ชื่อ</Table.Th>
 							<Table.Th>ภาคเรียน</Table.Th>
-							{["advisor", "chairpersons"].includes(role) && <Table.Th>เรื่อง</Table.Th>}
+							<Table.Th>เรื่อง</Table.Th>
 							<Table.Th>สถานะ</Table.Th>
 							<Table.Th>การดำเนินการ</Table.Th>
 							{request?.some((it) => it.exam_results !== null) && <Table.Th>ผลสอบ</Table.Th>}

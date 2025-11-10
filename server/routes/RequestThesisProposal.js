@@ -154,6 +154,9 @@ router.post("/addRequestThesisProposal", authenticateToken, async (req, res) => 
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()],
+				advisor_approvals: result.recordset[0].advisor_approvals === null ? null : result.recordset[0].advisor_approvals === "1",
+				chairpersons_approvals: result.recordset[0].chairpersons_approvals === null ? null : result.recordset[0].chairpersons_approvals === "1",
+				registrar_approvals: result.recordset[0].registrar_approvals === null ? null : result.recordset[0].registrar_approvals === "1",
 			},
 		});
 	} catch (err) {
@@ -218,6 +221,9 @@ router.post("/approveRequestThesisProposal", authenticateToken, async (req, res)
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()],
+				advisor_approvals: result.recordset[0].advisor_approvals === null ? null : result.recordset[0].advisor_approvals === "1",
+				chairpersons_approvals: result.recordset[0].chairpersons_approvals === null ? null : result.recordset[0].chairpersons_approvals === "1",
+				registrar_approvals: result.recordset[0].registrar_approvals === null ? null : result.recordset[0].registrar_approvals === "1",
 			},
 		});
 	} catch (err) {
@@ -252,12 +258,9 @@ router.post("/payRequestThesisProposal", authenticateToken, async (req, res) => 
 			data: {
 				...row,
 				status_text: statusMap[row.status?.toString()],
-				thesis_exam_date: row.thesis_exam_date,
-				request_date: row.request_date,
-				advisor_approvals_date: row.advisor_approvals_date,
-				chairpersons_approvals_date: row.chairpersons_approvals_date,
-				registrar_approvals_date: row.registrar_approvals_date,
-				receipt_pay_date: row.receipt_pay_date,
+				advisor_approvals: result.recordset[0].advisor_approvals === null ? null : result.recordset[0].advisor_approvals === "1",
+				chairpersons_approvals: result.recordset[0].chairpersons_approvals === null ? null : result.recordset[0].chairpersons_approvals === "1",
+				registrar_approvals: result.recordset[0].registrar_approvals === null ? null : result.recordset[0].registrar_approvals === "1",
 			},
 		});
 	} catch (err) {

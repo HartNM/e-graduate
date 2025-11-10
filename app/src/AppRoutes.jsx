@@ -38,12 +38,17 @@ const ExamDefenseResultsPrint = lazy(() => import("./pages/RegistrarOfficer/Exam
 const Student = lazy(() => import("./pages/student/Student.jsx"));
 
 const Dean = lazy(() => import("./pages/dean/dean.jsx"));
-
+//------------------------------
 const MajorOfficer = lazy(() => import("./pages/MajorOfficer/MajorOfficer.jsx"));
+
+const PrintExam = lazy(() => import("./pages/MajorOfficer/PrintExam.jsx"));
+const PrintEngTest = lazy(() => import("./pages/MajorOfficer/PrintEngTest.jsx"));
+const PrintThesisProposal = lazy(() => import("./pages/MajorOfficer/PrintThesisProposal.jsx"));
+const PrintThesisDefense = lazy(() => import("./pages/MajorOfficer/PrintThesisDefense.jsx"));
+
 const AssignChairpersons = lazy(() => import("./pages/MajorOfficer/AssignChairpersons.jsx"));
 const CourseRegistration = lazy(() => import("./pages/MajorOfficer/CourseRegistration.jsx"));
 const ExamEligibleListPrint = lazy(() => import("./pages/MajorOfficer/ExamEligibleListPrint.jsx"));
-const PrintExam = lazy(() => import("./pages/MajorOfficer/PrintExam.jsx"));
 const ExamResults = lazy(() => import("./pages/MajorOfficer/ExamResults.jsx"));
 const ExamProposalResults = lazy(() => import("./pages/MajorOfficer/ExamProposalResults.jsx"));
 const ExamDefenseResults = lazy(() => import("./pages/MajorOfficer/ExamDefenseResults.jsx"));
@@ -128,13 +133,21 @@ function AppRoutes() {
 					</Route>
 					<Route path="/major-officer" element={<MajorOfficer />}>
 						<Route path="PrintExam" element={<PrintExam />} />
-						<Route path="CourseRegistration" element={<CourseRegistration />} />
+						<Route path="PrintEngTest" element={<PrintEngTest />} />
+						<Route path="PrintThesisProposal" element={<PrintThesisProposal />} />
+						<Route path="PrintThesisDefense" element={<PrintThesisDefense />} />
+
+						<Route path="RequestExam" element={<RequestExam />} />
 						<Route path="RequestEngTest" element={<RequestEngTest />} />
-						<Route path="AssignChairpersons" element={<AssignChairpersons />} />
-						<Route path="ExamEligibleListPrint" element={<ExamEligibleListPrint />} />
+						<Route path="RequestThesisProposal" element={<RequestThesisProposal />} />
+						<Route path="RequestThesisDefense" element={<RequestThesisDefense />} />
+
 						<Route path="ExamResults" element={<ExamResults />} />
 						<Route path="ExamProposalResults" element={<ExamProposalResults />} />
 						<Route path="ExamDefenseResults" element={<ExamDefenseResults />} />
+
+						<Route path="CourseRegistration" element={<CourseRegistration />} />
+						<Route path="AssignChairpersons" element={<AssignChairpersons />} />
 					</Route>
 				</Routes>
 			</Suspense>

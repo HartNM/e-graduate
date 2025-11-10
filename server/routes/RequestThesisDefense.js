@@ -84,15 +84,10 @@ router.post("/allRequestThesisDefense", authenticateToken, async (req, res) => {
 				return {
 					...item,
 					...studentInfo,
-					thesis_advisor_name: advisorInfo.name,
-					thesis_exam_date: item.thesis_exam_date,
-					request_date: item.request_date,
-					advisor_approvals_date: item.advisor_approvals_date,
-					chairpersons_approvals_date: item.chairpersons_approvals_date,
-					registrar_approvals_date: item.registrar_approvals_date,
-					receipt_pay_date: item.receipt_pay_date,
 					status_text: statusMap[item.status?.toString()],
-					request_type: item.request_type,
+					advisor_approvals: item.advisor_approvals === null ? null : item.advisor_approvals === "1",
+					chairpersons_approvals: item.chairpersons_approvals === null ? null : item.chairpersons_approvals === "1",
+					registrar_approvals: item.registrar_approvals === null ? null : item.registrar_approvals === "1",
 				};
 			})
 		);
@@ -222,12 +217,9 @@ router.post("/approveRequestThesisDefense", authenticateToken, async (req, res) 
 			data: {
 				...result.recordset[0],
 				status_text: statusMap[result.recordset[0].status?.toString()],
-				thesis_exam_date: result.recordset[0].thesis_exam_date,
-				request_date: result.recordset[0].request_date,
-				advisor_approvals_date: result.recordset[0].advisor_approvals_date,
-				chairpersons_approvals_date: result.recordset[0].chairpersons_approvals_date,
-				registrar_approvals_date: result.recordset[0].registrar_approvals_date,
-				receipt_pay_date: result.recordset[0].receipt_pay_date,
+				advisor_approvals: result.recordset[0].advisor_approvals === null ? null : result.recordset[0].advisor_approvals === "1",
+				chairpersons_approvals: result.recordset[0].chairpersons_approvals === null ? null : result.recordset[0].chairpersons_approvals === "1",
+				registrar_approvals: result.recordset[0].registrar_approvals === null ? null : result.recordset[0].registrar_approvals === "1",
 			},
 		});
 	} catch (err) {
@@ -265,12 +257,9 @@ router.post("/payRequestThesisDefense", authenticateToken, async (req, res) => {
 			data: {
 				...row,
 				status_text: statusMap[row.status?.toString()],
-				thesis_exam_date: row.thesis_exam_date,
-				request_date: row.request_date,
-				advisor_approvals_date: row.advisor_approvals_date,
-				chairpersons_approvals_date: row.chairpersons_approvals_date,
-				registrar_approvals_date: row.registrar_approvals_date,
-				receipt_pay_date: row.receipt_pay_date,
+				advisor_approvals: result.recordset[0].advisor_approvals === null ? null : result.recordset[0].advisor_approvals === "1",
+				chairpersons_approvals: result.recordset[0].chairpersons_approvals === null ? null : result.recordset[0].chairpersons_approvals === "1",
+				registrar_approvals: result.recordset[0].registrar_approvals === null ? null : result.recordset[0].registrar_approvals === "1",
 			},
 		});
 	} catch (err) {

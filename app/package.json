@@ -25,7 +25,8 @@
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.3",
     "react-window": "^2.1.0",
-    "sass": "^1.89.2"
+    "sass": "^1.89.2",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",

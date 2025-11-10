@@ -24,15 +24,15 @@ const Student = () => {
 				if (data.RequestThesisProposal) {
 					newMenu.push({ label: `คำร้องขอสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconReport, links: "/student/RequestThesisProposal" });
 				}
-				if (data.PostponeProposalExam) {
+				/* if (data.PostponeProposalExam) {
 					data.education_level === "ปริญญาเอก" && newMenu.push({ label: `คำร้องขอเลื่อนสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconCalendarClock, links: "/student/PostponeProposalExam" });
-				}
+				} */
 				if (data.RequestThesisDefense) {
 					newMenu.push({ label: `คำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconFileText, links: "/student/RequestThesisDefense" });
 				}
-				if (data.PostponeDefenseExam) {
+				/* if (data.PostponeDefenseExam) {
 					newMenu.push({ label: `คำร้องขอเลื่อนสอบวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconCalendarClock, links: "/student/PostponeDefenseExam" });
-				}
+				} */
 				/* if (data.RequestGraduation) {
 					newMenu.push({ label: "คำร้องขอสำเร็จการศึกษา", icon: IconSchool, links: "/student/RequestGraduation" });
 				} */

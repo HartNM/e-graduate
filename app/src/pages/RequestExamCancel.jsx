@@ -250,7 +250,7 @@ const RequestExamCancel = () => {
 		<Table.Tr key={item.request_cancel_exam_id}>
 			<Table.Td>{item.student_name}</Table.Td>
 			<Table.Td>{item.term}</Table.Td>
-			{["advisor", "chairpersons", "dean"].includes(role) && <Table.Td>{role === "dean" ? `ขอยกเลิก${item.request_type.replace("ขอ", "")}` : item.request_type}</Table.Td>}
+			<Table.Td>{role === "dean" ? `ขอยกเลิก${item.request_type.replace("ขอ", "")}` : item.request_type}</Table.Td>
 			<Table.Td style={{ textAlign: "center" }}>
 				{item.status == 0 && (
 					<Pill variant="filled" style={{ backgroundColor: "#ccffcc", color: "#006600" }}>
@@ -277,8 +277,6 @@ const RequestExamCancel = () => {
 						))}
 					</Stepper>
 				)}
-
-				{/* {item.status > 6 && <Pill>{item.status_text}</Pill>} */}
 			</Table.Td>
 
 			<Table.Td style={{ maxWidth: "150px" }}>
@@ -348,7 +346,7 @@ const RequestExamCancel = () => {
 						<Table.Tr>
 							<Table.Th style={{ minWidth: 100 }}>ชื่อ</Table.Th>
 							<Table.Th>ภาคเรียน</Table.Th>
-							{["advisor", "chairpersons", "dean"].includes(role) && <Table.Th style={{ minWidth: 100 }}>เรื่อง</Table.Th>}
+							<Table.Th style={{ minWidth: 100 }}>เรื่อง</Table.Th>
 							<Table.Th style={{ minWidth: 110 }}>สถานะ</Table.Th>
 							<Table.Th>การดำเนินการ</Table.Th>
 						</Table.Tr>

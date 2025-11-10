@@ -214,7 +214,7 @@ const RequestEngTest = () => {
 		<Table.Tr key={item.request_eng_test_id}>
 			<Table.Td>{item.student_name}</Table.Td>
 			<Table.Td>{item.term}</Table.Td>
-			{["advisor", "officer_registrar", "chairpersons", "dean"].includes(role) && <Table.Td>ขอทดสอบความรู้ทางภาษาอังกฤษ</Table.Td>}
+			<Table.Td>ขอทดสอบความรู้ทางภาษาอังกฤษ</Table.Td>
 			<Table.Td style={{ textAlign: "center" }}>
 				{item.status < 5 && item.status > 0 && (
 					<Stepper active={item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
@@ -338,7 +338,7 @@ const RequestEngTest = () => {
 						<Table.Tr>
 							<Table.Th style={{ minWidth: 100 }}>ชื่อ</Table.Th>
 							<Table.Th style={{ minWidth: 100 }}>ภาคเรียน</Table.Th>
-							{["advisor", "officer_registrar", "chairpersons", "dean"].includes(role) && <Table.Th style={{ minWidth: 100 }}>เรื่อง</Table.Th>}
+							<Table.Th style={{ minWidth: 100 }}>เรื่อง</Table.Th>
 							<Table.Th style={{ minWidth: 110 }}>สถานะ</Table.Th>
 							<Table.Th>การดำเนินการ</Table.Th>
 						</Table.Tr>

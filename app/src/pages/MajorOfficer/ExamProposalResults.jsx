@@ -1,8 +1,10 @@
 import { Box, Text, ScrollArea, Table, Group, Button, Space, Modal, Checkbox, Select } from "@mantine/core";
+import { DatePickerInput } from "@mantine/dates";
 import { useState, useEffect } from "react";
 import { useForm } from "@mantine/form";
 import ModalInform from "../../component/Modal/ModalInform";
 import PDFExamResultsPrint from "../../component/PDF/PdfExamResultsPrint";
+import * as XLSX from "xlsx"; // ยังต้อง import ไว้สำหรับปุ่มในตารางหลัก
 
 const ExamResults = () => {
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
@@ -33,25 +35,16 @@ const ExamResults = () => {
 				});
 				const data = await res.json();
 				if (!res.ok) throw new Error(data.message);
-
-				// เก็บ term ทั้งหมด
 				setTerm(data.map((item) => item.term));
-
-				// หาวันนี้
 				const today = new Date();
-
-				// หา term ที่อยู่ในช่วง open-close
 				let currentTerm = data.find((item) => {
 					const open = new Date(item.term_open_date);
 					const close = new Date(item.term_close_date);
 					return today >= open && today <= close;
 				});
-
 				if (!currentTerm && data.length > 0) {
-					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก close_date
 					currentTerm = [...data].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
 				}
-
 				if (currentTerm) {
 					setSelectedTerm(currentTerm.term);
 				}
@@ -86,7 +79,10 @@ const ExamResults = () => {
 		setSelectedGroupId({ [groupId]: { [term]: students } });
 		const initial = {};
 		students.forEach((s) => {
-			initial[s.student_id] = s.exam_results ?? "ผ่าน";
+			initial[s.student_id] = {
+				result: s.exam_results ?? "ผ่าน",
+				date: s.thesis_exam_date ? new Date(s.thesis_exam_date) : null,
+			};
 		});
 		form.setValues(initial);
 	};
@@ -104,9 +100,26 @@ const ExamResults = () => {
 			setOpenModal(false);
 			setReloadTable(true);
 			setSelectedGroupId("");
+			form.reset();
 		} catch (e) {
 			notify("error", e.message);
 		}
+	};
+
+	// ฟังก์ชัน Export หลัก (ยังคงอยู่)
+	const exportToExcel = (studentsToExport, fileName = "exam_results.xlsx") => {
+		const dataForSheet = studentsToExport.map((s) => ({
+			รหัสนักศึกษา: s.student_id,
+			"ชื่อ-สกุล": s.name,
+			ผลสอบ: s.exam_results,
+			วันที่สอบ: s.thesis_exam_date ? new Date(s.thesis_exam_date).toLocaleDateString("th-TH") : "",
+			หมู่เรียน: s.study_group_id,
+			เทอม: s.term,
+		}));
+		const ws = XLSX.utils.json_to_sheet(dataForSheet);
+		const wb = XLSX.utils.book_new();
+		XLSX.utils.book_append_sheet(wb, ws, "ExamResults");
+		XLSX.writeFile(wb, fileName);
 	};
 
 	const renderStudentRows = (selectedGroupId, form, statusColor, withCheckbox = false) => {
@@ -120,18 +133,25 @@ const ExamResults = () => {
 							{withCheckbox ? (
 								<Group justify="center">
 									{["ผ่าน", "ไม่ผ่าน", "ขาดสอบ"].map((status) => (
-										<Checkbox key={status} color={statusColor[status]} checked={form.values[s.student_id] === status} onChange={() => form.setFieldValue(s.student_id, status)} label={status} />
+										<Checkbox key={status} color={statusColor[status]} checked={form.values[s.student_id]?.result === status} onChange={() => form.setFieldValue(`${s.student_id}.result`, status)} label={status} />
 									))}
 								</Group>
 							) : (
-								<Text c={statusColor[form.values[s.student_id]]}>{form.values[s.student_id]}</Text>
+								<Text c={statusColor[form.values[s.student_id]?.result]}>{form.values[s.student_id]?.result}</Text>
 							)}
 						</Table.Td>
+
+						{withCheckbox ? (
+							<Table.Td style={{ maxWidth: "100px" }}>
+								<DatePickerInput placeholder="เลือกวันที่สอบ" valueFormat="DD MMMM YYYY" value={form.values[s.student_id]?.date} onChange={(newDate) => form.setFieldValue(`${s.student_id}.date`, newDate)} clearable />
+							</Table.Td>
+						) : null}
 					</Table.Tr>
 				))
 			)
 		);
 	};
+
 	return (
 		<Box>
 			<ModalInform opened={inform.open} onClose={close} message={inform.message} type={inform.type} />
@@ -181,6 +201,10 @@ const ExamResults = () => {
 													<Button size="xs" onClick={() => PDFExamResultsPrint(students)}>
 														พิมพ์
 													</Button>
+													{/* ปุ่ม Export Excel ในตารางหลัก (ยังคงอยู่) */}
+													<Button size="xs" color="teal" onClick={() => exportToExcel(students, `exam_results_${students[0].study_group_id}.xlsx`)}>
+														Export Excel
+													</Button>
 												</Group>
 											</Table.Td>
 										</Table.Tr>
@@ -192,14 +216,25 @@ const ExamResults = () => {
 				</Box>
 			) : (
 				<form onSubmit={form.onSubmit(() => setOpenModal(true))}>
+					{/* === UPDATED HERE === */}
 					<Group justify="flex-end">
-						<Button color="red" onClick={() => setSelectedGroupId("")}>
+						<Button
+							color="red"
+							onClick={() => {
+								setSelectedGroupId("");
+								form.reset();
+							}}
+						>
 							ยกเลิก
 						</Button>
+
+						{/* ลบปุ่ม Export Excel ออกจากส่วนนี้แล้ว */}
+
 						<Button type="submit" color="green">
 							บันทึก
 						</Button>
 					</Group>
+					{/* ===================== */}
 					<Space h="md" />
 					<ScrollArea type="scroll" offsetScrollbars style={{ borderRadius: 8, border: "1px solid #e0e0e0" }}>
 						<Table highlightOnHover>
@@ -208,6 +243,7 @@ const ExamResults = () => {
 									<Table.Th>รหัสนักศึกษา</Table.Th>
 									<Table.Th>ชื่อ</Table.Th>
 									<Table.Th>ผลสอบ</Table.Th>
+									<Table.Th>วันที่สอบ</Table.Th>
 								</Table.Tr>
 							</Table.Thead>
 							<Table.Tbody>{renderStudentRows(selectedGroupId, form, statusColor, true)}</Table.Tbody>
@@ -231,7 +267,7 @@ const ExamResults = () => {
 					<Button color="yellow" onClick={() => setOpenModal(false)}>
 						แก้ไข
 					</Button>
-					<Button color="green" onClick={() => (setOpenModal(false), handleSaveExamResults())}>
+					<Button color="green" onClick={handleSaveExamResults}>
 						บันทึก
 					</Button>
 				</Group>
