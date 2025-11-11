@@ -9,12 +9,14 @@ router.get("/student/:student_id", async (req, res) => {
 	try {
 		const response = await axios.get(`https://mua.kpru.ac.th/FrontEnd_Tabian/petition/Showstudent/${studentid}`);
 		const item = response.data[0];
+		console.log(item);
+		
 		const transformedData = {
 			student_id: item.OLDID,
 			PNAME: item.PNAME,
 			NAME: item.NAME,
 			BDATE: item.BDATE,
-			student_name: `${item.name} ${item.lname}`,
+			student_name: `${item.PNAME}${item.NAME}` /* `${item.name} ${item.lname}`, */,
 			education_level: item.level_type,
 			program: `${item.level_name_long} (${item.level_name})`,
 			study_group_id: item.GROUP_NO,

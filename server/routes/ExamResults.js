@@ -33,8 +33,8 @@ router.post("/AllExamResults", authenticateToken, async (req, res) => {
     	`);
 		const examsWithStudentData = await Promise.all(
 			exams.map(async ({ student_id, ...rest }) => {
-				const { NAME, major_name } = (await axios.get(`http://localhost:8080/externalApi/student/${student_id}`)).data;
-				return { ...rest, student_id, name: NAME, major_name };
+				const { student_name, major_name } = (await axios.get(`http://localhost:8080/externalApi/student/${student_id}`)).data;
+				return { ...rest, student_id, name: student_name, major_name };
 			})
 		);
 		res.status(200).json(examsWithStudentData);
@@ -53,8 +53,8 @@ router.post("/allExamResultsPrint", authenticateToken, async (req, res) => {
 		`);
 		const examsWithStudentData = await Promise.all(
 			exams.map(async ({ student_id, ...rest }) => {
-				const { NAME, major_name } = (await axios.get(`http://localhost:8080/externalApi/student/${student_id}`)).data;
-				return { ...rest, student_id, name: NAME, major_name };
+				const { student_name, major_name } = (await axios.get(`http://localhost:8080/externalApi/student/${student_id}`)).data;
+				return { ...rest, student_id, name: student_name, major_name };
 			})
 		);
 		/* console.log(examsWithStudentData); */

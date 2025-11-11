@@ -39,7 +39,7 @@ router.post("/login", async (req, res) => {
 			if (result.student_name === "undefined undefined" || (result.education_level !== "ปริญญาโท" && result.education_level !== "ปริญญาเอก") /* || result.BDATE !== password */) {
 				return res.status(401).json({ message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" });
 			}
-			const token = jwt.sign({ user_id: username, roles: [`student`], role: `student`, name: result.PNAME + result.NAME }, SECRET_KEY, { expiresIn: "1h" });
+			const token = jwt.sign({ user_id: username, roles: [`student`], role: `student`, name: result.student_name }, SECRET_KEY, { expiresIn: "1h" });
 			console.log(token);
 			res.status(200).json({ message: "เข้าสู่ระบบสำเร็จ", token, role: `student` });
 		} catch (e) {

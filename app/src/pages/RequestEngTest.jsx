@@ -113,7 +113,7 @@ const RequestEngTest = () => {
 				console.log(requestData);
 			} catch (e) {
 				notify("error", e.message);
-				console.error("Error fetching requestExamAll:", e);
+				console.error("Error fetching allRequestEngTest:", e);
 			}
 		};
 		getRequest();

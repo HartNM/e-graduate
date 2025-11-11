@@ -81,7 +81,7 @@ const ExamEligibleListPrint = () => {
 				console.log("all request :", requestData);
 			} catch (e) {
 				notify("error", e.message);
-				console.error("Error fetching requestExamAll:", e);
+				console.error("Error fetching allExamEligibleListPrint:", e);
 			}
 		};
 		getRequest();

@@ -113,7 +113,7 @@ const RequestExamCancel = () => {
 				console.log("คำร้องทังหมด", requestExamData);
 			} catch (e) {
 				notify("error", e.message);
-				console.error("Error fetching requestExamAll:", e);
+				console.error("Error fetching AllRequestExamCancel:", e);
 			}
 		};
 		getRequestCancel();

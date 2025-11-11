@@ -1,6 +1,6 @@
-//แต่งตั้งเจ้าหน้าที่ประจำคณะ
+//แต่งตั้งเจ้าหน้าที่ประจำสาขา
 import { useState, useEffect } from "react";
-import { Box, Text, TextInput, Table, Button, Modal, Space, ScrollArea, PasswordInput, Group, Select, Flex } from "@mantine/core";
+import { Box, Text, TextInput, Table, Button, Modal, Space, ScrollArea, Group, Select, Flex } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import ModalInform from "../../component/Modal/ModalInform";
 
@@ -16,16 +16,6 @@ const AssignMajorOfficer = () => {
 	const [openModal, setOpenModal] = useState(false);
 	const [modalType, setModalType] = useState(false);
 
-	const save = [
-		{ value: "1000000000001", label: "นายกิตติพงษ์ วัฒนากูล" },
-		{ value: "1000000000002", label: "นางสาวธนพร สุขเจริญ" },
-		{ value: "1000000000003", label: "นายวรากร ศรีสวัสดิ์" },
-		{ value: "1000000000004", label: "นางสุภาพร จิตต์ภักดี" },
-		{ value: "1000000000005", label: "นางสาวพิมพ์ชนก แสงสุวรรณ" },
-		{ value: "1000000000006", label: "นายณัฐวุฒิ เกษมสุข" },
-		{ value: "1000000000007", label: "นางรัตนาวดี มีศิลป์" },
-	];
-
 	const Form = useForm({
 		initialValues: {
 			user_id: "",
@@ -34,37 +24,29 @@ const AssignMajorOfficer = () => {
 			password: "123456",
 		},
 		validate: {
-			name: (value) => (value.trim().length > 0 ? null : "กรุณากรอกชื่อ"),
+			user_id: (value) => (value.trim().length > 0 ? null : "กรุณาเลือกชื่อ"),
 			major_id: (value) => (value.trim().length > 0 ? null : "กรุณาเลือกสาขา"),
 		},
 	});
 
-	const [majorName, setMajorName] = useState([]);
-	const [MajorOfficer, setMajorOfficer] = useState([]);
+	// --- State สำหรับ Dropdown ---
+	const [majorsData, setMajorsData] = useState([]); // 1. เก็บข้อมูลดิบของ "สาขา" (ที่มี id_fac)
+	const [majorOptions, setMajorOptions] = useState([]); // 2. เก็บข้อมูล "สาขา" ที่แปลงแล้ว (สำหรับ Select 1)
+	const [memberOptions, setMemberOptions] = useState([]); // 3. เก็บข้อมูล "บุคลากร" ที่แปลงแล้ว (สำหรับ Select 2)
+	const [allAssignedOfficers, setAllAssignedOfficers] = useState([]); // 4. เก็บข้อมูล "คนที่ถูกแต่งตั้งแล้ว" (สำหรับกรอง)
+	const [isLoadingMembers, setIsLoadingMembers] = useState(false); // 5. สถานะโหลด Select 2
 
 	useEffect(() => {
-		const fetchRequestExamInfoAll = async () => {
+		const fetchInitialData = async () => {
 			try {
-				const personnelRes = await fetch("https://git.kpru.ac.th/FrontEnd_Admission/admissionnew2022/loadMember/1", {
-					method: "GET",
-					headers: { "Content-Type": "application/json" },
-				});
-				const personnelData = await personnelRes.json();
-				const personnelList = personnelData.map((item) => ({
-					value: item.employee_id,
-					label: `${item.prename_full_tha}${item.first_name_tha} ${item.last_name_tha}`,
-				}));
-				console.log("personnelList :", personnelList);
-
-				console.log("candidate :", save);
-
 				const MajorOfficerRes = await fetch("http://localhost:8080/api/allAssignMajorOfficer", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
 				const MajorOfficerData = await MajorOfficerRes.json();
 				if (!MajorOfficerRes.ok) throw new Error(MajorOfficerData.message);
-				setAssignMajorOfficer(MajorOfficerData);
+				setAssignMajorOfficer(MajorOfficerData); // << สำหรับตาราง
+				setAllAssignedOfficers(MajorOfficerData);
 				console.log("MajorOfficer :", MajorOfficerData);
 
 				const majorsRes = await fetch("http://localhost:8080/api/majors", {
@@ -73,33 +55,35 @@ const AssignMajorOfficer = () => {
 				});
 				const majorsData = await majorsRes.json();
 				if (!majorsRes.ok) throw new Error(majorsData.message);
+				setMajorsData(majorsData);
+
 				const majorOptions = majorsData.map((m) => ({
 					value: m.major_id,
 					label: m.major_name,
 				}));
-				setMajorName(majorOptions);
-				console.log("marjor :", majorOptions);
 
-				const candidate_filtered = save.filter((person) => !MajorOfficerData.some((item) => item.user_id === person.value));
-				setMajorOfficer(candidate_filtered);
-				console.log("candidate_filtered :", candidate_filtered);
+				setMajorOptions(majorOptions);
+				console.log("marjor :", majorOptions);
+				console.log("Majors (Raw Data):", majorsData);
 			} catch (e) {
 				notify("error", e.message);
 				console.error("Error fetch requestExamInfoAll:", e);
 			}
 			setReloadTable(false);
 		};
-		fetchRequestExamInfoAll();
-	}, [reloadTable]);
+		fetchInitialData();
+	}, [reloadTable, token]);
 
 	const handleOpenAdd = () => {
 		Form.reset();
+		setMemberOptions([]);
 		setModalType("add");
 		setOpenModal(true);
 	};
 
 	const handleOpenDelete = (item) => {
 		Form.setValues(item);
+		setMemberOptions([]);
 		setModalType("delete");
 		setOpenModal(true);
 	};
@@ -127,9 +111,63 @@ const AssignMajorOfficer = () => {
 			console.error("Error fetch deleteAssignChairpersons:", e);
 		}
 	};
+	const handleMajorChange = async (selectedMajorId) => {
+		// 1. อัปเดตฟอร์ม (ทำโดย Form.getInputProps... อยู่แล้ว แต่ทำซ้ำเพื่อความชัดเจน)
+		Form.setFieldValue("major_id", selectedMajorId);
+
+		// ✅ 2. เคลียร์ค่าเก่าของ Select 2
+		Form.setFieldValue("user_id", "");
+		Form.setFieldValue("name", "");
+		setMemberOptions([]);
+
+		console.log(Form.values);
+
+		if (!selectedMajorId) return; // ถ้าผู้ใช้ลบ (เลือก "ว่าง") ก็หยุด
+
+		// 3. ค้นหา id_fac จากข้อมูลดิบ
+		const selectedMajor = majorsData.find((m) => m.major_id === selectedMajorId);
+
+		// ⚠️ จุดสำคัญ: ต้องมี id_fac
+		if (!selectedMajor || !selectedMajor.id_fac) {
+			console.error("ไม่พบ id_fac สำหรับสาขานี้:", selectedMajor);
+			notify("error", "สาขานี้ไม่มีข้อมูล id_fac");
+			return;
+		}
+
+		const id_fac = selectedMajor.id_fac;
+		console.log(`Fetching members for id_fac: ${id_fac}`);
+		setIsLoadingMembers(true); // เริ่มหมุน...
+
+		try {
+			// 4. Fetch รายชื่อคนจาก id_fac
+			const res = await fetch(`https://git.kpru.ac.th/FrontEnd_Admission/admissionnew2022/loadMember/${id_fac}`, {
+				method: "GET",
+				headers: { "Content-Type": "application/json" },
+			});
+			const data = await res.json();
+			if (!res.ok) throw new Error("ดึงข้อมูลบุคลากรไม่สำเร็จ");
+
+			// 5. แปลงข้อมูล
+			const formattedMembers = data.map((item) => ({
+				value: item.employee_id,
+				label: `${item.prename_full_tha}${item.first_name_tha} ${item.last_name_tha}`.trim(),
+			}));
+
+			// 6. กรองคนที่ "ยังว่าง" (ไม่ได้ถูกแต่งตั้งใน *ทุก* สาขา)
+			const availableMembers = formattedMembers.filter((person) => !allAssignedOfficers.some((assigned) => assigned.user_id === person.value));
+
+			setMemberOptions(availableMembers);
+			console.log("Available Members:", availableMembers);
+		} catch (e) {
+			notify("error", e.message);
+		} finally {
+			setIsLoadingMembers(false); // หยุดหมุน
+		}
+	};
 
 	const classRows = assignMajorOfficer.map((item) => {
-		const major = majorName.find((m) => m.value === item.major_id);
+		// ใช้ majorOptions ที่เรามีอยู่แล้ว
+		const major = majorOptions.find((m) => m.value === item.major_id);
 		return (
 			<Table.Tr key={item.user_id}>
 				<Table.Td>{major ? major.label : "-"}</Table.Td>
@@ -151,18 +189,31 @@ const AssignMajorOfficer = () => {
 			<Modal opened={openModal} onClose={() => setOpenModal(false)} title="กรอกข้อมูลเจ้าหน้าที่ประจำสาขาวิชา" centered>
 				<Box>
 					<form onSubmit={Form.onSubmit(handleSubmit)}>
-						<Select label="เลือกสาขา" data={majorName} {...Form.getInputProps("major_id")} disabled={modalType === "delete" ? true : false}></Select>
+						<Select
+							label="เลือกสาขา"
+							data={majorOptions}
+							value={Form.values.major_id} // 1. กำหนด value เอง
+							onChange={handleMajorChange} // 2. กำหนด onChange เอง
+							error={Form.errors.major_id} // 3. กำหนด error เอง
+							disabled={modalType === "delete"}
+							placeholder="เลือกสาขา"
+						/>
+
 						{modalType === "delete" ? (
 							<TextInput label="ชื่อ" {...Form.getInputProps("name")} disabled={true} />
 						) : (
 							<Select
 								label="ชื่อ"
 								searchable
-								data={MajorOfficer}
-								value={Form.values.user_id}
+								data={memberOptions}
+								placeholder={isLoadingMembers ? "กำลังโหลด..." : "กรุณาเลือกสาขาก่อน"}
+								disabled={isLoadingMembers || !Form.values.major_id}
+								value={Form.values.user_id} // 1. กำหนด value เอง
+								error={Form.errors.user_id} // 3. กำหนด error เอง
+								// 2. กำหนด onChange เอง
 								onChange={(value) => {
 									Form.setFieldValue("user_id", value);
-									const selected = MajorOfficer.find((c) => c.value === value);
+									const selected = memberOptions.find((c) => c.value === value);
 									Form.setFieldValue("name", selected ? selected.label : "");
 								}}
 							/>

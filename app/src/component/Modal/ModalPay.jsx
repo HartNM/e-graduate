@@ -46,7 +46,7 @@ const ModalPay = ({ opened, onClose, selectedRow, handlePay, MoneyRegis, stop_da
 
 					<Flex justify="flex-end" mt="md">
 						<Button color="green" onClick={() => handlePay(selectedRow)}>
-							ทดสอบ
+							ชำระค่าธรรมเนียม
 						</Button>
 					</Flex>
 				</Box>

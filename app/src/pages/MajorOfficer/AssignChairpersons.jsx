@@ -12,23 +12,21 @@ const AssignChairpersons = () => {
 
 	const [openModal, setOpenModal] = useState(false);
 	const [modalType, setModalType] = useState(false);
+	const [majorName, setMajorName] = useState(null);
 
 	const [reloadTable, setReloadTable] = useState(false);
 	const token = localStorage.getItem("token");
 
-	const [assignChairpersons, setAssignChairpersons] = useState([]);
+	const [assignChairpersons, setAssignChairpersons] = useState([]); // State สำหรับตาราง
+	const [chairpersons, setChairpersons] = useState([]); // State สำหรับ Select (Dropdown)
 
-	const [chairpersons, setChairpersons] = useState([]);
+	// ✅ 1. State ใหม่: เก็บข้อมูลดิบของคนที่ถูกแต่งตั้ง "ทั้งหมด"
+	const [allAssignedData, setAllAssignedData] = useState([]);
+	// ✅ 2. State ใหม่: สำหรับคุมการ loading ของ Select
+	const [isLoadingSelect, setIsLoadingSelect] = useState(false);
 
-	const save = [
-		{ value: "4000000000001", label: "นางสาวมณีรัตน์ ทองมาก" },
-		{ value: "4000000000002", label: "นายปิยะพงษ์ ชาญชัย" },
-		{ value: "4000000000003", label: "นางสาวศศิธร บุญเรือง" },
-		{ value: "4000000000004", label: "นายอนันต์ รุ่งเรืองสกุล" },
-		{ value: "4000000000005", label: "นายกิตติพงษ์ ศรีสวัสดิ์" },
-		{ value: "4000000000006", label: "นางสุชาดา แก้วมณี" },
-		{ value: "4000000000007", label: "นายธนกฤต พูนสุข" },
-	];
+	// 🛑 3. ลบ const save = [...] (ข้อมูล hardcode) ทิ้งได้เลย
+	// const save = [ ... ];
 
 	const Form = useForm({
 		initialValues: {
@@ -42,61 +40,87 @@ const AssignChairpersons = () => {
 		},
 	});
 
-	const [majorName, setMajorName] = useState("");
-	const [SelectlistCurr, SetSelectListCurr] = useState([]);
-
 	useEffect(() => {
-		const fetchRequestExamInfoAll = async () => {
+		const fetchTableData = async () => {
 			try {
-				const ListCurrRes = await fetch("https://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListCurr");
-				const ListCurrData = await ListCurrRes.json();
-
-				SetSelectListCurr(
-					ListCurrData.map((item) => ({
-						value: item.curr_id,
-						label: `${item.curr_levnameth} (${item.curr_year})`,
-					}))
-				);
-				console.log("ListCurr :", ListCurrData);
-
-				console.log("candidate :", save);
-
+				// 1. ดึงข้อมูล Major (เหมือนเดิม)
 				const marjorRes = await fetch("http://localhost:8080/api/getMajor_name", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
 				const marjorData = await marjorRes.json();
 				setMajorName(marjorData);
-				console.log("marjor :", marjorData);
+				console.log("EFFECT (Table) - major:", marjorData);
 
+				// 2. ดึงข้อมูลประธานที่ถูกแต่งตั้งไปแล้ว (สำหรับตาราง)
 				const ChairpersonsRes = await fetch("http://localhost:8080/api/allAssignChairpersons", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
 				const ChairpersonsData = await ChairpersonsRes.json();
 				if (!ChairpersonsRes.ok) throw new Error(ChairpersonsData.message);
-				console.log("Chairpersons :", ChairpersonsData);
+				console.log("EFFECT (Table) - Chairpersons (Assigned):", ChairpersonsData);
 
+				// ✅ 4. เก็บข้อมูลดิบไว้ใน State เพื่อใช้ตอนกด "เพิ่ม"
+				setAllAssignedData(ChairpersonsData);
+
+				// 5. กรองข้อมูลประธานเฉพาะ major นี้ (สำหรับตาราง)
 				const Chairpersons_filtered = ChairpersonsData.filter((item) => item.major_id === marjorData.major_id);
 				setAssignChairpersons(Chairpersons_filtered);
-				console.log("Chairpersons filtered :", Chairpersons_filtered);
+				console.log("EFFECT (Table) - Chairpersons filtered (This Major):", Chairpersons_filtered);
 
-				const candidate_filtered = save.filter((person) => !ChairpersonsData.some((item) => item.user_id === person.value));
-				setChairpersons(candidate_filtered);
-				console.log("candidate_filtered :", candidate_filtered);
+				// 🛑 6. ลบการ fetch 'loadMember' และการกรอง 'candidate_filtered' ออกจากตรงนี้
 			} catch (e) {
 				notify("error", e.message);
-				console.error("Error fetch allAssignChairpersons:", e);
+				console.error("Error fetch Table Data:", e);
 			}
 			setReloadTable(false);
 		};
-		fetchRequestExamInfoAll();
-	}, [reloadTable]);
+		fetchTableData();
+	}, [reloadTable, token]); // ทำงานเมื่อ reloadTable หรือ token เปลี่ยน
 
-	const handleOpenAdd = () => {
+	// -----------------------------------------------------------------
+	// FUNCTION: ทำงานตอนกดปุ่ม "เพิ่มข้อมูล"
+	// - เปิด Modal
+	// - (ใหม่) Fetch ข้อมูลสำหรับ Select Dropdown
+	// -----------------------------------------------------------------
+	const handleOpenAdd = async () => {
+		// ✅ 7. เปลี่ยนเป็น async
 		Form.reset();
 		setModalType("add");
 		setOpenModal(true);
+		setIsLoadingSelect(true); // ✅ 8. เริ่มหมุน...
+		setChairpersons([]); // เคลียร์ค่าเก่า
+
+		try {
+			// ตรวจสอบว่ามีข้อมูลสาขาก่อน
+			if (!majorName || !majorName.id_fac) {
+				throw new Error("ยังโหลดข้อมูลสาขาไม่เสร็จ หรือไม่มี id_fac");
+			}
+
+			// ✅ 9. Fetch ข้อมูลบุคลากร (loadMember) "ณ ตอนนี้"
+			const facultyMembersRes = await fetch(`https://git.kpru.ac.th/FrontEnd_Admission/admissionnew2022/loadMember/${majorName.id_fac}`);
+			const facultyMembersData = await facultyMembersRes.json();
+			if (!facultyMembersRes.ok) throw new Error("ไม่สามารถดึงข้อมูลบุคลากรได้");
+
+			// แปลงข้อมูล
+			const formattedMembers = facultyMembersData.map((member) => ({
+				value: member.employee_id,
+				label: `${member.prename_full_tha}${member.first_name_tha} ${member.last_name_tha}`.trim(),
+			}));
+
+			// ✅ 10. กรองคนที่ "ยังว่าง" โดยใช้ข้อมูล 'allAssignedData' จาก State
+			const candidate_filtered = formattedMembers.filter((person) => !allAssignedData.some((item) => item.user_id === person.value));
+
+			setChairpersons(candidate_filtered); // ✅ 11. อัปเดต Dropdown
+			console.log("HANDLE OPEN ADD - Candidates for Select:", candidate_filtered);
+		} catch (e) {
+			notify("error", e.message);
+			console.error("Error fetching data for select:", e);
+			setOpenModal(false); // ปิด Modal ไปเลยถ้า fetch พลาด
+		} finally {
+			setIsLoadingSelect(false); // ✅ 12. หยุดหมุน
+		}
 	};
 
 	const handleOpenDelete = (item) => {
@@ -131,7 +155,8 @@ const AssignChairpersons = () => {
 
 	const classRows = assignChairpersons.map((item) => (
 		<Table.Tr key={item.user_id}>
-			<Table.Td>{majorName.major_name}</Table.Td>
+			{/* ✅ 13. เพิ่ม ? (Optional Chaining) ป้องกัน error ตอนโหลดครั้งแรก */}
+			<Table.Td>{majorName?.major_name}</Table.Td>
 			<Table.Td>{item.name}</Table.Td>
 			<Table.Td>
 				<Group>
@@ -145,35 +170,29 @@ const AssignChairpersons = () => {
 
 	return (
 		<Box>
-			<ModalInform opened={inform.open} onClose={close} message={inform.message} type={inform.type} />
+			{/* ... (ModalInform เหมือนเดิม) */}
 			<Modal opened={openModal} onClose={() => setOpenModal(false)} title="กรอกข้อมูลประธานกรรมการบัณฑิตศึกษาประจำสาขาวิชา" centered>
 				<form onSubmit={Form.onSubmit(handleSubmit)}>
-					<Text>สาขา{majorName.major_name}</Text>
+					{/* ✅ 13. เพิ่ม ? ป้องกัน error */}
+					<Text>สาขา{majorName?.major_name}</Text>
 
 					{modalType === "delete" ? (
 						<TextInput label="ชื่อ" {...Form.getInputProps("name")} disabled={true} />
 					) : (
 						<>
 							<Select
-								label="หลักสูตร"
-								searchable
-								data={SelectlistCurr}
-								value={Form.values.chairpersons_id}
-								onChange={(value) => {
-									Form.setFieldValue("curr_id", value);
-								}}
-							/>
-
-							<Select
 								label="ชื่อ"
 								searchable
 								data={chairpersons}
-								value={Form.values.chairpersons_id}
+								value={Form.values.user_id}
 								onChange={(value) => {
 									Form.setFieldValue("user_id", value);
 									const selected = chairpersons.find((c) => c.value === value);
 									Form.setFieldValue("name", selected ? selected.label : "");
 								}}
+								// ✅ 14. เพิ่ม disabled และ placeholder ตอนโหลด
+								disabled={isLoadingSelect}
+								placeholder={isLoadingSelect ? "กำลังโหลดรายชื่อ..." : "เลือกอาจารย์"}
 							/>
 						</>
 					)}
@@ -191,7 +210,7 @@ const AssignChairpersons = () => {
 			<Space h="xl" />
 			<Box>
 				<Flex justify="flex-end">
-					<Button variant="filled" size="xs" onClick={() => handleOpenAdd()}>
+					<Button variant="filled" size="xs" onClick={() => handleOpenAdd()} disabled={!majorName}>
 						เพิ่มข้อมูล
 					</Button>
 				</Flex>

@@ -141,10 +141,10 @@ async function fillPdf(templateUrl, data) {
 				for (let i = start; i < end; i++) {
 					y -= ROW_HEIGHT;
 					drawRect(newPage, 60, y, 490, ROW_HEIGHT);
-					drawCenteredText(newPage, `${i + 1}`, 60, y, 40, ROW_HEIGHT, customFont, 14); // (ใช้ 'student_id')
-					drawCenteredText(newPage, `${students[i].student_id}`, 100, y, 70, ROW_HEIGHT, customFont, 14); // (ใช้ 'NAME')
-					drawMiddleText(newPage, `${students[i].PNAME}${students[i].NAME.split(" ")[0]}`, 190, y, ROW_HEIGHT, customFont, 14);
-					drawMiddleText(newPage, students[i].NAME.split(" ").slice(1).join(" "), 290, y, ROW_HEIGHT, customFont, 14);
+					drawCenteredText(newPage, `${i + 1}`, 60, y, 40, ROW_HEIGHT, customFont, 14);
+					drawCenteredText(newPage, `${students[i].student_id}`, 100, y, 70, ROW_HEIGHT, customFont, 14);
+					drawMiddleText(newPage, `${students[i].student_name.split(" ")[0]}`, 190, y, ROW_HEIGHT, customFont, 14);
+					drawMiddleText(newPage, students[i].student_name.split(" ").slice(1).join(" "), 290, y, ROW_HEIGHT, customFont, 14);
 				}
 				pageIndex++;
 			}

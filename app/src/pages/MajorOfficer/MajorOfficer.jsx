@@ -38,7 +38,8 @@ const menu = [
 	/* { label: "กรอกผลการสอบประมวลความรู้/สอบวัดคุณสมบัติ", icon: IconEdit, links: "/major-officer/ExamResults" },
 	{ label: "กรอกผลการสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ", icon: IconEdit, links: "/major-officer/ExamProposalResults" },
 	{ label: "กรอกผลการสอบวิทยานิพนธ์/การค้นคว้าอิสระ", icon: IconEdit, links: "/major-officer/ExamDefenseResults" }, */
-	{ label: "กรอกข้อมูลรายวิชาสำหรับสอบประมวลความรู้/สอบวัดคุณสมบัติ", icon: IconBooks, links: "/major-officer/CourseRegistration" },
+	/* { label: "กรอกข้อมูลรายวิชาสำหรับสอบประมวลความรู้/สอบวัดคุณสมบัติ", icon: IconBooks, links: "/major-officer/CourseRegistration" }, */
+	{ label: "กรอกข้อมูลรายวิชาบังคับ", icon: IconBooks, links: "/major-officer/CourseRegistration" },
 	{ label: "กรอกข้อมูลประธานกรรมการบัณฑิตศึกษาประจำสาขาวิชา", icon: IconUserCheck, links: "/major-officer/AssignChairpersons" },
 ];
 /* data.education_level === "ปริญญาเอก" && newMenu.push({ label: "คำร้องขอทดสอบความรู้ทางภาษาอังกฤษ", icon: IconCertificate, links: "/student/RequestEngTest" }); */

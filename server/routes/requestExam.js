@@ -61,6 +61,8 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 		} else if (role === "officer_registrar") {
 			query +=
 				" WHERE (status IN (0, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL AND registrar_approvals_id IS NOT NULL)) AND term = @term";
+		} else if (role === "officer_major") {
+			query += " WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND term = @term";
 		}
 		query += " ORDER BY request_exam_id DESC";
 		const result = await request.query(query);
