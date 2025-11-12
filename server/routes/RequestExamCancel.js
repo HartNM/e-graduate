@@ -33,7 +33,7 @@ router.post("/CheckOpenREC", authenticateToken, async (req, res) => {
 		// (ป้องกันปัญหาเช่น สอบวันที่ 10 (09:00) แต่วันนี้คือวันที่ 7 (23:00) ซึ่งอาจนับได้ 2 วัน)
 		today.setHours(0, 0, 0, 0); // คำนวณเป็น milliseconds
 		// ถ้า KQ_exam_date มีเวลามาด้วย อาจจะต้องทำแบบเดียวกันกับ examDate
-		// examDate.setHours(0, 0, 0, 0);
+		examDate.setHours(0, 0, 0, 0);
 
 		const diffTime = examDate.getTime() - today.getTime();
 

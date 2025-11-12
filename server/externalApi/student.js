@@ -9,7 +9,6 @@ router.get("/student/:student_id", async (req, res) => {
 	try {
 		const response = await axios.get(`https://mua.kpru.ac.th/FrontEnd_Tabian/petition/Showstudent/${studentid}`);
 		const item = response.data[0];
-		console.log(item);
 		
 		const transformedData = {
 			student_id: item.OLDID,

@@ -21,9 +21,10 @@ const statusMap = {
 	8: "ขอยกเลิก",
 	9: "ขอยกเลิก",
 };
-
+ 
 router.post("/checkOpenKQ", authenticateToken, async (req, res) => {
 	try {
+		const { type } = req.body;
 		const pool = await poolPromise;
 		const result = await pool.query(`
 			SELECT TOP 1 *
@@ -32,7 +33,7 @@ router.post("/checkOpenKQ", authenticateToken, async (req, res) => {
 			ORDER BY request_exam_info_id DESC
 		`);
 		if (result.recordset.length === 0) {
-			return res.status(403).json({ status: false, message: "ระบบคำร้องขอสอบประมวลความรู้/สอบวัดคุณสมบัติยังไม่เปิด" });
+			return res.status(403).json({ status: false, message: `ระบบ${type}ยังไม่เปิด` });
 		}
 		res.status(200).json({ status: true });
 	} catch (err) {

@@ -1,7 +1,6 @@
 //คำร้องขอยกเลิกประมวลความรู้/วัดคุณสมบัติ
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
-import { useParams } from "react-router-dom";
 import ModalAddCancel from "../component/Modal/ModalAddCancel";
 import ModalApprove from "../component/Modal/ModalApprove";
 import ModalInform from "../component/Modal/ModalInform";
@@ -10,12 +9,11 @@ import { jwtDecode } from "jwt-decode";
 
 const RequestExamCancel = () => {
 	const token = localStorage.getItem("token");
-	/* const payloadBase64 = token.split(".")[1];
-		const payload = JSON.parse(atob(payloadBase64)); */
-
-	const payload = jwtDecode(token);
+	const payload = useMemo(() => {
+		return jwtDecode(token);
+	}, [token]);
 	const role = payload.role;
-	const user_id = payload.user_id;
+	const name = payload.name;
 	// Modal Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
@@ -33,14 +31,9 @@ const RequestExamCancel = () => {
 	// System states
 	const [user, setUser] = useState("");
 	//student //advisor //chairpersons //officer_registrar  //dean
-	const [request, setRequest] = useState([]);
+	const [request, setRequest] = useState(null);
 	const [search, setSearch] = useState("");
-	const { type } = useParams();
 	const [selectedType, setSelectedType] = useState("");
-
-	useEffect(() => {
-		setSelectedType(type);
-	}, [type]);
 
 	const [term, setTerm] = useState([]);
 	const [selectedTerm, setSelectedTerm] = useState("");
@@ -97,6 +90,7 @@ const RequestExamCancel = () => {
 
 	useEffect(() => {
 		if (!selectedTerm) return;
+		if (request != null && role === "student") return;
 		console.log("เทอมนี้ ", selectedTerm);
 
 		const getRequestCancel = async () => {
@@ -204,7 +198,7 @@ const RequestExamCancel = () => {
 				body: JSON.stringify({
 					request_cancel_exam_id: item.request_cancel_exam_id,
 					request_exam_id: item.request_exam_id,
-					name: user.name,
+					name: name,
 					role: role,
 					selected: selected,
 					comment_cancel: comment,
@@ -239,14 +233,14 @@ const RequestExamCancel = () => {
 
 	const sortedData = sortRequests(request, role);
 
-	const filteredData = sortedData.filter((p) => {
+	const filteredData = sortedData?.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
 		const matchesType = selectedType ? p.request_type === selectedType : true;
 		const matchesTerm = selectedTerm ? p.term === selectedTerm : true;
 		return matchesSearch && matchesType && matchesTerm;
 	});
 
-	const rows = filteredData.map((item) => (
+	const rows = filteredData?.map((item) => (
 		<Table.Tr key={item.request_cancel_exam_id}>
 			<Table.Td>{item.student_name}</Table.Td>
 			<Table.Td>{item.term}</Table.Td>
@@ -325,8 +319,8 @@ const RequestExamCancel = () => {
 				<Box>
 					<Flex align="flex-end" gap="sm">
 						{role !== "student" && <TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
-						{(role === "chairpersons" || role === "advisor") && <Select placeholder="ชนิดคำขอ" data={["ขอยกเลิกการเข้าสอบประมวลความรู้", "ขอยกเลิกการเข้าสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
-						{role !== "student" && <Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} allowDeselect={false} />}
+						{role !== "student" && <Select placeholder="ชนิดคำขอ" data={["ขอยกเลิกการเข้าสอบประมวลความรู้", "ขอยกเลิกการเข้าสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
+						<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} allowDeselect={false} />
 					</Flex>
 				</Box>
 				<Box>

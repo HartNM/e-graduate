@@ -386,9 +386,9 @@ const ExamScheduleSetupPage = () => {
 
 					<DatePickerInput type="range" label="วันเปิด-ปิดภาคเรียน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" {...Form.getInputProps("term_date_range")} disabled={modalType === "delete" ? true : false} />
 
-					<DatePickerInput type="range" label="วันเปิด-ปิดยื่นคำร้องสอบประมวลความรู้/สอบวัดคุณสมบัติ" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" {...Form.getInputProps("KQ_date_range")} disabled={modalType === "delete" ? true : false} />
+					<DatePickerInput type="range" label="วันเปิด-ปิดยื่นคำร้องสอบประมวลความรู้/วัดคุณสมบัติ/ความรู้ทางภาษาอังกฤษ" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" {...Form.getInputProps("KQ_date_range")} disabled={modalType === "delete" ? true : false} />
 
-					<DatePickerInput type="range" allowSingleDateInRange label="วันสอบประมวลความรู้/สอบวัดคุณสมบัติ" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" minDate={Form.values.KQ_date_range[1]} {...Form.getInputProps("KQ_exam_date")} disabled={modalType === "delete" ? true : false} />
+					<DatePickerInput type="range" allowSingleDateInRange label="วันสอบประมวลความรู้/วัดคุณสมบัติ" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" minDate={Form.values.KQ_date_range[1]} {...Form.getInputProps("KQ_exam_date")} disabled={modalType === "delete" ? true : false} />
 
 					<DatePickerInput label="วันสอบความรู้ทางภาษาอังกฤษ" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" {...Form.getInputProps("ET_exam_date")} disabled={modalType === "delete" ? true : false} />
 					<Space h="md" />

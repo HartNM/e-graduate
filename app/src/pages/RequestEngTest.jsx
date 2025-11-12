@@ -1,5 +1,5 @@
 //คำร้องขอทดสอบความรู้ทางภาษาอังกฤษ
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Flex, Stepper, Pill, Select } from "@mantine/core";
 import ModalApprove from "../component/Modal/ModalApprove";
 import ModalAdd from "../component/Modal/ModalAdd";
@@ -11,13 +11,11 @@ import { jwtDecode } from "jwt-decode";
 
 const RequestEngTest = () => {
 	const token = localStorage.getItem("token");
-	/* const payloadBase64 = token.split(".")[1];
-				const payload = JSON.parse(atob(payloadBase64));  */
-
-	const payload = jwtDecode(token);
+	const payload = useMemo(() => {
+		return jwtDecode(token);
+	}, [token]);
 	const role = payload.role;
-	const user_id = payload.user_id;
-	console.log("token :", payload);
+	const name = payload.name;
 	// Modal notify
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
@@ -33,37 +31,18 @@ const RequestEngTest = () => {
 	const [comment, setComment] = useState("");
 	const [error, setError] = useState("");
 	// System states
-	const [user, setUser] = useState("");
 	//student //advisor //chairpersons //officer_registrar //dean
-	const [request, setRequest] = useState([]);
 	const [search, setSearch] = useState("");
-	const [latestRequest, setLatestRequest] = useState(null);
+	const [latestRequest, setLatestRequest] = useState(true);
+	const [openKQ, setOpenKQ] = useState(null);
+	const [request, setRequest] = useState(null);
 
 	const form = useForm({});
 
 	const [term, setTerm] = useState([]);
 	const [selectedTerm, setSelectedTerm] = useState("");
-
 	useEffect(() => {
-		const getProfile = async () => {
-			try {
-				const req = await fetch("http://localhost:8080/api/profile", {
-					method: "GET",
-					headers: { Authorization: `Bearer ${token}` },
-				});
-				const res = await req.json();
-				if (!req.ok) throw new Error(res.message);
-				console.log(res);
-				setUser(res);
-			} catch (e) {
-				notify("error", e.message);
-				console.error(e);
-			}
-		};
-		getProfile();
-
 		const getTerm = async () => {
-			if (role === "student") return;
 			try {
 				const termInfoReq = await fetch("http://localhost:8080/api/allRequestExamInfo", {
 					method: "POST",
@@ -72,7 +51,6 @@ const RequestEngTest = () => {
 				const termInfodata = await termInfoReq.json();
 				if (!termInfoReq.ok) throw new Error(termInfodata.message);
 				setTerm(termInfodata.map((item) => item.term));
-
 				console.log(termInfodata);
 
 				const today = new Date();
@@ -86,7 +64,11 @@ const RequestEngTest = () => {
 					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก close_date
 					currentTerm = [...termInfodata].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
 				}
-				setSelectedTerm(currentTerm.term);
+				if (currentTerm) {
+					setSelectedTerm(currentTerm.term);
+				} else {
+					console.warn("ไม่พบข้อมูลเทอม");
+				}
 			} catch (e) {
 				notify("error", e.message);
 				console.error("Error fetching allRequestExamInfo:", e);
@@ -96,6 +78,28 @@ const RequestEngTest = () => {
 	}, []);
 
 	useEffect(() => {
+		const fetchOpenStatus = async () => {
+			try {
+				const checkOpenKQRes = await fetch("http://localhost:8080/api/checkOpenKQ", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+					body: JSON.stringify({ type: "คำร้องขอสอบประมวลความรู้/วัดคุณสมบัติ" }),
+				});
+				const checkOpenKQData = await checkOpenKQRes.json();
+				setOpenKQ(checkOpenKQData.status);
+				if (!checkOpenKQRes.ok) throw new Error(checkOpenKQData.message);
+			} catch (e) {
+				console.error("Error fetching checkOpenKQ:", e);
+				notify("error", e.message || "ไม่สามารถตรวจสอบสถานะการเปิดระบบได้");
+			}
+		};
+
+		fetchOpenStatus();
+	}, []);
+
+	useEffect(() => {
+		if (!selectedTerm) return;
+		if (request != null && role === "student") return;
 		console.log(selectedTerm);
 
 		const getRequest = async () => {
@@ -108,7 +112,6 @@ const RequestEngTest = () => {
 				const requestData = await requestReq.json();
 				if (!requestReq.ok) throw new Error(requestData.message);
 				setRequest(requestData);
-				setLatestRequest(requestData[0]);
 
 				console.log(requestData);
 			} catch (e) {
@@ -119,7 +122,42 @@ const RequestEngTest = () => {
 		getRequest();
 	}, [selectedTerm]);
 
-	const [reloadTable, setReloadTable] = useState(false);
+	useEffect(() => {
+		if (request === null || role !== "student" || openKQ === null) return;
+		console.log("student");
+
+		const fetchStudentData = async () => {
+			try {
+				if (openKQ === false) {
+					// เราไม่มี message จาก API แล้ว แต่โยน Error เพื่อหยุดการทำงาน
+					throw new Error("ระบบคำร้องขอทดสอบความรู้ทางภาษาอังกฤษยังไม่เปิด");
+				}
+
+				const countFailOrAbsent = request.filter((row) => row.exam_results === "ไม่ผ่าน" || row.exam_results === "ขาดสอบ").length;
+				if (!request.length) {
+					console.log("ลำดับ : 1 ไม่มีคำร้อง (เปิด)");
+					setLatestRequest(false);
+				} else if (countFailOrAbsent > 2) {
+					console.log("ลำดับ : 2 ไม่ผ่านเกิน 3 ครั้ง (ปิด)");
+					setLatestRequest(true);
+					throw new Error("สอบไม่ผ่านเกิน 3 ครั้ง");
+				} else if (selectedTerm === request[0].term) {
+					console.log("ลำดับ : 3 เทอมนี้ลงแล้ว (ปิด)");
+					setLatestRequest(true);
+				} else if (request[0].exam_results === "ไม่ผ่าน" || request[0].exam_results === "ขาดสอบ") {
+					console.log("ลำดับ : 4 รอบที่แล้วไม่ผ่าน (เปิด)");
+					setLatestRequest(false);
+				} else {
+					console.log("ลำดับ : 5 (ปิด)");
+					setLatestRequest(true);
+				}
+			} catch (e) {
+				notify("error", e.message, 10000);
+				console.error(e);
+			}
+		};
+		fetchStudentData();
+	}, [request, openKQ]);
 
 	const handleOpenAdd = async () => {
 		try {
@@ -165,7 +203,7 @@ const RequestEngTest = () => {
 			const requestRes = await fetch("http://localhost:8080/api/approveRequestEngTest", {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ request_eng_test_id: item.request_eng_test_id, name: user.name, role: role, selected: selected, comment: comment }),
+				body: JSON.stringify({ request_eng_test_id: item.request_eng_test_id, name: name, role: role, selected: selected, comment: comment }),
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) throw new Error(requestData.message);
@@ -203,14 +241,15 @@ const RequestEngTest = () => {
 		return data.sort((a, b) => Number(a.status) - Number(b.status));
 	}
 
-	const sortedData = sortRequests(request, role);
+	const sortedData = sortRequests(request || [], role);
 
-	const filteredData = sortedData.filter((p) => {
+	const filteredData = sortedData?.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
-		return matchesSearch;
+		const matchesTerm = selectedTerm ? p.term === selectedTerm : true;
+		return matchesSearch && matchesTerm;
 	});
 
-	const rows = filteredData.map((item) => (
+	const rows = filteredData?.map((item) => (
 		<Table.Tr key={item.request_eng_test_id}>
 			<Table.Td>{item.student_name}</Table.Td>
 			<Table.Td>{item.term}</Table.Td>
@@ -261,6 +300,7 @@ const RequestEngTest = () => {
 										setSelectedRow(item);
 										setOpenPay(true);
 									}}
+									disabled={!openKQ}
 								>
 									ชำระค่าธรรมเนียม
 								</Button>
@@ -284,6 +324,7 @@ const RequestEngTest = () => {
 								setOpenApproveState("add");
 								setOpenApprove(true);
 							}}
+							disabled={!openKQ}
 						>
 							{role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
 						</Button>
@@ -320,7 +361,7 @@ const RequestEngTest = () => {
 				<Box>
 					<Flex align="flex-end" gap="sm">
 						{role !== "student" && <TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
-						{role !== "student" && <Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} allowDeselect={false} />}
+						<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} allowDeselect={false} />
 					</Flex>
 				</Box>
 				<Box>

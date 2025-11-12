@@ -13,15 +13,12 @@ import { jwtDecode } from "jwt-decode";
 
 const RequestExam = () => {
 	const token = localStorage.getItem("token");
-
 	const payload = useMemo(() => {
 		return jwtDecode(token);
 	}, [token]);
 	const role = payload.role;
 	const user_id = payload.user_id;
 	const name = payload.name;
-	/* console.log(role, user_id, name); */
-
 	// Modal Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "", timeout: 3000 });
 	const notify = (type, message, timeout = 3000) => setInform({ open: true, type, message, timeout });
@@ -41,24 +38,22 @@ const RequestExam = () => {
 	const [user, setUser] = useState("");
 	const [request, setRequest] = useState(null);
 	const [search, setSearch] = useState("");
-	const { type } = useParams();
+	
 	const [selectedType, setSelectedType] = useState("");
 	const [latestRequest, setLatestRequest] = useState(true);
 
 	const [missingCoures, setMissingCoures] = useState([]);
 
-	const form = useForm({
-		initialValues: {},
-		validate: {},
-	});
+	const form = useForm({});
 
+	const { type } = useParams();
 	useEffect(() => {
 		setSelectedType(type);
 	}, [type]);
 
 	const [term, setTerm] = useState([]);
 	const [selectedTerm, setSelectedTerm] = useState("");
-
+	
 	useEffect(() => {
 		const getProfile = async () => {
 			try {
@@ -102,9 +97,7 @@ const RequestExam = () => {
 				if (currentTerm) {
 					setSelectedTerm(currentTerm.term);
 				} else {
-					// แจ้งเตือน หรือ set ค่า default ถ้าไม่มีเทอมเลย
 					console.warn("ไม่พบข้อมูลเทอม");
-					// setSelectedTerm(null); // หรือค่า default
 				}
 			} catch (e) {
 				notify("error", e.message);
@@ -149,6 +142,7 @@ const RequestExam = () => {
 				const checkOpenKQRes = await fetch("http://localhost:8080/api/checkOpenKQ", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+					body: JSON.stringify({ type: "คำร้องขอสอบประมวลความรู้/วัดคุณสมบัติ"})
 				});
 				const checkOpenKQData = await checkOpenKQRes.json();
 				setOpenKQ(checkOpenKQData.status);
