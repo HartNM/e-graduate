@@ -23,6 +23,8 @@ router.get("/student/:student_id", async (req, res) => {
 			major_name: item.t_mjname,
 			faculty_name: item.faculty_name,
 		};
+		console.log(transformedData.student_id);
+		
 		res.json(transformedData);
 	} catch (err) {
 		console.error("API call error:", err);

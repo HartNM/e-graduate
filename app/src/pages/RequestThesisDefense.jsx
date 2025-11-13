@@ -50,9 +50,10 @@ const RequestThesisDefense = () => {
 			thesis_exam_date: null,
 		},
 		validate: {
-			thesis_exam_date: (v) => {
+			research_name: (value) => (value === "" ? "กรุณากรอกชื่องานวิจัย" : null),
+			/* thesis_exam_date: (v) => {
 				if (!v) return "กรุณาระบุวันที่สอบ";
-			},
+			}, */
 		},
 	});
 
@@ -162,7 +163,7 @@ const RequestThesisDefense = () => {
 			form.setValues(ThesisProposalData[0]);
 			form.setValues({ thesis_exam_date: null });
 			setOpenAdd(true);
-		} catch (e) { 
+		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching studentInfo:", e);
 		}
@@ -183,7 +184,7 @@ const RequestThesisDefense = () => {
 			setLatestRequest(true);
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-			console.error("Error fetching addRequestExam:", e);
+			console.error("Error fetching addRequestThesisDefense:", e);
 		}
 	};
 

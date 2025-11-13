@@ -10,17 +10,6 @@ const timezone = require("dayjs/plugin/timezone");
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-function formatDateThaiBE(date) {
-	if (!date) return null;
-	const d = dayjs(date).tz("Asia/Bangkok");
-	const buddhistYear = d.year() + 543;
-	return `${buddhistYear}-${(d.month() + 1).toString().padStart(2, "0")}-${d.date().toString().padStart(2, "0")}`;
-}
-
-function formatDateForDB(date = new Date()) {
-	return dayjs(date).tz("Asia/Bangkok").format("YYYY-MM-DD HH:mm:ss");
-}
-
 const statusMap = {
 	0: "ยกเลิก",
 	1: "รออาจารย์ที่ปรึกษาอนุมัติ",
@@ -47,21 +36,23 @@ router.post("/getAdvisors", authenticateToken, async (req, res) => {
 
 // ดึงคำร้องทั้งหมด
 router.post("/allRequestThesisDefense", authenticateToken, async (req, res) => {
-	const { lastRequest } = req.body;
+	const { lastRequest, term } = req.body;
 	const { user_id, role } = req.user;
 	try {
 		const pool = await poolPromise;
-		const request = pool.request().input("user_id", user_id);
+		const request = pool.request().input("user_id", user_id).input("term", term);
 		let query = "SELECT * FROM request_thesis_defense";
 		if (role === "student") {
 			if (lastRequest) query = "SELECT TOP 1 * FROM request_thesis_defense";
 			query += " WHERE student_id = @user_id";
 		} else if (role === "advisor") {
-			query += " WHERE thesis_advisor_id = @user_id";
+			query += " WHERE thesis_advisor_id = @user_id AND term = @term";
 		} else if (role === "chairpersons") {
-			query += ` WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND (status IN (0, 2, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL))`;
+			query += ` WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND (status IN (0, 2, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL)) AND term = @term`;
 		} else if (role === "officer_registrar") {
-			query += ` WHERE (status IN (0, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL AND registrar_approvals_id IS NOT NULL))`;
+			query += ` WHERE (status IN (0, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL AND registrar_approvals_id IS NOT NULL)) AND term = @term`;
+		} else if (role === "officer_major") {
+			query += " WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND term = @term";
 		}
 		query += " ORDER BY request_thesis_defense_id DESC";
 		const result = await request.query(query);
@@ -112,19 +103,16 @@ router.post("/addRequestThesisDefense", authenticateToken, async (req, res) => {
 			.input("student_id", student_id)
 			.input("study_group_id", study_group_id)
 			.input("thesis_advisor_id", thesis_advisor_id)
-			.input("thesis_exam_date", thesis_exam_date)
 			.input("major_id", major_id)
 			.input("faculty_name", faculty_name)
 			.input("research_name", research_name)
 			.input("request_type", request_type.replace("โครงร่าง", ""))
 			.input("term", infoRes.recordset[0].term)
-			.input("request_date", formatDateForDB())
 			.input("status", "1").query(`
 				INSERT INTO request_thesis_defense (
 					student_id,
 					study_group_id,
 					thesis_advisor_id,
-					thesis_exam_date,
 					major_id,
 					faculty_name,
 					research_name,
@@ -136,13 +124,12 @@ router.post("/addRequestThesisDefense", authenticateToken, async (req, res) => {
 					@student_id,
 					@study_group_id,
 					@thesis_advisor_id,
-					@thesis_exam_date,
 					@major_id,
 					@faculty_name,
 					@research_name,
 					@request_type,
 					@term,
-					@request_date,
+					GETDATE(),
 					@status
 				)
 			`);
@@ -160,7 +147,8 @@ router.post("/addRequestThesisDefense", authenticateToken, async (req, res) => {
 });
 
 router.post("/approveRequestThesisDefense", authenticateToken, async (req, res) => {
-	const { request_thesis_defense_id, name, role, selected, comment } = req.body;
+	const { request_thesis_defense_id, role, selected, comment } = req.body;
+	const { user_id } = req.user;
 	try {
 		let statusValue = "";
 		if (selected === "approve") {
@@ -179,26 +167,25 @@ router.post("/approveRequestThesisDefense", authenticateToken, async (req, res) 
 			.request()
 			.input("request_thesis_defense_id", request_thesis_defense_id)
 			.input("status", statusValue)
-			.input("name", name)
+			.input("user_id", user_id)
 			.input("approve", selected === "approve" ? 1 : 0)
-			.input("date", formatDateForDB())
 			.input("comment", comment);
 
 		const roleFields = {
 			research_advisor: `
-				advisor_approvals_id = @name,
+				advisor_approvals_id = @user_id,
 				advisor_approvals = @approve,
-				advisor_approvals_date = @date
+				advisor_approvals_date = GETDATE()
 			`,
 			chairpersons: `
-				chairpersons_approvals_id = @name,
+				chairpersons_approvals_id = @user_id,
 				chairpersons_approvals = @approve,
-				chairpersons_approvals_date = @date
+				chairpersons_approvals_date = GETDATE()
 			`,
 			officer_registrar: `
-				registrar_approvals_id = @name,
+				registrar_approvals_id = @user_id,
 				registrar_approvals = @approve,
-				registrar_approvals_date = @date
+				registrar_approvals_date = GETDATE()
 			`,
 		};
 
@@ -239,13 +226,12 @@ router.post("/payRequestThesisDefense", authenticateToken, async (req, res) => {
 			.input("receipt_vol", receipt_vol)
 			.input("receipt_No", receipt_No)
 			.input("receipt_pay", receipt_pay)
-			.input("receipt_pay_date", formatDateForDB())
 			.input("status", "5").query(`
 				UPDATE request_thesis_defense
 				SET receipt_vol = @receipt_vol ,
 					receipt_No = @receipt_No ,
 					receipt_pay = @receipt_pay ,
-					receipt_pay_date = @receipt_pay_date,
+					receipt_pay_date = GETDATE(),
 					status = @status
 				OUTPUT INSERTED.*
 				WHERE request_thesis_defense_id = @request_thesis_defense_id

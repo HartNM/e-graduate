@@ -19,46 +19,6 @@ async function fillPdf(students) {
 
 	let date_exam = `ประจำภาคเรียนที่ ${students[0].term}`;
 
-	if (students[0].request_type === "ขอสอบประมวลความรู้" || students[0].request_type === "ขอสอบวัดคุณสมบัติ") {
-		try {
-			const token = localStorage.getItem("token");
-			const requestRes = await fetch("http://localhost:8080/api/allRequestExamInfo", {
-				method: "POST",
-				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ term: students[0].term }),
-			});
-			const requestData = await requestRes.json();
-
-			if (Array.isArray(requestData) && requestData.length > 0) {
-				const info = requestData[0];
-				const startDateRaw = info.KQ_exam_date;
-				const endDateRaw = info.KQ_exam_end_date; // รับค่าวันที่สิ้นสุด
-
-				if (startDateRaw) {
-					const [d1, m1, y1] = formatThaiDate(startDateRaw);
-
-					// กรณีมีวันที่สิ้นสุด และ วันที่สิ้นสุดไม่ตรงกับวันเริ่ม
-					if (endDateRaw && endDateRaw !== startDateRaw) {
-						const [d2, m2, y2] = formatThaiDate(endDateRaw);
-
-						if (m1 === m2 && y1 === y2) {
-							// กรณีเดือนเดียวกัน ปีเดียวกัน (เช่น 29 - 30 ตุลาคม 2568)
-							date_exam += ` สอบวันที่ ${d1} - ${d2} ${m1} ${y1}`;
-						} else {
-							// กรณีคนละเดือน หรือ คนละปี (เช่น 31 ตุลาคม 2568 - 1 พฤศจิกายน 2568)
-							date_exam += ` สอบวันที่ ${d1} ${m1} ${y1} - ${d2} ${m2} ${y2}`;
-						}
-					} else {
-						// กรณีสอบวันเดียว หรือไม่มีวันที่สิ้นสุดระบุมา
-						date_exam += ` สอบวันที่ ${d1} ${m1} ${y1}`;
-					}
-				}
-			}
-		} catch (e) {
-			console.error("Error fetch allRequestExamInfo:", e);
-		}
-	}
-
 	while (pageIndex * STUDENTS_PER_PAGE < students.length) {
 		const newPage = pageIndex === 0 ? page : pdfDoc.addPage([595, 842]);
 		const start = pageIndex * STUDENTS_PER_PAGE;
@@ -71,10 +31,9 @@ async function fillPdf(students) {
 			width: pngDims.width,
 			height: pngDims.height,
 		});
-		const type = students[0].request_type.split("ขอ")[1];
 
 		let y = 600;
-		drawCenterXText(newPage, `ผล${type}`, 680, font, 16);
+		drawCenterXText(newPage, `ผลการสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`, 680, font, 16);
 		drawCenterXText(newPage, `สาขาวิชา${students[0].major_name}`, 660, font, 16);
 		drawCenterXText(newPage, date_exam, 640, font, 16);
 

@@ -233,7 +233,7 @@ router.post(
 				},
 			});
 		} catch (err) {
-			console.error("addRequestExam:", err);
+			console.error("addPlagiarismDefense:", err);
 			res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกคำร้องขอสอบ" });
 		}
 	}

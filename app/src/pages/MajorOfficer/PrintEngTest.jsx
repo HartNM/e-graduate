@@ -15,7 +15,6 @@ const PrintExam = () => {
 	const [term, setTerm] = useState([]);
 
 	const [selectedTerm, setSelectedTerm] = useState("");
-	const [selectedType, setSelectedType] = useState("");
 
 	useEffect(() => {
 		const getTerm = async () => {
@@ -59,7 +58,7 @@ const PrintExam = () => {
 
 		const getRequest = async () => {
 			try {
-				const requestReq = await fetch("http://localhost:8080/api/requestExamAll", {
+				const requestReq = await fetch("http://localhost:8080/api/allRequestEngTest", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 					body: JSON.stringify({ term: selectedTerm }),
@@ -82,8 +81,7 @@ const PrintExam = () => {
 	const filteredData = request.filter((p) => {
 		const filterStatus = p.status === "5";
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
-		const matchesType = selectedType ? p.request_type === selectedType : true;
-		return filterStatus && matchesSearch && matchesType;
+		return filterStatus && matchesSearch ;
 	});
 
 	const handleExport = () => {
@@ -113,7 +111,6 @@ const PrintExam = () => {
 			<Group justify="space-between">
 				<Group>
 					<TextInput placeholder="ค้นหา ชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />
-					<Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />
 					<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} allowDeselect={false} onChange={setSelectedTerm} />
 				</Group>
 				<Group>

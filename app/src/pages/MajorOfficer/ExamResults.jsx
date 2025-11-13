@@ -1,8 +1,10 @@
+//ผลการสอบประมวลความรู้/สอบวัดคุณสมบัติ
 import { Box, Text, ScrollArea, Table, Group, Button, Space, Modal, Checkbox, Select } from "@mantine/core";
 import { useState, useEffect } from "react";
 import { useForm } from "@mantine/form";
 import ModalInform from "../../component/Modal/ModalInform";
-import PDFExamResultsPrint from "../../component/PDF/PdfExamResultsPrint";
+import PDFExamPrint from "../../component/PDF/PdfExamResultsPrint";
+import * as XLSX from "xlsx";
 
 const ExamResults = () => {
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
@@ -110,6 +112,21 @@ const ExamResults = () => {
 		}
 	};
 
+	const exportToExcel = (studentsToExport, fileName = "ผลการสอบ.xlsx") => {
+		const dataForSheet = studentsToExport.map((s) => ({
+			รหัสนักศึกษา: s.student_id,
+			"ชื่อ-สกุล": s.name,
+			ผลสอบ: s.exam_results,
+			//วันที่สอบ: s.thesis_exam_date ? new Date(s.thesis_exam_date).toLocaleDateString("th-TH") : "",
+			หมู่เรียน: s.study_group_id,
+			เทอม: s.term,
+		}));
+		const ws = XLSX.utils.json_to_sheet(dataForSheet);
+		const wb = XLSX.utils.book_new();
+		XLSX.utils.book_append_sheet(wb, ws, "ผลการสอบ");
+		XLSX.writeFile(wb, fileName);
+	};
+
 	const renderStudentRows = (selectedGroupId, form, statusColor, withCheckbox = false) => {
 		return Object.values(selectedGroupId).flatMap((terms) =>
 			Object.values(terms).flatMap((students) =>
@@ -180,8 +197,11 @@ const ExamResults = () => {
 													<Button size="xs" color={allFilled ? "yellow" : "blue"} onClick={() => handleFormClick(students)}>
 														{allFilled ? "แก้ไข" : "กรอก"}
 													</Button>
-													<Button size="xs" onClick={() => PDFExamResultsPrint(students)}>
+													<Button size="xs" onClick={() => PDFExamPrint(students)}>
 														พิมพ์
+													</Button>
+													<Button size="xs" color="teal" onClick={() => exportToExcel(students, `ผลการสอบประมวลความรู้_วัดคุณสมบัติ_${students[0].study_group_id}.xlsx`)}>
+														Export Excel
 													</Button>
 												</Group>
 											</Table.Td>

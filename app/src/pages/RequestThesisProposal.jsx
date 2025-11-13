@@ -56,9 +56,9 @@ const RequestThesisProposal = () => {
 			request_type: (value) => (value === "" ? "กรุณาเลือกชนิดโครงร่างงานวิจัย" : null),
 			research_name: (value) => (value === "" ? "กรุณากรอกชื่องานวิจัย" : null),
 			thesis_advisor_id: (value) => (value === "" ? "กรุณาเลือกอาจารย์ที่ปรึกษางานวิจัย" : null),
-			thesis_exam_date: (v) => {
+			/* thesis_exam_date: (v) => {
 				if (!v) return "กรุณาระบุวันที่สอบ";
-			},
+			}, */
 		},
 	});
 
@@ -188,7 +188,7 @@ const RequestThesisProposal = () => {
 			setLatestRequest(true);
 		} catch (e) {
 			notify("error", e.message);
-			console.error("Error fetching addRequestExam:", e);
+			console.error("Error fetching addRequestThesisProposal:", e);
 		}
 	};
 

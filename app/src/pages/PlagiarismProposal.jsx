@@ -184,7 +184,7 @@ const PlagiarismReport = () => {
 			setRequest((prev) => [...prev, { ...form.values, ...requestData.data }]);
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-			console.error("Error fetching addRequestExam:", e);
+			console.error("Error fetching addPlagiarismProposal:", e);
 		}
 	};
 

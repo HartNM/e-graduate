@@ -38,13 +38,16 @@ const RequestExam = () => {
 	const [user, setUser] = useState("");
 	const [request, setRequest] = useState(null);
 	const [search, setSearch] = useState("");
-	
+
 	const [selectedType, setSelectedType] = useState("");
 	const [latestRequest, setLatestRequest] = useState(true);
 
 	const [missingCoures, setMissingCoures] = useState([]);
 
 	const form = useForm({});
+
+	const [actualCurrentTerm, setActualCurrentTerm] = useState("");
+	const [openKQ, setOpenKQ] = useState(null);
 
 	const { type } = useParams();
 	useEffect(() => {
@@ -53,7 +56,7 @@ const RequestExam = () => {
 
 	const [term, setTerm] = useState([]);
 	const [selectedTerm, setSelectedTerm] = useState("");
-	
+
 	useEffect(() => {
 		const getProfile = async () => {
 			try {
@@ -90,6 +93,13 @@ const RequestExam = () => {
 					const close = new Date(item.term_close_date);
 					return today >= open && today <= close;
 				});
+
+				if (currentTerm) {
+					setActualCurrentTerm(currentTerm.term); // <--- เก็บเทอมปัจจุบันจริง
+				} else {
+					setActualCurrentTerm("");
+				}
+
 				if (!currentTerm && termInfodata.length > 0) {
 					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก close_date
 					currentTerm = [...termInfodata].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
@@ -105,6 +115,29 @@ const RequestExam = () => {
 			}
 		};
 		getTerm();
+	}, []);
+
+	useEffect(() => {
+		const fetchOpenStatus = async () => {
+			try {
+				const checkOpenKQRes = await fetch("http://localhost:8080/api/checkOpenKQ", {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+					body: JSON.stringify({ type: "คำร้องขอสอบประมวลความรู้/วัดคุณสมบัติ" }),
+				});
+				const checkOpenKQData = await checkOpenKQRes.json();
+
+				setOpenKQ(checkOpenKQData.status);
+
+				if (!checkOpenKQRes.ok && checkOpenKQRes.status !== 403) {
+					throw new Error(checkOpenKQData.message);
+				}
+			} catch (e) {
+				console.error("Error fetching checkOpenKQ:", e);
+				setOpenKQ(false); // Error ให้ถือว่าปิด
+			}
+		};
+		fetchOpenStatus();
 	}, []);
 
 	useEffect(() => {
@@ -132,21 +165,15 @@ const RequestExam = () => {
 		getRequest();
 	}, [selectedTerm]);
 
-	const [openKQ, setOpenKQ] = useState(null);
 	useEffect(() => {
-		if (request === null || role !== "student") return;
+		if (request === null || role !== "student" || openKQ === null) return;
 		console.log("student");
 
 		const fetchStudentData = async () => {
 			try {
-				const checkOpenKQRes = await fetch("http://localhost:8080/api/checkOpenKQ", {
-					method: "POST",
-					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-					body: JSON.stringify({ type: "คำร้องขอสอบประมวลความรู้/วัดคุณสมบัติ"})
-				});
-				const checkOpenKQData = await checkOpenKQRes.json();
-				setOpenKQ(checkOpenKQData.status);
-				if (!checkOpenKQRes.ok) throw new Error(checkOpenKQData.message);
+				if (openKQ === false) {
+					throw new Error("ระบบคำร้องขอสอบประมวลความรู้/วัดคุณสมบัติยังไม่เปิด");
+				}
 
 				if (user_id === "674140101") {
 					const registrationRes = await fetch("http://localhost:8080/api/allStudyGroupIdCourseRegistration", {
@@ -216,7 +243,7 @@ const RequestExam = () => {
 		/* if (role === "student") {
 			fetchStudentData();
 		} */
-	}, [request]);
+	}, [request, openKQ, selectedTerm]);
 
 	const handleOpenAdd = async () => {
 		try {
@@ -371,6 +398,7 @@ const RequestExam = () => {
 										setSelectedRow(item);
 										setOpenPay(true);
 									}}
+									disabled={!openKQ || item.term !== actualCurrentTerm}
 								>
 									ชำระค่าธรรมเนียม
 								</Button>
@@ -392,6 +420,7 @@ const RequestExam = () => {
 								setOpenApproveState("add");
 								setOpenApprove(true);
 							}}
+							disabled={!openKQ || item.term !== actualCurrentTerm}
 						>
 							{role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
 						</Button>
@@ -442,7 +471,7 @@ const RequestExam = () => {
 				</Box>
 				<Box>
 					{role === "student" && (
-						<Button onClick={() => handleOpenAdd()} disabled={latestRequest ? latestRequest.status !== "0" && latestRequest.status !== "6" && latestRequest.exam_results !== false : false}>
+						<Button onClick={() => handleOpenAdd()} disabled={openKQ === false || latestRequest}>
 							เพิ่มคำร้อง
 						</Button>
 					)}

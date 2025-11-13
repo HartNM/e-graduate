@@ -121,7 +121,6 @@ router.post("/AllRequestExamCancel", authenticateToken, async (req, res) => {
 					status_text: statusMap[item.status?.toString()] || null,
 					advisor_approvals: item.advisor_approvals === null ? null : item.advisor_approvals === "1",
 					chairpersons_approvals: item.chairpersons_approvals === null ? null : item.chairpersons_approvals === "1",
-					registrar_approvals: item.registrar_approvals === null ? null : item.registrar_approvals === "1",
 				};
 			})
 		);
@@ -171,9 +170,8 @@ router.post("/AddRequestExamCancel", authenticateToken, async (req, res) => {
 					...request_exam.recordset[0],
 					...request_exam_cancel.recordset[0],
 					status_text: statusMap[request_exam_cancel.recordset[0].status?.toString()] || null,
-					advisor_approvals: request_exam.recordset[0].advisor_approvals === null ? null : request_exam.recordset[0].advisor_approvals === "1",
-					chairpersons_approvals: request_exam.recordset[0].chairpersons_approvals === null ? null : request_exam.recordset[0].chairpersons_approvals === "1",
-					registrar_approvals: request_exam.recordset[0].registrar_approvals === null ? null : request_exam.recordset[0].registrar_approvals === "1",
+					advisor_approvals: request_exam_cancel.recordset[0].advisor_approvals === null ? null : request_exam_cancel.recordset[0].advisor_approvals === "1",
+					chairpersons_approvals: request_exam_cancel.recordset[0].chairpersons_approvals === null ? null : request_exam_cancel.recordset[0].chairpersons_approvals === "1",
 				},
 			});
 		} catch (err) {
@@ -261,9 +259,8 @@ router.post("/ApproveRequestExamCancel", authenticateToken, async (req, res) => 
 					...request_exam.recordset[0],
 					...request_exam_cancel.recordset[0],
 					status_text: statusMap[request_exam_cancel.recordset[0].status?.toString()] || null,
-					advisor_approvals: request_exam.recordset[0].advisor_approvals === null ? null : request_exam.recordset[0].advisor_approvals === "1",
-					chairpersons_approvals: request_exam.recordset[0].chairpersons_approvals === null ? null : request_exam.recordset[0].chairpersons_approvals === "1",
-					registrar_approvals: request_exam.recordset[0].registrar_approvals === null ? null : request_exam.recordset[0].registrar_approvals === "1",
+					advisor_approvals: request_exam_cancel.recordset[0].advisor_approvals === null ? null : request_exam_cancel.recordset[0].advisor_approvals === "1",
+					chairpersons_approvals: request_exam_cancel.recordset[0].chairpersons_approvals === null ? null : request_exam_cancel.recordset[0].chairpersons_approvals === "1",
 				},
 			});
 		} catch (err) {

@@ -3,7 +3,7 @@ import { DatePickerInput } from "@mantine/dates";
 import { useState, useEffect } from "react";
 import { useForm } from "@mantine/form";
 import ModalInform from "../../component/Modal/ModalInform";
-import PDFExamResultsPrint from "../../component/PDF/PdfExamResultsPrint";
+import PDFExamPrint from "../../component/PDF/PdfExamDefenseResults";
 import * as XLSX from "xlsx"; // === 1. ADDED IMPORT HERE ===
 
 const ExamResults = () => {
@@ -109,7 +109,7 @@ const ExamResults = () => {
 	};
 
 	// === 2. ADDED EXPORT FUNCTION HERE ===
-	const exportToExcel = (studentsToExport, fileName = "exam_results.xlsx") => {
+	const exportToExcel = (studentsToExport, fileName = "ผลการสอบ.xlsx") => {
 		const dataForSheet = studentsToExport.map((s) => ({
 			รหัสนักศึกษา: s.student_id,
 			"ชื่อ-สกุล": s.name,
@@ -120,8 +120,24 @@ const ExamResults = () => {
 		}));
 		const ws = XLSX.utils.json_to_sheet(dataForSheet);
 		const wb = XLSX.utils.book_new();
-		XLSX.utils.book_append_sheet(wb, ws, "ExamResults");
+		XLSX.utils.book_append_sheet(wb, ws, "ผลการสอบ");
 		XLSX.writeFile(wb, fileName);
+	};
+
+	const handleCheckBeforeModal = (values) => {
+		// values คือข้อมูลทั้งหมดใน form
+		// โครงสร้างข้อมูลเป็น: { "รหัสนศ1": { result: "...", date: ... }, "รหัสนศ2": ... }
+
+		// เช็คว่ามีคนไหนที่ date เป็น null หรือค่าว่างหรือไม่
+		const hasMissingDate = Object.values(values).some((student) => !student.date);
+
+		if (hasMissingDate) {
+			notify("error", "กรุณาระบุวันที่สอบให้ครบถ้วน");
+			return; // หยุดการทำงาน ไม่เปิด Modal
+		}
+
+		// ถ้าข้อมูลครบ ให้เปิด Modal
+		setOpenModal(true);
 	};
 
 	const renderStudentRows = (selectedGroupId, form, statusColor, withCheckbox = false) => {
@@ -199,12 +215,12 @@ const ExamResults = () => {
 													<Button size="xs" color={allFilled ? "yellow" : "blue"} onClick={() => handleFormClick(students)}>
 														{allFilled ? "แก้ไข" : "กรอก"}
 													</Button>
-													<Button size="xs" onClick={() => PDFExamResultsPrint(students)}>
+													<Button size="xs" onClick={() => PDFExamPrint(students)}>
 														พิมพ์
 													</Button>
 
 													{/* === 3. ADDED BUTTON HERE === */}
-													<Button size="xs" color="teal" onClick={() => exportToExcel(students, `exam_defense_results_${students[0].study_group_id}.xlsx`)}>
+													<Button size="xs" color="teal" onClick={() => exportToExcel(students, `ผลสอบวิทยานิพนธ์_การค้นคว้าอิสระ_${students[0].study_group_id}.xlsx`)}>
 														Export Excel
 													</Button>
 												</Group>
@@ -217,7 +233,7 @@ const ExamResults = () => {
 					</ScrollArea>
 				</Box>
 			) : (
-				<form onSubmit={form.onSubmit(() => setOpenModal(true))}>
+				<form onSubmit={form.onSubmit(handleCheckBeforeModal)}>
 					<Group justify="flex-end">
 						<Button
 							color="red"

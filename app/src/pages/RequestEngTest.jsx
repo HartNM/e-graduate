@@ -10,6 +10,7 @@ import { useForm } from "@mantine/form";
 import { jwtDecode } from "jwt-decode";
 
 const RequestEngTest = () => {
+	// token
 	const token = localStorage.getItem("token");
 	const payload = useMemo(() => {
 		return jwtDecode(token);
@@ -20,27 +21,25 @@ const RequestEngTest = () => {
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
 	const close = () => setInform((s) => ({ ...s, open: false }));
-	// Modal states
+	// useState
 	const [openAdd, setOpenAdd] = useState(false);
 	const [openApprove, setOpenApprove] = useState(false);
 	const [openApproveState, setOpenApproveState] = useState(false);
 	const [openPay, setOpenPay] = useState(false);
-	// Form states
 	const [selectedRow, setSelectedRow] = useState(null);
 	const [selected, setSelected] = useState("approve");
 	const [comment, setComment] = useState("");
 	const [error, setError] = useState("");
-	// System states
-	//student //advisor //chairpersons //officer_registrar //dean
 	const [search, setSearch] = useState("");
 	const [latestRequest, setLatestRequest] = useState(true);
-	const [openKQ, setOpenKQ] = useState(null);
 	const [request, setRequest] = useState(null);
-
-	const form = useForm({});
-
 	const [term, setTerm] = useState([]);
 	const [selectedTerm, setSelectedTerm] = useState("");
+	const [openKQ, setOpenKQ] = useState(null);
+	const [actualCurrentTerm, setActualCurrentTerm] = useState("");
+	//useForm
+	const form = useForm({});
+
 	useEffect(() => {
 		const getTerm = async () => {
 			try {
@@ -50,24 +49,28 @@ const RequestEngTest = () => {
 				});
 				const termInfodata = await termInfoReq.json();
 				if (!termInfoReq.ok) throw new Error(termInfodata.message);
-				setTerm(termInfodata.map((item) => item.term));
+				setTerm(termInfodata.map((item) => item.term)); // เทอมทังหมด
 				console.log(termInfodata);
 
 				const today = new Date();
-				// หา term ที่อยู่ในช่วง open-close
 				let currentTerm = termInfodata.find((item) => {
 					const open = new Date(item.term_open_date);
 					const close = new Date(item.term_close_date);
 					return today >= open && today <= close;
 				});
+				if (currentTerm) {
+					setActualCurrentTerm(currentTerm.term); //เทอมทังหมดปัจจุบัน
+				} else {
+					setActualCurrentTerm("");
+					console.warn("ไม่พบเทอมที่กำลังเปิดทำการ");
+				}
 				if (!currentTerm && termInfodata.length > 0) {
-					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก close_date
 					currentTerm = [...termInfodata].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
 				}
 				if (currentTerm) {
-					setSelectedTerm(currentTerm.term);
+					setSelectedTerm(currentTerm.term); //เทอมที่ select
 				} else {
-					console.warn("ไม่พบข้อมูลเทอม");
+					console.warn("ไม่พบข้อมูลเทอม (สำหรับ default selection)");
 				}
 			} catch (e) {
 				notify("error", e.message);
@@ -83,7 +86,7 @@ const RequestEngTest = () => {
 				const checkOpenKQRes = await fetch("http://localhost:8080/api/checkOpenKQ", {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-					body: JSON.stringify({ type: "คำร้องขอสอบประมวลความรู้/วัดคุณสมบัติ" }),
+					body: JSON.stringify({ type: "คำร้องขอทดสอบความรู้ทางภาษาอังกฤษ" }),
 				});
 				const checkOpenKQData = await checkOpenKQRes.json();
 				setOpenKQ(checkOpenKQData.status);
@@ -91,9 +94,9 @@ const RequestEngTest = () => {
 			} catch (e) {
 				console.error("Error fetching checkOpenKQ:", e);
 				notify("error", e.message || "ไม่สามารถตรวจสอบสถานะการเปิดระบบได้");
+				setOpenKQ(false);
 			}
 		};
-
 		fetchOpenStatus();
 	}, []);
 
@@ -129,7 +132,6 @@ const RequestEngTest = () => {
 		const fetchStudentData = async () => {
 			try {
 				if (openKQ === false) {
-					// เราไม่มี message จาก API แล้ว แต่โยน Error เพื่อหยุดการทำงาน
 					throw new Error("ระบบคำร้องขอทดสอบความรู้ทางภาษาอังกฤษยังไม่เปิด");
 				}
 
@@ -157,7 +159,7 @@ const RequestEngTest = () => {
 			}
 		};
 		fetchStudentData();
-	}, [request, openKQ]);
+	}, [request, openKQ, selectedTerm]);
 
 	const handleOpenAdd = async () => {
 		try {
@@ -190,7 +192,7 @@ const RequestEngTest = () => {
 			setRequest((prev) => [...prev, { ...form.values, ...requestData.data }]);
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-			console.error("Error fetching addRequestExam:", e);
+			console.error("Error fetching addRequestEngTest:", e);
 		}
 	};
 
@@ -300,7 +302,7 @@ const RequestEngTest = () => {
 										setSelectedRow(item);
 										setOpenPay(true);
 									}}
-									disabled={!openKQ}
+									disabled={!openKQ || item.term !== actualCurrentTerm}
 								>
 									ชำระค่าธรรมเนียม
 								</Button>
@@ -324,7 +326,7 @@ const RequestEngTest = () => {
 								setOpenApproveState("add");
 								setOpenApprove(true);
 							}}
-							disabled={!openKQ}
+							disabled={!openKQ || item.term !== actualCurrentTerm}
 						>
 							{role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
 						</Button>
@@ -366,7 +368,7 @@ const RequestEngTest = () => {
 				</Box>
 				<Box>
 					{role === "student" && (
-						<Button onClick={() => handleOpenAdd()} disabled={latestRequest ? latestRequest.status !== "0" && latestRequest.status !== "6" : false}>
+						<Button onClick={() => handleOpenAdd()} disabled={openKQ === false || latestRequest}>
 							เพิ่มคำร้อง
 						</Button>
 					)}

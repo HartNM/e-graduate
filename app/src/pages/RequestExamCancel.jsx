@@ -231,7 +231,7 @@ const RequestExamCancel = () => {
 		});
 	}
 
-	const sortedData = sortRequests(request, role);
+	const sortedData = sortRequests(request || [], role);
 
 	const filteredData = sortedData?.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());

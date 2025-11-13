@@ -26,7 +26,7 @@ router.post("/allRequestEngTest", authenticateToken, async (req, res) => {
 			query += " WHERE study_group_id IN (SELECT group_no FROM advisorGroup_no WHERE user_id = @user_id) AND term = @term";
 		} else if (role === "chairpersons") {
 			query +=
-				" WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL) AND term = @term";
+				" WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND (status IN (0, 2, 3, 4, 5)) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL) AND term = @term";
 		} else if (role === "officer_registrar") {
 			query += " WHERE (status IN (0, 3, 4, 5) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL AND registrar_approvals_id IS NOT NULL)) AND term = @term";
 		} else if (role === "officer_major") {
@@ -108,7 +108,7 @@ router.post("/addRequestEngTest", authenticateToken, async (req, res) => {
 			},
 		});
 	} catch (err) {
-		console.error("addRequestExam:", err);
+		console.error("addRequestEngTest:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกคำร้องขอสอบ" });
 	}
 });
