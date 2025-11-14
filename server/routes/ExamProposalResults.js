@@ -3,6 +3,7 @@ const router = express.Router();
 const authenticateToken = require("../middleware/authenticateToken");
 const { poolPromise } = require("../db");
 const axios = require("axios");
+const BASE_URL = process.env.VITE_API_URL;
 
 router.post("/AddExamProposalResults", authenticateToken, async (req, res) => {
     const { term, ...studentIdsObj } = req.body;
@@ -54,7 +55,7 @@ router.post("/AllExamProposalResults", authenticateToken, async (req, res) => {
         const examsWithStudentData = await Promise.all(
             // promise map จะส่ง thesis_exam_date ไปด้วยอัตโนมัติ
             exams.map(async ({ student_id, ...rest }) => {
-                const { student_name, major_name } = (await axios.get(`http://localhost:8080/externalApi/student/${student_id}`)).data;
+                const { student_name, major_name } = (await axios.get(`${BASE_URL}/externalApi/student/${student_id}`)).data;
                 return { ...rest, student_id, name: student_name, major_name };
             })
         );
@@ -76,7 +77,7 @@ router.post("/allExamProposalResultsPrint", authenticateToken, async (req, res) 
         `);
         const examsWithStudentData = await Promise.all(
             exams.map(async ({ student_id, ...rest }) => {
-                const { student_name, major_name } = (await axios.get(`http://localhost:8080/externalApi/student/${student_id}`)).data;
+                const { student_name, major_name } = (await axios.get(`${BASE_URL}/externalApi/student/${student_id}`)).data;
                 return { ...rest, student_id, name: student_name, major_name };
             })
         );

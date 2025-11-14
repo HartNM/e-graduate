@@ -3,6 +3,7 @@ const router = express.Router();
 const authenticateToken = require("../middleware/authenticateToken");
 const { sql, poolPromise } = require("../db");
 const axios = require("axios");
+const BASE_URL = process.env.VITE_API_URL;
 
 const convertToBool = (val) => {
 	if (val === null || val === undefined) return null;
@@ -71,7 +72,7 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 			result.recordset.map(async (item) => {
 				let student;
 				try {
-					const studentRes = await axios.get(`http://localhost:8080/externalApi/student/${item.student_id}`);
+					const studentRes = await axios.get(`${BASE_URL}/externalApi/student/${item.student_id}`);
 					student = studentRes.data;
 				} catch (err) {
 					console.warn(`ไม่สามารถดึงข้อมูลนักศึกษา ${item.student_id}`);

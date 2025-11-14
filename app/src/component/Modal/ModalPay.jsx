@@ -1,13 +1,13 @@
 import { Modal, Box, Text, Group, Image, Stack, Flex, Button } from "@mantine/core";
 
 const ModalPay = ({ opened, onClose, selectedRow, handlePay, MoneyRegis, stop_date }) => {
-	console.log(selectedRow?.student_id, selectedRow?.receipt_pay, stop_date);
+	console.log(selectedRow?.student_id, MoneyRegis, stop_date);
 
 	return (
 		<Modal opened={opened} onClose={onClose} title="ชำระค่าธรรมเนียม" centered size="500">
 			{selectedRow && (
 				<Box>
-					<a href={`https://e-payment.kpru.ac.th/pay/typepayment?comp=81914&orderRef1=${selectedRow?.student_id}&amount=${selectedRow?.receipt_pay}&endDate=${stop_date}&urlredirect=http://localhost:3000/student/RequestExam`}>
+					<a href={`https://e-payment.kpru.ac.th/pay/typepayment?comp=81914&orderRef1=${selectedRow?.student_id}&amount=${MoneyRegis}&endDate=${stop_date}&urlredirect=http://localhost:3000/student/RequestExam`}>
 						{/* Stack ใช้จัด layout แนวตั้ง และจัดกลาง */}
 						<Stack align="center" gap="md">
 							{/* ใช้ Text component และกำหนดสไตล์ให้เหมือนลิงก์ */}

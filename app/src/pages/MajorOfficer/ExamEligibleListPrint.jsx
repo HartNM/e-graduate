@@ -3,6 +3,7 @@ import { Box, Text, ScrollArea, Table, Group, Space, Select } from "@mantine/cor
 import { useState, useEffect } from "react";
 import SignatureForm from "../../component/PDF/SignatureForm";
 import ModalInform from "../../component/Modal/ModalInform";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const ExamEligibleListPrint = () => {
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
@@ -28,7 +29,7 @@ const ExamEligibleListPrint = () => {
 	useEffect(() => {
 		const getTerm = async () => {
 			try {
-				const termInfoReq = await fetch("http://localhost:8080/api/allRequestExamInfo", {
+				const termInfoReq = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
@@ -69,7 +70,7 @@ const ExamEligibleListPrint = () => {
 
 		const getRequest = async () => {
 			try {
-				const requestReq = await fetch("http://localhost:8080/api/allExamEligibleListPrint", {
+				const requestReq = await fetch(`${BASE_URL}/api/allExamEligibleListPrint`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 					body: JSON.stringify({ term: selectedTerm }),

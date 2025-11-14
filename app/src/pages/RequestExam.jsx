@@ -10,6 +10,7 @@ import ModalCheckCourse from "../component/Modal/ModalCheckCourse";
 import Pdfg01 from "../component/PDF/Pdfg01";
 import { useForm } from "@mantine/form";
 import { jwtDecode } from "jwt-decode";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const RequestExam = () => {
 	const token = localStorage.getItem("token");
@@ -57,10 +58,12 @@ const RequestExam = () => {
 	const [term, setTerm] = useState([]);
 	const [selectedTerm, setSelectedTerm] = useState("");
 
+	const [paymentCloseDate, setPaymentCloseDate] = useState(null);
+
 	useEffect(() => {
 		const getProfile = async () => {
 			try {
-				const req = await fetch("http://localhost:8080/api/profile", {
+				const req = await fetch(`${BASE_URL}/api/profile`, {
 					method: "GET",
 					headers: { Authorization: `Bearer ${token}` },
 				});
@@ -77,7 +80,7 @@ const RequestExam = () => {
 
 		const getTerm = async () => {
 			try {
-				const termInfoReq = await fetch("http://localhost:8080/api/allRequestExamInfo", {
+				const termInfoReq = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
@@ -96,6 +99,7 @@ const RequestExam = () => {
 
 				if (currentTerm) {
 					setActualCurrentTerm(currentTerm.term); // <--- เก็บเทอมปัจจุบันจริง
+					console.log(currentTerm.term);
 				} else {
 					setActualCurrentTerm("");
 				}
@@ -120,7 +124,7 @@ const RequestExam = () => {
 	useEffect(() => {
 		const fetchOpenStatus = async () => {
 			try {
-				const checkOpenKQRes = await fetch("http://localhost:8080/api/checkOpenKQ", {
+				const checkOpenKQRes = await fetch(`${BASE_URL}/api/checkOpenKQ`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 					body: JSON.stringify({ type: "คำร้องขอสอบประมวลความรู้/วัดคุณสมบัติ" }),
@@ -147,7 +151,7 @@ const RequestExam = () => {
 
 		const getRequest = async () => {
 			try {
-				const requestReq = await fetch("http://localhost:8080/api/requestExamAll", {
+				const requestReq = await fetch(`${BASE_URL}/api/requestExamAll`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 					body: JSON.stringify({ term: selectedTerm }),
@@ -176,7 +180,7 @@ const RequestExam = () => {
 				}
 
 				if (user_id === "674140101") {
-					const registrationRes = await fetch("http://localhost:8080/api/allStudyGroupIdCourseRegistration", {
+					const registrationRes = await fetch(`${BASE_URL}/api/allStudyGroupIdCourseRegistration`, {
 						method: "POST",
 						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 					});
@@ -247,7 +251,7 @@ const RequestExam = () => {
 
 	const handleOpenAdd = async () => {
 		try {
-			const req = await fetch("http://localhost:8080/api/studentInfo", {
+			const req = await fetch(`${BASE_URL}/api/studentInfo`, {
 				method: "GET",
 				headers: { Authorization: `Bearer ${token}` },
 			});
@@ -263,7 +267,7 @@ const RequestExam = () => {
 
 	const handleAdd = async () => {
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/addRequestExam", {
+			const requestRes = await fetch(`${BASE_URL}/api/addRequestExam`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify(form.values),
@@ -290,7 +294,7 @@ const RequestExam = () => {
 			return;
 		}
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/approveRequestExam", {
+			const requestRes = await fetch(`${BASE_URL}/api/approveRequestExam`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify({ request_exam_id: item.request_exam_id, name: name, selected: selected, comment: comment }),
@@ -310,7 +314,7 @@ const RequestExam = () => {
 
 	const handlePay = async (item) => {
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/payRequestExam", {
+			const requestRes = await fetch(`${BASE_URL}/api/payRequestExam`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify({ request_exam_id: item.request_exam_id, receipt_vol: "2564", receipt_No: "1", receipt_pay: "1000" }),
@@ -324,6 +328,27 @@ const RequestExam = () => {
 			console.log("ข้อมูลตอบกลับ ", requestData);
 
 			setRequest((prev) => prev.map((row) => (row.request_exam_id === item.request_exam_id ? { ...row, ...requestData.data } : row)));
+		} catch (e) {
+			notify("error", e.message);
+			console.error("Error fetching payRequestExam:", e);
+		}
+	};
+
+	const printReceipt = async (item) => {
+		console.log("test");
+
+		try {
+			const requestRes = await fetch(`${BASE_URL}/api/printReceipt`, {
+				method: "POST",
+				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				body: JSON.stringify({ ...item, amount: user.education_level === "ปริญญาโท" ? 1000 : 1500 }),
+			});
+			const requestData = await requestRes.json();
+			if (!requestRes.ok) {
+				throw new Error(requestData.message);
+			}
+			notify("success", requestData.message || "สำเร็จ");
+			console.log("ข้อมูลตอบกลับ ", requestData);
 		} catch (e) {
 			notify("error", e.message);
 			console.error("Error fetching payRequestExam:", e);
@@ -404,7 +429,14 @@ const RequestExam = () => {
 								</Button>
 							)}
 							{item.receipt_vol != null && (
-								<Button size="xs" color="green">
+								<Button
+									size="xs"
+									color="green"
+									onClick={() => {
+										printReceipt(item);
+										console.log("asd");
+									}}
+								>
 									พิมพ์ใบเสร็จ
 								</Button>
 							)}

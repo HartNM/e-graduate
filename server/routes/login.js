@@ -7,6 +7,7 @@ const { poolPromise } = require("../db"); // เชื่อมต่อฐา�
 const axios = require("axios");
 const SECRET_KEY = process.env.SECRET_KEY;
 const authenticateToken = require("../middleware/authenticateToken");
+const BASE_URL = process.env.VITE_API_URL;
 
 router.post("/login", async (req, res) => {
 	const { username, password } = req.body;
@@ -33,7 +34,7 @@ router.post("/login", async (req, res) => {
 
 	if (username.length == 9) {
 		try {
-			const request = await axios.get(`http://localhost:8080/externalApi/student/${username}`);
+			const request = await axios.get(`${BASE_URL}/externalApi/student/${username}`);
 			const result = request.data;
 			console.log(result);
 			if (result.student_name === "undefined undefined" || (result.education_level !== "ปริญญาโท" && result.education_level !== "ปริญญาเอก") /* || result.BDATE !== password */) {

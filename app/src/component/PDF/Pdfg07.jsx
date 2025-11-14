@@ -2,6 +2,7 @@ import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument, rgb } from "pdf-lib";
 import { Button } from "@mantine/core";
 import { setDefaultFont, drawGrid, draw, drawRect, drawCenterXText, formatThaiDate, formatThaiDateShort } from "./PdfUtils.js";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 async function fillPdf(data) {
 	const pdfDoc = await PDFDocument.create();
@@ -23,7 +24,7 @@ async function fillPdf(data) {
 		for (const [role, prop] of Object.entries(ids)) {
 			const id = data?.[prop];
 			if (!id || isNaN(Number(id))) continue;
-			const res = await fetch("http://localhost:8080/api/personnelInfo", {
+			const res = await fetch(`${BASE_URL}/api/personnelInfo`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify({ user_id: id }),

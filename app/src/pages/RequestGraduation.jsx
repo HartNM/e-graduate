@@ -8,6 +8,7 @@ import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
 import Pdfg01 from "../component/PDF/Pdfg05";
 import { jwtDecode } from "jwt-decode";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const RequestGraduation = () => {
 	const token = localStorage.getItem("token");
@@ -102,7 +103,7 @@ const RequestGraduation = () => {
 	useEffect(() => {
 		const fetchProfile = async () => {
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/profile", {
+				const requestRes = await fetch(`${BASE_URL}/api/profile`, {
 					method: "GET",
 					headers: { Authorization: `Bearer ${token}` },
 				});
@@ -123,7 +124,7 @@ const RequestGraduation = () => {
 	useEffect(() => {
 		const fetchRequestExam = async () => {
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/allRequestGraduation", {
+				const requestRes = await fetch(`${BASE_URL}/api/allRequestGraduation`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
@@ -132,7 +133,7 @@ const RequestGraduation = () => {
 				setRequest(requestData);
 				console.log(requestData);
 
-				const ThesisDefenseRes = await fetch("http://localhost:8080/api/allRequestThesisDefense", {
+				const ThesisDefenseRes = await fetch(`${BASE_URL}/api/allRequestThesisDefense`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
@@ -159,7 +160,7 @@ const RequestGraduation = () => {
 
 	const handleOpenAdd = async () => {
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/studentInfo", {
+			const requestRes = await fetch(`${BASE_URL}/api/studentInfo`, {
 				method: "GET",
 				headers: { Authorization: `Bearer ${token}` },
 			});
@@ -176,7 +177,7 @@ const RequestGraduation = () => {
 
 	const handleAdd = async () => {
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/addRequestGraduation", {
+			const requestRes = await fetch(`${BASE_URL}/api/addRequestGraduation`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify(form.values),
@@ -216,7 +217,7 @@ const RequestGraduation = () => {
 		console.log(item);
 
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/approveRequestGraduation", {
+			const requestRes = await fetch(`${BASE_URL}/api/approveRequestGraduation`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify({ request_graduation_id: item.request_graduation_id, name: user.name, role: role, selected: selected, comment: comment }),
@@ -236,7 +237,7 @@ const RequestGraduation = () => {
 
 	const handlePay = async (item) => {
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/payRequestGraduation", {
+			const requestRes = await fetch(`${BASE_URL}/api/payRequestGraduation`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify({ request_graduation_id: item.request_graduation_id, receipt_vol: "154", receipt_No: "4", receipt_pay: "1000" }),

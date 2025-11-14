@@ -3,6 +3,7 @@ const router = express.Router();
 const authenticateToken = require("../middleware/authenticateToken");
 const { poolPromise } = require("../db");
 const axios = require("axios");
+const BASE_URL = process.env.VITE_API_URL;
 
 const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
@@ -60,14 +61,14 @@ router.post("/allRequestThesisDefense", authenticateToken, async (req, res) => {
 			result.recordset.map(async (item) => {
 				let studentInfo = null;
 				try {
-					const studentRes = await axios.get(`http://localhost:8080/externalApi/student/${item.student_id}`);
+					const studentRes = await axios.get(`${BASE_URL}/externalApi/student/${item.student_id}`);
 					studentInfo = studentRes.data;
 				} catch {
 					console.warn(`ไม่สามารถดึงข้อมูลนักศึกษา ${item.student_id}`);
 				}
 				let advisorInfo = null;
 				try {
-					const advisorRes = await axios.get(`http://localhost:8080/externalApi/user_idGetUser_name/${item.thesis_advisor_id}`);
+					const advisorRes = await axios.get(`${BASE_URL}/externalApi/user_idGetUser_name/${item.thesis_advisor_id}`);
 					advisorInfo = advisorRes.data;
 				} catch (e) {
 					console.warn(item.thesis_advisor_id, e);

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 import PdfPrintExam from "../../component/PDF/PdfPrintExam";
 import ModalInform from "../../component/Modal/ModalInform";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const PrintExam = () => {
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
@@ -20,7 +21,7 @@ const PrintExam = () => {
 	useEffect(() => {
 		const getTerm = async () => {
 			try {
-				const termInfoReq = await fetch("http://localhost:8080/api/allRequestExamInfo", {
+				const termInfoReq = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
@@ -59,7 +60,7 @@ const PrintExam = () => {
 
 		const getRequest = async () => {
 			try {
-				const requestReq = await fetch("http://localhost:8080/api/requestExamAll", {
+				const requestReq = await fetch(`${BASE_URL}/api/requestExamAll`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 					body: JSON.stringify({ term: selectedTerm }),

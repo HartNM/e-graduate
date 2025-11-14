@@ -3,6 +3,7 @@ import { Avatar, Group, Text, UnstyledButton, Select } from "@mantine/core";
 import classes from "./UserButton.module.css";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 export function UserButton() {
 	const navigate = useNavigate();
@@ -83,7 +84,7 @@ export function UserButton() {
 		if (!role || role === activeRole) {
 			return;
 		}
-		const res = await fetch("http://localhost:8080/api/switchRole", {
+		const res = await fetch(`${BASE_URL}/api/switchRole`, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",

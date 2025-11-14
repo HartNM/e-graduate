@@ -1,6 +1,7 @@
 import { PDFDocument, rgb } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import { setDefaultFont, drawRect, drawCenterXText, drawCenteredText, drawMiddleText, drawLine, formatThaiDate } from "./PdfUtils.js";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 async function fillPdf(students) {
 	const pdfDoc = await PDFDocument.create();
@@ -22,7 +23,7 @@ async function fillPdf(students) {
 	if (students[0].request_type === "ขอสอบประมวลความรู้" || students[0].request_type === "ขอสอบวัดคุณสมบัติ") {
 		try {
 			const token = localStorage.getItem("token");
-			const requestRes = await fetch("http://localhost:8080/api/allRequestExamInfo", {
+			const requestRes = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify({ term: students[0].term }),

@@ -3,6 +3,7 @@ const router = express.Router();
 const authenticateToken = require("../middleware/authenticateToken");
 const { poolPromise } = require("../db");
 const axios = require("axios");
+const BASE_URL = process.env.VITE_API_URL;
 
 const fs = require("fs");
 const path = require("path");
@@ -63,7 +64,7 @@ router.post("/AllPlagiarismDefense", authenticateToken, async (req, res) => {
 			result.recordset.map(async (item) => {
 				let studentInfo = null;
 				try {
-					const studentRes = await axios.get(`http://localhost:8080/externalApi/student/${item.student_id}`);
+					const studentRes = await axios.get(`${BASE_URL}/externalApi/student/${item.student_id}`);
 					studentInfo = studentRes.data;
 				} catch (e) {
 					console.warn(item.student_id, e);
@@ -284,13 +285,13 @@ router.post("/approvePlagiarismDefense", authenticateToken, async (req, res) => 
 			`;
 		const result = await request.query(query);
 		try {
-			const advisorRes = await axios.get(`http://localhost:8080/externalApi/user_idGetUser_name/${result.recordset[0].advisor_approvals_id}`);
+			const advisorRes = await axios.get(`${BASE_URL}/externalApi/user_idGetUser_name/${result.recordset[0].advisor_approvals_id}`);
 			advisorInfo = advisorRes.data;
 		} catch (e) {
 			console.warn(item.advisor_approvals_id, e);
 		}
 		try {
-			const chairpersonsRes = await axios.get(`http://localhost:8080/externalApi/user_idGetUser_name/${result.recordset[0].chairpersons_approvals_id}`);
+			const chairpersonsRes = await axios.get(`${BASE_URL}/externalApi/user_idGetUser_name/${result.recordset[0].chairpersons_approvals_id}`);
 			chairpersonsInfo = chairpersonsRes.data;
 		} catch (e) {
 			console.warn(item.chairpersons_approvals_id, e);

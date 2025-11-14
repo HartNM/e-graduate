@@ -9,7 +9,7 @@ router.get("/student/:student_id", async (req, res) => {
 	try {
 		const response = await axios.get(`https://mua.kpru.ac.th/FrontEnd_Tabian/petition/Showstudent/${studentid}`);
 		const item = response.data[0];
-		
+
 		const transformedData = {
 			student_id: item.OLDID,
 			PNAME: item.PNAME,
@@ -22,9 +22,12 @@ router.get("/student/:student_id", async (req, res) => {
 			major_id: item.mjcode,
 			major_name: item.t_mjname,
 			faculty_name: item.faculty_name,
+			citizen_id: item.GDNAME,
+			fname: item.name,
+			lname : item.lname,
 		};
 		console.log(transformedData.student_id);
-		
+
 		res.json(transformedData);
 	} catch (err) {
 		console.error("API call error:", err);

@@ -7,6 +7,7 @@ import ModalAddRequestGraduation from "../component/Modal/ModalAddPlagiarismRepo
 import ModalApprove from "../component/Modal/ModalApprove";
 import ModalInform from "../component/Modal/ModalInform";
 import Pdfg06 from "../component/PDF/Pdfg06";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const PlagiarismReport = () => {
 	const token = localStorage.getItem("token");
@@ -85,7 +86,7 @@ const PlagiarismReport = () => {
 	useEffect(() => {
 		const fetchProfile = async () => {
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/profile", {
+				const requestRes = await fetch(`${BASE_URL}/api/profile`, {
 					method: "GET",
 					headers: { Authorization: `Bearer ${token}` },
 				});
@@ -106,7 +107,7 @@ const PlagiarismReport = () => {
 	useEffect(() => {
 		const fetchRequestExam = async () => {
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/AllPlagiarismDefense", {
+				const requestRes = await fetch(`${BASE_URL}/api/AllPlagiarismDefense`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
@@ -115,7 +116,7 @@ const PlagiarismReport = () => {
 				setRequest(requestData);
 
 				if (role == "student") {
-					const lastThesisDefenseRes = await fetch("http://localhost:8080/api/allRequestThesisDefense", {
+					const lastThesisDefenseRes = await fetch(`${BASE_URL}/api/allRequestThesisDefense`, {
 						method: "POST",
 						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 						body: JSON.stringify({ lastRequest: true }),
@@ -143,14 +144,14 @@ const PlagiarismReport = () => {
 
 	const handleOpenAdd = async () => {
 		try {
-			const InfoRes = await fetch("http://localhost:8080/api/studentInfo", {
+			const InfoRes = await fetch(`${BASE_URL}/api/studentInfo`, {
 				method: "GET",
 				headers: { Authorization: `Bearer ${token}` },
 			});
 			const InfoData = await InfoRes.json();
 			if (!InfoRes.ok) throw new Error(InfoData.message);
 
-			const ThesisDefenseRes = await fetch("http://localhost:8080/api/allRequestThesisDefense", {
+			const ThesisDefenseRes = await fetch(`${BASE_URL}/api/allRequestThesisDefense`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify({ lastRequest: true }),
@@ -174,7 +175,7 @@ const PlagiarismReport = () => {
 				else if (value instanceof File) formData.append(key, value, value.name);
 				else formData.append(key, value ?? "");
 			});
-			const requestRes = await fetch("http://localhost:8080/api/addPlagiarismDefense", {
+			const requestRes = await fetch(`${BASE_URL}/api/addPlagiarismDefense`, {
 				method: "POST",
 				headers: { Authorization: `Bearer ${token}` },
 				body: formData,
@@ -197,7 +198,7 @@ const PlagiarismReport = () => {
 			return;
 		}
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/approvePlagiarismDefense", {
+			const requestRes = await fetch(`${BASE_URL}/api/approvePlagiarismDefense`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify({ plagiarism_report_id: item.plagiarism_report_id, selected: selected, comment: comment }),

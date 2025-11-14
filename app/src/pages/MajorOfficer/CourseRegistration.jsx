@@ -4,6 +4,7 @@ import { useForm } from "@mantine/form";
 import ModalInform from "../../component/Modal/ModalInform";
 import AsyncCourseSelect from "./AsyncCourseSelect";
 import { jwtDecode } from "jwt-decode";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const CourseRegistration = () => {
 	const token = localStorage.getItem("token");
@@ -67,7 +68,7 @@ const CourseRegistration = () => {
 	useEffect(() => {
 		const fetchMajorNameAndData = async () => {
 			try {
-				const req1 = await fetch("http://localhost:8080/api/allMajorCourseRegistration", {
+				const req1 = await fetch(`${BASE_URL}/api/allMajorCourseRegistration`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
@@ -75,7 +76,7 @@ const CourseRegistration = () => {
 				if (!req1.ok) throw new Error(res1.message);
 				setTableData(res1);
 
-				const req2 = await fetch("http://localhost:8080/api/officerGetMajor_id", {
+				const req2 = await fetch(`${BASE_URL}/api/officerGetMajor_id`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 					body: JSON.stringify({ user_id }),
@@ -83,7 +84,7 @@ const CourseRegistration = () => {
 				const res2 = await req2.json();
 				if (!req2.ok) throw new Error(res2.message);
 
-				const req3 = await fetch("http://localhost:8080/api/major_idGetMajor_name", {
+				const req3 = await fetch(`${BASE_URL}/api/major_idGetMajor_name`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 					body: JSON.stringify({ major_id: res2.major_id }),
@@ -119,9 +120,9 @@ const CourseRegistration = () => {
 
 	const handleSubmit = async () => {
 		const url = {
-			add: "http://localhost:8080/api/addCourseRegistration",
-			edit: "http://localhost:8080/api/editCourseRegistration",
-			delete: "http://localhost:8080/api/deleteCourseRegistration",
+			add: `${BASE_URL}/api/addCourseRegistration`,
+			edit: `${BASE_URL}/api/editCourseRegistration`,
+			delete: `${BASE_URL}/api/deleteCourseRegistration`,
 		};
 		try {
 			const req = await fetch(url[modalType], {

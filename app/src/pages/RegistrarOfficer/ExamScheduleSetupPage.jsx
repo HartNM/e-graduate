@@ -4,6 +4,7 @@ import { Box, Text, ScrollArea, Table, Button, Modal, Group, Flex, Space, TextIn
 import { DatePickerInput } from "@mantine/dates";
 import ModalInform from "../../component/Modal/ModalInform";
 import { useForm } from "@mantine/form";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const ExamScheduleSetupPage = () => {
 	const [reloadTable, setReloadTable] = useState(false);
@@ -53,7 +54,7 @@ const ExamScheduleSetupPage = () => {
 	useEffect(() => {
 		const fetchRequestExamInfoAll = async () => {
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/allRequestExamInfo", {
+				const requestRes = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
@@ -73,9 +74,9 @@ const ExamScheduleSetupPage = () => {
 
 	const handleSubmit = async () => {
 		const url = {
-			add: "http://localhost:8080/api/addRequestExamInfo",
-			edit: "http://localhost:8080/api/editRequestExamInfo",
-			delete: "http://localhost:8080/api/deleteRequestExamInfo",
+			add: `${BASE_URL}/api/addRequestExamInfo",
+			edit: `${BASE_URL}/api/editRequestExamInfo",
+			delete: `${BASE_URL}/api/deleteRequestExamInfo",
 		};
 		try {
 			const requestRes = await fetch(url[modalType], {
@@ -212,6 +213,7 @@ import { Box, Text, ScrollArea, Table, Button, Modal, Group, Flex, Space, TextIn
 import { DatePickerInput } from "@mantine/dates";
 import ModalInform from "../../component/Modal/ModalInform";
 import { useForm } from "@mantine/form";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const ExamScheduleSetupPage = () => {
 	const [reloadTable, setReloadTable] = useState(false);
@@ -258,7 +260,7 @@ const ExamScheduleSetupPage = () => {
 	useEffect(() => {
 		const fetchRequestExamInfoAll = async () => {
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/allRequestExamInfo", {
+				const requestRes = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
@@ -278,9 +280,9 @@ const ExamScheduleSetupPage = () => {
 
 	const handleSubmit = async () => {
 		const url = {
-			add: "http://localhost:8080/api/addRequestExamInfo",
-			edit: "http://localhost:8080/api/editRequestExamInfo",
-			delete: "http://localhost:8080/api/deleteRequestExamInfo",
+			add: `${BASE_URL}/api/addRequestExamInfo`,
+			edit: `${BASE_URL}/api/editRequestExamInfo`,
+			delete: `${BASE_URL}/api/deleteRequestExamInfo`,
 		};
 
 		const payload = {

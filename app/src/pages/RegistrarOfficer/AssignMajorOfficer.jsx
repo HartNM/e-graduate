@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Box, Text, TextInput, Table, Button, Modal, Space, ScrollArea, Group, Select, Flex } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import ModalInform from "../../component/Modal/ModalInform";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const AssignMajorOfficer = () => {
 	// Modal Info
@@ -39,7 +40,7 @@ const AssignMajorOfficer = () => {
 	useEffect(() => {
 		const fetchInitialData = async () => {
 			try {
-				const MajorOfficerRes = await fetch("http://localhost:8080/api/allAssignMajorOfficer", {
+				const MajorOfficerRes = await fetch(`${BASE_URL}/api/allAssignMajorOfficer`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
@@ -49,7 +50,7 @@ const AssignMajorOfficer = () => {
 				setAllAssignedOfficers(MajorOfficerData);
 				console.log("MajorOfficer :", MajorOfficerData);
 
-				const majorsRes = await fetch("http://localhost:8080/api/majors", {
+				const majorsRes = await fetch(`${BASE_URL}/api/majors`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
@@ -90,8 +91,8 @@ const AssignMajorOfficer = () => {
 
 	const handleSubmit = async () => {
 		const url = {
-			add: "http://localhost:8080/api/addAssignMajorOfficer",
-			delete: "http://localhost:8080/api/deleteAssignMajorOfficer",
+			add: `${BASE_URL}/api/addAssignMajorOfficer`,
+			delete: `${BASE_URL}/api/deleteAssignMajorOfficer`,
 		};
 		console.log(url[modalType]);
 		console.log(Form.values);

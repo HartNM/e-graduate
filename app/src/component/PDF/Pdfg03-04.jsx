@@ -2,6 +2,7 @@ import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument, rgb } from "pdf-lib";
 import { Button } from "@mantine/core";
 import { setDefaultFont, drawGrid, draw, drawRect, drawCenterXText, formatThaiDate, formatThaiDateShort } from "./PdfUtils.js";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 async function fillPdf(data) {
 	const pdfDoc = await PDFDocument.create();
@@ -61,7 +62,7 @@ async function fillPdf(data) {
 		for (const [role, prop] of Object.entries(ids)) {
 			const id = data?.[prop];
 			if (!id || isNaN(Number(id))) continue;
-			const res = await fetch("http://localhost:8080/api/personnelInfo", {
+			const res = await fetch(`${BASE_URL}/api/personnelInfo`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify({ user_id: id }),
@@ -100,7 +101,7 @@ async function fillPdf(data) {
 		{ text: `คณะ..........................................................................................มีความประสงค์.........................................................................................`, x: 60, y: (y -= space) },
 		{ text: data?.faculty_name, x: 100, y: y + 2 },
 		{ text: `${data?.request_type}`, x: 360, y: y + 2 },
-		{ text: `ในภาคเรียนที่ ....................... `/* ในวันที่..................................................... */, x: 60, y: (y -= space) },
+		{ text: `ในภาคเรียนที่ ....................... ` /* ในวันที่..................................................... */, x: 60, y: (y -= space) },
 		{ text: data?.term, x: 130, y: y + 2 },
 		/* { text: `${exam_date_day} ${exam_date_month} ${exam_date_year}`, x: 210, y: y + 2 }, */
 		{ text: `จึงเรียนมาเพื่อโปรดพิจารณา`, x: 100, y: (y -= space) },

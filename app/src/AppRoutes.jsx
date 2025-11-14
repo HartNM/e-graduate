@@ -58,7 +58,7 @@ function AppRoutes() {
 		<BrowserRouter>
 			<Suspense fallback={<LoadingScreen />}>
 				<Routes>
-					<Route path="*" element={<NotFound />} />
+					<Route path="*" element={<AuthenticationForm />} />
 					<Route path="/login" element={<AuthenticationForm />} />
 					<Route path="/personnel" element={<Personnel />} />
 

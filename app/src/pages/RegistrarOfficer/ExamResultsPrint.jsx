@@ -2,6 +2,7 @@
 import { Box, Text, ScrollArea, Table, Group, Space, Select, Button } from "@mantine/core";
 import { useState, useEffect } from "react";
 import PDFExamResultsPrint from "../../component/PDF/PdfExamResultsPrint";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const ExamResultsPrint = () => {
 	const token = localStorage.getItem("token");
@@ -18,7 +19,7 @@ const ExamResultsPrint = () => {
 	useEffect(() => {
 		const fetchTermAndData = async () => {
 			try {
-				const res = await fetch("http://localhost:8080/api/allRequestExamInfo", {
+				const res = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
@@ -43,7 +44,7 @@ const ExamResultsPrint = () => {
 				notify("error", e.message);
 			}
 			try {
-				const res = await fetch("http://localhost:8080/api/allExamResultsPrint", {
+				const res = await fetch(`${BASE_URL}/api/allExamResultsPrint`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});

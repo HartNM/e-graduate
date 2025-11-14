@@ -6,6 +6,7 @@ import ModalApprove from "../component/Modal/ModalApprove";
 import ModalInform from "../component/Modal/ModalInform";
 import Pdfg07 from "../component/PDF/Pdfg07";
 import { jwtDecode } from "jwt-decode";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const RequestExamCancel = () => {
 	const token = localStorage.getItem("token");
@@ -41,7 +42,7 @@ const RequestExamCancel = () => {
 	useEffect(() => {
 		const getProfile = async () => {
 			try {
-				const req = await fetch("http://localhost:8080/api/profile", {
+				const req = await fetch(`${BASE_URL}/api/profile`, {
 					method: "GET",
 					headers: { Authorization: `Bearer ${token}` },
 				});
@@ -58,7 +59,7 @@ const RequestExamCancel = () => {
 
 		const getTerm = async () => {
 			try {
-				const termInfoReq = await fetch("http://localhost:8080/api/allRequestExamInfo", {
+				const termInfoReq = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
@@ -95,7 +96,7 @@ const RequestExamCancel = () => {
 
 		const getRequestCancel = async () => {
 			try {
-				const requestExamReq = await fetch("http://localhost:8080/api/AllRequestExamCancel", {
+				const requestExamReq = await fetch(`${BASE_URL}/api/AllRequestExamCancel`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 					body: JSON.stringify({ term: selectedTerm }),
@@ -118,7 +119,7 @@ const RequestExamCancel = () => {
 	useEffect(() => {
 		const fetchRequestExam = async () => {
 			try {
-				const requestReq = await fetch("http://localhost:8080/api/requestExamAll", {
+				const requestReq = await fetch(`${BASE_URL}/api/requestExamAll`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 					body: JSON.stringify({ lastRequest: true }),
@@ -127,7 +128,7 @@ const RequestExamCancel = () => {
 				if (!requestReq.ok) throw new Error(requestData.message);
 				console.log(requestData[0]);
 
-				const CheckOpenRECRes = await fetch("http://localhost:8080/api/CheckOpenREC", {
+				const CheckOpenRECRes = await fetch(`${BASE_URL}/api/CheckOpenREC`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
@@ -148,7 +149,7 @@ const RequestExamCancel = () => {
 
 	const handleOpenAddCancel = async () => {
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/studentInfo", {
+			const requestRes = await fetch(`${BASE_URL}/api/studentInfo`, {
 				method: "GET",
 				headers: { Authorization: `Bearer ${token}` },
 			});
@@ -169,7 +170,7 @@ const RequestExamCancel = () => {
 			return;
 		}
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/AddRequestExamCancel", {
+			const requestRes = await fetch(`${BASE_URL}/api/AddRequestExamCancel`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify({ reason: reason, request_type: `ขอยกเลิกการเข้าสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` }),
@@ -192,7 +193,7 @@ const RequestExamCancel = () => {
 			return;
 		}
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/ApproveRequestExamCancel", {
+			const requestRes = await fetch(`${BASE_URL}/api/ApproveRequestExamCancel`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify({

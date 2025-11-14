@@ -1,6 +1,7 @@
 import { Modal, TextInput, Flex, Button, Space, Grid, Text, Checkbox, Select, Group } from "@mantine/core";
 import { useState, useEffect } from "react";
 import { DatePickerInput } from "@mantine/dates";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const ModalAddRequestThesisProposal = ({ opened, onClose, title, form, handleAdd }) => {
 	const [advisors, setAdvisors] = useState([]);
@@ -10,7 +11,7 @@ const ModalAddRequestThesisProposal = ({ opened, onClose, title, form, handleAdd
 		if (opened) {
 			const fetchAdvisors = async () => {
 				try {
-					const res = await fetch("http://localhost:8080/api/getAdvisors", {
+					const res = await fetch(`${BASE_URL}/api/getAdvisors`, {
 						method: "POST",
 						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 					});

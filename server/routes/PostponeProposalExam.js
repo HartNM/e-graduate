@@ -3,6 +3,7 @@ const router = express.Router();
 const authenticateToken = require("../middleware/authenticateToken");
 const { sql, poolPromise } = require("../db");
 const axios = require("axios");
+const BASE_URL = process.env.VITE_API_URL;
 
 const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
@@ -90,7 +91,7 @@ router.post("/allPostponeProposalExam", authenticateToken, async (req, res) => {
 			result.recordset.map(async (item) => {
 				let studentInfo = null;
 				try {
-					const studentRes = await axios.get(`http://localhost:8080/externalApi/student/${item.student_id}`);
+					const studentRes = await axios.get(`${BASE_URL}/externalApi/student/${item.student_id}`);
 					studentInfo = studentRes.data;
 				} catch (err) {
 					console.warn(`ไม่สามารถดึงข้อมูลนักศึกษา ${item.student_id}`);

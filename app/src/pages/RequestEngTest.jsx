@@ -8,6 +8,7 @@ import ModalInform from "../component/Modal/ModalInform";
 import Pdfg02 from "../component/PDF/Pdfg02";
 import { useForm } from "@mantine/form";
 import { jwtDecode } from "jwt-decode";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const RequestEngTest = () => {
 	// token
@@ -43,7 +44,7 @@ const RequestEngTest = () => {
 	useEffect(() => {
 		const getTerm = async () => {
 			try {
-				const termInfoReq = await fetch("http://localhost:8080/api/allRequestExamInfo", {
+				const termInfoReq = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
@@ -83,7 +84,7 @@ const RequestEngTest = () => {
 	useEffect(() => {
 		const fetchOpenStatus = async () => {
 			try {
-				const checkOpenKQRes = await fetch("http://localhost:8080/api/checkOpenKQ", {
+				const checkOpenKQRes = await fetch(`${BASE_URL}/api/checkOpenKQ`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 					body: JSON.stringify({ type: "คำร้องขอทดสอบความรู้ทางภาษาอังกฤษ" }),
@@ -107,7 +108,7 @@ const RequestEngTest = () => {
 
 		const getRequest = async () => {
 			try {
-				const requestReq = await fetch("http://localhost:8080/api/allRequestEngTest", {
+				const requestReq = await fetch(`${BASE_URL}/api/allRequestEngTest`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 					body: JSON.stringify({ term: selectedTerm }),
@@ -163,7 +164,7 @@ const RequestEngTest = () => {
 
 	const handleOpenAdd = async () => {
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/studentInfo", {
+			const requestRes = await fetch(`${BASE_URL}/api/studentInfo`, {
 				method: "GET",
 				headers: { Authorization: `Bearer ${token}` },
 			});
@@ -179,7 +180,7 @@ const RequestEngTest = () => {
 
 	const handleAdd = async () => {
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/addRequestEngTest", {
+			const requestRes = await fetch(`${BASE_URL}/api/addRequestEngTest`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify(form.values),
@@ -202,7 +203,7 @@ const RequestEngTest = () => {
 			return;
 		}
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/approveRequestEngTest", {
+			const requestRes = await fetch(`${BASE_URL}/api/approveRequestEngTest`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify({ request_eng_test_id: item.request_eng_test_id, name: name, role: role, selected: selected, comment: comment }),
@@ -222,7 +223,7 @@ const RequestEngTest = () => {
 
 	const handlePay = async (item) => {
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/payRequestEngTest", {
+			const requestRes = await fetch(`${BASE_URL}/api/payRequestEngTest`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify({ request_eng_test_id: item.request_eng_test_id, receipt_vol: "154", receipt_No: "4", receipt_pay: "1000" }),

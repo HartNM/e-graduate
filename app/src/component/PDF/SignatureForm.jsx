@@ -3,6 +3,7 @@ import { Button } from "@mantine/core";
 import { PDFDocument, rgb } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import { formatThaiDate, drawGrid, drawRect, drawLine, drawCenteredText, drawMiddleText, drawCenterXText } from "./PdfUtils.js";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 async function fillPdf(templateUrl, data) {
 	// โหลด template PDF ใหม่สำหรับ copy
@@ -29,7 +30,7 @@ async function fillPdf(templateUrl, data) {
 	let KQ_exam_date;
 	try {
 		const token = localStorage.getItem("token");
-		const requestRes = await fetch("http://localhost:8080/api/allRequestExamInfo", {
+		const requestRes = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 			body: JSON.stringify({ term: term }),
@@ -131,6 +132,7 @@ import { Button } from "@mantine/core";
 import { PDFDocument, rgb } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import { formatThaiDate, drawGrid, drawRect, drawLine, drawCenteredText, drawMiddleText, drawCenterXText } from "./PdfUtils.js";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 async function fillPdf(templateUrl, data) {
 	// --- 1. ส่วน Setup (เหมือนเดิม) ---
@@ -154,7 +156,7 @@ async function fillPdf(templateUrl, data) {
 	let examInfo = null;
 	try {
 		const token = localStorage.getItem("token");
-		const requestRes = await fetch("http://localhost:8080/api/allRequestExamInfo", {
+		const requestRes = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 			body: JSON.stringify({ term: term }),

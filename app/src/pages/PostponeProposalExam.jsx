@@ -7,6 +7,7 @@ import ModalInform from "../component/Modal/ModalInform";
 import Pdfg07 from "../component/PDF/Pdfg08";
 import { useForm } from "@mantine/form";
 import { jwtDecode } from "jwt-decode";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const PostponeProposalExam = () => {
 	const token = localStorage.getItem("token");
@@ -61,7 +62,7 @@ const PostponeProposalExam = () => {
 	useEffect(() => {
 		const fetchProfile = async () => {
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/profile", {
+				const requestRes = await fetch(`${BASE_URL}/api/profile`, {
 					method: "GET",
 					headers: { Authorization: `Bearer ${token}` },
 				});
@@ -77,7 +78,7 @@ const PostponeProposalExam = () => {
 
 		const getTerm = async () => {
 			try {
-				const termInfoReq = await fetch("http://localhost:8080/api/allRequestExamInfo", {
+				const termInfoReq = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
@@ -113,7 +114,7 @@ const PostponeProposalExam = () => {
 	useEffect(() => {
 		const fetchLatestRequestThesisProposal = async () => {
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/allRequestThesisProposal", {
+				const requestRes = await fetch(`${BASE_URL}/api/allRequestThesisProposal`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 					body: JSON.stringify({ lastRequest: true }),
@@ -123,7 +124,7 @@ const PostponeProposalExam = () => {
 				setLatestRequest(requestData[0]);
 				console.log(requestData);
 
-				const PlagiarismRes = await fetch("http://localhost:8080/api/AllPlagiarismProposal", {
+				const PlagiarismRes = await fetch(`${BASE_URL}/api/AllPlagiarismProposal`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
@@ -151,7 +152,7 @@ const PostponeProposalExam = () => {
 
 		const fetchRequestExamCancel = async () => {
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/allPostponeProposalExam", {
+				const requestRes = await fetch(`${BASE_URL}/api/allPostponeProposalExam`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
@@ -169,7 +170,7 @@ const PostponeProposalExam = () => {
 
 	const handleOpenAdd = async () => {
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/studentInfo", {
+			const requestRes = await fetch(`${BASE_URL}/api/studentInfo`, {
 				method: "GET",
 				headers: { Authorization: `Bearer ${token}` },
 			});
@@ -186,7 +187,7 @@ const PostponeProposalExam = () => {
 
 	const handleAdd = async () => {
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/addPostponeProposalExam", {
+			const requestRes = await fetch(`${BASE_URL}/api/addPostponeProposalExam`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify(formAdd.values),
@@ -210,7 +211,7 @@ const PostponeProposalExam = () => {
 			return;
 		}
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/approvePostponeProposalExam", {
+			const requestRes = await fetch(`${BASE_URL}/api/approvePostponeProposalExam`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify({

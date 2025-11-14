@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Box, Text, TextInput, Table, Button, Modal, Space, ScrollArea, PasswordInput, Group, Select, Flex } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import ModalInform from "../../component/Modal/ModalInform";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const AssignChairpersons = () => {
 	// Modal Info
@@ -44,7 +45,7 @@ const AssignChairpersons = () => {
 		const fetchTableData = async () => {
 			try {
 				// 1. ดึงข้อมูล Major (เหมือนเดิม)
-				const marjorRes = await fetch("http://localhost:8080/api/getMajor_name", {
+				const marjorRes = await fetch(`${BASE_URL}/api/getMajor_name`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
@@ -53,7 +54,7 @@ const AssignChairpersons = () => {
 				console.log("EFFECT (Table) - major:", marjorData);
 
 				// 2. ดึงข้อมูลประธานที่ถูกแต่งตั้งไปแล้ว (สำหรับตาราง)
-				const ChairpersonsRes = await fetch("http://localhost:8080/api/allAssignChairpersons", {
+				const ChairpersonsRes = await fetch(`${BASE_URL}/api/allAssignChairpersons`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
@@ -131,8 +132,8 @@ const AssignChairpersons = () => {
 
 	const handleSubmit = async () => {
 		const url = {
-			add: "http://localhost:8080/api/addAssignChairpersons",
-			delete: "http://localhost:8080/api/deleteAssignChairpersons",
+			add: `${BASE_URL}/api/addAssignChairpersons`,
+			delete: `${BASE_URL}/api/deleteAssignChairpersons`,
 		};
 		try {
 			const req = await fetch(url[modalType], {

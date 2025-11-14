@@ -3,6 +3,7 @@ const router = express.Router();
 const authenticateToken = require("../middleware/authenticateToken");
 const { poolPromise } = require("../db");
 const axios = require("axios");
+const BASE_URL = process.env.VITE_API_URL;
 
 const statusMap = {
 	0: "ยกเลิก",
@@ -48,7 +49,7 @@ router.post("/allExamEligibleListPrint", authenticateToken, async (req, res) => 
 			});
 		});
 		const allStudentIds = Object.values(output).flatMap((group) => group.map((s) => s.student_id));
-		const promises = allStudentIds.map((studentId) => axios.get(`http://localhost:8080/externalApi/student/${studentId}`));
+		const promises = allStudentIds.map((studentId) => axios.get(`${BASE_URL}/externalApi/student/${studentId}`));
 		const studentResults = await Promise.all(promises);
 		const studentMap = {};
 		studentResults.forEach((res) => {

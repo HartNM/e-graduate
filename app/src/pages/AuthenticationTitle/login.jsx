@@ -4,6 +4,7 @@ import { useForm } from "@mantine/form";
 import { useNavigate } from "react-router-dom";
 import myImage from "../../assets/logo.png";
 import ModalInform from "../../component/Modal/ModalInform";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const AuthenticationForm = () => {
 	const navigate = useNavigate();
@@ -39,7 +40,7 @@ const AuthenticationForm = () => {
 				advisor: "/advisor",
 			};
  */
-			const response = await fetch("http://localhost:8080/api/login", {
+			const response = await fetch(`${BASE_URL}/api/login`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(loginForm.values),

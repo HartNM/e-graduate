@@ -5,6 +5,7 @@ import { useForm } from "@mantine/form";
 import ModalInform from "../../component/Modal/ModalInform";
 import PDFExamPrint from "../../component/PDF/PdfExamProposalResults";
 import * as XLSX from "xlsx";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const ExamResults = () => {
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
@@ -29,7 +30,7 @@ const ExamResults = () => {
 	useEffect(() => {
 		const fetchTerm = async () => {
 			try {
-				const res = await fetch("http://localhost:8080/api/allRequestExamInfo", {
+				const res = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
@@ -58,7 +59,7 @@ const ExamResults = () => {
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
-				const res = await fetch("http://localhost:8080/api/AllExamProposalResults", {
+				const res = await fetch(`${BASE_URL}/api/AllExamProposalResults`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
@@ -89,7 +90,7 @@ const ExamResults = () => {
 
 	const handleSaveExamResults = async () => {
 		try {
-			const req = await fetch("http://localhost:8080/api/AddExamProposalResults", {
+			const req = await fetch(`${BASE_URL}/api/AddExamProposalResults`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify({ ...form.values, term: selectedTerm }),

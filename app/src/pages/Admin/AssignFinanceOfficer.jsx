@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Box, Text, TextInput, Table, Button, Modal, Space, ScrollArea, PasswordInput, Group, Select, Flex } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import ModalInform from "../../component/Modal/ModalInform";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const AssignFinanceOfficer = () => {
 	// Modal Info
@@ -47,7 +48,7 @@ const AssignFinanceOfficer = () => {
 			try {
 				console.log("candidate :", save);
 
-				const FinanceOfficerRes = await fetch("http://localhost:8080/api/allAssignFinanceOfficer", {
+				const FinanceOfficerRes = await fetch(`${BASE_URL}/api/allAssignFinanceOfficer`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
@@ -82,8 +83,8 @@ const AssignFinanceOfficer = () => {
 
 	const handleSubmit = async () => {
 		const url = {
-			add: "http://localhost:8080/api/addAssignFinanceOfficer",
-			delete: "http://localhost:8080/api/deleteAssignFinanceOfficer",
+			add: `${BASE_URL}/api/addAssignFinanceOfficer`,
+			delete: `${BASE_URL}/api/deleteAssignFinanceOfficer`,
 		};
 		try {
 			const req = await fetch(url[modalType], {

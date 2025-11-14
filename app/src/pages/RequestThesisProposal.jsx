@@ -9,6 +9,7 @@ import ModalInform from "../component/Modal/ModalInform";
 import Pdfg01 from "../component/PDF/Pdfg03-04";
 import { useForm } from "@mantine/form";
 import { jwtDecode } from "jwt-decode";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const RequestThesisProposal = () => {
 	const token = localStorage.getItem("token");
@@ -68,7 +69,7 @@ const RequestThesisProposal = () => {
 	useEffect(() => {
 		const fetchProfile = async () => {
 			try {
-				const requestRes = await fetch("http://localhost:8080/api/profile", {
+				const requestRes = await fetch(`${BASE_URL}/api/profile`, {
 					method: "GET",
 					headers: { Authorization: `Bearer ${token}` },
 				});
@@ -85,7 +86,7 @@ const RequestThesisProposal = () => {
 
 		const getTerm = async () => {
 			try {
-				const termInfoReq = await fetch("http://localhost:8080/api/allRequestExamInfo", {
+				const termInfoReq = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
@@ -120,7 +121,7 @@ const RequestThesisProposal = () => {
 	useEffect(() => {
 		const fetchRequestExam = async () => {
 			try {
-				const ThesisProposalRes = await fetch("http://localhost:8080/api/allRequestThesisProposal", {
+				const ThesisProposalRes = await fetch(`${BASE_URL}/api/allRequestThesisProposal`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 					body: JSON.stringify({ term: selectedTerm }),
@@ -130,7 +131,7 @@ const RequestThesisProposal = () => {
 				setRequest(ThesisProposalData);
 
 				if (role === "student") {
-					const RequestExamRes = await fetch("http://localhost:8080/api/requestExamAll", {
+					const RequestExamRes = await fetch(`${BASE_URL}/api/requestExamAll`, {
 						method: "POST",
 						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 						body: JSON.stringify({ lastRequest: true }),
@@ -158,7 +159,7 @@ const RequestThesisProposal = () => {
 
 	const handleOpenAdd = async () => {
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/studentInfo", {
+			const requestRes = await fetch(`${BASE_URL}/api/studentInfo`, {
 				method: "GET",
 				headers: { Authorization: `Bearer ${token}` },
 			});
@@ -175,7 +176,7 @@ const RequestThesisProposal = () => {
 
 	const handleAdd = async () => {
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/addRequestThesisProposal", {
+			const requestRes = await fetch(`${BASE_URL}/api/addRequestThesisProposal`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify(form.values),
@@ -198,7 +199,7 @@ const RequestThesisProposal = () => {
 			return;
 		}
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/approveRequestThesisProposal", {
+			const requestRes = await fetch(`${BASE_URL}/api/approveRequestThesisProposal`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify({ request_thesis_proposal_id: item.request_thesis_proposal_id, name: user.name, role: role, selected: selected, comment: comment }),
@@ -220,7 +221,7 @@ const RequestThesisProposal = () => {
 
 	const handlePay = async (item) => {
 		try {
-			const requestRes = await fetch("http://localhost:8080/api/payRequestThesisProposal", {
+			const requestRes = await fetch(`${BASE_URL}/api/payRequestThesisProposal`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify({ request_thesis_proposal_id: item.request_thesis_proposal_id, receipt_vol: "154", receipt_No: "4", receipt_pay: "1000" }),

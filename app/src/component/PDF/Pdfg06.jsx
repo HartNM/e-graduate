@@ -3,6 +3,7 @@ import { PDFDocument } from "pdf-lib";
 import { Button, Loader } from "@mantine/core";
 import { setDefaultFont, drawGrid, draw, drawRect, drawCenterXText, formatThaiDate, formatThaiDateShort } from "./PdfUtils.js";
 import { useMemo, useState } from "react";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 let THSarabunNewBoldBytesPromise = fetch("/fonts/THSarabunNew Bold.ttf").then((res) => res.arrayBuffer());
 
@@ -119,7 +120,7 @@ async function fillPdf(data) {
 	return new Blob([pdfBytes], { type: "application/pdf" });
 }
 
-const API_BASE = "http://localhost:8080/api";
+const API_BASE = `${BASE_URL}/api`;
 
 async function fetchPdfBlob(url, token) {
 	const res = await fetch(url, {

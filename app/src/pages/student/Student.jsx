@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { IconClipboardText, IconCertificate, IconReport, IconFileText, IconSchool, IconSearch, IconCalendarClock, IconClipboardX } from "@tabler/icons-react";
 import UserLayout from "../../layout/userLayout.jsx";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const Student = () => {
 	const [menu, setMenu] = useState([]);
@@ -10,7 +11,7 @@ const Student = () => {
 	useEffect(() => {
 		(async () => {
 			try {
-				const res = await fetch("http://localhost:8080/api/checkStudent", {
+				const res = await fetch(`${BASE_URL}/api/checkStudent`, {
 					method: "GET",
 					headers: { Authorization: `Bearer ${token}` },
 				});

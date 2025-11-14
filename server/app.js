@@ -4,8 +4,9 @@ const app = express();
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 const cors = require("cors");
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+app.use(cors({ /* origin: "http://localhost:3000", */ credentials: true }));
 const PORT = process.env.PORT;
+const BASE_URL = process.env.VITE_API_URL;
 
 const externalApiStudent = require("./externalApi/student");
 app.use("/externalApi", externalApiStudent);
@@ -65,6 +66,9 @@ const AssignFinanceOfficer = require("./routes/AssignFinanceOfficer");
 app.use("/api", AssignFinanceOfficer);
 const AssignRegistrarOfficer = require("./routes/AssignRegistrarOfficer");
 app.use("/api", AssignRegistrarOfficer);
+
+const pay = require("./routes/pay");
+app.use("/api", pay);
 
 app.listen(PORT, () => {
 	console.log(`Server is running on port ${PORT}`);
