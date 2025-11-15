@@ -66,6 +66,8 @@ const RequestThesisProposal = () => {
 	const [term, setTerm] = useState([]);
 	const [selectedTerm, setSelectedTerm] = useState("");
 
+	const [actualCurrentTerm, setActualCurrentTerm] = useState("");
+
 	useEffect(() => {
 		const fetchProfile = async () => {
 			try {
@@ -103,6 +105,14 @@ const RequestThesisProposal = () => {
 					const close = new Date(item.term_close_date);
 					return today >= open && today <= close;
 				});
+
+				if (currentTerm) {
+					setActualCurrentTerm(currentTerm.term); // <--- เก็บเทอมปัจจุบันจริง
+					console.log(currentTerm.term);
+				} else {
+					setActualCurrentTerm("");
+				}
+
 				if (!currentTerm && termInfodata.length > 0) {
 					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก close_date
 					currentTerm = [...termInfodata].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
@@ -260,7 +270,7 @@ const RequestThesisProposal = () => {
 		<Table.Tr key={item.request_thesis_proposal_id}>
 			<Table.Td>{item.student_name}</Table.Td>
 			<Table.Td>{item.request_type}</Table.Td>
-			<Table.Td style={{ textAlign: "center" }}>
+			<Table.Td style={{ textAlign: "center" }}>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
 				{item.status <= 4 && item.status > 0 && (
 					<Stepper active={item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
 						{[...Array(4)].map((_, i) => (
@@ -304,6 +314,7 @@ const RequestThesisProposal = () => {
 										setSelectedRow(item);
 										setOpenPay(true);
 									}}
+									disabled={item.term !== actualCurrentTerm}
 								>
 									ชำระค่าธรรมเนียม
 								</Button>
@@ -325,6 +336,7 @@ const RequestThesisProposal = () => {
 								setOpenApproveState("add");
 								setOpenApprove(true);
 							}}
+							disabled={item.term !== actualCurrentTerm}
 						>
 							{role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
 						</Button>

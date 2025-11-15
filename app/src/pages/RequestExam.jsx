@@ -40,15 +40,15 @@ const RequestExam = () => {
 	const [request, setRequest] = useState(null);
 	const [search, setSearch] = useState("");
 
-	const [selectedType, setSelectedType] = useState("");
-	const [latestRequest, setLatestRequest] = useState(true);
+	const [selectedType, setSelectedType] = useState(""); //
+	const [latestRequest, setLatestRequest] = useState(true); // เปิด - ปิด ปุ่มเพิ่มคำร้อง
 
-	const [missingCoures, setMissingCoures] = useState([]);
+	const [missingCoures, setMissingCoures] = useState([]);// รายวิชาที่ขาด
 
-	const form = useForm({});
+	const form = useForm({}); 
 
-	const [actualCurrentTerm, setActualCurrentTerm] = useState("");
-	const [openKQ, setOpenKQ] = useState(null);
+	const [actualCurrentTerm, setActualCurrentTerm] = useState(""); //เทอมปัจจุบันจริง
+	const [openKQ, setOpenKQ] = useState(null); //เปิด - ปิด ระบบ
 
 	const { type } = useParams();
 	useEffect(() => {

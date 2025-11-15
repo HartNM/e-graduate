@@ -109,7 +109,7 @@ const RequestThesisDefense = () => {
 			}
 		};
 		getTerm();
-	}, [token]);
+	}, []);
 
 	const [latestRequest, setLatestRequest] = useState(null);
 
@@ -119,29 +119,30 @@ const RequestThesisDefense = () => {
 				const ThesisDefenseRes = await fetch(`${BASE_URL}/api/allRequestThesisDefense`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+					body: JSON.stringify({ term: selectedTerm }),
 				});
 				const ThesisDefenseData = await ThesisDefenseRes.json();
 				if (!ThesisDefenseRes.ok) throw new Error(ThesisDefenseData.message);
 				setRequest(ThesisDefenseData);
 
-				const ThesisProposalRes = await fetch(`${BASE_URL}/api/allRequestThesisProposal`, {
-					method: "POST",
-					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-					body: JSON.stringify({ lastRequest: true }),
-				});
-				const ThesisProposalData = await ThesisProposalRes.json();
-				if (!ThesisProposalRes.ok) throw new Error(ThesisProposalData.message);
-				console.log(ThesisProposalData);
-				console.log(ThesisDefenseData);
+				if (role === "student") {
+					const ThesisProposalRes = await fetch(`${BASE_URL}/api/allRequestThesisProposal`, {
+						method: "POST",
+						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+						body: JSON.stringify({ lastRequest: true }),
+					});
+					const ThesisProposalData = await ThesisProposalRes.json();
+					if (!ThesisProposalRes.ok) throw new Error(ThesisProposalData.message);
 
-				if (ThesisProposalData[0]?.status === "5" && ThesisProposalData[0]?.exam_results === "ผ่าน") {
-					if (ThesisDefenseData[0]?.status === "6" || ThesisDefenseData[0]?.status === undefined) {
-						setLatestRequest(false);
+					if (ThesisProposalData[0]?.status === "5" && ThesisProposalData[0]?.exam_results === "ผ่าน") {
+						if (ThesisDefenseData[0]?.status === "6" || ThesisDefenseData[0]?.status === undefined) {
+							setLatestRequest(false);
+						} else {
+							setLatestRequest(true);
+						}
 					} else {
 						setLatestRequest(true);
 					}
-				} else {
-					setLatestRequest(true);
 				}
 			} catch (e) {
 				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
@@ -149,7 +150,7 @@ const RequestThesisDefense = () => {
 			}
 		};
 		fetchRequestExam();
-	}, []);
+	}, [selectedTerm]);
 
 	const handleOpenAdd = async () => {
 		try {

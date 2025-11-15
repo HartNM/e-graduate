@@ -90,8 +90,8 @@ router.post("/AllRequestExamCancel", authenticateToken, async (req, res) => {
 					rce.dean_approvals,
 					rce.dean_approvals_date,
 					rce.comment
-			FROM [request_submission].[dbo].[request_exam_cancel] rce
-			INNER JOIN [request_submission].[dbo].[request_exam] re
+			FROM request_exam_cancel rce
+			INNER JOIN request_exam re
 					ON rce.request_exam_id = re.request_exam_id
 			`;
 		if (role === "student") {

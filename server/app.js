@@ -70,6 +70,9 @@ app.use("/api", AssignRegistrarOfficer);
 const pay = require("./routes/pay");
 app.use("/api", pay);
 
+const test = require("./routes/test");
+app.use("/api", test);
+
 app.listen(PORT, () => {
 	console.log(`Server is running on port ${PORT}`);
 });

@@ -3,7 +3,7 @@ app/node_modules/
 server/node_modules/
 
 # Build output React
-app/build/
+app/dist/
 
 # Logs
 **/*.log
