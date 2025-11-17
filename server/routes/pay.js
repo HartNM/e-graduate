@@ -32,39 +32,82 @@ const { poolPromise } = require("../db");
 const axios = require("axios");
 
 router.post("/printReceipt", authenticateToken, async (req, res) => {
-	const { citizen_id, student_id, fname, lname, amount } = req.body;
+	const { citizen_id, student_id, fname, lname, amount, request_type } = req.body;
 	console.log(req.body);
 
-    const center = "";
-    const citizent = "";
-    const orderRef1 = "";
-    const name = "";
-/*     const lname = "";
+	const center = "-";
+	const citizent = citizen_id;
+	const orderRef1 = student_id;
+	const name = fname;
+	/* const lname = "";
     const amount = ""; */
-	const add1 = "";
-	const add2 = "";
-	const add3 = "";
-	const NameOther1 = "";
-	const NameOther1_2 = "";
-	const NameOther1_3 = "";
-	const NameOther1_4 = "";
-	const NameOther1_5 = "";
-	const NameOther1_6 = "";
-	const NameOther1_7 = "";
-	const NameOther1_8 = "";
-	const NameOther1_9 = "";
-	const NameOther1_10 = "";
-	const NameOther1_11 = "";
-	const NameOther1_12 = "";
-	const NameOther1_13 = "";
-	const NameOther1_14 = "";
-	const NameOther1_15 = "";
-	const NameOther1_16 = "";
+	const add1 = "-";
+	const add2 = "-";
+	const add3 = "-";
+	const NameOther1 = `ชำระค่า${request_type}`;
+	const NameOther1_2 = `ค่า${request_type} ${amount} บาท`;
+	const NameOther1_3 = "-";
+	const NameOther1_4 = "-";
+	const NameOther1_5 = "-";
+	const NameOther1_6 = "-";
+	const NameOther1_7 = "-";
+	const NameOther1_8 = "-";
+	const NameOther1_9 = "-";
+	const NameOther1_10 = "-";
+	const NameOther1_11 = "-";
+	const NameOther1_12 = "-";
+	const NameOther1_13 = "-";
+	const NameOther1_14 = "-";
+	const NameOther1_15 = "-";
+	const NameOther1_16 = "-";
 
-	const url = `citizent=${citizen_id}&_POST['orderRef1']=${student_id}&_POST['name']=${fname}&_POST['lname']=${lname}&_POST['amount']=${amount}&add1=${add1}&add2=${add2}&add3=${add3}&NameOther1=${NameOther1}&NameOther1_2=${NameOther1_2}&NameOther1_3=${NameOther1_3}&NameOther1_4=${NameOther1_4}&NameOther1_5=${NameOther1_5}&NameOther1_6=${NameOther1_6}&NameOther1_7=${NameOther1_7}&NameOther1_8=${NameOther1_8}&NameOther1_9=${NameOther1_9}&NameOther1_10=${NameOther1_10}&NameOther1_11=${NameOther1_11}&NameOther1_12=${NameOther1_12}&NameOther1_13=${NameOther1_13}&NameOther1_14=${NameOther1_14}&NameOther1_15=${NameOther1_15}&NameOther1_16=${NameOther1_16}`;
+	const url = `http://localhost:8080/api/paytest?center=${center}&citizent=${citizent}&_POST['orderRef1']=${orderRef1}&_POST['name']=${name}&_POST['lname']=${lname}&_POST['amount']=${amount}&add1=${add1}&add2=${add2}&add3=${add3}&NameOther1=${NameOther1}&NameOther1_2=${NameOther1_2}&NameOther1_3=${NameOther1_3}&NameOther1_4=${NameOther1_4}&NameOther1_5=${NameOther1_5}&NameOther1_6=${NameOther1_6}&NameOther1_7=${NameOther1_7}&NameOther1_8=${NameOther1_8}&NameOther1_9=${NameOther1_9}&NameOther1_10=${NameOther1_10}&NameOther1_11=${NameOther1_11}&NameOther1_12=${NameOther1_12}&NameOther1_13=${NameOther1_13}&NameOther1_14=${NameOther1_14}&NameOther1_15=${NameOther1_15}&NameOther1_16=${NameOther1_16}`;
 	console.log(url);
 
 	res.status(200).json({ message: "บันทึกผลสอบเรียบร้อยแล้ว" });
+});
+
+router.get("/paytest", async (req, res) => {
+	try {
+		// 1. ดูข้อมูลทั้งหมดที่ได้รับ
+		// req.query จะเก็บทุกอย่างที่อยู่หลัง ?
+		console.log("Query Data Received:", req.query);
+
+		// 2. ดึงค่าที่ต้องการ
+		// สำหรับ parameter ทั่วไป
+		const citizenId = req.query.citizent; // (คุณพิมพ์ citizent ไม่ใช่ citizen)
+
+		// 3. สำหรับ parameter ที่มีชื่อแปลกๆ (มี ' )
+		// ต้องใช้ Bracket Notation (วงเล็บเหลี่ยม) ในการเข้าถึง
+		const orderRef = req.query["_POST['orderRef1']"];
+		const name = req.query["_POST['name']"];
+		const lname = req.query["_POST['lname']"];
+		const amount = req.query["_POST['amount']"];
+
+		// 4. พิมพ์ค่าที่ดึงออกมาดู
+		console.log("Citizen ID:", citizenId);
+		console.log("Order Ref:", orderRef);
+		console.log("Name:", name);
+		console.log("Amount:", amount);
+
+		// 5. ตอบกลับ (สำคัญมากสำหรับ API callback)
+		// ระบบชำระเงินมักจะคาดหวังการตอบกลับที่สำเร็จ
+		// (คุณอาจจะต้องตอบกลับเป็น "OK" หรือ JSON ตามที่คู่มือกำหนด)
+		res.status(200).json(req.query/* {
+			message: "Payment data received successfully.",
+			receivedData: {
+				citizenId: citizenId,
+				orderRef: orderRef,
+				name: name,
+				lname: lname,
+				amount: amount,
+			},
+		} */);
+	} catch (error) {
+		console.error("Error processing payment callback:", error);
+		// ตอบกลับว่ามีข้อผิดพลาด
+		res.status(500).json({ message: "Error processing data." });
+	}
 });
 
 module.exports = router;

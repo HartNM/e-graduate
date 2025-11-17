@@ -37,7 +37,7 @@ const RequestThesisProposal = () => {
 	// System states
 	const [user, setUser] = useState("");
 	//student //advisor //chairpersons //officer_registrar
-	const [request, setRequest] = useState([]);
+	const [request, setRequest] = useState(null);
 	const [search, setSearch] = useState("");
 
 	const form = useForm({
@@ -67,6 +67,7 @@ const RequestThesisProposal = () => {
 	const [selectedTerm, setSelectedTerm] = useState("");
 
 	const [actualCurrentTerm, setActualCurrentTerm] = useState("");
+	const [paymentCloseDate, setPaymentCloseDate] = useState(null);
 
 	useEffect(() => {
 		const fetchProfile = async () => {
@@ -107,8 +108,22 @@ const RequestThesisProposal = () => {
 				});
 
 				if (currentTerm) {
-					setActualCurrentTerm(currentTerm.term); // <--- เก็บเทอมปัจจุบันจริง
-					console.log(currentTerm.term);
+					setActualCurrentTerm(currentTerm.term);
+					console.log("เทอมปัจจุบัน", currentTerm.term);
+
+					const options = {
+						day: "2-digit", // วันที่ 2 หลัก
+						month: "2-digit", // เดือน 2 หลัก
+						year: "numeric", // ปี
+						calendar: "buddhist", // ใช้ปฏิทินพุทธ (พ.ศ.)
+						numberingSystem: "latn", // ใช้เลขอารบิก
+						timeZone: "Asia/Bangkok", // ระบุไทม์โซนเพื่อให้ได้วันที่ถูกต้อง
+					};
+
+					const formattedDate = new Intl.DateTimeFormat("th-TH", options).format(new Date(currentTerm.term_close_date));
+
+					setPaymentCloseDate(formattedDate);
+					console.log("วันสุดท้ายชำระค่าธรรมเนียม", formattedDate);
 				} else {
 					setActualCurrentTerm("");
 				}
@@ -129,6 +144,9 @@ const RequestThesisProposal = () => {
 	const [latestRequest, setLatestRequest] = useState(true);
 
 	useEffect(() => {
+		if (!selectedTerm) return;
+		if (request != null && role === "student") return;
+
 		const fetchRequestExam = async () => {
 			try {
 				const ThesisProposalRes = await fetch(`${BASE_URL}/api/allRequestThesisProposal`, {
@@ -234,7 +252,7 @@ const RequestThesisProposal = () => {
 			const requestRes = await fetch(`${BASE_URL}/api/payRequestThesisProposal`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ request_thesis_proposal_id: item.request_thesis_proposal_id, receipt_vol: "154", receipt_No: "4", receipt_pay: "1000" }),
+				body: JSON.stringify({ request_thesis_proposal_id: item.request_thesis_proposal_id, receipt_vol: "154", receipt_No: "4", receipt_pay: user.education_level === "ปริญญาโท" ? 2000 : 5000 }),
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) {
@@ -258,19 +276,19 @@ const RequestThesisProposal = () => {
 		});
 	}
 
-	const sortedData = sortRequests(request, role);
+	const sortedData = sortRequests(request ?? [], role);
 
-	const filteredData = sortedData.filter((p) => {
+	const filteredData = sortedData?.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
-
-		return matchesSearch;
+		const matchesTerm = selectedTerm ? p.term === selectedTerm : true;
+		return matchesSearch && matchesTerm;
 	});
 
 	const rows = filteredData.map((item) => (
 		<Table.Tr key={item.request_thesis_proposal_id}>
 			<Table.Td>{item.student_name}</Table.Td>
 			<Table.Td>{item.request_type}</Table.Td>
-			<Table.Td style={{ textAlign: "center" }}>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr
+			<Table.Td style={{ textAlign: "center" }}>
 				{item.status <= 4 && item.status > 0 && (
 					<Stepper active={item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
 						{[...Array(4)].map((_, i) => (
@@ -371,7 +389,7 @@ const RequestThesisProposal = () => {
 				title={`${role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}คำร้องขอสอบโครงร่าง${user.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`}
 			/>
 			<ModalAddRequestThesisProposal opened={openAdd} onClose={() => setOpenAdd(false)} form={form} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`} />
-			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} MoneyRegis={user.education_level === "ปริญญาโท" ? 2000 : 5000} stop_date={"15/11/2568"} />
+			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} MoneyRegis={user.education_level === "ปริญญาโท" ? 2000 : 5000} type={`คำร้องขอสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`} stop_date={paymentCloseDate} />
 			<Text size="1.5rem" fw={900} mb="md">
 				คำร้องขอสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ
 			</Text>
@@ -399,7 +417,7 @@ const RequestThesisProposal = () => {
 							<Table.Th style={{ minWidth: 100 }}>เรื่อง</Table.Th>
 							<Table.Th style={{ minWidth: 110 }}>สถานะ</Table.Th>
 							<Table.Th>การดำเนินการ</Table.Th>
-							{request.some((it) => it.exam_results !== null) && <Table.Th style={{ minWidth: 110 }}>ผลสอบ</Table.Th>}
+							{request?.some((it) => it.exam_results !== null) && <Table.Th style={{ minWidth: 110 }}>ผลสอบ</Table.Th>}
 						</Table.Tr>
 					</Table.Thead>
 					<Table.Tbody>{rows}</Table.Tbody>

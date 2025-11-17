@@ -14,12 +14,15 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 
 const RequestExam = () => {
 	const token = localStorage.getItem("token");
-	const payload = useMemo(() => {
-		return jwtDecode(token);
+	const { role, user_id, name } = useMemo(() => {
+		if (!token) return { role: "", user_id: "", name: "" };
+		try {
+			return jwtDecode(token);
+		} catch (error) {
+			console.error("Invalid token:", error);
+			return { role: "", user_id: "", name: "" };
+		}
 	}, [token]);
-	const role = payload.role;
-	const user_id = payload.user_id;
-	const name = payload.name;
 	// Modal Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "", timeout: 3000 });
 	const notify = (type, message, timeout = 3000) => setInform({ open: true, type, message, timeout });
@@ -43,9 +46,9 @@ const RequestExam = () => {
 	const [selectedType, setSelectedType] = useState(""); //
 	const [latestRequest, setLatestRequest] = useState(true); // เปิด - ปิด ปุ่มเพิ่มคำร้อง
 
-	const [missingCoures, setMissingCoures] = useState([]);// รายวิชาที่ขาด
+	const [missingCoures, setMissingCoures] = useState([]); // รายวิชาที่ขาด
 
-	const form = useForm({}); 
+	const form = useForm({});
 
 	const [actualCurrentTerm, setActualCurrentTerm] = useState(""); //เทอมปัจจุบันจริง
 	const [openKQ, setOpenKQ] = useState(null); //เปิด - ปิด ระบบ
@@ -98,8 +101,22 @@ const RequestExam = () => {
 				});
 
 				if (currentTerm) {
-					setActualCurrentTerm(currentTerm.term); // <--- เก็บเทอมปัจจุบันจริง
-					console.log(currentTerm.term);
+					setActualCurrentTerm(currentTerm.term);
+					console.log("เทอมปัจจุบัน", currentTerm.term);
+
+					const options = {
+						day: "2-digit", // วันที่ 2 หลัก
+						month: "2-digit", // เดือน 2 หลัก
+						year: "numeric", // ปี
+						calendar: "buddhist", // ใช้ปฏิทินพุทธ (พ.ศ.)
+						numberingSystem: "latn", // ใช้เลขอารบิก
+						timeZone: "Asia/Bangkok", // ระบุไทม์โซนเพื่อให้ได้วันที่ถูกต้อง
+					};
+
+					const formattedDate = new Intl.DateTimeFormat("th-TH", options).format(new Date(currentTerm.KQ_close_date));
+
+					setPaymentCloseDate(formattedDate);
+					console.log("วันสุดท้ายชำระค่าธรรมเนียม", formattedDate);
 				} else {
 					setActualCurrentTerm("");
 				}
@@ -317,7 +334,7 @@ const RequestExam = () => {
 			const requestRes = await fetch(`${BASE_URL}/api/payRequestExam`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ request_exam_id: item.request_exam_id, receipt_vol: "2564", receipt_No: "1", receipt_pay: "1000" }),
+				body: JSON.stringify({ request_exam_id: item.request_exam_id, receipt_vol: "2564", receipt_No: "1", receipt_pay: user.education_level === "ปริญญาโท" ? 1000 : 1500 }),
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) {
@@ -335,8 +352,6 @@ const RequestExam = () => {
 	};
 
 	const printReceipt = async (item) => {
-		console.log("test");
-
 		try {
 			const requestRes = await fetch(`${BASE_URL}/api/printReceipt`, {
 				method: "POST",
@@ -370,7 +385,6 @@ const RequestExam = () => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
 		const matchesType = selectedType ? p.request_type === selectedType : true;
 		const matchesTerm = selectedTerm ? p.term === selectedTerm : true;
-
 		return matchesSearch && matchesType && matchesTerm;
 	});
 
@@ -488,7 +502,15 @@ const RequestExam = () => {
 				title={`${role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}คำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`}
 			/>
 			<ModalAdd opened={openAdd} onClose={() => setOpenAdd(false)} form={form.values} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`} />
-			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} MoneyRegis={user.education_level === "ปริญญาโท" ? 1000 : 1500} type={`คำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`} stop_date={"15/11/2568"} />
+			<ModalPay
+				opened={openPay}
+				onClose={() => setOpenPay(false)}
+				selectedRow={selectedRow}
+				handlePay={handlePay}
+				MoneyRegis={user.education_level === "ปริญญาโท" ? 1000 : 1500}
+				type={`คำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`}
+				stop_date={paymentCloseDate}
+			/>
 
 			<Text size="1.5rem" fw={900} mb="md">
 				{`คำร้องขอสอบ${type ? type : `${user.education_level ? `${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` : "ประมวลความรู้/วัดคุณสมบัติ"}`}`}

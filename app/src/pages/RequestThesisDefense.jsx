@@ -37,7 +37,7 @@ const RequestThesisDefense = () => {
 	// System states
 	const [user, setUser] = useState("");
 	//student //advisor //chairpersons //officer_registrar
-	const [request, setRequest] = useState([]);
+	const [request, setRequest] = useState(null);
 	const [search, setSearch] = useState("");
 
 	const form = useForm({
@@ -60,6 +60,9 @@ const RequestThesisDefense = () => {
 
 	const [term, setTerm] = useState([]);
 	const [selectedTerm, setSelectedTerm] = useState("");
+
+	const [actualCurrentTerm, setActualCurrentTerm] = useState("");
+	const [paymentCloseDate, setPaymentCloseDate] = useState(null);
 
 	useEffect(() => {
 		const fetchProfile = async () => {
@@ -98,6 +101,28 @@ const RequestThesisDefense = () => {
 					const close = new Date(item.term_close_date);
 					return today >= open && today <= close;
 				});
+
+				if (currentTerm) {
+					setActualCurrentTerm(currentTerm.term);
+					console.log("เทอมปัจจุบัน", currentTerm.term);
+
+					const options = {
+						day: "2-digit", // วันที่ 2 หลัก
+						month: "2-digit", // เดือน 2 หลัก
+						year: "numeric", // ปี
+						calendar: "buddhist", // ใช้ปฏิทินพุทธ (พ.ศ.)
+						numberingSystem: "latn", // ใช้เลขอารบิก
+						timeZone: "Asia/Bangkok", // ระบุไทม์โซนเพื่อให้ได้วันที่ถูกต้อง
+					};
+
+					const formattedDate = new Intl.DateTimeFormat("th-TH", options).format(new Date(currentTerm.term_close_date));
+
+					setPaymentCloseDate(formattedDate);
+					console.log("วันสุดท้ายชำระค่าธรรมเนียม", formattedDate);
+				} else {
+					setActualCurrentTerm("");
+				}
+
 				if (!currentTerm && termInfodata.length > 0) {
 					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก close_date
 					currentTerm = [...termInfodata].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
@@ -114,6 +139,9 @@ const RequestThesisDefense = () => {
 	const [latestRequest, setLatestRequest] = useState(null);
 
 	useEffect(() => {
+		if (!selectedTerm) return;
+		if (request != null && role === "student") return;
+
 		const fetchRequestExam = async () => {
 			try {
 				const ThesisDefenseRes = await fetch(`${BASE_URL}/api/allRequestThesisDefense`, {
@@ -221,7 +249,7 @@ const RequestThesisDefense = () => {
 			const requestRes = await fetch(`${BASE_URL}/api/payRequestThesisDefense`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ request_thesis_defense_id: item.request_thesis_defense_id, receipt_vol: "154", receipt_No: "4", receipt_pay: "1000" }),
+				body: JSON.stringify({ request_thesis_defense_id: item.request_thesis_defense_id, receipt_vol: "154", receipt_No: "4", receipt_pay: user.education_level === "ปริญญาโท" ? 3000 : 7000 }),
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) {
@@ -245,11 +273,12 @@ const RequestThesisDefense = () => {
 		});
 	}
 
-	const sortedData = sortRequests(request, role);
+	const sortedData = sortRequests(request ?? [], role);
 
 	const filteredData = sortedData.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
-		return matchesSearch;
+		const matchesTerm = selectedTerm ? p.term === selectedTerm : true;
+		return matchesSearch && matchesTerm;
 	});
 
 	const rows = filteredData.map((item) => (
@@ -300,6 +329,7 @@ const RequestThesisDefense = () => {
 										setSelectedRow(item);
 										setOpenPay(true);
 									}}
+									disabled={item.term !== actualCurrentTerm}
 								>
 									ชำระค่าธรรมเนียม
 								</Button>
@@ -321,6 +351,7 @@ const RequestThesisDefense = () => {
 								setOpenApproveState("add");
 								setOpenApprove(true);
 							}}
+							disabled={item.term !== actualCurrentTerm}
 						>
 							{role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
 						</Button>
@@ -355,8 +386,7 @@ const RequestThesisDefense = () => {
 				title={`${role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}คำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`}
 			/>
 			<ModalAddRequestThesisDefense opened={openAdd} onClose={() => setOpenAdd(false)} form={form} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ`} />
-			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} />
-
+			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} MoneyRegis={user.education_level === "ปริญญาโท" ? 3000 : 7000} type={`คำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ`} stop_date={paymentCloseDate} />
 			<Text size="1.5rem" fw={900} mb="md">
 				คำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ
 			</Text>
@@ -384,7 +414,7 @@ const RequestThesisDefense = () => {
 							<Table.Th style={{ minWidth: 100 }}>เรื่อง</Table.Th>
 							<Table.Th style={{ minWidth: 110 }}>สถานะ</Table.Th>
 							<Table.Th>การดำเนินการ</Table.Th>
-							{request.some((it) => it.exam_results !== null) && <Table.Th style={{ minWidth: 110 }}>ผลสอบ</Table.Th>}
+							{request?.some((it) => it.exam_results !== null) && <Table.Th style={{ minWidth: 110 }}>ผลสอบ</Table.Th>}
 						</Table.Tr>
 					</Table.Thead>
 					<Table.Tbody>{rows}</Table.Tbody>

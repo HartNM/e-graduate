@@ -11,13 +11,16 @@ import { jwtDecode } from "jwt-decode";
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 const RequestEngTest = () => {
-	// token
 	const token = localStorage.getItem("token");
-	const payload = useMemo(() => {
-		return jwtDecode(token);
+	const { role, user_id, name } = useMemo(() => {
+		if (!token) return { role: "", user_id: "", name: "" };
+		try {
+			return jwtDecode(token);
+		} catch (error) {
+			console.error("Invalid token:", error);
+			return { role: "", user_id: "", name: "" };
+		}
 	}, [token]);
-	const role = payload.role;
-	const name = payload.name;
 	// Modal notify
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
@@ -38,10 +41,29 @@ const RequestEngTest = () => {
 	const [selectedTerm, setSelectedTerm] = useState("");
 	const [openKQ, setOpenKQ] = useState(null);
 	const [actualCurrentTerm, setActualCurrentTerm] = useState("");
+	const [paymentCloseDate, setPaymentCloseDate] = useState(null);
+	const [user, setUser] = useState("");
 	//useForm
 	const form = useForm({});
 
 	useEffect(() => {
+		const getProfile = async () => {
+			try {
+				const req = await fetch(`${BASE_URL}/api/profile`, {
+					method: "GET",
+					headers: { Authorization: `Bearer ${token}` },
+				});
+				const res = await req.json();
+				if (!req.ok) throw new Error(res.message);
+				setUser(res);
+				console.log(res);
+			} catch (e) {
+				notify("error", e.message);
+				console.error(e);
+			}
+		};
+		getProfile();
+
 		const getTerm = async () => {
 			try {
 				const termInfoReq = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
@@ -50,7 +72,7 @@ const RequestEngTest = () => {
 				});
 				const termInfodata = await termInfoReq.json();
 				if (!termInfoReq.ok) throw new Error(termInfodata.message);
-				setTerm(termInfodata.map((item) => item.term)); // เทอมทังหมด
+				setTerm(termInfodata.map((item) => item.term));
 				console.log(termInfodata);
 
 				const today = new Date();
@@ -60,18 +82,31 @@ const RequestEngTest = () => {
 					return today >= open && today <= close;
 				});
 				if (currentTerm) {
-					setActualCurrentTerm(currentTerm.term); //เทอมทังหมดปัจจุบัน
+					setActualCurrentTerm(currentTerm.term);
+					console.log("เทอมปัจจุบัน", currentTerm.term);
+
+					const options = {
+						day: "2-digit",
+						month: "2-digit",
+						year: "numeric",
+						calendar: "buddhist",
+						numberingSystem: "latn",
+						timeZone: "Asia/Bangkok",
+					};
+					const formattedDate = new Intl.DateTimeFormat("th-TH", options).format(new Date(currentTerm.KQ_close_date));
+					setPaymentCloseDate(formattedDate);
+					console.log("วันสุดท้ายชำระค่าธรรมเนียม", formattedDate);
 				} else {
 					setActualCurrentTerm("");
-					console.warn("ไม่พบเทอมที่กำลังเปิดทำการ");
 				}
+
 				if (!currentTerm && termInfodata.length > 0) {
 					currentTerm = [...termInfodata].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
 				}
 				if (currentTerm) {
-					setSelectedTerm(currentTerm.term); //เทอมที่ select
+					setSelectedTerm(currentTerm.term);
 				} else {
-					console.warn("ไม่พบข้อมูลเทอม (สำหรับ default selection)");
+					console.warn("ไม่พบข้อมูลเทอม");
 				}
 			} catch (e) {
 				notify("error", e.message);
@@ -355,7 +390,7 @@ const RequestEngTest = () => {
 				title={"ลงความเห็นคำร้องขอทดสอบความรู้ทางภาษาอังกฤษ"}
 			/>
 			<ModalAdd opened={openAdd} onClose={() => setOpenAdd(false)} form={form.values} handleAdd={handleAdd} title={"เพิ่มคำร้องขอทดสอบความรู้ทางภาษาอังกฤษ"} />
-			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} />
+			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} MoneyRegis={1000} type={`คำร้องขอทดสอบความรู้ทางภาษาอังกฤษ`} stop_date={paymentCloseDate} />
 
 			<Text size="1.5rem" fw={900} mb="md">
 				คำร้องขอทดสอบความรู้ทางภาษาอังกฤษ

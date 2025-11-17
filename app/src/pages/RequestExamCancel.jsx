@@ -10,11 +10,15 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 
 const RequestExamCancel = () => {
 	const token = localStorage.getItem("token");
-	const payload = useMemo(() => {
-		return jwtDecode(token);
+	const { role, user_id, name } = useMemo(() => {
+		if (!token) return { role: "", user_id: "", name: "" };
+		try {
+			return jwtDecode(token);
+		} catch (error) {
+			console.error("Invalid token:", error);
+			return { role: "", user_id: "", name: "" };
+		}
 	}, [token]);
-	const role = payload.role;
-	const name = payload.name;
 	// Modal Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
@@ -38,6 +42,8 @@ const RequestExamCancel = () => {
 
 	const [term, setTerm] = useState([]);
 	const [selectedTerm, setSelectedTerm] = useState("");
+
+	const [actualCurrentTerm, setActualCurrentTerm] = useState("");
 
 	useEffect(() => {
 		const getProfile = async () => {
@@ -76,6 +82,14 @@ const RequestExamCancel = () => {
 					const close = new Date(item.term_close_date);
 					return today >= open && today <= close;
 				});
+
+				if (currentTerm) {
+					setActualCurrentTerm(currentTerm.term); // <--- เก็บเทอมปัจจุบันจริง
+					console.log(currentTerm.term);
+				} else {
+					setActualCurrentTerm("");
+				}
+
 				if (!currentTerm && termInfodata.length > 0) {
 					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก close_date
 					currentTerm = [...termInfodata].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
@@ -286,6 +300,7 @@ const RequestExamCancel = () => {
 								setOpenApproveState("cancel");
 								setOpenApprove(true);
 							}}
+							disabled={item.term !== actualCurrentTerm}
 						>
 							ลงความเห็น
 						</Button>

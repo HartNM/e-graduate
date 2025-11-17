@@ -42,7 +42,7 @@ async function fillPdf(data) {
 		for (const [role, prop] of Object.entries(ids)) {
 			const id = data?.[prop];
 			if (!id || isNaN(Number(id))) continue;
-			const requestRes = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
+			const res = await fetch(`${BASE_URL}/api/personnelInfo`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				body: JSON.stringify({ user_id: id }),
