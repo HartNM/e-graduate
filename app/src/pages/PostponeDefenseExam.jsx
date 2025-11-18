@@ -57,7 +57,7 @@ const PostponeDefenseExam = () => {
 	const [selectedTerm, setSelectedTerm] = useState("");
 
 	useEffect(() => {
-		const fetchProfile = async () => {
+		const getProfile = async () => {
 			try {
 				const requestRes = await fetch(`${BASE_URL}/api/profile`, {
 					method: "GET",
@@ -71,7 +71,7 @@ const PostponeDefenseExam = () => {
 				console.error("Error fetching profile:", e);
 			}
 		};
-		fetchProfile();
+		if (role === "student") getProfile();
 
 		const getTerm = async () => {
 			try {
@@ -229,7 +229,7 @@ const PostponeDefenseExam = () => {
 			setRequest((prev) => prev.map((row) => (row.postpone_defense_exam_id === item.postpone_defense_exam_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
 			notify("error", e.message);
-			console.error("Error fetching cancelApproveRequestExam:", e);
+			console.error("Error fetching approvePostponeDefenseExam:", e);
 		}
 	};
 

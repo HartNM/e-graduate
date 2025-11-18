@@ -21,7 +21,7 @@ const RequestEngTest = () => {
 			return { role: "", user_id: "", name: "" };
 		}
 	}, [token]);
-	// Modal notify
+	// Modal  notify
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
 	const close = () => setInform((s) => ({ ...s, open: false }));
@@ -62,7 +62,7 @@ const RequestEngTest = () => {
 				console.error(e);
 			}
 		};
-		getProfile();
+		if (role === "student") getProfile();
 
 		const getTerm = async () => {
 			try {
@@ -252,7 +252,7 @@ const RequestEngTest = () => {
 			setRequest((prev) => prev.map((row) => (row.request_eng_test_id === item.request_eng_test_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-			console.error("Error fetching approveRequestExam:", e);
+			console.error("Error fetching approveRequestEngTest:", e);
 		}
 	};
 

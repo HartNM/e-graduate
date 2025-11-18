@@ -1,5 +1,5 @@
 //คำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
 import { useParams } from "react-router-dom";
 import ModalAddRequestThesisDefense from "../component/Modal/ModalAddRequestThesisDefense.jsx";
@@ -13,13 +13,15 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 
 const RequestThesisDefense = () => {
 	const token = localStorage.getItem("token");
-	/* const payloadBase64 = token.split(".")[1];
-			const payload = JSON.parse(atob(payloadBase64)); */
-
-	const payload = jwtDecode(token);
-	const role = payload.role;
-	const user_id = payload.user_id;
-	console.log("token :", payload);
+	const { role, user_id, name } = useMemo(() => {
+		if (!token) return { role: "", user_id: "", name: "" };
+		try {
+			return jwtDecode(token);
+		} catch (error) {
+			console.error("Invalid token:", error);
+			return { role: "", user_id: "", name: "" };
+		}
+	}, [token]);
 	// Modal Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
@@ -65,7 +67,7 @@ const RequestThesisDefense = () => {
 	const [paymentCloseDate, setPaymentCloseDate] = useState(null);
 
 	useEffect(() => {
-		const fetchProfile = async () => {
+		const getProfile = async () => {
 			try {
 				const requestRes = await fetch(`${BASE_URL}/api/profile`, {
 					method: "GET",
@@ -80,7 +82,7 @@ const RequestThesisDefense = () => {
 				console.error("Error fetching profile:", e);
 			}
 		};
-		fetchProfile();
+		if (role === "student") getProfile();
 
 		const getTerm = async () => {
 			try {

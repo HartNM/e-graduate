@@ -60,7 +60,7 @@ const PostponeProposalExam = () => {
 	const [selectedTerm, setSelectedTerm] = useState("");
 
 	useEffect(() => {
-		const fetchProfile = async () => {
+		const getProfile = async () => {
 			try {
 				const requestRes = await fetch(`${BASE_URL}/api/profile`, {
 					method: "GET",
@@ -74,7 +74,7 @@ const PostponeProposalExam = () => {
 				console.error("Error fetching profile:", e);
 			}
 		};
-		fetchProfile();
+		if (role === "student") getProfile();
 
 		const getTerm = async () => {
 			try {
@@ -232,7 +232,7 @@ const PostponeProposalExam = () => {
 			setRequest((prev) => prev.map((row) => (row.postpone_proposal_exam_id === item.postpone_proposal_exam_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
 			notify("error", e.message);
-			console.error("Error fetching cancelApproveRequestExam:", e);
+			console.error("Error fetching approvePostponeProposalExam:", e);
 		}
 	};
 

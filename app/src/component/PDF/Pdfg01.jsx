@@ -69,7 +69,7 @@ async function fillPdf(data) {
 		{ text: `มหาวิทยาลัยราชภัฏกำแพงเพชร`, x: 420, y: (y -= space) },
 		{ text: `วันที่................เดือน...........................พ.ศ...................`, x: 350, y: (y -= space) },
 		{ text: request_date_day, x: 380, y: y + 2 },
-		{ text: request_date_month, x: 440, y: y + 2 },
+		{ text: request_date_month, x: 425, y: y + 2 },
 		{ text: request_date_year, x: 510, y: y + 2 },
 		{ text: `เรื่อง`, x: 60, y: (y -= space * 2), font: THSarabunNewBold },
 		{ text: data?.request_type, x: 100, y: y },

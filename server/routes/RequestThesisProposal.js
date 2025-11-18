@@ -39,7 +39,7 @@ router.post("/getAdvisors", authenticateToken, async (req, res) => {
 
 router.post("/allRequestThesisProposal", authenticateToken, async (req, res) => {
 	const { lastRequest, term } = req.body;
-	const { user_id, role } = req.user;
+	const { user_id, role, employee_id } = req.user;
 	console.log(lastRequest, user_id, role);
 
 	try {
@@ -52,11 +52,17 @@ router.post("/allRequestThesisProposal", authenticateToken, async (req, res) => 
 		} else if (role === "advisor") {
 			query += " WHERE thesis_advisor_id = @user_id AND term = @term";
 		} else if (role === "chairpersons") {
-			query += ` WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND (status IN (0, 2, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL)) AND term = @term`;
+			// query += ` WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND (status IN (0, 2, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL)) AND term = @term`; //test
+
+			request.input("employee_id", employee_id);
+			query += ` WHERE major_id IN (SELECT major_id FROM roles WHERE user_id = @employee_id) AND (status IN (0, 2, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL)) AND term = @term`; //product
 		} else if (role === "officer_registrar") {
 			query += ` WHERE (status IN (0, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL AND registrar_approvals_id IS NOT NULL)) AND term = @term`;
 		} else if (role === "officer_major") {
-			query += " WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND term = @term";
+			// query += " WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND term = @term"; //test
+
+			request.input("employee_id", employee_id);
+			query += " WHERE major_id IN (SELECT major_id FROM roles WHERE user_id = @employee_id) AND term = @term"; //product
 		}
 		query += " ORDER BY request_thesis_proposal_id DESC";
 		const result = await request.query(query);

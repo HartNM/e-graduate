@@ -7,17 +7,36 @@ const ModalAddRequestThesisProposal = ({ opened, onClose, title, form, handleAdd
 	const [advisors, setAdvisors] = useState([]);
 	const token = localStorage.getItem("token");
 
+	/* console.log(form.values.major_id); */
+
 	useEffect(() => {
 		if (opened) {
 			const fetchAdvisors = async () => {
 				try {
-					const res = await fetch(`${BASE_URL}/api/getAdvisors`, {
+					/* const res = await fetch(`${BASE_URL}/api/getAdvisors`, {
 						method: "POST",
 						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 					});
 					const data = await res.json();
 					if (!res.ok) throw new Error(data.message);
-					setAdvisors(data.map((a) => ({ value: a.user_id, label: a.name })));
+					setAdvisors(data.map((a) => ({ value: a.user_id, label: a.name }))); */
+
+					const majorsRes = await fetch(`${BASE_URL}/api/majors`, {
+						method: "POST",
+						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+					});
+					const majorsData = await majorsRes.json();
+					if (!majorsRes.ok) throw new Error(majorsData.message);
+					const selectedMajor = majorsData.find((m) => m.major_id === form.values.major_id);
+					const facultyMembersRes = await fetch(`https://git.kpru.ac.th/FrontEnd_Admission/admissionnew2022/loadMember/${selectedMajor.id_fac}`);
+					const facultyMembersData = await facultyMembersRes.json();
+					if (!facultyMembersRes.ok) throw new Error("ไม่สามารถดึงข้อมูลบุคลากรได้");
+					setAdvisors(
+						facultyMembersData.map((member) => ({
+							value: member.employee_id,
+							label: `${member.prename_full_tha}${member.first_name_tha} ${member.last_name_tha}`.trim(),
+						}))
+					);
 				} catch (e) {
 					console.error("Error fetching advisors:", e);
 				}
@@ -51,7 +70,7 @@ const ModalAddRequestThesisProposal = ({ opened, onClose, title, form, handleAdd
 						</Group>
 						<Space h="md" />
 						<TextInput label="ชื่องานวิจัย" placeholder="กรอกชื่องานวิจัย" {...form.getInputProps("research_name")} />
-						<Select label="เลือกอาจารย์ที่ปรึกษางานวิจัย" placeholder="เลือกอาจารย์" data={advisors} {...form.getInputProps("thesis_advisor_id")} />
+						<Select label="เลือกอาจารย์ที่ปรึกษางานวิจัย" placeholder="เลือกอาจารย์" data={advisors} searchable {...form.getInputProps("thesis_advisor_id")} />
 						{/* <DatePickerInput label="เลือกวันที่สอบ" placeholder="เลื่อกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" minDate={new Date()} {...form.getInputProps("thesis_exam_date")} /> */}
 					</Grid.Col>
 				</Grid>

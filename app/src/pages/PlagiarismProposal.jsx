@@ -82,7 +82,7 @@ const PlagiarismReport = () => {
 	});
 
 	useEffect(() => {
-		const fetchProfile = async () => {
+		const getProfile = async () => {
 			try {
 				const requestRes = await fetch(`${BASE_URL}/api/profile`, {
 					method: "GET",
@@ -97,7 +97,8 @@ const PlagiarismReport = () => {
 				console.error("Error fetching profile:", e);
 			}
 		};
-		fetchProfile();
+		if (role === "student") getProfile();
+		
 	}, [token]);
 
 	const [latestRequest, setLatestRequest] = useState(true);

@@ -23,7 +23,7 @@ const RequestExam = () => {
 			return { role: "", user_id: "", name: "" };
 		}
 	}, [token]);
-	// Modal Info
+	// Modal  Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "", timeout: 3000 });
 	const notify = (type, message, timeout = 3000) => setInform({ open: true, type, message, timeout });
 	const close = () => setInform((s) => ({ ...s, open: false }));
@@ -79,7 +79,7 @@ const RequestExam = () => {
 				console.error(e);
 			}
 		};
-		getProfile();
+		if (role === "student") getProfile();
 
 		const getTerm = async () => {
 			try {

@@ -61,7 +61,7 @@ const RequestExamCancel = () => {
 				console.error(e);
 			}
 		};
-		getProfile();
+		if (role === "student") getProfile();
 
 		const getTerm = async () => {
 			try {
@@ -91,7 +91,7 @@ const RequestExamCancel = () => {
 				}
 
 				if (!currentTerm && termInfodata.length > 0) {
-					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก close_date
+					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก  close_date
 					currentTerm = [...termInfodata].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
 				}
 				setSelectedTerm(currentTerm.term);
@@ -228,7 +228,7 @@ const RequestExamCancel = () => {
 			setRequest((prev) => prev.map((row) => (row.request_cancel_exam_id === item.request_cancel_exam_id ? { ...row, ...requestData.data } : row)));
 		} catch (e) {
 			notify("error", e.message);
-			console.error("Error fetching cancelApproveRequestExam:", e);
+			console.error("Error fetching ApproveRequestExamCancel:", e);
 		}
 	};
 

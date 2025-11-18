@@ -16,7 +16,7 @@ const statusMap = {
 
 router.post("/allRequestEngTest", authenticateToken, async (req, res) => {
 	const { term } = req.body;
-	const { role, user_id } = req.user;
+	const { role, user_id, employee_id } = req.user;
 	try {
 		const pool = await poolPromise;
 		const request = pool.request().input("user_id", user_id).input("term", term);
@@ -24,14 +24,30 @@ router.post("/allRequestEngTest", authenticateToken, async (req, res) => {
 		if (role === "student") {
 			query += " WHERE student_id = @user_id";
 		} else if (role === "advisor") {
-			query += " WHERE study_group_id IN (SELECT group_no FROM advisorGroup_no WHERE user_id = @user_id) AND term = @term";
+			// query += ` WHERE study_group_id IN (SELECT group_no FROM advisorGroup_no WHERE user_id = @user_id) AND term = @term`; //test
+
+			const apiResponse = await axios.post("https://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/FindGroup", {
+				ID_TEACHER: user_id,
+			});
+			const groupNumbers = apiResponse.data.map((item) => item.GROUP_NO);
+			if (groupNumbers.length === 0) {
+				query += ` WHERE 1=0 AND term = @term`;
+			} else {
+				const groupListString = groupNumbers.map((group) => `'${group}'`).join(", ");
+				query += ` WHERE study_group_id IN (${groupListString}) AND term = @term`; //product
+			}
 		} else if (role === "chairpersons") {
-			query +=
-				" WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND (status IN (0, 2, 3, 4, 5)) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL) AND term = @term";
+			// query += ` WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND (status IN (0, 2, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL)) AND term = @term`; //test
+
+			request.input("employee_id", employee_id);
+			query += ` WHERE major_id IN (SELECT major_id FROM roles WHERE user_id = @employee_id) AND (status IN (0, 2, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL)) AND term = @term`; //product
 		} else if (role === "officer_registrar") {
 			query += " WHERE (status IN (0, 3, 4, 5) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL AND registrar_approvals_id IS NOT NULL)) AND term = @term";
 		} else if (role === "officer_major") {
-			query += " WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND term = @term AND status = 5";
+			// query += " WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND term = @term"; //test
+
+			request.input("employee_id", employee_id);
+			query += " WHERE major_id IN (SELECT major_id FROM roles WHERE user_id = @employee_id) AND term = @term"; //product
 		}
 		query += " ORDER BY request_eng_test_id DESC";
 		const result = await request.query(query);
