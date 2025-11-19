@@ -4,29 +4,6 @@ import { DatePickerInput } from "@mantine/dates";
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 const ModalAddRequestThesisProposal = ({ opened, onClose, title, form, handleAdd }) => {
-	const [advisors, setAdvisors] = useState([]);
-	const token = localStorage.getItem("token");
-
-	useEffect(() => {
-		if (opened) {
-			const fetchAdvisors = async () => {
-				try {
-					const res = await fetch(`${BASE_URL}/api/getAdvisors`, {
-						method: "POST",
-						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-					});
-					const data = await res.json();
-					if (!res.ok) throw new Error(data.message);
-					setAdvisors(data.map((a) => ({ value: a.user_id, label: a.name })));
-				} catch (e) {
-					console.error("Error fetching advisors:", e);
-				}
-			};
-
-			fetchAdvisors();
-		}
-	}, [opened, token]);
-
 	return (
 		<Modal opened={opened} onClose={onClose} title={title} centered size="800">
 			<form onSubmit={form.onSubmit(handleAdd)}>

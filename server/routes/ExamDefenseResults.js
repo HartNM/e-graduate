@@ -43,14 +43,14 @@ router.post("/AddExamDefenseResults", authenticateToken, async (req, res) => {
 });
 
 router.post("/AllExamDefenseResults", authenticateToken, async (req, res) => {
-	const { user_id } = req.user;
+	const { user_id , major_ids} = req.user;
 	try {
-		const { recordset: exams } = await (await poolPromise).request().input("user_id", user_id).query(`
+		const { recordset: exams } = await (await poolPromise).request().input("user_id", user_id).input("major_ids_str", major_ids.join(",")).query(`
             SELECT 
                 study_group_id, student_id, exam_results, term, request_type,
                 thesis_exam_date -- *** UPDATED HERE: เพิ่ม field นี้
             FROM request_thesis_defense 
-            WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND status = 5
+            WHERE major_id IN ((SELECT value FROM STRING_SPLIT(@major_ids_str, ','))) AND status = 5
         `);
 		const examsWithStudentData = await Promise.all(
 			exams.map(async ({ student_id, ...rest }) => {

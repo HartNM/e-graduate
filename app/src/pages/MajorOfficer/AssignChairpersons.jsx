@@ -1,11 +1,21 @@
 //แต่งตั้งประธานกรรมการบัณฑิตศึกษาประจำสาขา
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Box, Text, TextInput, Table, Button, Modal, Space, ScrollArea, PasswordInput, Group, Select, Flex } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import ModalInform from "../../component/Modal/ModalInform";
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 const AssignChairpersons = () => {
+	const token = localStorage.getItem("token");
+	const { role, user_id, name, education_level, major_ids } = useMemo(() => {
+		if (!token) return { role: "", user_id: "", name: "", education_level: "", major_ids: "" };
+		try {
+			return jwtDecode(token);
+		} catch (error) {
+			console.error("Invalid token:", error);
+			return { role: "", user_id: "", name: "", education_level: "", major_ids: "" };
+		}
+	}, [token]);
 	// Modal Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
@@ -16,7 +26,6 @@ const AssignChairpersons = () => {
 	const [majorName, setMajorName] = useState(null);
 
 	const [reloadTable, setReloadTable] = useState(false);
-	const token = localStorage.getItem("token");
 
 	const [assignChairpersons, setAssignChairpersons] = useState([]); // State สำหรับตาราง
 	const [chairpersons, setChairpersons] = useState([]); // State สำหรับ Select (Dropdown)
@@ -69,8 +78,6 @@ const AssignChairpersons = () => {
 				const Chairpersons_filtered = ChairpersonsData.filter((item) => item.major_id === marjorData.major_id);
 				setAssignChairpersons(Chairpersons_filtered);
 				console.log("EFFECT (Table) - Chairpersons filtered (This Major):", Chairpersons_filtered);
-
-				// 🛑 6. ลบการ fetch 'loadMember' และการกรอง 'candidate_filtered' ออกจากตรงนี้
 			} catch (e) {
 				notify("error", e.message);
 				console.error("Error fetch Table Data:", e);

@@ -6,7 +6,6 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 const cors = require("cors");
 app.use(cors({ /* origin: "http://localhost:3000", */ credentials: true }));
 const PORT = process.env.PORT;
-const BASE_URL = process.env.VITE_API_URL;
 
 const externalApiStudent = require("./externalApi/student");
 app.use("/externalApi", externalApiStudent);
@@ -27,9 +26,9 @@ const ExamResults = require("./routes/ExamResults");
 app.use("/api", ExamResults);
 const ExamEligibleListPrint = require("./routes/ExamEligibleListPrint");
 app.use("/api", ExamEligibleListPrint);
-const PrintExam = require("./routes/PrintExam");
+/* const PrintExam = require("./routes/PrintExam");
 app.use("/api", PrintExam);
-
+ */
 const requestExamInfoRouters = require("./routes/requestExamInfo");
 app.use("/api", requestExamInfoRouters);
 
@@ -43,29 +42,29 @@ app.use("/api", RequestEngTest);
 
 const RequestThesisProposal = require("./routes/RequestThesisProposal");
 app.use("/api", RequestThesisProposal);
-const PostponeProposalExam = require("./routes/PostponeProposalExam");
-app.use("/api", PostponeProposalExam);
+/* const PostponeProposalExam = require("./routes/PostponeProposalExam");
+app.use("/api", PostponeProposalExam); 
 const PlagiarismProposal = require("./routes/PlagiarismProposal");
-app.use("/api", PlagiarismProposal);
+app.use("/api", PlagiarismProposal); */
 const ExamProposalResults = require("./routes/ExamProposalResults");
 app.use("/api", ExamProposalResults);
 
 const RequestThesisDefense = require("./routes/RequestThesisDefense");
 app.use("/api", RequestThesisDefense);
-const PostponeDefenseExam = require("./routes/PostponeDefenseExam");
+/*const PostponeDefenseExam = require("./routes/PostponeDefenseExam");
 app.use("/api", PostponeDefenseExam);
 const PlagiarismDefense = require("./routes/PlagiarismDefense");
-app.use("/api", PlagiarismDefense);
+app.use("/api", PlagiarismDefense); */
 const ExamDefenseResults = require("./routes/ExamDefenseResults");
 app.use("/api", ExamDefenseResults);
 
-const RequestGraduation = require("./routes/RequestGraduation");
-app.use("/api", RequestGraduation);
+/* const RequestGraduation = require("./routes/RequestGraduation");
+app.use("/api", RequestGraduation); */
 
-const AssignFinanceOfficer = require("./routes/AssignFinanceOfficer");
+/* const AssignFinanceOfficer = require("./routes/AssignFinanceOfficer");
 app.use("/api", AssignFinanceOfficer);
 const AssignRegistrarOfficer = require("./routes/AssignRegistrarOfficer");
-app.use("/api", AssignRegistrarOfficer);
+app.use("/api", AssignRegistrarOfficer); */
 
 const pay = require("./routes/pay");
 app.use("/api", pay);

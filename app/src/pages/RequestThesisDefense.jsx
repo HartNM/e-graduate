@@ -1,4 +1,4 @@
-//คำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ
+// คำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ
 import { useState, useEffect, useMemo } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
 import { useParams } from "react-router-dom";
@@ -8,18 +8,18 @@ import ModalPay from "../component/Modal/ModalPay.jsx";
 import ModalInform from "../component/Modal/ModalInform.jsx";
 import Pdfg01 from "../component/PDF/Pdfg03-04.jsx";
 import { useForm } from "@mantine/form";
-import { jwtDecode } from "jwt-decode";
+import { jwtDecode } from "jwt-decode"; 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 const RequestThesisDefense = () => {
 	const token = localStorage.getItem("token");
-	const { role, user_id, name } = useMemo(() => {
-		if (!token) return { role: "", user_id: "", name: "" };
+	const { role, user_id, name, education_level } = useMemo(() => {
+		if (!token) return { role: "", user_id: "", name: "", education_level: "" };
 		try {
 			return jwtDecode(token);
 		} catch (error) {
 			console.error("Invalid token:", error);
-			return { role: "", user_id: "", name: "" };
+			return { role: "", user_id: "", name: "", education_level: "" };
 		}
 	}, [token]);
 	// Modal Info
@@ -67,23 +67,6 @@ const RequestThesisDefense = () => {
 	const [paymentCloseDate, setPaymentCloseDate] = useState(null);
 
 	useEffect(() => {
-		const getProfile = async () => {
-			try {
-				const requestRes = await fetch(`${BASE_URL}/api/profile`, {
-					method: "GET",
-					headers: { Authorization: `Bearer ${token}` },
-				});
-				const requestData = await requestRes.json();
-				if (!requestRes.ok) throw new Error(requestData.message);
-				setUser(requestData);
-				console.log(requestData);
-			} catch (e) {
-				notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-				console.error("Error fetching profile:", e);
-			}
-		};
-		if (role === "student") getProfile();
-
 		const getTerm = async () => {
 			try {
 				const termInfoReq = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
@@ -251,7 +234,7 @@ const RequestThesisDefense = () => {
 			const requestRes = await fetch(`${BASE_URL}/api/payRequestThesisDefense`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ request_thesis_defense_id: item.request_thesis_defense_id, receipt_vol: "154", receipt_No: "4", receipt_pay: user.education_level === "ปริญญาโท" ? 3000 : 7000 }),
+				body: JSON.stringify({ request_thesis_defense_id: item.request_thesis_defense_id, receipt_vol: "154", receipt_No: "4", receipt_pay: education_level === "ปริญญาโท" ? 3000 : 7000 }),
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) {
@@ -385,10 +368,10 @@ const RequestThesisDefense = () => {
 				openApproveState={openApproveState}
 				handleApprove={handleApprove}
 				role={role}
-				title={`${role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}คำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`}
+				title={`${role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}คำร้องขอสอบ${education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`}
 			/>
 			<ModalAddRequestThesisDefense opened={openAdd} onClose={() => setOpenAdd(false)} form={form} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ`} />
-			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} MoneyRegis={user.education_level === "ปริญญาโท" ? 3000 : 7000} type={`คำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ`} stop_date={paymentCloseDate} />
+			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} MoneyRegis={education_level === "ปริญญาโท" ? 3000 : 7000} type={`คำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ`} stop_date={paymentCloseDate} />
 			<Text size="1.5rem" fw={900} mb="md">
 				คำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ
 			</Text>

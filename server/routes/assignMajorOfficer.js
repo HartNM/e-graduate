@@ -15,7 +15,7 @@ router.post("/majors", authenticateToken, async (req, res) => {
 	}
 });
 
-router.post("/addAssignMajorOfficer", authenticateToken, async (req, res) => {
+/* router.post("/addAssignMajorOfficer", authenticateToken, async (req, res) => {
 	const { user_id, name, major_id, password } = req.body;
 	try {
 		const pool = await poolPromise;
@@ -68,17 +68,16 @@ router.post("/allAssignMajorOfficer", authenticateToken, async (req, res) => {
 
 		res.status(200).json(MajorOfficerResult.recordset);
 	} catch (err) {
-		console.error("allAssignChairpersons:", err);
+		console.error("allAssignMajorOfficer:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
 	}
-});
+}); */
 
-/* router.post("/allAssignMajorOfficer", authenticateToken, async (req, res) => {
+router.post("/allAssignMajorOfficer", authenticateToken, async (req, res) => {
 	try {
 		const pool = await poolPromise;
 		const MajorOfficerResult = await pool.request().query(`SELECT * FROM roles WHERE role = 'officer_major'`);
-		console.log(MajorOfficerResult.recordset);
-
+		/* console.log(MajorOfficerResult.recordset); */
 		res.status(200).json(MajorOfficerResult.recordset);
 	} catch (err) {
 		console.error("allAssignMajorOfficer:", err);
@@ -88,8 +87,6 @@ router.post("/allAssignMajorOfficer", authenticateToken, async (req, res) => {
 
 router.post("/addAssignMajorOfficer", authenticateToken, async (req, res) => {
 	const { user_id, name, major_id } = req.body;
-	console.log(req.body);
-
 	try {
 		const pool = await poolPromise;
 		const checkResult = await pool.request().input("user_id", user_id).query("SELECT * FROM roles WHERE user_id = @user_id AND role = 'officer_major'");
@@ -105,7 +102,7 @@ router.post("/addAssignMajorOfficer", authenticateToken, async (req, res) => {
 		console.error("addAssignMajorOfficer:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
 	}
-}); 
+});
 
 router.post("/deleteAssignMajorOfficer", authenticateToken, async (req, res) => {
 	const { user_id } = req.body;
@@ -117,6 +114,6 @@ router.post("/deleteAssignMajorOfficer", authenticateToken, async (req, res) => 
 		console.error("deleteAssignMajorOfficer:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการลบข้อมูล" });
 	}
-}); */
+});
 
 module.exports = router;

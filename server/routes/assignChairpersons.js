@@ -5,11 +5,11 @@ const { poolPromise } = require("../db");
 const bcrypt = require("bcrypt");
 
 router.post("/getMajor_name", authenticateToken, async (req, res) => {
-	const { user_id } = req.user;
+	const { major_ids } = req.user;
+
 	try {
 		const pool = await poolPromise;
-		const officerResult = await pool.request().input("user_id", user_id).query(`SELECT * FROM users WHERE user_id = @user_id`);
-		const major_name = await pool.request().input("major_id", officerResult.recordset[0].major_id).query(`SELECT * FROM majors WHERE major_id = @major_id`);
+		const major_name = await pool.request().input("major_id", major_ids[0]).query(`SELECT * FROM majors WHERE major_id = @major_id`);
 		res.status(200).json(major_name.recordset[0]);
 	} catch (err) {
 		console.error("getMajor_name:", err);
@@ -17,7 +17,7 @@ router.post("/getMajor_name", authenticateToken, async (req, res) => {
 	}
 });
 
-router.post("/allAssignChairpersons", authenticateToken, async (req, res) => {
+/* router.post("/allAssignChairpersons", authenticateToken, async (req, res) => {
 	try {
 		const pool = await poolPromise;
 		const chairpersonsResult = await pool.request().query(`SELECT * FROM users WHERE role = 'chairpersons'`);
@@ -76,14 +76,13 @@ router.post("/deleteAssignChairpersons", authenticateToken, async (req, res) => 
 		console.error("deleteAssignChairpersons:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการลบข้อมูล" });
 	}
-});
+}); */
 
-/* router.post("/allAssignChairpersons", authenticateToken, async (req, res) => {
+router.post("/allAssignChairpersons", authenticateToken, async (req, res) => {
 	try {
 		const pool = await poolPromise;
 		const chairpersonsResult = await pool.request().query(`SELECT * FROM roles WHERE role = 'chairpersons'`);
 		console.log(chairpersonsResult.recordset);
-
 		res.status(200).json(chairpersonsResult.recordset);
 	} catch (err) {
 		console.error("allAssignChairpersons:", err);
@@ -92,15 +91,11 @@ router.post("/deleteAssignChairpersons", authenticateToken, async (req, res) => 
 });
 
 router.post("/addAssignChairpersons", authenticateToken, async (req, res) => {
-	const { user_id, name, major_id ,curr_id} = req.body;
+	const { user_id, name, major_id, curr_id } = req.body;
 	console.log(req.body);
 
 	try {
 		const pool = await poolPromise;
-		//const checkResult = await pool.request().input("user_id", user_id).query("SELECT * FROM roles WHERE user_id = @user_id AND role = 'chairpersons'");
-		//if (checkResult.recordset.length > 0) {
-		//	return res.status(409).json({ message: "รหัสเจ้าหน้าที่นี้มีอยู่แล้วในระบบ" });
-		//}
 		await pool.request().input("user_id", user_id).input("name", name).input("major_id", major_id).query(`
 		INSERT INTO roles (user_id, name, role, major_id
 		) VALUES (
@@ -110,7 +105,7 @@ router.post("/addAssignChairpersons", authenticateToken, async (req, res) => {
 		console.error("addAssignChairpersons:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
 	}
-}); 
+});
 
 router.post("/deleteAssignChairpersons", authenticateToken, async (req, res) => {
 	const { user_id } = req.body;
@@ -121,7 +116,7 @@ router.post("/deleteAssignChairpersons", authenticateToken, async (req, res) => 
 	} catch (err) {
 		console.error("deleteAssignChairpersons:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการลบข้อมูล" });
-	} 
-});*/
+	}
+});
 
 module.exports = router;

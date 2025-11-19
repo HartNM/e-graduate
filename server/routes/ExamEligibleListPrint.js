@@ -19,22 +19,21 @@ const statusMap = {
 };
 
 router.post("/allExamEligibleListPrint", authenticateToken, async (req, res) => {
-	const { user_id } = req.user;
+	const { user_id, major_ids } = req.user;
 	const { term } = req.body;
-	console.log(user_id, term);
 
 	try {
 		const pool = await poolPromise;
-		const request = pool.request().input("user_id", user_id).input("term", term);
+		const request = pool.request().input("user_id", user_id).input("term", term).input("major_ids_str", major_ids.join(","));
 		let query = `
 			SELECT study_group_id, student_id, exam_results, term, request_type, status
 			FROM request_exam 
-			WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND term = @term
+			WHERE major_id IN ((SELECT value FROM STRING_SPLIT(@major_ids_str, ','))) AND term = @term
 		`;
 		/* let query = `
 			SELECT study_group_id, student_id, exam_results, term, request_type, status
 			FROM request_exam 
-			WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND status = 5
+			WHERE major_id IN ((SELECT value FROM STRING_SPLIT(@major_ids_str, ','))) AND status = 5
 		`; */
 		const result = await request.query(query);
 		const output = {};

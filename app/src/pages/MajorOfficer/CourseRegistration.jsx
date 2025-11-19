@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Box, Text, ScrollArea, Table, Space, Button, Modal, MultiSelect, Group, Flex, Select, TextInput, NumberInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import ModalInform from "../../component/Modal/ModalInform";
@@ -8,12 +8,15 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 
 const CourseRegistration = () => {
 	const token = localStorage.getItem("token");
-	/* const payloadBase64 = token.split(".")[1];
-				const payload = JSON.parse(atob(payloadBase64)); */
-
-	const payload = jwtDecode(token);
-	const role = payload.role;
-	const user_id = payload.user_id;
+	const { role, user_id, name, education_level, major_ids } = useMemo(() => {
+		if (!token) return { role: "", user_id: "", name: "", education_level: "", major_ids: "" };
+		try {
+			return jwtDecode(token);
+		} catch (error) {
+			console.error("Invalid token:", error);
+			return { role: "", user_id: "", name: "", education_level: "", major_ids: "" };
+		}
+	}, [token]);
 
 	// Modal Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
@@ -76,23 +79,23 @@ const CourseRegistration = () => {
 				if (!req1.ok) throw new Error(res1.message);
 				setTableData(res1);
 
-				const req2 = await fetch(`${BASE_URL}/api/officerGetMajor_id`, {
+				/* const req2 = await fetch(`${BASE_URL}/api/officerGetMajor_id`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 					body: JSON.stringify({ user_id }),
 				});
 				const res2 = await req2.json();
-				if (!req2.ok) throw new Error(res2.message);
+				if (!req2.ok) throw new Error(res2.message); */
 
 				const req3 = await fetch(`${BASE_URL}/api/major_idGetMajor_name`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-					body: JSON.stringify({ major_id: res2.major_id }),
+					body: JSON.stringify({ major_id: major_ids[0] }),
 				});
 				const res3 = await req3.json();
 				if (!req3.ok) throw new Error(res3.message);
 
-				Form.setValues({ major_id: res2.major_id, major_name: res3.major_name });
+				Form.setValues({ major_id: major_ids[0], major_name: res3.major_name });
 			} catch (e) {
 				notify("error", e.message);
 				console.log(e);

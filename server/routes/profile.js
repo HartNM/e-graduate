@@ -82,7 +82,7 @@ const BASE_URL = process.env.VITE_API_URL;
 });
 */
 
-router.get("/profile", authenticateToken, async (req, res) => {
+/* router.get("/profile", authenticateToken, async (req, res) => {
 	const { user_id } = req.user;
 	if (user_id.length == 9) {
 		try {
@@ -111,7 +111,7 @@ router.get("/profile", authenticateToken, async (req, res) => {
 			return res.status(500).json({ message: "เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์" });
 		}
 	}
-});
+}); */
 
 router.get("/studentInfo", authenticateToken, async (req, res) => {
 	const { user_id } = req.user;

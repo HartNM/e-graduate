@@ -21,7 +21,7 @@ const RequestEngTest = () => {
 			return { role: "", user_id: "", name: "" };
 		}
 	}, [token]);
-	// Modal  notify
+	// Modal notify
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
 	const close = () => setInform((s) => ({ ...s, open: false }));
@@ -47,23 +47,6 @@ const RequestEngTest = () => {
 	const form = useForm({});
 
 	useEffect(() => {
-		const getProfile = async () => {
-			try {
-				const req = await fetch(`${BASE_URL}/api/profile`, {
-					method: "GET",
-					headers: { Authorization: `Bearer ${token}` },
-				});
-				const res = await req.json();
-				if (!req.ok) throw new Error(res.message);
-				setUser(res);
-				console.log(res);
-			} catch (e) {
-				notify("error", e.message);
-				console.error(e);
-			}
-		};
-		if (role === "student") getProfile();
-
 		const getTerm = async () => {
 			try {
 				const termInfoReq = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {

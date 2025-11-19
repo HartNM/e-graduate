@@ -17,6 +17,7 @@ const NotFound = () => {
         <Button onClick={() => navigate("/login")}>กลับหน้าหลัก</Button>
       </Group>
 		</Container>
+		
 	);
 };
 

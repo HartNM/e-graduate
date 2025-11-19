@@ -10,13 +10,13 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 
 const RequestExamCancel = () => {
 	const token = localStorage.getItem("token");
-	const { role, user_id, name } = useMemo(() => {
-		if (!token) return { role: "", user_id: "", name: "" };
+	const { role, user_id, name, education_level } = useMemo(() => {
+		if (!token) return { role: "", user_id: "", name: "", education_level: "" };
 		try {
 			return jwtDecode(token);
 		} catch (error) {
 			console.error("Invalid token:", error);
-			return { role: "", user_id: "", name: "" };
+			return { role: "", user_id: "", name: "", education_level: "" };
 		}
 	}, [token]);
 	// Modal Info
@@ -46,23 +46,6 @@ const RequestExamCancel = () => {
 	const [actualCurrentTerm, setActualCurrentTerm] = useState("");
 
 	useEffect(() => {
-		const getProfile = async () => {
-			try {
-				const req = await fetch(`${BASE_URL}/api/profile`, {
-					method: "GET",
-					headers: { Authorization: `Bearer ${token}` },
-				});
-				const res = await req.json();
-				if (!req.ok) throw new Error(res.message);
-				console.log(res);
-				setUser(res);
-			} catch (e) {
-				notify("error", e.message);
-				console.error(e);
-			}
-		};
-		if (role === "student") getProfile();
-
 		const getTerm = async () => {
 			try {
 				const termInfoReq = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
@@ -91,7 +74,7 @@ const RequestExamCancel = () => {
 				}
 
 				if (!currentTerm && termInfodata.length > 0) {
-					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก  close_date
+					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก close_date
 					currentTerm = [...termInfodata].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
 				}
 				setSelectedTerm(currentTerm.term);
@@ -187,7 +170,7 @@ const RequestExamCancel = () => {
 			const requestRes = await fetch(`${BASE_URL}/api/AddRequestExamCancel`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ reason: reason, request_type: `ขอยกเลิกการเข้าสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` }),
+				body: JSON.stringify({ reason: reason, request_type: `ขอยกเลิกการเข้าสอบ${education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` }),
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) throw new Error(requestData.message);
@@ -325,11 +308,11 @@ const RequestExamCancel = () => {
 				openApproveState={openApproveState}
 				handleCancel={handleCancel}
 				role={role}
-				title={`ลงความเห็นคำร้องขอยกเลิกการเข้าสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`}
+				title={`ลงความเห็นคำร้องขอยกเลิกการเข้าสอบ${education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`}
 			/>
 			<ModalAddCancel opened={openAddCancel} onClose={() => setOpenAddCancel(false)} selectedRow={selectedRow} reason={reason} setReason={setReason} error={error} handleAddCancel={handleAddCancel} />
 			<Text size="1.5rem" fw={900} mb="md">
-				{`คำร้องขอยกเลิกการเข้าสอบ${user.education_level ? `${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` : "ประมวลความรู้/สอบวัดคุณสมบัติ"}`}
+				{`คำร้องขอยกเลิกการเข้าสอบ${education_level ? `${education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` : "ประมวลความรู้/สอบวัดคุณสมบัติ"}`}
 			</Text>
 			<Group justify="space-between">
 				<Box>

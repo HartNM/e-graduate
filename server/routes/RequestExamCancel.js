@@ -64,7 +64,7 @@ router.post("/CheckOpenREC", authenticateToken, async (req, res) => {
 
 router.post("/AllRequestExamCancel", authenticateToken, async (req, res) => {
 	const { term } = req.body;
-	const { user_id, role, employee_id } = req.user;
+	const { user_id, role, employee_id, major_ids } = req.user;
 	try {
 		const pool = await poolPromise;
 		const request = pool.request().input("user_id", user_id).input("term", term);
@@ -112,8 +112,8 @@ router.post("/AllRequestExamCancel", authenticateToken, async (req, res) => {
 		} else if (role === "chairpersons") {
 			// query += ` WHERE re.major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND (rce.status IN (0, 8, 9) OR (rce.status = 5 AND rce.advisor_approvals_id IS NOT NULL AND rce.chairpersons_approvals_id IS NOT NULL)) AND re.term = @term`; //test
 
-			request.input("employee_id", employee_id);
-			query += ` WHERE re.major_id IN (SELECT major_id FROM roles WHERE user_id = @employee_id) AND (rce.status IN (0, 8, 9) OR (rce.status = 5 AND rce.advisor_approvals_id IS NOT NULL AND rce.chairpersons_approvals_id IS NOT NULL)) AND re.term = @term`;
+			request.input("major_ids_str", major_ids.join(","));
+			query += ` WHERE re.major_id IN ((SELECT value FROM STRING_SPLIT(@major_ids_str, ','))) AND (rce.status IN (0, 8, 9) OR (rce.status = 5 AND rce.advisor_approvals_id IS NOT NULL AND rce.chairpersons_approvals_id IS NOT NULL)) AND re.term = @term`;
 		} else if (role === "dean") {
 			query += ` WHERE re.faculty_name IN (SELECT faculty_name FROM users WHERE user_id = @user_id) AND (rce.status IN (0, 9) OR (rce.status = 5 AND rce.advisor_approvals_id IS NOT NULL AND rce.chairpersons_approvals_id IS NOT NULL AND rce.dean_approvals_id IS NOT NULL)) AND re.term = @term`;
 		}

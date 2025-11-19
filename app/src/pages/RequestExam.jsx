@@ -14,16 +14,16 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 
 const RequestExam = () => {
 	const token = localStorage.getItem("token");
-	const { role, user_id, name } = useMemo(() => {
-		if (!token) return { role: "", user_id: "", name: "" };
+	const { role, user_id, name, education_level } = useMemo(() => {
+		if (!token) return { role: "", user_id: "", name: "", education_level: "" };
 		try {
 			return jwtDecode(token);
 		} catch (error) {
 			console.error("Invalid token:", error);
-			return { role: "", user_id: "", name: "" };
+			return { role: "", user_id: "", name: "", education_level: "" };
 		}
 	}, [token]);
-	// Modal  Info
+	// Modal Info
 	const [inform, setInform] = useState({ open: false, type: "", message: "", timeout: 3000 });
 	const notify = (type, message, timeout = 3000) => setInform({ open: true, type, message, timeout });
 	const close = () => setInform((s) => ({ ...s, open: false }));
@@ -64,23 +64,6 @@ const RequestExam = () => {
 	const [paymentCloseDate, setPaymentCloseDate] = useState(null);
 
 	useEffect(() => {
-		const getProfile = async () => {
-			try {
-				const req = await fetch(`${BASE_URL}/api/profile`, {
-					method: "GET",
-					headers: { Authorization: `Bearer ${token}` },
-				});
-				const res = await req.json();
-				if (!req.ok) throw new Error(res.message);
-				setUser(res);
-				console.log(res);
-			} catch (e) {
-				notify("error", e.message);
-				console.error(e);
-			}
-		};
-		if (role === "student") getProfile();
-
 		const getTerm = async () => {
 			try {
 				const termInfoReq = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
@@ -334,7 +317,7 @@ const RequestExam = () => {
 			const requestRes = await fetch(`${BASE_URL}/api/payRequestExam`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ request_exam_id: item.request_exam_id, receipt_vol: "2564", receipt_No: "1", receipt_pay: user.education_level === "ปริญญาโท" ? 1000 : 1500 }),
+				body: JSON.stringify({ request_exam_id: item.request_exam_id, receipt_vol: "2564", receipt_No: "1", receipt_pay: education_level === "ปริญญาโท" ? 1000 : 1500 }),
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) {
@@ -356,7 +339,7 @@ const RequestExam = () => {
 			const requestRes = await fetch(`${BASE_URL}/api/printReceipt`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ ...item, amount: user.education_level === "ปริญญาโท" ? 1000 : 1500 }),
+				body: JSON.stringify({ ...item, amount: education_level === "ปริญญาโท" ? 1000 : 1500 }),
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) {
@@ -485,7 +468,7 @@ const RequestExam = () => {
 
 	return (
 		<Box>
-			<ModalCheckCourse opened={openCheckCourse} onClose={() => setOpenCheckCourse(false)} missingCoures={missingCoures} type={user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"} />
+			<ModalCheckCourse opened={openCheckCourse} onClose={() => setOpenCheckCourse(false)} missingCoures={missingCoures} type={education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"} />
 			<ModalInform opened={inform.open} onClose={close} message={inform.message} type={inform.type} timeout={inform.timeout} />
 			<ModalApprove
 				opened={openApprove}
@@ -499,21 +482,21 @@ const RequestExam = () => {
 				openApproveState={openApproveState}
 				handleApprove={handleApprove}
 				role={role}
-				title={`${role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}คำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`}
+				title={`${role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}คำร้องขอสอบ${education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`}
 			/>
-			<ModalAdd opened={openAdd} onClose={() => setOpenAdd(false)} form={form.values} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`} />
+			<ModalAdd opened={openAdd} onClose={() => setOpenAdd(false)} form={form.values} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสอบ${education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`} />
 			<ModalPay
 				opened={openPay}
 				onClose={() => setOpenPay(false)}
 				selectedRow={selectedRow}
 				handlePay={handlePay}
-				MoneyRegis={user.education_level === "ปริญญาโท" ? 1000 : 1500}
-				type={`คำร้องขอสอบ${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`}
+				MoneyRegis={education_level === "ปริญญาโท" ? 1000 : 1500}
+				type={`คำร้องขอสอบ${education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`}
 				stop_date={paymentCloseDate}
 			/>
 
 			<Text size="1.5rem" fw={900} mb="md">
-				{`คำร้องขอสอบ${type ? type : `${user.education_level ? `${user.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` : "ประมวลความรู้/วัดคุณสมบัติ"}`}`}
+				{`คำร้องขอสอบ${type ? type : `${education_level ? `${education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` : "ประมวลความรู้/วัดคุณสมบัติ"}`}`}
 			</Text>
 			<Group justify="space-between">
 				<Box>

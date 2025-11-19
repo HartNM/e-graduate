@@ -5,7 +5,6 @@ import { useDisclosure } from "@mantine/hooks";
 import { NavbarNested } from "../component/Navbar";
 import myImage from "../assets/logo.png";
 import { Suspense } from "react";
-import LoadingScreen from "../component/LoadingScreen.jsx";
 import { ActionIcon, useMantineColorScheme, useComputedColorScheme } from "@mantine/core";
 import { IconSun, IconMoon } from "@tabler/icons-react";
 import { jwtDecode } from "jwt-decode";

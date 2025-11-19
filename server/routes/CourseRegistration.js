@@ -101,10 +101,13 @@ router.post("/deleteCourseRegistration", authenticateToken, async (req, res) => 
 });
 
 router.post("/allMajorCourseRegistration", authenticateToken, async (req, res) => {
-	const { user_id } = req.user;
+	const { user_id, major_ids } = req.user;
 	try {
 		const pool = await poolPromise;
-		const result = await pool.request().input("user_id", user_id).query(`SELECT * FROM course_registration WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id)`);
+		const result = await pool
+			.request()
+			.input("major_ids_str", major_ids.join(","))
+			.query(`SELECT * FROM course_registration WHERE major_id IN ((SELECT value FROM STRING_SPLIT(@major_ids_str, ',')))`);
 
 		const data = result.recordset;
 		if (data.length === 0) {
