@@ -1,13 +1,30 @@
 .nav {
 	display: flex;
 	flex-direction: column;
-	height: 100vh; /* ให้เต็มจอ */
+	height: 100vh;
 }
 
 .footer {
-	margin-top: auto; /* ดัน footer ลงไปล่างสุด */
-	padding: var(--mantine-spacing-md) 0;
+	margin-top: auto;
+	padding: var(--mantine-spacing-md);
 	border-top: 1px solid light-dark(var(--mantine-color-gray-4), var(--mantine-color-dark-4));
+}
+
+.logout {
+	display: flex;
+	align-items: center;
+	text-decoration: none;
+	padding: 10px 12px;
+	border-radius: 8px;
+	color: light-dark(#000, #fff);
+	font-weight: 500;
+	transition: all 0.2s ease;
+	cursor: pointer;
+}
+
+.logout:hover {
+	background-color: var(--mantine-color-red-light);
+	color: var(--mantine-color-red-filled);
 }
 
 .link {
@@ -27,4 +44,9 @@
 	margin-right: var(--mantine-spacing-sm);
 	width: 25px;
 	height: 25px;
+	transition: transform 0.2s ease; /* เตรียมขยับ */
+}
+
+.logout:hover .linkIcon {
+	transform: translateX(5px);
 }

@@ -51,7 +51,7 @@ const CourseRegistration = () => {
 	useEffect(() => {
 		const fetchAll = async () => {
 			try {
-				const ListSubjectAll = await fetch("https://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectAll");
+				const ListSubjectAll = await fetch("/mua-proxy/FrontEnd_Tabian/apiforall/ListSubjectAll");
 				const subjects = await ListSubjectAll.json();
 
 				const formattedSubjects = subjects.map((item) => ({

@@ -1,4 +1,5 @@
-import { useState } from "react";
+//NavbarLinksGroup
+import { useState, useEffect } from "react";
 import { IconChevronRight } from "@tabler/icons-react";
 import { Box, Collapse, Group, Text, ThemeIcon, UnstyledButton } from "@mantine/core";
 import classes from "./NavbarLinksGroup.module.css";
@@ -6,17 +7,23 @@ import { Link } from "react-router-dom";
 
 export function LinksGroup({ icon: Icon, label, initiallyOpened, links }) {
 	const hasLinks = Array.isArray(links);
-	const [opened, setOpened] = useState(initiallyOpened || false);
+	/* const [opened, setOpened] = useState(initiallyOpened || false); */
+
+	const shouldOpen = hasLinks && links.some((link) => link.link === location.pathname);
+
+	const [opened, setOpened] = useState(initiallyOpened || shouldOpen);
 
 	const items = (hasLinks ? links : []).map((link) => (
-		<Text component={Link} to={link.link} className={classes.link} key={link.label}>
+		<Text component={Link} to={link.link} className={classes.link} data-active={location.pathname === link.link || undefined} key={link.label}>
 			{link.label}{" "}
 		</Text>
 	));
 
+	const isMainActive = !hasLinks && location.pathname === links;
+
 	return (
 		<>
-			<UnstyledButton onClick={() => setOpened((o) => !o)} className={classes.control}>
+			<UnstyledButton onClick={() => setOpened((o) => !o)} className={classes.control} data-active={isMainActive || undefined}>
 				{hasLinks ? (
 					<Group justify="space-between" gap={0} className={classes.mainlink}>
 						<Box style={{ display: "flex", alignItems: "center", flex: 1 }}>

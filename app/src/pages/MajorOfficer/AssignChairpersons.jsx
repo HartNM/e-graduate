@@ -4,6 +4,7 @@ import { Box, Text, TextInput, Table, Button, Modal, Space, ScrollArea, Password
 import { useForm } from "@mantine/form";
 import ModalInform from "../../component/Modal/ModalInform";
 const BASE_URL = import.meta.env.VITE_API_URL;
+import { jwtDecode } from "jwt-decode";
 
 const AssignChairpersons = () => {
 	const token = localStorage.getItem("token");
@@ -107,7 +108,7 @@ const AssignChairpersons = () => {
 			}
 
 			// ✅ 9. Fetch ข้อมูลบุคลากร (loadMember) "ณ ตอนนี้"
-			const facultyMembersRes = await fetch(`https://git.kpru.ac.th/FrontEnd_Admission/admissionnew2022/loadMember/${majorName.id_fac}`);
+			const facultyMembersRes = await fetch(`/git-proxy/FrontEnd_Admission/admissionnew2022/loadMember/${majorName.id_fac}`);
 			const facultyMembersData = await facultyMembersRes.json();
 			if (!facultyMembersRes.ok) throw new Error("ไม่สามารถดึงข้อมูลบุคลากรได้");
 

@@ -39,7 +39,6 @@ const RequestExam = () => {
 	const [comment, setComment] = useState("");
 	const [error, setError] = useState("");
 	// System states
-	const [user, setUser] = useState("");
 	const [request, setRequest] = useState(null);
 	const [search, setSearch] = useState("");
 
@@ -189,7 +188,7 @@ const RequestExam = () => {
 					/* if (!registrationData) throw new Error("รอเจ้าหน้าที่ประจำสาขากรอกรายวิชาบังคับ");  */
 					console.log("ที่ต้องลง :", registrationData);
 
-					const registerCoursesRes = await fetch("https://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectPass", {
+					const registerCoursesRes = await fetch("/mua-proxy/FrontEnd_Tabian/apiforall/ListSubjectPass", {
 						method: "POST",
 						headers: { "Content-Type": "application/json" },
 						body: JSON.stringify({ ID_NO: user_id }),
@@ -203,7 +202,7 @@ const RequestExam = () => {
 					console.log("ที่ขาด :", missing);
 
 					if (missing.length > 0) {
-						const res = await fetch("https://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListSubjectAll");
+						const res = await fetch("/mua-proxy/FrontEnd_Tabian/apiforall/ListSubjectAll");
 						const subjects = await res.json();
 
 						const subjMap = new Map(subjects.map((s) => [s.SUBJCODE, s.SUBJNAME]));
@@ -485,15 +484,7 @@ const RequestExam = () => {
 				title={`${role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}คำร้องขอสอบ${education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`}
 			/>
 			<ModalAdd opened={openAdd} onClose={() => setOpenAdd(false)} form={form.values} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสอบ${education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`} />
-			<ModalPay
-				opened={openPay}
-				onClose={() => setOpenPay(false)}
-				selectedRow={selectedRow}
-				handlePay={handlePay}
-				MoneyRegis={education_level === "ปริญญาโท" ? 1000 : 1500}
-				type={`คำร้องขอสอบ${education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`}
-				stop_date={paymentCloseDate}
-			/>
+			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} MoneyRegis={education_level === "ปริญญาโท" ? 1000 : 1500} type={`คำร้องขอสอบ${education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`} stop_date={paymentCloseDate} />
 
 			<Text size="1.5rem" fw={900} mb="md">
 				{`คำร้องขอสอบ${type ? type : `${education_level ? `${education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}` : "ประมวลความรู้/วัดคุณสมบัติ"}`}`}

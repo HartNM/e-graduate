@@ -1,3 +1,4 @@
+//NavbarNested
 import { Box, ScrollArea, Select } from "@mantine/core";
 import { IconLogout } from "@tabler/icons-react";
 import { LinksGroup } from "../NavbarLinksGroup";
@@ -10,6 +11,11 @@ export function NavbarNested(menu) {
 	const links = menu.menu.map((item) => <LinksGroup {...item} key={item.label} />);
 	const navigate = useNavigate();
 
+	const handleLogout = () => {
+		localStorage.removeItem("token");
+		navigate("/login");
+	};
+
 	return (
 		<nav className={classes.nav}>
 			<Box>
@@ -21,15 +27,9 @@ export function NavbarNested(menu) {
 			</ScrollArea>
 
 			<Box className={classes.footer}>
-				<Text
-					className={classes.link}
-					onClick={() => {
-						navigate("/login");
-					}}
-					style={{ cursor: "pointer" }}
-				>
+				<Text className={classes.logout} onClick={handleLogout}>
 					<IconLogout className={classes.linkIcon} stroke={1.5} />
-					<span>Logout</span>
+					<span>ออกจากระบบ</span>
 				</Text>
 			</Box>
 		</nav>

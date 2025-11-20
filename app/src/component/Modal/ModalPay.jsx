@@ -7,7 +7,7 @@ const ModalPay = ({ opened, onClose, selectedRow, handlePay, MoneyRegis, stop_da
 		<Modal opened={opened} onClose={onClose} title="ชำระค่าธรรมเนียม" centered size="500">
 			{selectedRow && (
 				<Box>
-					<a href={`https://e-payment.kpru.ac.th/pay/typepayment?comp=81914&orderRef1=${selectedRow?.student_id}&amount=${MoneyRegis}&endDate=${stop_date}&urlredirect=http://localhost:3000/student/RequestExam`}>
+					<a href={`/epayment-proxy/pay/typepayment?comp=81914&orderRef1=${selectedRow?.student_id}&amount=${MoneyRegis}&endDate=${stop_date}&urlredirect=http://localhost:3000/student/RequestExam`}> {/* แก้ไขในภายหลัง urlredirect*/}
 						{/* Stack ใช้จัด layout แนวตั้ง และจัดกลาง */}
 						<Stack align="center" gap="md">
 							{/* ใช้ Text component และกำหนดสไตล์ให้เหมือนลิงก์ */}
@@ -18,22 +18,23 @@ const ModalPay = ({ opened, onClose, selectedRow, handlePay, MoneyRegis, stop_da
 							{/* Group ใช้จัด layout แนวนอน (สำหรับโลโก้) */}
 							<Group justify="center" gap="md">
 								<Image
-									src="https://e-payment.kpru.ac.th/pay/public/images/Visa_Mastercard_jcb.jpg"
+									src="/epayment-proxy/pay/public/images/Visa_Mastercard_jcb.jpg"
 									alt="payment credit"
 									h={30} // กำหนดความสูงให้ใกล้เคียงกัน
 									w="auto"
 								/>
 								<Image
-									src="https://e-payment.kpru.ac.th/pay/public/images/logo_ktb_next.png"
+									src="/epayment-proxy/pay/public/images/logo_ktb_next.png"
 									alt="krungthai Next"
 									h={35} // KTB อาจจะต้องสูงกว่านิดหน่อย
 									w="auto"
 								/>
 								<Image
-									src="https://e-payment.kpru.ac.th/pay/public/images/promtpay1.png"
+									src="/epayment-proxy/pay/public/images/promtpay1.png"
 									alt="promtpay"
 									h={30} // กำหนดความสูง
 									w="auto"
+
 								/>
 							</Group>
 
@@ -48,6 +49,7 @@ const ModalPay = ({ opened, onClose, selectedRow, handlePay, MoneyRegis, stop_da
 						<Button color="green" onClick={() => handlePay(selectedRow)}>
 							ชำระค่าธรรมเนียม
 						</Button>
+
 					</Flex>
 				</Box>
 			)}

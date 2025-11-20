@@ -1,4 +1,4 @@
-import { Routes, Route, BrowserRouter } from "react-router-dom";
+import { Routes, Route, BrowserRouter, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import LoadingScreen from "./component/LoadingScreen.jsx";
 
@@ -59,7 +59,8 @@ function AppRoutes() {
 		<BrowserRouter>
 			<Suspense fallback={<LoadingScreen />}>
 				<Routes>
-					<Route path="*" element={<AuthenticationForm />} />
+					<Route path="*" element={<NotFound />} />
+					<Route path="/" element={<Navigate to="/login" replace />} />
 					<Route path="/login" element={<AuthenticationForm />} />
 					<Route path="/personnel" element={<Personnel />} />
 

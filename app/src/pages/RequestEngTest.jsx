@@ -42,7 +42,6 @@ const RequestEngTest = () => {
 	const [openKQ, setOpenKQ] = useState(null);
 	const [actualCurrentTerm, setActualCurrentTerm] = useState("");
 	const [paymentCloseDate, setPaymentCloseDate] = useState(null);
-	const [user, setUser] = useState("");
 	//useForm
 	const form = useForm({});
 

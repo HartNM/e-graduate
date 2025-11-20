@@ -8,7 +8,7 @@ function AsyncCourseSelect({ form, disabled = false, fullCourses }) {
 	const handleSearchChange = useCallback(
 		debounce((query) => {
 			if (!query) return setData(fullCourses.slice(0, 0));
-			const filtered = fullCourses.filter((item) => (item?.value || "").toLowerCase().includes(query.toLowerCase()) || (item?.label || "").toLowerCase().includes(query.toLowerCase())).slice(0, 50); // render แค่ 200 แถว
+			const filtered = fullCourses.filter((item) => (item?.value || "").toLowerCase().includes(query.toLowerCase()) || (item?.label || "").toLowerCase().includes(query.toLowerCase())).slice(0, 50);
 			setData(filtered);
 		}, 300),
 		[fullCourses]

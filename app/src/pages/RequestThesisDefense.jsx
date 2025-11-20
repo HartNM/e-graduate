@@ -37,7 +37,6 @@ const RequestThesisDefense = () => {
 	const [comment, setComment] = useState("");
 	const [error, setError] = useState("");
 	// System states
-	const [user, setUser] = useState("");
 	//student //advisor //chairpersons //officer_registrar
 	const [request, setRequest] = useState(null);
 	const [search, setSearch] = useState("");

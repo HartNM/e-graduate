@@ -28,7 +28,7 @@ const ModalAddRequestThesisProposal = ({ opened, onClose, title, form, handleAdd
 					const majorsData = await majorsRes.json();
 					if (!majorsRes.ok) throw new Error(majorsData.message);
 					const selectedMajor = majorsData.find((m) => m.major_id === form.values.major_id);
-					const facultyMembersRes = await fetch(`https://git.kpru.ac.th/FrontEnd_Admission/admissionnew2022/loadMember/${selectedMajor.id_fac}`);
+					const facultyMembersRes = await fetch(`/git-proxy/FrontEnd_Admission/admissionnew2022/loadMember/${selectedMajor.id_fac}`);
 					const facultyMembersData = await facultyMembersRes.json();
 					if (!facultyMembersRes.ok) throw new Error("ไม่สามารถดึงข้อมูลบุคลากรได้");
 					setAdvisors(

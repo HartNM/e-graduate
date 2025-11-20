@@ -141,7 +141,7 @@ const AssignMajorOfficer = () => {
 
 		try {
 			// 4. Fetch รายชื่อคนจาก id_fac
-			const res = await fetch(`https://git.kpru.ac.th/FrontEnd_Admission/admissionnew2022/loadMember/${id_fac}`, {
+			const res = await fetch(`/git-proxy/FrontEnd_Admission/admissionnew2022/loadMember/${id_fac}`, {
 				method: "GET",
 				headers: { "Content-Type": "application/json" },
 			});
