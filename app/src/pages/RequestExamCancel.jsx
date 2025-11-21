@@ -34,7 +34,7 @@ const RequestExamCancel = () => {
 	const [reason, setReason] = useState("");
 	const [error, setError] = useState("");
 	// System states
-	//student //advisor //chairpersons //officer_registrar  //dean
+	//student //advisor //chairpersons //officer_registrar //dean
 	const [request, setRequest] = useState(null);
 	const [search, setSearch] = useState("");
 	const [selectedType, setSelectedType] = useState("");

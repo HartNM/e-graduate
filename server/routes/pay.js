@@ -30,6 +30,7 @@ const router = express.Router();
 const authenticateToken = require("../middleware/authenticateToken");
 const { poolPromise } = require("../db");
 const axios = require("axios");
+const BASE_URL = process.env.VITE_API_URL;
 
 router.post("/printReceipt", authenticateToken, async (req, res) => {
 	const { citizen_id, student_id, fname, lname, amount, request_type } = req.body;
@@ -61,7 +62,7 @@ router.post("/printReceipt", authenticateToken, async (req, res) => {
 	const NameOther1_15 = "-";
 	const NameOther1_16 = "-";
 
-	const url = `http://localhost:8080/api/paytest?center=${center}&citizent=${citizent}&_POST['orderRef1']=${orderRef1}&_POST['name']=${name}&_POST['lname']=${lname}&_POST['amount']=${amount}&add1=${add1}&add2=${add2}&add3=${add3}&NameOther1=${NameOther1}&NameOther1_2=${NameOther1_2}&NameOther1_3=${NameOther1_3}&NameOther1_4=${NameOther1_4}&NameOther1_5=${NameOther1_5}&NameOther1_6=${NameOther1_6}&NameOther1_7=${NameOther1_7}&NameOther1_8=${NameOther1_8}&NameOther1_9=${NameOther1_9}&NameOther1_10=${NameOther1_10}&NameOther1_11=${NameOther1_11}&NameOther1_12=${NameOther1_12}&NameOther1_13=${NameOther1_13}&NameOther1_14=${NameOther1_14}&NameOther1_15=${NameOther1_15}&NameOther1_16=${NameOther1_16}`;
+	const url = `${BASE_URL}/api/paytest?center=${center}&citizent=${citizent}&_POST['orderRef1']=${orderRef1}&_POST['name']=${name}&_POST['lname']=${lname}&_POST['amount']=${amount}&add1=${add1}&add2=${add2}&add3=${add3}&NameOther1=${NameOther1}&NameOther1_2=${NameOther1_2}&NameOther1_3=${NameOther1_3}&NameOther1_4=${NameOther1_4}&NameOther1_5=${NameOther1_5}&NameOther1_6=${NameOther1_6}&NameOther1_7=${NameOther1_7}&NameOther1_8=${NameOther1_8}&NameOther1_9=${NameOther1_9}&NameOther1_10=${NameOther1_10}&NameOther1_11=${NameOther1_11}&NameOther1_12=${NameOther1_12}&NameOther1_13=${NameOther1_13}&NameOther1_14=${NameOther1_14}&NameOther1_15=${NameOther1_15}&NameOther1_16=${NameOther1_16}`;
 	console.log(url);
 
 	res.status(200).json({ message: "บันทึกผลสอบเรียบร้อยแล้ว" });
@@ -93,7 +94,8 @@ router.get("/paytest", async (req, res) => {
 		// 5. ตอบกลับ (สำคัญมากสำหรับ API callback)
 		// ระบบชำระเงินมักจะคาดหวังการตอบกลับที่สำเร็จ
 		// (คุณอาจจะต้องตอบกลับเป็น "OK" หรือ JSON ตามที่คู่มือกำหนด)
-		res.status(200).json(req.query/* {
+		res.status(200).json(
+			req.query /* {
 			message: "Payment data received successfully.",
 			receivedData: {
 				citizenId: citizenId,
@@ -102,10 +104,55 @@ router.get("/paytest", async (req, res) => {
 				lname: lname,
 				amount: amount,
 			},
-		} */);
+		} */
+		);
 	} catch (error) {
 		console.error("Error processing payment callback:", error);
 		// ตอบกลับว่ามีข้อผิดพลาด
+		res.status(500).json({ message: "Error processing data." });
+	}
+});
+
+router.get("/getpaydata", async (req, res) => {
+	try {
+		const pool = await poolPromise;
+		const { recordset } = await pool.request().query(`SELECT * FROM request_exam WHERE status = 5`);
+
+		const dataWithUrl = await Promise.all(
+			recordset.map(async (item) => {
+				let student = {};
+				try {
+					const { data } = await axios.get(`${BASE_URL}/externalApi/student/${item.student_id}`);
+					student = data;
+				} catch (e) {
+					console.warn(`ไม่สามารถดึงข้อมูลนักศึกษา ${item.student_id}`);
+				}
+
+				let extraParams = "";
+				for (let i = 3; i <= 16; i++) {
+					extraParams += `&NameOther1_${i}=-`;
+				}
+
+				// สร้าง URL แบบ Template Literal (ภาษาไทยจะยังคงเป็นภาษาไทย ไม่ถูกแปลงเป็น %)
+				const url =
+					`http://localhost:8080/api/paytest` +
+					`?center=-` +
+					`&citizent=${student.citizen_id || ""}` +
+					`&_POST['orderRef1']=${item.student_id}` +
+					`&_POST['name']=${student.fname || ""}` +
+					`&_POST['lname']=${student.lname || ""}` +
+					`&_POST['amount']=${item.receipt_pay}` +
+					`&add1=-&add2=-&add3=-` +
+					`&NameOther1=ชำระค่า${item.request_type}` +
+					`&NameOther1_2=ค่า${item.request_type} ${item.receipt_pay} บาท` +
+					extraParams;
+				return { url };
+			})
+		);
+
+		res.status(200).json(dataWithUrl);
+	} catch (error) {
+		console.error("Error:", error);
 		res.status(500).json({ message: "Error processing data." });
 	}
 });

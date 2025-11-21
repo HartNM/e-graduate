@@ -43,7 +43,7 @@ const RequestExam = () => {
 	const [search, setSearch] = useState("");
 
 	const [selectedType, setSelectedType] = useState(""); //
-	const [latestRequest, setLatestRequest] = useState(true); // เปิด - ปิด ปุ่มเพิ่มคำร้อง
+	const [isAddButtonDisabled, setIsAddButtonDisabled] = useState(true); // เปิด - ปิด ปุ่มเพิ่มคำร้อง
 
 	const [missingCoures, setMissingCoures] = useState([]); // รายวิชาที่ขาด
 
@@ -185,7 +185,7 @@ const RequestExam = () => {
 					});
 					const registrationData = await registrationRes.json();
 					if (!registrationRes.ok) throw new Error(registrationData.message);
-					/* if (!registrationData) throw new Error("รอเจ้าหน้าที่ประจำสาขากรอกรายวิชาบังคับ");  */
+					/* if (!registrationData) throw new Error("รอเจ้าหน้าที่ประจำสาขากรอกรายวิชาบังคับ"); */
 					console.log("ที่ต้องลง :", registrationData);
 
 					const registerCoursesRes = await fetch("/mua-proxy/FrontEnd_Tabian/apiforall/ListSubjectPass", {
@@ -221,20 +221,20 @@ const RequestExam = () => {
 				const countFailOrAbsent = request.filter((row) => row.exam_results === "ไม่ผ่าน" || row.exam_results === "ขาดสอบ").length;
 				if (!request.length) {
 					console.log("ลำดับ : 1 ไม่มีคำร้อง (เปิด)");
-					setLatestRequest(false);
+					setIsAddButtonDisabled(false);
 				} else if (countFailOrAbsent > 2) {
 					console.log("ลำดับ : 2 ไม่ผ่านเกิน 3 ครั้ง (ปิด)");
-					setLatestRequest(true);
+					setIsAddButtonDisabled(true);
 					throw new Error("สอบไม่ผ่านเกิน 3 ครั้ง");
 				} else if (selectedTerm === request[0].term) {
 					console.log("ลำดับ : 3 เทอมนี้ลงแล้ว (ปิด)");
-					setLatestRequest(true);
+					setIsAddButtonDisabled(true);
 				} else if (request[0].exam_results === "ไม่ผ่าน" || request[0].exam_results === "ขาดสอบ") {
 					console.log("ลำดับ : 4 รอบที่แล้วไม่ผ่าน (เปิด)");
-					setLatestRequest(false);
+					setIsAddButtonDisabled(false);
 				} else {
 					console.log("ลำดับ : 5 (ปิด)");
-					setLatestRequest(true);
+					setIsAddButtonDisabled(true);
 				}
 			} catch (e) {
 				notify("error", e.message, 10000);
@@ -280,7 +280,7 @@ const RequestExam = () => {
 
 			setOpenAdd(false);
 			setRequest((prev) => [...prev, { ...requestData.data, ...form.values }]);
-			/* setLatestRequest(true); */
+			/* setIsAddButtonDisabled(true); */
 		} catch (e) {
 			notify("error", e.message);
 			console.error("Error fetching addRequestExam:", e);
@@ -499,7 +499,7 @@ const RequestExam = () => {
 				</Box>
 				<Box>
 					{role === "student" && (
-						<Button onClick={() => handleOpenAdd()} disabled={openKQ === false || latestRequest}>
+						<Button onClick={() => handleOpenAdd()} disabled={openKQ === false || isAddButtonDisabled}>
 							เพิ่มคำร้อง
 						</Button>
 					)}

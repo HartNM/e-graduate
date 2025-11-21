@@ -36,6 +36,11 @@ const theme = createTheme({
 		}),
 		Select: Select.extend({
 			styles: { input: { color: "black" } },
+			defaultProps: {
+				comboboxProps: {
+					transitionProps: { transition: "pop", duration: 200 },
+				},
+			},
 		}),
 		ScrollArea: ScrollArea.extend({
 			styles: { viewport: { padding: 0 } },

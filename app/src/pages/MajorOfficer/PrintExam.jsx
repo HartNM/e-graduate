@@ -28,7 +28,7 @@ const PrintExam = () => {
 				const termInfodata = await termInfoReq.json();
 				if (!termInfoReq.ok) throw new Error(termInfodata.message);
 				setTerm(termInfodata.map((item) => item.term));
-				console.log(termInfodata); /*  */
+				console.log(termInfodata);
 
 				const today = new Date();
 				let currentTerm = termInfodata.find((item) => {
