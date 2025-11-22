@@ -38,7 +38,7 @@ const theme = createTheme({
 			styles: { input: { color: "black" } },
 			defaultProps: {
 				comboboxProps: {
-					transitionProps: { transition: "pop", duration: 200 },
+					transitionProps: { transition: "pop", duration: 200 }, 
 				},
 			},
 		}),
