@@ -24,8 +24,7 @@ jobs:
       - name: Create .env for Production
         working-directory: ./app
         run: |
-          # เขียนค่า IP ของ Server ลงไปในไฟล์ .env
-          echo "VITE_API_URL=${{ secrets.SERVER_IP }}" > .env
+          Set-Content -Path .env -Value "VITE_API_URL=${{ secrets.SERVER_IP }}" -Encoding UTF8
 
       - name: Build Frontend
         working-directory: ./app
@@ -33,13 +32,9 @@ jobs:
 
       - name: Deploy Frontend to Nginx
         run: |
-          # ลบไฟล์เก่าใน Nginx html ออกก่อน (ยกเว้นบางไฟล์ถ้าจำเป็น)
           Remove-Item -Path "C:\Program Files\nginx\html\*" -Recurse -Force -ErrorAction SilentlyContinue
 
-          # ก๊อปปี้ไฟล์จาก folder 'dist' ไปที่ Nginx
           Copy-Item -Path ".\app\dist\*" -Destination "C:\Program Files\nginx\html" -Recurse -Force
-
-          Write-Host "Frontend Deployed Successfully!"
 
       # ---------------------------------------------------------
       # ส่วนของ Backend (Server) -> รันด้วย PM2
@@ -48,20 +43,19 @@ jobs:
       #  working-directory: ./server
       #  run: npm install
 
-      # สร้างไฟล์ .env (ถ้าใช้วิธี GitHub Secrets) หรือข้ามส่วนนี้ถ้าคุณวางไฟล์ .env ไว้เองแล้ว
       - name: Create Backend .env
         working-directory: ./server
         run: |
-          # สร้างไฟล์ .env สำหรับ Backend โดยดึงค่าจาก Secrets
-          echo "PORT=8080" > .env
-          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
-          echo "USER=${{ secrets.DB_USER }}" >> .env
-          echo "PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-          echo "SERVER=${{ secrets.DB_SERVER }}" >> .env
-          echo "DATABASE=${{ secrets.DB_NAME }}" >> .env
+          $envContent = @"
+          PORT=8080
+          SECRET_KEY=${{ secrets.SECRET_KEY }}
+          USER=${{ secrets.DB_USER }}
+          PASSWORD=${{ secrets.DB_PASSWORD }}
+          SERVER=${{ secrets.DB_SERVER }}
+          DATABASE=${{ secrets.DB_NAME }}
+          "@
 
-          # เช็คว่าไฟล์ถูกสร้างจริง (แต่จะไม่โชว์รหัสผ่านออกมา)
-          Write-Host "Backend .env created successfully."
+          Set-Content -Path .env -Value $envContent -Encoding UTF8
 
       #- name: Restart Backend API
       #  working-directory: ./server
