@@ -10,7 +10,7 @@ jobs:
     runs-on: self-hosted # รันบน Windows Server ของคุณ
 
     steps:
-      # 1. ดึงโค้ดล่าสุดมาที่เครื่อง Server (ในโฟลเดอร์ของ Runner)
+      # ดึงโค้ดล่าสุดมาที่เครื่อง Server (ในโฟลเดอร์ของ Runner)
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -20,6 +20,12 @@ jobs:
       - name: Install Frontend Dependencies
         working-directory: ./app
         run: npm install
+
+      - name: Create .env for Production
+        working-directory: ./app
+        run: |
+          # เขียนค่า IP ของ Server ลงไปในไฟล์ .env
+          echo "VITE_API_URL=${{ secrets.SERVER_IP }}" > .env
 
       - name: Build Frontend
         working-directory: ./app
@@ -43,14 +49,22 @@ jobs:
       #  run: npm install
 
       # สร้างไฟล์ .env (ถ้าใช้วิธี GitHub Secrets) หรือข้ามส่วนนี้ถ้าคุณวางไฟล์ .env ไว้เองแล้ว
-      # - name: Create .env file
-      #   working-directory: ./server
-      #   run: |
-      #     echo "${{ secrets.BACKEND_ENV }}" > .env
+      - name: Create Backend .env
+        working-directory: ./server
+        run: |
+          # สร้างไฟล์ .env สำหรับ Backend โดยดึงค่าจาก Secrets
+          echo "PORT=8080" > .env
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+          echo "USER=${{ secrets.DB_USER }}" >> .env
+          echo "PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+          echo "SERVER=${{ secrets.DB_SERVER }}" >> .env
+          echo "DATABASE=${{ secrets.DB_NAME }}" >> .env
+
+          # เช็คว่าไฟล์ถูกสร้างจริง (แต่จะไม่โชว์รหัสผ่านออกมา)
+          Write-Host "Backend .env created successfully."
 
       #- name: Restart Backend API
       #  working-directory: ./server
       #  run: |
-      # สั่ง PM2 ให้ restart process ที่ชื่อ 'egraduate-api'
-      # (คุณต้องไปตั้งชื่อนี้ในขั้นตอนที่ 3)
+      #    # Restart process ชื่อ egraduate-api และให้อ่านค่า env ใหม่
       #    pm2 restart egraduate-api --update-env

@@ -11,12 +11,12 @@ const Student = () => {
 	useEffect(() => {
 		(async () => {
 			try {
-				const res = await fetch(`${BASE_URL}/api/checkStudent`, {
+				const newMenu = [];
+				/* const res = await fetch(`${BASE_URL}/api/checkStudent`, {
 					method: "GET",
 					headers: { Authorization: `Bearer ${token}` },
 				});
 				const data = await res.json();
-				const newMenu = [];
 				newMenu.push({ label: `คำร้องขอสอบ${data.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, icon: IconClipboardText, links: "/student/RequestExam" });
 				if (data.RequestExamCancel) {
 					newMenu.push({ label: `คำร้องขอยกเลิกการเข้าสอบ${data.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, icon: IconClipboardX, links: "/student/RequestExamCancel" });
@@ -25,18 +25,15 @@ const Student = () => {
 				if (data.RequestThesisProposal) {
 					newMenu.push({ label: `คำร้องขอสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconReport, links: "/student/RequestThesisProposal" });
 				}
-				/* if (data.PostponeProposalExam) {
-					data.education_level === "ปริญญาเอก" && newMenu.push({ label: `คำร้องขอเลื่อนสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconCalendarClock, links: "/student/PostponeProposalExam" });
-				} */
 				if (data.RequestThesisDefense) {
 					newMenu.push({ label: `คำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconFileText, links: "/student/RequestThesisDefense" });
-				}
-				/* if (data.PostponeDefenseExam) {
-					newMenu.push({ label: `คำร้องขอเลื่อนสอบวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconCalendarClock, links: "/student/PostponeDefenseExam" });
 				} */
-				/* if (data.RequestGraduation) {
-					newMenu.push({ label: "คำร้องขอสำเร็จการศึกษา", icon: IconSchool, links: "/student/RequestGraduation" });
-				} */
+				newMenu.push({ label: `คำร้องขอสอบ${data.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, icon: IconClipboardText, links: "/student/RequestExam" });
+				newMenu.push({ label: `คำร้องขอยกเลิกการเข้าสอบ${data.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, icon: IconClipboardX, links: "/student/RequestExamCancel" });
+				data.education_level === "ปริญญาเอก" && newMenu.push({ label: "คำร้องขอทดสอบความรู้ทางภาษาอังกฤษ", icon: IconCertificate, links: "/student/RequestEngTest" });
+				newMenu.push({ label: `คำร้องขอสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconReport, links: "/student/RequestThesisProposal" });
+				newMenu.push({ label: `คำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconFileText, links: "/student/RequestThesisDefense" });
+
 				setMenu(newMenu);
 			} catch (e) {
 				console.error("Error fetching checkStudent:", e);
