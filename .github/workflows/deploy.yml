@@ -2,7 +2,7 @@ name: Deploy E-Graduate System
 
 on:
   push:
-    branches: ["master"] # ทำงานเมื่อมีการ push เข้า branch main
+    branches: ["master"] # ทำงานเมื่อมีการ push เข้า branch master
   workflow_dispatch:
 
 jobs:
