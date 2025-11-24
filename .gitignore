@@ -1,9 +1,7 @@
 # Ignore node_modules ทั้ง frontend และ backend
 app/node_modules/
-server/node_modules/
-
-# Build output React
 app/dist/
+server/node_modules/
 
 # Logs
 **/*.log
@@ -30,7 +28,5 @@ Thumbs.db
 *.sln
 
 # Optional: If using dist/ for backend builds
-server/dist/
 server/sc.js
 server/scaddrq.js
-server/uploads
