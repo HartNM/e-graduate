@@ -1,4 +1,4 @@
-//คำร้องขอยกเลิกประมวลความรู้/วัดคุณสมบัติ
+//คำร้องขอยกเลิกประมวลความรู้/วัดคุณสมบัติ 
 import { useState, useEffect, useMemo } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
 import ModalAddCancel from "../component/Modal/ModalAddCancel";

@@ -39,9 +39,9 @@ jobs:
       # ---------------------------------------------------------
       # ส่วนของ Backend (Server) -> รันด้วย PM2
       # ---------------------------------------------------------
-      #- name: Install Backend Dependencies
-      #  working-directory: ./server
-      #  run: npm install
+      - name: Install Backend Dependencies
+        working-directory: ./server
+        run: npm install
 
       - name: Create Backend .env
         working-directory: ./server
@@ -53,12 +53,13 @@ jobs:
           PASSWORD=${{ secrets.DB_PASSWORD }}
           SERVER=${{ secrets.DB_SERVER }}
           DATABASE=${{ secrets.DB_NAME }}
+          VITE_API_URL=${{ secrets.SERVER_IP }}
           "@
 
           Set-Content -Path .env -Value $envContent -Encoding UTF8
 
-      #- name: Restart Backend API
-      #  working-directory: ./server
-      #  run: |
-      #    # Restart process ชื่อ egraduate-api และให้อ่านค่า env ใหม่
-      #    pm2 restart egraduate-api --update-env
+      - name: Restart Backend API
+        working-directory: ./server
+        run: |
+          # Restart process ชื่อ egraduate-api และให้อ่านค่า env ใหม่
+          pm2 reload backend-api --update-env

@@ -10,7 +10,7 @@ const NotFound = () => {
 			<Title order={1} style={{ fontSize: "48px", marginBottom: "16px" }}>
 				404 - Page Not Found
 			</Title>
-			<Text size="lg" color="dimmed">
+			<Text size="lg" c="dimmed">
 				ขออภัย ไม่พบหน้าที่คุณกำลังค้นหา
 			</Text>
 			<Group justify="center" mt="xl">

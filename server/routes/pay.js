@@ -133,18 +133,17 @@ router.get("/getpaydata", async (req, res) => {
 					extraParams += `&NameOther1_${i}=-`;
 				}
 
-				// สร้าง URL แบบ Template Literal (ภาษาไทยจะยังคงเป็นภาษาไทย ไม่ถูกแปลงเป็น %)
 				const url =
-					`http://localhost:8080/api/paytest` +
+					`${BASE_URL}/api/paytest` +
 					`?center=-` +
-					`&citizent=${student.citizen_id || ""}` +
-					`&_POST['orderRef1']=${item.student_id}` +
-					`&_POST['name']=${student.fname || ""}` +
-					`&_POST['lname']=${student.lname || ""}` +
-					`&_POST['amount']=${item.receipt_pay}` +
+					`&citizent=${student.citizen_id || "-"}` +
+					`&_POST['orderRef1']=${item.student_id || "-"}` +
+					`&_POST['name']=${student.fname || "-"}` +
+					`&_POST['lname']=${student.lname || "-"}` +
+					`&_POST['amount']=${item.receipt_pay || "-"}` +
 					`&add1=-&add2=-&add3=-` +
-					`&NameOther1=ชำระค่า${item.request_type}` +
-					`&NameOther1_2=ค่า${item.request_type} ${item.receipt_pay} บาท` +
+					`&NameOther1=ชำระค่า${item.request_type || "-"}` +
+					`&NameOther1_2=ค่า${item.request_type || "-"} ${item.receipt_pay || "-"} บาท` +
 					extraParams;
 				return { url };
 			})
