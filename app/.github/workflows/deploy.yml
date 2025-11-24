@@ -2,7 +2,8 @@ name: Deploy E-Graduate System
 
 on:
   push:
-    branches: ["main"] # ทำงานเมื่อมีการ push เข้า branch main
+    branches: ["master"] # ทำงานเมื่อมีการ push เข้า branch main
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -50,6 +51,6 @@ jobs:
       #- name: Restart Backend API
       #  working-directory: ./server
       #  run: |
-          # สั่ง PM2 ให้ restart process ที่ชื่อ 'egraduate-api'
-          # (คุณต้องไปตั้งชื่อนี้ในขั้นตอนที่ 3)
+      # สั่ง PM2 ให้ restart process ที่ชื่อ 'egraduate-api'
+      # (คุณต้องไปตั้งชื่อนี้ในขั้นตอนที่ 3)
       #    pm2 restart egraduate-api --update-env
