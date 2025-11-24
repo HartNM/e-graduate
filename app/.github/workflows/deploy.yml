@@ -1,0 +1,55 @@
+name: Deploy E-Graduate System
+
+on:
+  push:
+    branches: ["main"] # ทำงานเมื่อมีการ push เข้า branch main
+
+jobs:
+  deploy:
+    runs-on: self-hosted # รันบน Windows Server ของคุณ
+
+    steps:
+      # 1. ดึงโค้ดล่าสุดมาที่เครื่อง Server (ในโฟลเดอร์ของ Runner)
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # ---------------------------------------------------------
+      # ส่วนของ Frontend (App) -> ไปที่ Nginx
+      # ---------------------------------------------------------
+      - name: Install Frontend Dependencies
+        working-directory: ./app
+        run: npm install
+
+      - name: Build Frontend
+        working-directory: ./app
+        run: npm run build
+
+      - name: Deploy Frontend to Nginx
+        run: |
+          # ลบไฟล์เก่าใน Nginx html ออกก่อน (ยกเว้นบางไฟล์ถ้าจำเป็น)
+          Remove-Item -Path "C:\Program Files\nginx\html\*" -Recurse -Force -ErrorAction SilentlyContinue
+
+          # ก๊อปปี้ไฟล์จาก folder 'dist' ไปที่ Nginx
+          Copy-Item -Path ".\app\dist\*" -Destination "C:\Program Files\nginx\html" -Recurse -Force
+
+          Write-Host "Frontend Deployed Successfully!"
+
+      # ---------------------------------------------------------
+      # ส่วนของ Backend (Server) -> รันด้วย PM2
+      # ---------------------------------------------------------
+      #- name: Install Backend Dependencies
+      #  working-directory: ./server
+      #  run: npm install
+
+      # สร้างไฟล์ .env (ถ้าใช้วิธี GitHub Secrets) หรือข้ามส่วนนี้ถ้าคุณวางไฟล์ .env ไว้เองแล้ว
+      # - name: Create .env file
+      #   working-directory: ./server
+      #   run: |
+      #     echo "${{ secrets.BACKEND_ENV }}" > .env
+
+      #- name: Restart Backend API
+      #  working-directory: ./server
+      #  run: |
+          # สั่ง PM2 ให้ restart process ที่ชื่อ 'egraduate-api'
+          # (คุณต้องไปตั้งชื่อนี้ในขั้นตอนที่ 3)
+      #    pm2 restart egraduate-api --update-env

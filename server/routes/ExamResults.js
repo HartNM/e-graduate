@@ -25,7 +25,7 @@ router.post("/AddExamResults", authenticateToken, async (req, res) => {
 });
 
 router.post("/AllExamResults", authenticateToken, async (req, res) => {
-	const { user_id , major_ids} = req.user;
+	const { user_id, major_ids } = req.user;
 	try {
 		const { recordset: exams } = await (await poolPromise).request().input("user_id", user_id).input("major_ids_str", major_ids.join(",")).query(`
 			SELECT study_group_id, student_id, exam_results, term, request_type
