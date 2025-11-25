@@ -8,9 +8,9 @@ app.use(cors({ /* origin: "http://localhost:3000", */ credentials: true }));
 const PORT = process.env.PORT;
 
 const externalApiStudent = require("./externalApi/student");
-app.use("/externalApi", externalApiStudent);
+app.use("/api", externalApiStudent);
 const externalApiUsers = require("./externalApi/users");
-app.use("/externalApi", externalApiUsers);
+app.use("/api", externalApiUsers);
 const loginRoutes = require("./routes/login");
 app.use("/api", loginRoutes);
 const profileRoutes = require("./routes/profile");

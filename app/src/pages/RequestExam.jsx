@@ -137,7 +137,7 @@ const RequestExam = () => {
 				}
 			} catch (e) {
 				console.error("Error fetching checkOpenKQ:", e);
-				setOpenKQ(false); // Error ให้ถือว่าปิด
+				setOpenKQ(false); // Error ให้ถือว่าปิด 
 			}
 		};
 		fetchOpenStatus();

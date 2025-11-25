@@ -6,7 +6,7 @@
 	border-bottom: 1px solid var(--app-shell-border-color);
 }
 
-.user:hover {
+/* .user:hover {
 	background-color: light-dark(#e9ecef, #333333);
 	color: light-dark(black, white);
-}
+} */

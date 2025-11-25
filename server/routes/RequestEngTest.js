@@ -55,7 +55,7 @@ router.post("/allRequestEngTest", authenticateToken, async (req, res) => {
 			result.recordset.map(async (item) => {
 				let studentInfo = null;
 				try {
-					const studentRes = await axios.get(`${BASE_URL}/externalApi/student/${item.student_id}`);
+					const studentRes = await axios.get(`${BASE_URL}/api/student/${item.student_id}`);
 					studentInfo = studentRes.data;
 				} catch (err) {
 					console.warn(`ไม่สามารถดึงข้อมูลนักศึกษา ${item.student_id}`);

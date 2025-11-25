@@ -88,7 +88,7 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 			result.recordset.map(async (item) => {
 				let student;
 				try {
-					const studentRes = await axios.get(`${BASE_URL}/externalApi/student/${item.student_id}`);
+					const studentRes = await axios.get(`${BASE_URL}/api/student/${item.student_id}`);
 					student = studentRes.data;
 				} catch (err) {
 					console.warn(`ไม่สามารถดึงข้อมูลนักศึกษา ${item.student_id}`);

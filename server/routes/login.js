@@ -33,7 +33,7 @@ router.post("/login", async (req, res) => {
 
 	if (username.length == 9) {
 		try {
-			const request = await axios.get(`${BASE_URL}/externalApi/student/${username}`);
+			const request = await axios.get(`${BASE_URL}/api/student/${username}`);
 			const result = request.data;
 			if (result.student_name === "undefined undefined" || (result.education_level !== "ปริญญาโท" && result.education_level !== "ปริญญาเอก") /* || result.BDATE !== password */) {
 				return res.status(401).json({ message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" });

@@ -48,7 +48,7 @@ router.post("/allExamEligibleListPrint", authenticateToken, async (req, res) => 
 			});
 		});
 		const allStudentIds = Object.values(output).flatMap((group) => group.map((s) => s.student_id));
-		const promises = allStudentIds.map((studentId) => axios.get(`${BASE_URL}/externalApi/student/${studentId}`));
+		const promises = allStudentIds.map((studentId) => axios.get(`${BASE_URL}/api/student/${studentId}`));
 		const studentResults = await Promise.all(promises);
 		const studentMap = {};
 		studentResults.forEach((res) => {

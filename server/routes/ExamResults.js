@@ -34,7 +34,7 @@ router.post("/AllExamResults", authenticateToken, async (req, res) => {
     	`);
 		const examsWithStudentData = await Promise.all(
 			exams.map(async ({ student_id, ...rest }) => {
-				const { student_name, major_name } = (await axios.get(`${BASE_URL}/externalApi/student/${student_id}`)).data;
+				const { student_name, major_name } = (await axios.get(`${BASE_URL}/api/student/${student_id}`)).data;
 				return { ...rest, student_id, name: student_name, major_name };
 			})
 		);
@@ -54,7 +54,7 @@ router.post("/allExamResultsPrint", authenticateToken, async (req, res) => {
 		`);
 		const examsWithStudentData = await Promise.all(
 			exams.map(async ({ student_id, ...rest }) => {
-				const { student_name, major_name } = (await axios.get(`${BASE_URL}/externalApi/student/${student_id}`)).data;
+				const { student_name, major_name } = (await axios.get(`${BASE_URL}/api/student/${student_id}`)).data;
 				return { ...rest, student_id, name: student_name, major_name };
 			})
 		);

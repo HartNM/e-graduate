@@ -10,7 +10,7 @@ const BASE_URL = process.env.VITE_API_URL;
 	if (reference_id.length == 9) {
 		// นักศึกษา
 		try {
-			const studentRes = await axios.get(`${BASE_URL}/externalApi/student/${reference_id}`);
+			const studentRes = await axios.get(`${BASE_URL}/api/student/${reference_id}`);
 			const studentInfo = studentRes.data;
 			return res.status(200).json({
 				name: studentInfo.student_name,
@@ -86,7 +86,7 @@ const BASE_URL = process.env.VITE_API_URL;
 	const { user_id } = req.user;
 	if (user_id.length == 9) {
 		try {
-			const studentRes = await axios.get(`${BASE_URL}/externalApi/student/${user_id}`);
+			const studentRes = await axios.get(`${BASE_URL}/api/student/${user_id}`);
 			const studentInfo = studentRes.data;
 			return res.status(200).json({
 				name: studentInfo.student_name,
@@ -116,7 +116,7 @@ const BASE_URL = process.env.VITE_API_URL;
 router.get("/studentInfo", authenticateToken, async (req, res) => {
 	const { user_id } = req.user;
 	try {
-		const response = await axios.get(`${BASE_URL}/externalApi/student/${user_id}`);
+		const response = await axios.get(`${BASE_URL}/api/student/${user_id}`);
 		return res.status(200).json(response.data);
 	} catch (err) {
 		console.error("เกิดข้อผิดพลาดระหว่างเรียกข้อมูลนักศึกษา:", err);
@@ -146,7 +146,7 @@ router.get("/checkStudent", authenticateToken, async (req, res) => {
 	const { user_id } = req.user;
 	try {
 		const pool = await poolPromise;
-		const student = await axios.get(`${BASE_URL}/externalApi/student/${user_id}`);
+		const student = await axios.get(`${BASE_URL}/api/student/${user_id}`);
 		/* const request_exam = await pool.request().input("user_id", user_id).query(`SELECT status, exam_results FROM request_exam WHERE student_id = @user_id ORDER BY request_exam_id DESC`);
 		const latest_request_exam = request_exam.recordset[0] || null;
 

@@ -122,7 +122,7 @@ router.get("/getpaydata", async (req, res) => {
 			recordset.map(async (item) => {
 				let student = {};
 				try {
-					const { data } = await axios.get(`${BASE_URL}/externalApi/student/${item.student_id}`);
+					const { data } = await axios.get(`${BASE_URL}/api/student/${item.student_id}`);
 					student = data;
 				} catch (e) {
 					console.warn(`ไม่สามารถดึงข้อมูลนักศึกษา ${item.student_id}`);
