@@ -104,7 +104,7 @@ const RequestExam = () => {
 				}
 
 				if (!currentTerm && termInfodata.length > 0) {
-					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก close_date
+					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก close_date 
 					currentTerm = [...termInfodata].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
 				}
 				if (currentTerm) {
