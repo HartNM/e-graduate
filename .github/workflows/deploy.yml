@@ -10,6 +10,13 @@ jobs:
     runs-on: self-hosted # รันบน Windows Server ของคุณ
 
     steps:
+      - name: Stop Backend API
+        shell: powershell
+        run: |
+          pm2 stop backend-api
+          Start-Sleep -Seconds 3
+
+
       # ดึงโค้ดล่าสุดมาที่เครื่อง Server (ในโฟลเดอร์ของ Runner)
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -58,8 +65,7 @@ jobs:
 
           Set-Content -Path .env -Value $envContent -Encoding UTF8
 
-      - name: Restart Backend API
+      - name: start Backend API
         working-directory: ./server
         run: |
-          # Restart process ชื่อ egraduate-api และให้อ่านค่า env ใหม่
-          pm2 reload backend-api --update-env
+          pm2 start backend-api
