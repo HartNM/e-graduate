@@ -1,4 +1,4 @@
-//คำร้องขอสอบประมวลความรู้/วัดคุณสมบัติ 
+//คำร้องขอสอบประมวลความรู้/วัดคุณสมบัติ
 import { useState, useEffect, useMemo } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
 import { useParams } from "react-router-dom";
@@ -10,6 +10,7 @@ import ModalCheckCourse from "../component/Modal/ModalCheckCourse";
 import Pdfg01 from "../component/PDF/Pdfg01";
 import { useForm } from "@mantine/form";
 import { jwtDecode } from "jwt-decode";
+import { PDFDocument } from "pdf-lib";
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 const RequestExam = () => {
@@ -104,7 +105,7 @@ const RequestExam = () => {
 				}
 
 				if (!currentTerm && termInfodata.length > 0) {
-					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก close_date 
+					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก close_date
 					currentTerm = [...termInfodata].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
 				}
 				if (currentTerm) {
@@ -137,7 +138,7 @@ const RequestExam = () => {
 				}
 			} catch (e) {
 				console.error("Error fetching checkOpenKQ:", e);
-				setOpenKQ(false); // Error ให้ถือว่าปิด 
+				setOpenKQ(false); // Error ให้ถือว่าปิด
 			}
 		};
 		fetchOpenStatus();
@@ -334,7 +335,7 @@ const RequestExam = () => {
 	};
 
 	const printReceipt = async (item) => {
-		try {
+		/* try {
 			const requestRes = await fetch(`${BASE_URL}/api/printReceipt`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -349,6 +350,47 @@ const RequestExam = () => {
 		} catch (e) {
 			notify("error", e.message);
 			console.error("Error fetching payRequestExam:", e);
+		} */
+	
+		try {
+			// 1. กำหนด URL ของไฟล์ทั้งสอง
+			const receiptUrl = `/pdf/g01.pdf`;
+			let announceUrl;
+			if (item.education_level === "ปริญญาโท") {
+				announceUrl = `/pdf/ระเบียบ-การรับจ่ายเงิน ป.โท_61.pdf`;
+			} else {
+				announceUrl = `/pdf/ประกาศการเก็บเงินป.เอก_2557.pdf`;
+			}
+
+			// 2. โหลดไฟล์ PDF ทั้งสองเข้ามาเป็น ArrayBuffer (โหลดข้อมูลไฟล์)
+			const receiptBytes = await fetch(receiptUrl).then((res) => res.arrayBuffer());
+			const announceBytes = await fetch(announceUrl).then((res) => res.arrayBuffer());
+
+			// 3. สร้าง PDF เอกสารใหม่ที่ว่างเปล่า
+			const mergedPdf = await PDFDocument.create();
+
+			// 4. โหลด PDF ต้นฉบับเพื่อเตรียมคัดลอก
+			const pdfA = await PDFDocument.load(receiptBytes);
+			const pdfB = await PDFDocument.load(announceBytes);
+
+			// 5. คัดลอกหน้าจากไฟล์แรก (Receipt) ไปใส่ไฟล์ใหม่
+			const copiedPagesA = await mergedPdf.copyPages(pdfA, pdfA.getPageIndices());
+			copiedPagesA.forEach((page) => mergedPdf.addPage(page));
+
+			// 6. คัดลอกหน้าจากไฟล์ที่สอง (Announce) ไปต่อท้าย
+			const copiedPagesB = await mergedPdf.copyPages(pdfB, pdfB.getPageIndices());
+			copiedPagesB.forEach((page) => mergedPdf.addPage(page));
+
+			// 7. เซฟไฟล์ใหม่เป็น Blob และสร้าง URL
+			const pdfBytes = await mergedPdf.save();
+			const blob = new Blob([pdfBytes], { type: "application/pdf" });
+			const mergedUrl = URL.createObjectURL(blob);
+
+			// 8. เปิดไฟล์ที่รวมเสร็จแล้วใน Tab ใหม่
+			window.open(mergedUrl, "_blank");
+		} catch (error) {
+			console.error("Error merging PDFs:", error);
+			alert("ไม่สามารถรวมไฟล์ PDF ได้");
 		}
 	};
 
@@ -430,7 +472,6 @@ const RequestExam = () => {
 									color="green"
 									onClick={() => {
 										printReceipt(item);
-										console.log("asd");
 									}}
 								>
 									พิมพ์ใบเสร็จ

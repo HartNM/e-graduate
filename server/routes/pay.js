@@ -113,12 +113,28 @@ router.get("/paytest", async (req, res) => {
 	}
 });
 
-router.get("/getpaydata", async (req, res) => {
+router.get("/getPayData", async (req, res) => {
+	const student_id = req.query.student_id;
+	console.log("student_id = ", student_id);
 	try {
 		const pool = await poolPromise;
-		const { recordset } = await pool.request().query(`SELECT * FROM request_exam WHERE status = 5`);
+		const request = pool.request();
+		
+		let sql = `SELECT * FROM request_exam WHERE status = 5`;
 
-		const dataWithUrl = await Promise.all(
+		if (student_id) {
+			request.input("id", student_id);
+			sql += ` AND student_id = @id`;
+		}
+
+		const { recordset } = await request.query(sql);
+
+		if (!recordset || recordset.length === 0) {
+			console.log("ไม่พบข้อมูลรายการชำระเงิน");
+			return res.status(200).json({ message: "ไม่พบข้อมูลรายการที่ค้นหา" });
+		}
+
+		const jsonArray = await Promise.all(
 			recordset.map(async (item) => {
 				let student = {};
 				try {
@@ -127,29 +143,27 @@ router.get("/getpaydata", async (req, res) => {
 				} catch (e) {
 					console.warn(`ไม่สามารถดึงข้อมูลนักศึกษา ${item.student_id}`);
 				}
-
-				let extraParams = "";
+				const paymentObj = {
+					center: "-",
+					citizent: student.citizen_id || "-",
+					orderRef1: item.student_id || "-",
+					name: student.fname || "-",
+					lname: student.lname || "-",
+					amount: item.receipt_pay || "-",
+					add1: "-",
+					add2: "-",
+					add3: "-",
+					NameOther1: `ชำระค่า${item.request_type || "-"}`,
+					NameOther1_2: `ค่า${item.request_type || "-"} ${item.receipt_pay || "-"} บาท`,
+				};
 				for (let i = 3; i <= 16; i++) {
-					extraParams += `&NameOther1_${i}=-`;
+					paymentObj[`NameOther1_${i}`] = "-";
 				}
-
-				const url =
-					`${BASE_URL}/api/paytest` +
-					`?center=-` +
-					`&citizent=${student.citizen_id || "-"}` +
-					`&_POST['orderRef1']=${item.student_id || "-"}` +
-					`&_POST['name']=${student.fname || "-"}` +
-					`&_POST['lname']=${student.lname || "-"}` +
-					`&_POST['amount']=${item.receipt_pay || "-"}` +
-					`&add1=-&add2=-&add3=-` +
-					`&NameOther1=ชำระค่า${item.request_type || "-"}` +
-					`&NameOther1_2=ค่า${item.request_type || "-"} ${item.receipt_pay || "-"} บาท` +
-					extraParams;
-				return { url };
+				return paymentObj;
 			})
 		);
 
-		res.status(200).json(dataWithUrl);
+		res.status(200).json(jsonArray);
 	} catch (error) {
 		console.error("Error:", error);
 		res.status(500).json({ message: "Error processing data." });
