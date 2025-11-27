@@ -10,8 +10,9 @@ import ModalCheckCourse from "../component/Modal/ModalCheckCourse";
 import Pdfg01 from "../component/PDF/Pdfg01";
 import { useForm } from "@mantine/form";
 import { jwtDecode } from "jwt-decode";
-import { PDFDocument } from "pdf-lib";
+
 const BASE_URL = import.meta.env.VITE_API_URL;
+import PrintReceipt from "../component/ิbutton/printReceipt";
 
 const RequestExam = () => {
 	const token = localStorage.getItem("token");
@@ -73,7 +74,6 @@ const RequestExam = () => {
 				const termInfodata = await termInfoReq.json();
 				if (!termInfoReq.ok) throw new Error(termInfodata.message);
 				setTerm(termInfodata.map((item) => item.term));
-				console.log(termInfodata);
 
 				const today = new Date();
 				// หา term ที่อยู่ในช่วง open-close
@@ -86,20 +86,16 @@ const RequestExam = () => {
 				if (currentTerm) {
 					setActualCurrentTerm(currentTerm.term);
 					console.log("เทอมปัจจุบัน", currentTerm.term);
-
 					const options = {
-						day: "2-digit", // วันที่ 2 หลัก
-						month: "2-digit", // เดือน 2 หลัก
-						year: "numeric", // ปี
-						calendar: "buddhist", // ใช้ปฏิทินพุทธ (พ.ศ.)
-						numberingSystem: "latn", // ใช้เลขอารบิก
-						timeZone: "Asia/Bangkok", // ระบุไทม์โซนเพื่อให้ได้วันที่ถูกต้อง
+						day: "2-digit",
+						month: "2-digit",
+						year: "numeric",
+						calendar: "buddhist",
+						numberingSystem: "latn",
+						timeZone: "Asia/Bangkok",
 					};
-
 					const formattedDate = new Intl.DateTimeFormat("th-TH", options).format(new Date(currentTerm.KQ_close_date));
-
 					setPaymentCloseDate(formattedDate);
-					console.log("วันสุดท้ายชำระค่าธรรมเนียม", formattedDate);
 				} else {
 					setActualCurrentTerm("");
 				}
@@ -334,66 +330,6 @@ const RequestExam = () => {
 		}
 	};
 
-	const printReceipt = async (item) => {
-		/* try {
-			const requestRes = await fetch(`${BASE_URL}/api/printReceipt`, {
-				method: "POST",
-				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ ...item, amount: education_level === "ปริญญาโท" ? 1000 : 1500 }),
-			});
-			const requestData = await requestRes.json();
-			if (!requestRes.ok) {
-				throw new Error(requestData.message);
-			}
-			notify("success", requestData.message || "สำเร็จ");
-			console.log("ข้อมูลตอบกลับ ", requestData);
-		} catch (e) {
-			notify("error", e.message);
-			console.error("Error fetching payRequestExam:", e);
-		} */
-	
-		try {
-			// 1. กำหนด URL ของไฟล์ทั้งสอง
-			const receiptUrl = `/pdf/g01.pdf`;
-			let announceUrl;
-			if (item.education_level === "ปริญญาโท") {
-				announceUrl = `/pdf/ระเบียบ-การรับจ่ายเงิน ป.โท_61.pdf`;
-			} else {
-				announceUrl = `/pdf/ประกาศการเก็บเงินป.เอก_2557.pdf`;
-			}
-
-			// 2. โหลดไฟล์ PDF ทั้งสองเข้ามาเป็น ArrayBuffer (โหลดข้อมูลไฟล์)
-			const receiptBytes = await fetch(receiptUrl).then((res) => res.arrayBuffer());
-			const announceBytes = await fetch(announceUrl).then((res) => res.arrayBuffer());
-
-			// 3. สร้าง PDF เอกสารใหม่ที่ว่างเปล่า
-			const mergedPdf = await PDFDocument.create();
-
-			// 4. โหลด PDF ต้นฉบับเพื่อเตรียมคัดลอก
-			const pdfA = await PDFDocument.load(receiptBytes);
-			const pdfB = await PDFDocument.load(announceBytes);
-
-			// 5. คัดลอกหน้าจากไฟล์แรก (Receipt) ไปใส่ไฟล์ใหม่
-			const copiedPagesA = await mergedPdf.copyPages(pdfA, pdfA.getPageIndices());
-			copiedPagesA.forEach((page) => mergedPdf.addPage(page));
-
-			// 6. คัดลอกหน้าจากไฟล์ที่สอง (Announce) ไปต่อท้าย
-			const copiedPagesB = await mergedPdf.copyPages(pdfB, pdfB.getPageIndices());
-			copiedPagesB.forEach((page) => mergedPdf.addPage(page));
-
-			// 7. เซฟไฟล์ใหม่เป็น Blob และสร้าง URL
-			const pdfBytes = await mergedPdf.save();
-			const blob = new Blob([pdfBytes], { type: "application/pdf" });
-			const mergedUrl = URL.createObjectURL(blob);
-
-			// 8. เปิดไฟล์ที่รวมเสร็จแล้วใน Tab ใหม่
-			window.open(mergedUrl, "_blank");
-		} catch (error) {
-			console.error("Error merging PDFs:", error);
-			alert("ไม่สามารถรวมไฟล์ PDF ได้");
-		}
-	};
-
 	function sortRequests(data, role) {
 		if (role === "student") return data;
 		return [...data].sort((a, b) => {
@@ -466,17 +402,7 @@ const RequestExam = () => {
 									ชำระค่าธรรมเนียม
 								</Button>
 							)}
-							{item.receipt_vol != null && (
-								<Button
-									size="xs"
-									color="green"
-									onClick={() => {
-										printReceipt(item);
-									}}
-								>
-									พิมพ์ใบเสร็จ
-								</Button>
-							)}
+							{item.receipt_vol != null && <PrintReceipt item={item} />}
 						</>
 					)}
 					<Pdfg01 data={item} showType={item.status == 0 ? undefined : (role === "advisor" && item.status <= 1) || (role === "chairpersons" && item.status <= 2) || (role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />

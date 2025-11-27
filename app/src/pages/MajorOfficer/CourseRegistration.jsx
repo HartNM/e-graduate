@@ -54,7 +54,26 @@ const CourseRegistration = () => {
 				const ListSubjectAll = await fetch("/mua-proxy/FrontEnd_Tabian/apiforall/ListSubjectAll");
 				const subjects = await ListSubjectAll.json();
 
-				const formattedSubjects = subjects.map((item) => ({
+				const uniqueSubjectsMap = new Map();
+
+				subjects.forEach((item) => {
+					if (!uniqueSubjectsMap.has(item.SUBJCODE)) {
+						// ถ้ายังไม่มี ให้เก็บ
+						uniqueSubjectsMap.set(item.SUBJCODE, item);
+					} /* else {
+						// ถ้ามีแล้ว (แสดงว่าเป็นตัวซ้ำ)
+						const existing = uniqueSubjectsMap.get(item.SUBJCODE); // ดึงตัวเก่าออกมาดู
+
+						console.group(`⚠️ พบวิชาซ้ำ: ${item.SUBJCODE}`);
+						console.log("1. ตัวที่ถูกเก็บไว้ (First found):", existing);
+						console.log("2. ตัวที่ซ้ำและถูกข้าม (Duplicate):", item);
+						console.groupEnd();
+					} */
+				});
+
+				const uniqueSubjects = Array.from(uniqueSubjectsMap.values());
+
+				const formattedSubjects = uniqueSubjects.map((item) => ({
 					value: item.SUBJCODE,
 					label: `${item.SUBJCODE} - ${item.SUBJNAME}`,
 				}));
