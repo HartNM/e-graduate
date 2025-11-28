@@ -179,6 +179,7 @@ const RequestExam = () => {
 					const registrationRes = await fetch(`${BASE_URL}/api/allStudyGroupIdCourseRegistration`, {
 						method: "POST",
 						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+						body: JSON.stringify({ usage: 1 }),
 					});
 					const registrationData = await registrationRes.json();
 					if (!registrationRes.ok) throw new Error(registrationData.message);

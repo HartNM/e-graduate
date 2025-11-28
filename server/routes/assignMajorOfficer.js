@@ -4,17 +4,6 @@ const authenticateToken = require("../middleware/authenticateToken");
 const { poolPromise } = require("../db");
 const bcrypt = require("bcrypt");
 
-router.post("/majors", authenticateToken, async (req, res) => {
-	try {
-		const pool = await poolPromise;
-		const majors = await pool.request().query("SELECT * FROM majors");
-		res.status(200).json(majors.recordset);
-	} catch (e) {
-		console.error(e);
-		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
-	}
-});
-
 /* router.post("/addAssignMajorOfficer", authenticateToken, async (req, res) => {
 	const { user_id, name, major_id, password } = req.body;
 	try {

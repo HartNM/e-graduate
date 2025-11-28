@@ -4,18 +4,7 @@ const authenticateToken = require("../middleware/authenticateToken");
 const { poolPromise } = require("../db");
 const bcrypt = require("bcrypt");
 
-router.post("/getMajor_name", authenticateToken, async (req, res) => {
-	const { major_ids } = req.user;
 
-	try {
-		const pool = await poolPromise;
-		const major_name = await pool.request().input("major_id", major_ids[0]).query(`SELECT * FROM majors WHERE major_id = @major_id`);
-		res.status(200).json(major_name.recordset[0]);
-	} catch (err) {
-		console.error("getMajor_name:", err);
-		res.status(500).json({ message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" });
-	}
-});
 
 /* router.post("/allAssignChairpersons", authenticateToken, async (req, res) => {
 	try {

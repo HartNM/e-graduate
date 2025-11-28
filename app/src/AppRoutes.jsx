@@ -23,32 +23,32 @@ const RequestGraduation = lazy(() => import("./pages/RequestGraduation.jsx")); *
 const AssignFinanceOfficer = lazy(() => import("./pages/Admin/AssignFinanceOfficer.jsx"));
 const AssignRegistrarOfficer = lazy(() => import("./pages/Admin/AssignRegistrarOfficer.jsx")); */
 
+//------------------------------------------------------------------------------------------------------------------
 const Chairpersons = lazy(() => import("./pages/chairpersons/Chairpersons.jsx"));
-
+//------------------------------------------------------------------------------------------------------------------
 const Advisor = lazy(() => import("./pages/Advisor/Advisor.jsx"));
-
+//------------------------------------------------------------------------------------------------------------------
 const Research_advisor = lazy(() => import("./pages/research_advisor/research_advisor.jsx"));
-
+//------------------------------------------------------------------------------------------------------------------
 const RegistrarOfficer = lazy(() => import("./pages/RegistrarOfficer/RegistrarOfficer.jsx"));
+const CourseRegistrationR = lazy(() => import("./pages/RegistrarOfficer/CourseRegistrationR.jsx"));
 const ExamScheduleSetupPage = lazy(() => import("./pages/RegistrarOfficer/ExamScheduleSetupPage.jsx"));
 const AssignMajorOfficer = lazy(() => import("./pages/RegistrarOfficer/AssignMajorOfficer.jsx"));
 const ExamResultsPrint = lazy(() => import("./pages/RegistrarOfficer/ExamResultsPrint.jsx"));
 const ExamProposalResultsPrint = lazy(() => import("./pages/RegistrarOfficer/ExamProposalResultsPrint.jsx"));
 const ExamDefenseResultsPrint = lazy(() => import("./pages/RegistrarOfficer/ExamDefenseResultsPrint.jsx"));
-
+//------------------------------------------------------------------------------------------------------------------
 const Student = lazy(() => import("./pages/student/Student.jsx"));
-
+//------------------------------------------------------------------------------------------------------------------
 const Dean = lazy(() => import("./pages/dean/dean.jsx"));
-//------------------------------
+//------------------------------------------------------------------------------------------------------------------
 const MajorOfficer = lazy(() => import("./pages/MajorOfficer/MajorOfficer.jsx"));
-
 const PrintExam = lazy(() => import("./pages/MajorOfficer/PrintExam.jsx"));
 const PrintEngTest = lazy(() => import("./pages/MajorOfficer/PrintEngTest.jsx"));
 const PrintThesisProposal = lazy(() => import("./pages/MajorOfficer/PrintThesisProposal.jsx"));
 const PrintThesisDefense = lazy(() => import("./pages/MajorOfficer/PrintThesisDefense.jsx"));
-
 const AssignChairpersons = lazy(() => import("./pages/MajorOfficer/AssignChairpersons.jsx"));
-const CourseRegistration = lazy(() => import("./pages/MajorOfficer/CourseRegistration.jsx"));
+const CourseRegistrationM = lazy(() => import("./pages/MajorOfficer/CourseRegistrationM.jsx"));
 /* const ExamEligibleListPrint = lazy(() => import("./pages/MajorOfficer/ExamEligibleListPrint.jsx")); */
 const ExamResults = lazy(() => import("./pages/MajorOfficer/ExamResults.jsx"));
 const ExamProposalResults = lazy(() => import("./pages/MajorOfficer/ExamProposalResults.jsx"));
@@ -70,6 +70,7 @@ function AppRoutes() {
 					</Route> */}
 
 					<Route path="/registrar-officer" element={<RegistrarOfficer />}>
+						<Route path="CourseRegistration" element={<CourseRegistrationR />} />
 						<Route path="RequestExam/:type" element={<RequestExam />} />
 						<Route path="RequestEngTest" element={<RequestEngTest />} />
 						<Route path="RequestThesisProposal" element={<RequestThesisProposal />} />
@@ -152,7 +153,7 @@ function AppRoutes() {
 						<Route path="ExamProposalResults" element={<ExamProposalResults />} />
 						<Route path="ExamDefenseResults" element={<ExamDefenseResults />} />
 
-						<Route path="CourseRegistration" element={<CourseRegistration />} />
+						<Route path="CourseRegistration" element={<CourseRegistrationM />} />
 						<Route path="AssignChairpersons" element={<AssignChairpersons />} />
 					</Route>
 				</Routes>

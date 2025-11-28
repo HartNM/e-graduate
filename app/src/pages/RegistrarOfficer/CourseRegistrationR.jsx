@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import debounce from "lodash.debounce";
 import { Box, Text, ScrollArea, Table, Space, Button, Modal, MultiSelect, Group, Flex, Select, TextInput, NumberInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import ModalInform from "../../component/Modal/ModalInform";
-import AsyncCourseSelect from "./AsyncCourseSelect";
+
 import { jwtDecode } from "jwt-decode";
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -27,14 +28,13 @@ const CourseRegistration = () => {
 	const [reloadTable, setReloadTable] = useState(false);
 	const [modalType, setModalType] = useState("");
 	const [openCourses, setOpenCourses] = useState(false);
-	const [courses, setCourses] = useState([]);
 
 	const Form = useForm({
 		initialValues: {
 			major_id: "",
-			major_name: "",
 			study_group_id: "",
-			course_id: [],
+			course_first: [],
+			course_last: [],
 		},
 		validate: {
 			study_group_id: (value) => {
@@ -43,7 +43,8 @@ const CourseRegistration = () => {
 				return null;
 			},
 
-			course_id: (value) => (value.length > 0 ? null : "กรุณาเลือกรหัสวิชา"),
+			course_first: (value) => (value.length > 0 ? null : "กรุณาเลือกรหัสวิชา"),
+			course_last: (value) => (value.length > 0 ? null : "กรุณาเลือกรหัสวิชา"),
 		},
 	});
 
@@ -58,17 +59,8 @@ const CourseRegistration = () => {
 
 				subjects.forEach((item) => {
 					if (!uniqueSubjectsMap.has(item.SUBJCODE)) {
-						// ถ้ายังไม่มี ให้เก็บ
 						uniqueSubjectsMap.set(item.SUBJCODE, item);
-					} /* else {
-						// ถ้ามีแล้ว (แสดงว่าเป็นตัวซ้ำ)
-						const existing = uniqueSubjectsMap.get(item.SUBJCODE); // ดึงตัวเก่าออกมาดู
-
-						console.group(`⚠️ พบวิชาซ้ำ: ${item.SUBJCODE}`);
-						console.log("1. ตัวที่ถูกเก็บไว้ (First found):", existing);
-						console.log("2. ตัวที่ซ้ำและถูกข้าม (Duplicate):", item);
-						console.groupEnd();
-					} */
+					}
 				});
 
 				const uniqueSubjects = Array.from(uniqueSubjectsMap.values());
@@ -87,34 +79,33 @@ const CourseRegistration = () => {
 		fetchAll();
 	}, []);
 
+	const [majors, setMajors] = useState([]);
 	useEffect(() => {
 		const fetchMajorNameAndData = async () => {
 			try {
 				const req1 = await fetch(`${BASE_URL}/api/allMajorCourseRegistration`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+					body: JSON.stringify({ usage: [2, 3] }),
 				});
 				const res1 = await req1.json();
 				if (!req1.ok) throw new Error(res1.message);
+				console.log(res1);
+
 				setTableData(res1);
 
-				/* const req2 = await fetch(`${BASE_URL}/api/officerGetMajor_id`, {
+				const req2 = await fetch(`${BASE_URL}/api/majors`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-					body: JSON.stringify({ user_id }),
 				});
 				const res2 = await req2.json();
-				if (!req2.ok) throw new Error(res2.message); */
 
-				const req3 = await fetch(`${BASE_URL}/api/major_idGetMajor_name`, {
-					method: "POST",
-					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-					body: JSON.stringify({ major_id: major_ids[0] }),
-				});
-				const res3 = await req3.json();
-				if (!req3.ok) throw new Error(res3.message);
-
-				Form.setValues({ major_id: major_ids[0], major_name: res3.major_name });
+				const selectData = res2.map((item) => ({
+					value: item.major_id,
+					label: item.major_name,
+				}));
+				console.log(selectData);
+				setMajors(selectData);
 			} catch (e) {
 				notify("error", e.message);
 				console.log(e);
@@ -125,7 +116,7 @@ const CourseRegistration = () => {
 	}, [reloadTable]);
 
 	const handleOpenAdd = () => {
-		Form.setValues({ study_group_id: "", course_id: [] });
+		Form.setValues({ major_id: "", study_group_id: "", course_first: [], course_last: [] });
 		setModalType("add");
 		setOpenCourses(true);
 	};
@@ -150,7 +141,7 @@ const CourseRegistration = () => {
 			const req = await fetch(url[modalType], {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify(Form.values),
+				body: JSON.stringify({ ...Form.values, usage: [2, 3] }),
 			});
 			const res = await req.json();
 			if (!req.ok) {
@@ -165,12 +156,23 @@ const CourseRegistration = () => {
 		}
 	};
 
-	const classRows = tableData.map((item, index) => (
+	const [selectedMajor, setSelectedMajor] = useState("");
+	const filteredData = tableData.filter((p) => {
+		const matchesMajor = selectedMajor ? p.major_id === selectedMajor : true;
+		return matchesMajor;
+	});
+
+	const classRows = filteredData.map((item, index) => (
 		<Table.Tr key={index}>
-			<Table.Td>{Form.values.major_name}</Table.Td>
+			<Table.Td>{majors.find((m) => m.value === item.major_id)?.label || item.major_id}</Table.Td>
 			<Table.Td>{item.study_group_id}</Table.Td>
 			<Table.Td style={{ whiteSpace: "pre-line", textAlign: "left" }}>
-				{item.course_id.map((id, index) => {
+				{item.course_first.map((id, index) => {
+					const found = fullCourses.find((c) => c.value === id);
+					const text = found ? found.label : id;
+					return <div key={index}>{text}</div>;
+				})}
+				{item.course_last.map((id, index) => {
 					const found = fullCourses.find((c) => c.value === id);
 					const text = found ? found.label : id;
 					return <div key={index}>{text}</div>;
@@ -190,17 +192,27 @@ const CourseRegistration = () => {
 		</Table.Tr>
 	));
 
+	const [data, setData] = useState([]);
+
+	const handleSearchChange = useCallback(
+		debounce((query) => {
+			if (!query) return setData(fullCourses.slice(0, 0));
+			const filtered = fullCourses.filter((item) => (item?.value || "").toLowerCase().includes(query.toLowerCase()) || (item?.label || "").toLowerCase().includes(query.toLowerCase())).slice(0, 50);
+			setData(filtered);
+		}, 300),
+		[fullCourses]
+	);
+
 	return (
 		<Box>
 			<ModalInform opened={inform.open} onClose={close} message={inform.message} type={inform.type} />
-			<Modal opened={openCourses} onClose={() => setOpenCourses(false)} title="กรอกข้อมูลรายวิชาสำหรับสอบประมวลความรู้/สอบวัดคุณสมบัติ" centered closeOnClickOutside={false}>
+			<Modal opened={openCourses} onClose={() => setOpenCourses(false)} title="กรอกข้อมูลรายวิชา" centered closeOnClickOutside={false}>
 				<Box>
 					<form onSubmit={Form.onSubmit(handleSubmit)}>
-						<Text size="2xl" fw={800}>
-							สาขา{Form.values.major_name}
-						</Text>
-						<NumberInput label="หมู่เรียน" hideControls disabled={modalType === "add" ? false : true} {...Form.getInputProps("study_group_id")} />
-						<AsyncCourseSelect form={Form} disabled={modalType === "delete"} fullCourses={fullCourses} />
+						<Select label="สาขา" data={majors} value={Form.values.major_id} onChange={(value) => Form.setFieldValue("major_id", value)} disabled={modalType === "add" ? false : true} />
+						<NumberInput label="หมู่เรียน" hideControls {...Form.getInputProps("study_group_id")} disabled={modalType === "add" ? false : true} />
+						<MultiSelect label="รหัสวิชาวิทยานิพนธ์และการค้นคว้าอิสระ ตัวแรก" searchable hidePickedOptions data={data} onSearchChange={handleSearchChange} {...Form.getInputProps("course_first")} disabled={modalType === "delete"} />
+						<MultiSelect label="รหัสวิชาวิทยานิพนธ์และการค้นคว้าอิสระ ตัวสุดท้าย" searchable hidePickedOptions data={data} onSearchChange={handleSearchChange} {...Form.getInputProps("course_last")} disabled={modalType === "delete"} />
 						<Space h="md" />
 						<Button color={modalType === "delete" ? "red" : "green"} type="submit" fullWidth>
 							{modalType === "delete" ? "ลบ" : "บันทึก"}
@@ -209,16 +221,24 @@ const CourseRegistration = () => {
 				</Box>
 			</Modal>
 			<Text size="1.5rem" fw={900} mb="md">
-				กรอกข้อมูลรายวิชา{/* สำหรับสอบประมวลความรู้/สอบวัดคุณสมบัติ */}บังคับ
+				กรอกข้อมูลรายวิชาบังคับสำหรับสอบวิทยานิพนธ์/การค้นคว้าอิสระ
 			</Text>
 			<Space h="sm" />
-			<Box>
-				<Flex justify="flex-end">
-					<Button variant="filled" onClick={() => handleOpenAdd()}>
-						เพิ่มข้อมูล
-					</Button>
-				</Flex>
-			</Box>
+			<Group justify="space-between">
+				<Box>
+					<Flex align="flex-end" gap="sm">
+						<Select placeholder="สาขา" data={majors} value={selectedMajor} onChange={(value) => setSelectedMajor(value)} />
+					</Flex>
+				</Box>
+				<Box>
+					<Flex justify="flex-end">
+						<Button variant="filled" onClick={() => handleOpenAdd()}>
+							เพิ่มข้อมูล
+						</Button>
+					</Flex>
+				</Box>
+			</Group>
+
 			<Space h="sm" />
 			<ScrollArea type="scroll" offsetScrollbars style={{ borderRadius: "8px", border: "1px solid #e0e0e0" }}>
 				<Table horizontalSpacing="sm" verticalSpacing="sm" highlightOnHover>

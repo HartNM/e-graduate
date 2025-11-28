@@ -1,5 +1,5 @@
 //เจ้าหน้าที่งานทะเบียน
-import { IconClipboardText, IconCertificate, IconCalendar, IconUserCheck, IconReport } from "@tabler/icons-react";
+import { IconClipboardText, IconCertificate, IconCalendar, IconUserCheck, IconReport, IconBooks } from "@tabler/icons-react";
 import UserLayout from "../../layout/userLayout.jsx";
 
 const menu = [
@@ -31,6 +31,7 @@ const menu = [
 	/* { label: "พิมพ์ผลการสอบประมวลความรู้/สอบวัดคุณสมบัติ", icon: IconCertificate, links: "/registrar-officer/ExamResultsPrint" },
 	{ label: "พิมพ์ผลการสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ", icon: IconCertificate, links: "/registrar-officer/ExamProposalResultsPrint" },
 	{ label: "พิมพ์ผลการสอบวิทยานิพนธ์/การค้นคว้าอิสระ", icon: IconCertificate, links: "/registrar-officer/ExamDefenseResultsPrint" }, */
+	{ label: "กรอกข้อมูลรายวิชาบังคับ", icon: IconBooks, links: "/registrar-officer/CourseRegistration" },
 	{ label: "กรอกข้อมูลภาคเรียน", icon: IconCalendar, links: "/registrar-officer/ExamScheduleSetupPage" },
 	{ label: "กรอกข้อมูลเจ้าหน้าที่ประจำสาขาวิชา", icon: IconUserCheck, links: "/registrar-officer/assign-major-officer" },
 ];

@@ -7,6 +7,9 @@ const cors = require("cors");
 app.use(cors({ /* origin: "http://localhost:3000", */ credentials: true }));
 const PORT = process.env.PORT;
 
+const majors = require("./routes/majors");
+app.use("/api", majors);
+
 const externalApiStudent = require("./externalApi/student");
 app.use("/api", externalApiStudent);
 const externalApiUsers = require("./externalApi/users");
