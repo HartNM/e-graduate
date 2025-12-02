@@ -10,9 +10,8 @@ import ModalCheckCourse from "../component/Modal/ModalCheckCourse";
 import Pdfg01 from "../component/PDF/Pdfg01";
 import { useForm } from "@mantine/form";
 import { jwtDecode } from "jwt-decode";
-
-const BASE_URL = import.meta.env.VITE_API_URL;
 import PrintReceipt from "../component/ิbutton/printReceipt";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 const RequestExam = () => {
 	const token = localStorage.getItem("token");
@@ -239,11 +238,7 @@ const RequestExam = () => {
 				console.error(e);
 			}
 		};
-
 		fetchStudentData();
-		/* if (role === "student") {
-			fetchStudentData();
-		} */
 	}, [request, openKQ, selectedTerm]);
 
 	const handleOpenAdd = async () => {
@@ -259,7 +254,7 @@ const RequestExam = () => {
 		} catch (e) {
 			notify("error", e.message);
 			console.error("Error fetching studentInfo:", e);
-		}
+		}	
 	};
 
 	const handleAdd = async () => {

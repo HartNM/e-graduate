@@ -1,0 +1,69 @@
+name: Deploy E-Graduate System
+
+on:
+  push:
+    branches: ["master"] # ทำงานเมื่อมีการ push เข้า branch master
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: self-hosted # รันบน Windows Server ของคุณ
+    steps:
+      - name: stop Backend API
+        working-directory: ./server
+        run: |
+          npx pm2 kill
+          Start-Sleep -Seconds 5
+          
+      # ดึงโค้ดล่าสุดมาที่เครื่อง Server (ในโฟลเดอร์ของ Runner)
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # ---------------------------------------------------------
+      # ส่วนของ Frontend (App) -> ไปที่ Nginx
+      # ---------------------------------------------------------
+      - name: Install Frontend Dependencies
+        working-directory: ./app
+        run: npm install
+
+      - name: Create .env for Production
+        working-directory: ./app
+        run: |
+          Set-Content -Path .env -Value "VITE_API_URL=${{ secrets.SERVER_IP }}" -Encoding UTF8
+
+      - name: Build Frontend
+        working-directory: ./app
+        run: npm run build
+
+      - name: Deploy Frontend to Nginx
+        run: |
+          Remove-Item -Path "C:\Program Files\nginx\html\*" -Recurse -Force -ErrorAction SilentlyContinue
+
+          Copy-Item -Path ".\app\dist\*" -Destination "C:\Program Files\nginx\html" -Recurse -Force
+
+      # ---------------------------------------------------------
+      # ส่วนของ Backend (Server) -> รันด้วย PM2
+      # ---------------------------------------------------------
+      #- name: Install Backend Dependencies
+      #  working-directory: ./server
+      #  run: npm install
+
+      #- name: Create Backend .env
+      #  working-directory: ./server
+      #  run: |
+      #    $envContent = @"
+      #    PORT=8080
+      #    SECRET_KEY=${{ secrets.SECRET_KEY }}
+      #    USER=${{ secrets.DB_USER }}
+      #    PASSWORD=${{ secrets.DB_PASSWORD }}
+      #    SERVER=${{ secrets.DB_SERVER }}
+      #    DATABASE=${{ secrets.DB_NAME }}
+      #    VITE_API_URL=${{ secrets.SERVER_IP }}
+      #    "@
+
+      #    Set-Content -Path .env -Value $envContent -Encoding UTF8
+
+      #- name: start Backend API
+      #  working-directory: ./server
+      #  run: |
+      #    npx pm2 start app.js
