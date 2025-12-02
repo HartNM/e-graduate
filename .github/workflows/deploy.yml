@@ -9,11 +9,11 @@ jobs:
   deploy:
     runs-on: self-hosted # รันบน Windows Server ของคุณ
     steps:
-      - name: stop Backend API
-        working-directory: ./server
-        run: |
-          npx pm2 kill
-          Start-Sleep -Seconds 5
+      #- name: stop Backend API
+      #  working-directory: ./server
+      #  run: |
+      #    npx pm2 kill
+      #    Start-Sleep -Seconds 5
           
       # ดึงโค้ดล่าสุดมาที่เครื่อง Server (ในโฟลเดอร์ของ Runner)
       - name: Checkout Code
