@@ -5,7 +5,7 @@ const printReceipt = (item) => {
 	const printReceipt = async (item) => {
 		try {
 			// 1. กำหนด URL ของไฟล์ทั้งสอง
-			const receiptUrl = `/pdf/g01.pdf`;
+			const receiptUrl = `/pdf/1764651312.pdf`;
 			let announceUrl;
 			if (item.education_level === "ปริญญาโท") {
 				announceUrl = `/pdf/ระเบียบ-การรับจ่ายเงิน ป.โท_61.pdf`;

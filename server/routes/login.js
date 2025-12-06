@@ -52,6 +52,7 @@ router.post("/login", async (req, res) => {
 				body: JSON.stringify({ txtemail: username, txtpass: password }),
 			});
 			const loginData = await loginReq.json();
+			console.log(loginData);
 
 			if (loginData[0].loginstatus === "0") {
 				return res.status(401).json({ message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" });
@@ -63,7 +64,9 @@ router.post("/login", async (req, res) => {
 			}
 
 			const db = await poolPromise;
-			const check_thesis = await db.request().input("user_id", username).query("SELECT TOP 1 * FROM request_thesis_proposal WHERE thesis_advisor_id = @user_id");
+			const check_thesis = await db.request().input("user_id", loginData[0].employee_id).query("SELECT TOP 1 * FROM request_thesis_proposal WHERE thesis_advisor_id = @user_id");
+			console.log(check_thesis.recordset[0]);
+			
 			if (check_thesis.recordset[0]) {
 				roles.push("research_advisor");
 			}

@@ -7,7 +7,7 @@ const ModalPay = ({ opened, onClose, selectedRow, handlePay, MoneyRegis, stop_da
 		<Modal opened={opened} onClose={onClose} title="ชำระค่าธรรมเนียม" centered size="500">
 			{selectedRow && (
 				<Box>
-					<a href={`/epayment-proxy/pay/typepayment?comp=81914&orderRef1=${selectedRow?.student_id}&amount=${MoneyRegis}&endDate=${stop_date}&urlredirect=http://localhost:3000/student/RequestExam`}> {/* แก้ไขในภายหลัง urlredirect*/}
+					<a href={`/epayment-proxy/pay/typepayment?comp= &orderRef1=${selectedRow?.student_id}&amount=${MoneyRegis}&endDate=${stop_date}&urlredirect=http://localhost:3000/student/RequestExam`}> {/* แก้ไขในภายหลัง urlredirect*/}
 						{/* Stack ใช้จัด layout แนวตั้ง และจัดกลาง */}
 						<Stack align="center" gap="md">
 							{/* ใช้ Text component และกำหนดสไตล์ให้เหมือนลิงก์ */}

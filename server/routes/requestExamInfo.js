@@ -113,4 +113,28 @@ router.post("/deleteRequestExamInfo", authenticateToken, async (req, res) => {
 	}
 });
 
+router.get("/checkOpenRequests", async (req, res) => {
+	try {
+		const { CheckKQ, CheckTerm } = req.body;
+
+		let status = 0;
+
+		const pool = await poolPromise;
+		const request = pool.request();
+		const result = await request.query(`SELECT * FROM request_exam_info`);
+
+		console.log(result);
+
+		if (CheckKQ) {
+		}
+		if (CheckTerm) {
+		}
+
+		res.status(200).json({ status: status });
+	} catch (err) {
+		console.error("CheckOpenRequests:", err);
+		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูล" });
+	}
+});
+
 module.exports = router;
