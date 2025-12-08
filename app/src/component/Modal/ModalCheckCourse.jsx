@@ -7,7 +7,7 @@ const ModalCheckCourse = ({ opened, onClose, missingCoures, type }) => (
 		title={
 			<Box className="flex items-center gap-2">
 				<Title order={4} c="red">
-					ลงทะเบียนเรียนไม่ครบตามหลักสูตร
+					ลงทะเบียนเรียนไม่ครบ
 				</Title>
 			</Box>
 		}
@@ -15,9 +15,8 @@ const ModalCheckCourse = ({ opened, onClose, missingCoures, type }) => (
 	>
 		<Box>
 			<Text mb="sm" c="dimmed">
-				คุณยังขาดการลงทะเบียนในรายวิชาต่อไปนี้ จึงจะสามารถยื่นคำร้องขอสอบ{type}
+				คุณยังขาดการลงทะเบียนในรายวิชาต่อไปนี้ {type}
 			</Text>
-
 			<List
 				spacing="sm"
 				icon={

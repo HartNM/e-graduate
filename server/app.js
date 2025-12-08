@@ -12,8 +12,6 @@ app.use("/api", majors);
 
 const externalApiStudent = require("./externalApi/student");
 app.use("/api", externalApiStudent);
-const externalApiUsers = require("./externalApi/users");
-app.use("/api", externalApiUsers);
 const loginRoutes = require("./routes/login");
 app.use("/api", loginRoutes);
 const profileRoutes = require("./routes/profile");

@@ -174,11 +174,13 @@ const RequestExam = () => {
 					throw new Error("ระบบคำร้องขอสอบประมวลความรู้/วัดคุณสมบัติยังไม่เปิด");
 				}
 
-				if (user_id === "674140101") {
+				/* if (user_id === "674140101") {
+				} */
+				{
 					const registrationRes = await fetch(`${BASE_URL}/api/allStudyGroupIdCourseRegistration`, {
 						method: "POST",
 						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-						body: JSON.stringify({ usage: 1 }),
+						body: JSON.stringify({ usage: [1] }),
 					});
 					const registrationData = await registrationRes.json();
 					if (!registrationRes.ok) throw new Error(registrationData.message);
@@ -254,7 +256,7 @@ const RequestExam = () => {
 		} catch (e) {
 			notify("error", e.message);
 			console.error("Error fetching studentInfo:", e);
-		}	
+		}
 	};
 
 	const handleAdd = async () => {
@@ -430,7 +432,7 @@ const RequestExam = () => {
 
 	return (
 		<Box>
-			<ModalCheckCourse opened={openCheckCourse} onClose={() => setOpenCheckCourse(false)} missingCoures={missingCoures} type={education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"} />
+			<ModalCheckCourse opened={openCheckCourse} onClose={() => setOpenCheckCourse(false)} missingCoures={missingCoures} type={`จึงจะสามารถยื่นคำร้องขอสอบ${education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`} />
 			<ModalInform opened={inform.open} onClose={close} message={inform.message} type={inform.type} timeout={inform.timeout} />
 			<ModalApprove
 				opened={openApprove}

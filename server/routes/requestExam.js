@@ -123,6 +123,7 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 		console.log(infoRes); */
 
 		const requestType = `ขอสอบ${education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`;
+		const receipt_pay = education_level === "ปริญญาโท" ? 1000 : 1500;
 		const result = await pool
 			.request()
 			.input("student_id", student_id)
@@ -131,7 +132,9 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 			.input("faculty_name", faculty_name)
 			.input("request_type", requestType)
 			.input("term", term /* infoRes.recordset[0].term */)
-			.input("status", "1").query(`
+			.input("status", "1")
+			//receipt_pay
+			.input("receipt_pay", receipt_pay).query(`
 				INSERT INTO request_exam (
 					student_id,
 					study_group_id,
@@ -140,7 +143,8 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 					request_type,
 					term,
 					request_date,
-					status
+					status,
+					receipt_pay
 				) OUTPUT INSERTED.* VALUES (
 					@student_id,
 					@study_group_id,
@@ -149,7 +153,8 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 					@request_type,
 					@term,
 					GETDATE(),
-					@status
+					@status,
+					@receipt_pay
 				)
 			`);
 

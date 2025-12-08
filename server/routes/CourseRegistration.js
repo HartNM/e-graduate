@@ -33,7 +33,7 @@ const processGroupedData = (data) => {
 router.post("/allMajorCourseRegistration", authenticateToken, async (req, res) => {
 	const { major_ids, role } = req.user;
 	const usage = req.body.usage;
-	
+
 	try {
 		const pool = await poolPromise;
 		const request = pool.request();
@@ -192,7 +192,10 @@ router.post("/allStudyGroupIdCourseRegistration", authenticateToken, async (req,
 
 		const data = result.recordset;
 
-		if (data.length === 0) return res.status(403).json({ message: "รอเจ้าหน้าที่ประจำสาขากรอกรายวิชาบังคับ" });
+		if (data.length === 0) {
+			return res.status(403).json({ message: "รอเจ้าหน้าที่ประกรอกรายวิชาบังคับ" });
+			//return res.status(403).json({ message: "รอเจ้าหน้าที่ประจำสาขากรอกรายวิชาบังคับ" });
+		}
 
 		// ใช้ Logic จัดกลุ่มเดียวกับ Route แรก แต่ดึงเอาแค่ตัวแรก (เพราะ Query มาเฉพาะ Study Group เดียว)
 		const formattedArray = processGroupedData(data);

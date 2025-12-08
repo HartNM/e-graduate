@@ -1,4 +1,4 @@
-// คำร้องขอสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ 
+// คำร้องขอสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ
 import { useState, useEffect, useMemo } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
 import { useParams } from "react-router-dom";
@@ -9,6 +9,7 @@ import ModalInform from "../component/Modal/ModalInform";
 import Pdfg01 from "../component/PDF/Pdfg03-04";
 import { useForm } from "@mantine/form";
 import { jwtDecode } from "jwt-decode";
+import ModalCheckCourse from "../component/Modal/ModalCheckCourse";
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 const RequestThesisProposal = () => {
@@ -126,6 +127,8 @@ const RequestThesisProposal = () => {
 	}, []);
 
 	const [latestRequest, setLatestRequest] = useState(true);
+	const [missingCoures, setMissingCoures] = useState([]); // รายวิชาที่ขาด
+	const [openCheckCourse, setOpenCheckCourse] = useState(false);
 
 	useEffect(() => {
 		if (!selectedTerm) return;
@@ -143,20 +146,51 @@ const RequestThesisProposal = () => {
 				setRequest(ThesisProposalData);
 
 				if (role === "student") {
-					const RequestExamRes = await fetch(`${BASE_URL}/api/requestExamAll`, {
-						method: "POST",
-						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-						body: JSON.stringify({ lastRequest: true }),
-					});
-					const RequestExamData = await RequestExamRes.json();
-					if (!RequestExamRes.ok) throw new Error(RequestExamData.message);
+					/* if (user_id === "674140101") {
+					} */
+					{
+						const registrationRes = await fetch(`${BASE_URL}/api/allStudyGroupIdCourseRegistration`, {
+							method: "POST",
+							headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+							body: JSON.stringify({ usage: [2] }),
+						});
+						const registrationData = await registrationRes.json();
+						if (!registrationRes.ok) throw new Error(registrationData.message);
+						console.log("ที่ต้องลง :", registrationData);
 
-					if (RequestExamData[0]?.status === "5" && RequestExamData[0]?.exam_results === "ผ่าน") {
-						if (ThesisProposalData[0]?.status === "6" || ThesisProposalData[0]?.status === undefined) {
-							setLatestRequest(false);
-						} else {
-							setLatestRequest(true);
+						const registerCoursesRes = await fetch("/mua-proxy/FrontEnd_Tabian/apiforall/ListSubjectPass", {
+							method: "POST",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify({ ID_NO: user_id }),
+						});
+						const registerCoursesData = await registerCoursesRes.json();
+						if (!registerCoursesRes.ok) throw new Error(registerCoursesData.message);
+						console.log("ที่ลง :", registerCoursesData);
+
+						const allCodes = registerCoursesData.map((c) => c.SJCODE);
+
+						const missing = registrationData.course_first.filter((code) => !allCodes.includes(code));
+						console.log("ที่ขาด :", missing);
+
+						if (missing.length > 1) {
+							const res = await fetch("/mua-proxy/FrontEnd_Tabian/apiforall/ListSubjectAll");
+							const subjects = await res.json();
+
+							const subjMap = new Map(subjects.map((s) => [s.SUBJCODE, s.SUBJNAME]));
+							const coursesData = missing.map((course_id) => ({
+								course_id,
+								course_name: subjMap.get(course_id) || "ไม่พบข้อมูล",
+							}));
+							console.log("รายวิชาที่ขาด :", coursesData);
+
+							setMissingCoures(coursesData);
+							setOpenCheckCourse(true);
+							return;
 						}
+					}
+
+					if (ThesisProposalData[0]?.status === "6" || ThesisProposalData[0]?.status === undefined) {
+						setLatestRequest(false);
 					} else {
 						setLatestRequest(true);
 					}
@@ -214,7 +248,7 @@ const RequestThesisProposal = () => {
 			const requestRes = await fetch(`${BASE_URL}/api/approveRequestThesisProposal`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ request_thesis_proposal_id: item.request_thesis_proposal_id, name: user.name, role: role, selected: selected, comment: comment }),
+				body: JSON.stringify({ request_thesis_proposal_id: item.request_thesis_proposal_id, name: name, role: role, selected: selected, comment: comment }),
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) {
@@ -357,6 +391,7 @@ const RequestThesisProposal = () => {
 
 	return (
 		<Box>
+			<ModalCheckCourse opened={openCheckCourse} onClose={() => setOpenCheckCourse(false)} missingCoures={missingCoures} type={`จึงจะสามารถยื่นคำร้องขอสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`} />
 			<ModalInform opened={inform.open} onClose={close} message={inform.message} type={inform.type} />
 			<ModalApprove
 				opened={openApprove}

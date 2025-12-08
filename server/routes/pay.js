@@ -119,8 +119,8 @@ router.get("/getPayData", async (req, res) => {
 	try {
 		const pool = await poolPromise;
 		const request = pool.request().input("id", student_id);
-		const queries = tables.map(async (tbl) => {
-			const sql = `SELECT TOP 1 *, '${tbl}' as src FROM ${tbl} WHERE status = 5 AND student_id = @id ORDER BY request_date DESC`;
+		const queries = tables.map(async (tbl) => {//status = 5 AND
+			const sql = `SELECT TOP 1 *, '${tbl}' as src FROM ${tbl} WHERE student_id = @id ORDER BY request_date DESC`;
 			const { recordset } = await request.query(sql);
 			return recordset[0];
 		});

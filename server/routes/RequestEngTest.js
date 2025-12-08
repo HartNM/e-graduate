@@ -93,7 +93,9 @@ router.post("/addRequestEngTest", authenticateToken, async (req, res) => {
 			.input("faculty_name", faculty_name)
 			.input("request_type", "คำร้องขอทดสอบความรู้ทางภาษาอังกฤษ")
 			.input("term", infoRes.recordset[0].term)
-			.input("status", "1").query(`
+			.input("status", "1")
+			//receipt_pay
+			.input("receipt_pay", 1000).query(`
 			INSERT INTO request_eng_test (
 				student_id,
 				study_group_id,
@@ -102,7 +104,8 @@ router.post("/addRequestEngTest", authenticateToken, async (req, res) => {
 				request_type,
 				term,
 				request_date,
-				status
+				status,
+				receipt_pay
 			) OUTPUT INSERTED.* VALUES (
 				@student_id,
 				@study_group_id,
@@ -111,7 +114,8 @@ router.post("/addRequestEngTest", authenticateToken, async (req, res) => {
 				@request_type,
 				@term,
 				GETDATE(),
-				@status
+				@status,
+				@receipt_pay
 			)`);
 
 		res.status(200).json({

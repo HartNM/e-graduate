@@ -1,4 +1,4 @@
-// คำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ 
+// คำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ
 import { useState, useEffect, useMemo } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
 import { useParams } from "react-router-dom";
@@ -8,7 +8,8 @@ import ModalPay from "../component/Modal/ModalPay.jsx";
 import ModalInform from "../component/Modal/ModalInform.jsx";
 import Pdfg01 from "../component/PDF/Pdfg03-04.jsx";
 import { useForm } from "@mantine/form";
-import { jwtDecode } from "jwt-decode"; 
+import { jwtDecode } from "jwt-decode";
+import ModalCheckCourse from "../component/Modal/ModalCheckCourse";
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 const RequestThesisDefense = () => {
@@ -120,7 +121,9 @@ const RequestThesisDefense = () => {
 		getTerm();
 	}, []);
 
-	const [latestRequest, setLatestRequest] = useState(null);
+	const [latestRequest, setLatestRequest] = useState(true);
+	const [missingCoures, setMissingCoures] = useState([]); // รายวิชาที่ขาด
+	const [openCheckCourse, setOpenCheckCourse] = useState(false);
 
 	useEffect(() => {
 		if (!selectedTerm) return;
@@ -138,20 +141,51 @@ const RequestThesisDefense = () => {
 				setRequest(ThesisDefenseData);
 
 				if (role === "student") {
-					const ThesisProposalRes = await fetch(`${BASE_URL}/api/allRequestThesisProposal`, {
-						method: "POST",
-						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-						body: JSON.stringify({ lastRequest: true }),
-					});
-					const ThesisProposalData = await ThesisProposalRes.json();
-					if (!ThesisProposalRes.ok) throw new Error(ThesisProposalData.message);
+					/* if (user_id === "674140101") {
+					} */
+					{
+						const registrationRes = await fetch(`${BASE_URL}/api/allStudyGroupIdCourseRegistration`, {
+							method: "POST",
+							headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+							body: JSON.stringify({ usage: [3] }),
+						});
+						const registrationData = await registrationRes.json();
+						if (!registrationRes.ok) throw new Error(registrationData.message);
+						console.log("ที่ต้องลง :", registrationData);
 
-					if (ThesisProposalData[0]?.status === "5" && ThesisProposalData[0]?.exam_results === "ผ่าน") {
-						if (ThesisDefenseData[0]?.status === "6" || ThesisDefenseData[0]?.status === undefined) {
-							setLatestRequest(false);
-						} else {
-							setLatestRequest(true);
+						const registerCoursesRes = await fetch("/mua-proxy/FrontEnd_Tabian/apiforall/ListSubjectPass", {
+							method: "POST",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify({ ID_NO: user_id }),
+						});
+						const registerCoursesData = await registerCoursesRes.json();
+						if (!registerCoursesRes.ok) throw new Error(registerCoursesData.message);
+						console.log("ที่ลง :", registerCoursesData);
+
+						const allCodes = registerCoursesData.map((c) => c.SJCODE);
+
+						const missing = registrationData.course_last.filter((code) => !allCodes.includes(code));
+						console.log("ที่ขาด :", missing);
+
+						if (missing.length > 1) {
+							const res = await fetch("/mua-proxy/FrontEnd_Tabian/apiforall/ListSubjectAll");
+							const subjects = await res.json();
+
+							const subjMap = new Map(subjects.map((s) => [s.SUBJCODE, s.SUBJNAME]));
+							const coursesData = missing.map((course_id) => ({
+								course_id,
+								course_name: subjMap.get(course_id) || "ไม่พบข้อมูล",
+							}));
+							console.log("รายวิชาที่ขาด :", coursesData);
+
+							setMissingCoures(coursesData);
+							setOpenCheckCourse(true);
+							return;
 						}
+					}
+
+					if (ThesisDefenseData[0]?.status === "6" || ThesisDefenseData[0]?.status === undefined) {
+						setLatestRequest(false);
 					} else {
 						setLatestRequest(true);
 					}
@@ -354,6 +388,7 @@ const RequestThesisDefense = () => {
 
 	return (
 		<Box>
+			<ModalCheckCourse opened={openCheckCourse} onClose={() => setOpenCheckCourse(false)} missingCoures={missingCoures} type={`จึงจะสามารถยื่นคำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ`} />
 			<ModalInform opened={inform.open} onClose={close} message={inform.message} type={inform.type} />
 			<ModalApprove
 				opened={openApprove}

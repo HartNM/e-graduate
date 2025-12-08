@@ -72,13 +72,6 @@ router.post("/allRequestThesisDefense", authenticateToken, async (req, res) => {
 				} catch {
 					console.warn(`ไม่สามารถดึงข้อมูลนักศึกษา ${item.student_id}`);
 				}
-				/* let advisorInfo = null;
-				try {
-					const advisorRes = await axios.get(`${BASE_URL}/api/user_idGetUser_name/${item.thesis_advisor_id}`);
-					advisorInfo = advisorRes.data;
-				} catch (e) {
-					console.warn(item.thesis_advisor_id, e);
-				} */
 				return {
 					...item,
 					...studentInfo,
@@ -98,13 +91,14 @@ router.post("/allRequestThesisDefense", authenticateToken, async (req, res) => {
 });
 
 router.post("/addRequestThesisDefense", authenticateToken, async (req, res) => {
-	const { student_id, study_group_id, major_id, faculty_name, thesis_exam_date, thesis_advisor_id, research_name, request_type } = req.body;
+	const { student_id, study_group_id, major_id, faculty_name, thesis_exam_date, thesis_advisor_id, research_name, request_type, education_level } = req.body;
 	try {
 		const pool = await poolPromise;
 		const infoRes = await pool.request().query(`SELECT TOP 1 *
 			FROM request_exam_info
 			WHERE CAST(GETDATE() AS DATE) BETWEEN term_open_date AND term_close_date
 			ORDER BY request_exam_info_id DESC`);
+		const receipt_pay = education_level === "ปริญญาโท" ? 3000 : 7000;
 		const result = await pool
 			.request()
 			.input("student_id", student_id)
@@ -115,7 +109,9 @@ router.post("/addRequestThesisDefense", authenticateToken, async (req, res) => {
 			.input("research_name", research_name)
 			.input("request_type", request_type.replace("โครงร่าง", ""))
 			.input("term", infoRes.recordset[0].term)
-			.input("status", "1").query(`
+			.input("status", "1")
+			//receipt_pay
+			.input("receipt_pay", receipt_pay).query(`
 				INSERT INTO request_thesis_defense (
 					student_id,
 					study_group_id,
@@ -126,7 +122,8 @@ router.post("/addRequestThesisDefense", authenticateToken, async (req, res) => {
 					request_type,
 					term,
 					request_date,
-					status
+					status,
+					receipt_pay
 				) OUTPUT INSERTED.* VALUES (
 					@student_id,
 					@study_group_id,
@@ -137,7 +134,8 @@ router.post("/addRequestThesisDefense", authenticateToken, async (req, res) => {
 					@request_type,
 					@term,
 					GETDATE(),
-					@status
+					@status,
+					@receipt_pay
 				)
 			`);
 		res.status(200).json({
