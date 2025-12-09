@@ -119,7 +119,8 @@ router.get("/getPayData", async (req, res) => {
 	try {
 		const pool = await poolPromise;
 		const request = pool.request().input("id", student_id);
-		const queries = tables.map(async (tbl) => {//status = 5 AND
+		const queries = tables.map(async (tbl) => {
+			//status = 5 AND
 			const sql = `SELECT TOP 1 *, '${tbl}' as src FROM ${tbl} WHERE student_id = @id ORDER BY request_date DESC`;
 			const { recordset } = await request.query(sql);
 			return recordset[0];
@@ -159,6 +160,33 @@ router.get("/getPayData", async (req, res) => {
 	} catch (error) {
 		console.error("Error:", error);
 		res.status(500).json({ message: "Error processing data." });
+	}
+});
+
+router.get("/get-receipt-proxy", async (req, res) => {
+	try {
+		// รับ query params จากหน้าบ้านส่งต่อมา
+		const { customer_id, receipt_book, receipt_no, type } = req.query;
+
+		// สร้าง URL ปลายทาง
+		const targetUrl = `https://e-finance.kpru.ac.th/receipt_research?customer_id=${customer_id}&receipt_book=${receipt_book}&receipt_no=${receipt_no}&type=${type}`;
+		console.log(targetUrl);
+
+		// โหลดไฟล์จาก e-finance แบบ ArrayBuffer
+		const response = await axios.get(targetUrl, {
+			responseType: "arraybuffer", // สำคัญมาก! ต้องบอกว่าจะเอามาเป็นไฟล์
+			headers: {
+				// บางเว็บต้องหลอกว่าเป็น Browser
+				"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+			},
+		});
+
+		// ส่งข้อมูลไฟล์กลับไปให้หน้าบ้าน React
+		res.setHeader("Content-Type", "application/pdf");
+		res.send(response.data);
+	} catch (error) {
+		console.error(error);
+		res.status(500).send("Error fetching PDF");
 	}
 });
 

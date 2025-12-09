@@ -154,7 +154,6 @@ const RequestExam = () => {
 				const requestData = await requestReq.json();
 				if (!requestReq.ok) throw new Error(requestData.message);
 				setRequest(requestData);
-
 				console.log("all request :", requestData);
 			} catch (e) {
 				notify("error", e.message);
@@ -173,7 +172,6 @@ const RequestExam = () => {
 				if (openKQ === false) {
 					throw new Error("ระบบคำร้องขอสอบประมวลความรู้/วัดคุณสมบัติยังไม่เปิด");
 				}
-
 				/* if (user_id === "674140101") {
 				} */
 				{

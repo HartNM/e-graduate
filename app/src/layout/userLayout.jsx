@@ -21,17 +21,12 @@ const UserLayout = (item) => {
 
 	const token = localStorage.getItem("token");
 
-	try {
-		const decoded = jwtDecode(token);
-		const now = Date.now() / 1000; // วินาทีปัจจุบัน
-		if (decoded.exp && decoded.exp < now) {
-			return navigate("/login");
-		}
-	} catch (e) {
-		console.log(e);
+	const decoded = jwtDecode(token);
+	const now = Date.now() / 1000; // วินาทีปัจจุบัน
+	if (decoded.exp && decoded.exp < now) {
 		return navigate("/login");
 	}
-
+	
 	const { setColorScheme } = useMantineColorScheme();
 	const computedColorScheme = useComputedColorScheme("light", { getInitialValueInEffect: true });
 

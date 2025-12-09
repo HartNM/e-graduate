@@ -12,7 +12,6 @@ export function NavbarNested(menu) {
 	const navigate = useNavigate();
 
 	const handleLogout = () => {
-		localStorage.removeItem("token");
 		navigate("/login");
 	};
 

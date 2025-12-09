@@ -9,10 +9,10 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 const AuthenticationForm = () => {
 	const navigate = useNavigate();
 	const [loading, setLoading] = useState(false);
-
 	const [openInform, setOpenInform] = useState(false);
 	const [informMessage, setInformMessage] = useState("");
 	const [informtype, setInformtype] = useState("");
+
 	const loginForm = useForm({
 		initialValues: {
 			username: "",
@@ -38,8 +38,8 @@ const AuthenticationForm = () => {
 				chairpersons: "/chairpersons",
 				officer_registrar: "/registrar-officer",
 				advisor: "/advisor",
-			};
- */
+			}; */
+
 			const response = await fetch(`${BASE_URL}/api/login`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
@@ -63,8 +63,8 @@ const AuthenticationForm = () => {
 			}, 1000);
 		} catch (error) {
 			console.error("Login error:", error);
-			setInformtype("error");
 			setInformMessage(error.message);
+			setInformtype("error");
 		} finally {
 			setLoading(false);
 			setOpenInform(true);
