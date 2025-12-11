@@ -163,7 +163,7 @@ router.get("/getPayData", async (req, res) => {
 	}
 });
 
-router.get("/get-receipt-proxy", async (req, res) => {
+/* router.get("/get-receipt-proxy", async (req, res) => {
 	try {
 		// รับ query params จากหน้าบ้านส่งต่อมา
 		const { customer_id, receipt_book, receipt_no, type } = req.query;
@@ -188,7 +188,7 @@ router.get("/get-receipt-proxy", async (req, res) => {
 		console.error(error);
 		res.status(500).send("Error fetching PDF");
 	}
-});
+}); */
 
 /* router.get("/getPayData", async (req, res) => {
 	const student_id = req.query.student_id;

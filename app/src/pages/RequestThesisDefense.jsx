@@ -50,6 +50,7 @@ const RequestThesisDefense = () => {
 			program: "",
 			major_name: "",
 			faculty_name: "",
+			thesis_advisor_name: "",
 			thesis_exam_date: null,
 		},
 		validate: {
@@ -144,6 +145,24 @@ const RequestThesisDefense = () => {
 					/* if (user_id === "674140101") {
 					} */
 					{
+						const ThesisProposalRes = await fetch(`${BASE_URL}/api/allRequestThesisProposal`, {
+							method: "POST",
+							headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+							body: JSON.stringify({ term: selectedTerm }),
+						});
+						const ThesisProposalData = await ThesisProposalRes.json();
+						if (!ThesisProposalRes.ok) throw new Error(ThesisProposalData.message);
+
+						if (ThesisProposalData.length > 0) {
+							const latestRequest = ThesisProposalData.reduce((prev, current) => (Number(prev.request_exam_id) > Number(current.request_exam_id) ? prev : current));
+							console.log("ผลการสอบล่าสุด:", latestRequest.exam_results);
+							if (latestRequest.exam_results === "ไม่ผ่าน" || latestRequest.exam_results === "ขาดสอบ" || latestRequest.exam_results === null) {
+								throw new Error("ยังสอบคำร้องขอสอบประมวลความรู้/การค้นคว้าอิสระ ไม่ผ่าน");
+							}
+						} else {
+							throw new Error("ยังสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ ไม่ผ่าน");
+						}
+
 						const registrationRes = await fetch(`${BASE_URL}/api/allStudyGroupIdCourseRegistration`, {
 							method: "POST",
 							headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -184,9 +203,23 @@ const RequestThesisDefense = () => {
 						}
 					}
 
-					if (ThesisDefenseData[0]?.status === "6" || ThesisDefenseData[0]?.status === undefined) {
+					/* if (ThesisDefenseData[0]?.status === "6" || ThesisDefenseData[0]?.status === undefined) {
 						setLatestRequest(false);
 					} else {
+						setLatestRequest(true);
+					} */
+
+					if (!ThesisDefenseData.length) {
+						console.log("ลำดับ : 1 ไม่มีคำร้อง (เปิด)");
+						setLatestRequest(false);
+					} else if (selectedTerm === ThesisDefenseData[0].term) {
+						console.log("ลำดับ : 3 เทอมนี้ลงแล้ว (ปิด)");
+						setLatestRequest(true);
+					} else if (ThesisDefenseData[0].exam_results === "ไม่ผ่าน" || ThesisDefenseData[0].exam_results === "ขาดสอบ") {
+						console.log("ลำดับ : 4 รอบที่แล้วไม่ผ่าน (เปิด)");
+						setLatestRequest(false);
+					} else {
+						console.log("ลำดับ : 5 (ปิด)");
 						setLatestRequest(true);
 					}
 				}
@@ -210,6 +243,8 @@ const RequestThesisDefense = () => {
 			console.log(ThesisProposalData[0]);
 			form.setValues(ThesisProposalData[0]);
 			form.setValues({ thesis_exam_date: null });
+			console.log("form :", form.values);
+
 			setOpenAdd(true);
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
@@ -418,7 +453,7 @@ const RequestThesisDefense = () => {
 				</Box>
 				<Box>
 					{role === "student" && (
-						<Button onClick={() => handleOpenAdd()} disabled={latestRequest ? latestRequest.status !== "0" && latestRequest.status !== "6" && latestRequest.exam_results !== false : false}>
+						<Button onClick={() => handleOpenAdd()} disabled={latestRequest}>
 							เพิ่มคำร้อง
 						</Button>
 					)}

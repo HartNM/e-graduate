@@ -53,6 +53,55 @@ router.post("/allRequestEngTest", authenticateToken, async (req, res) => {
 		const result = await request.query(query);
 		const enrichedData = await Promise.all(
 			result.recordset.map(async (item) => {
+				//---------------------------------------------------------------receipt--------------------------------------------------------------------------
+				if (item.status === "4") {
+					try {
+						// เรียก API e-payment
+						const paymentUrl = `https://e-payment.kpru.ac.th/pay/api/showlistcustomer/${item.student_id}/81914`;
+						const paymentRes = await axios.get(paymentUrl);
+						const paymentData = paymentRes.data;
+
+						if (Array.isArray(paymentData) && paymentData.length > 0) {
+							const payInfo = paymentData[0];
+							if (payInfo.success == 1) {
+								let dateForSQL = null;
+								if (payInfo.payment_create) {
+									const [day, month, thaiYear] = payInfo.payment_create.split("/");
+									const engYear = parseInt(thaiYear) - 543;
+									dateForSQL = `${engYear}-${month}-${day} 00:00:00`;
+								}
+
+								const updateQuery = `
+									UPDATE request_eng_test 
+									SET status = @status, 
+										receipt_vol = @vol, 
+										receipt_No = @no, 
+										receipt_pay_date = @date 
+									WHERE request_exam_id = @id
+								`;
+								await pool
+									.request()
+									.input("status", "5")
+									.input("vol", payInfo.receipt_book)
+									.input("no", payInfo.receipt_no)
+									.input("date", dateForSQL)
+									.input("id", item.request_exam_id)
+									.query(updateQuery);
+
+								item.status = 5;
+								item.receipt_vol = payInfo.receipt_book;
+								item.receipt_No = payInfo.receipt_no;
+								item.receipt_pay_date = dateForSQL;
+							} else {
+								console.log("ไม่มีข้อมูล ", item.student_id);
+							}
+						}
+					} catch (err) {
+						console.error(`Error checking payment for student ${item.student_id}:`, err.message);
+						// ไม่ throw error เพื่อให้ Loop ทำงานต่อได้กับ item อื่นๆ
+					}
+				}
+				//---------------------------------------------------------------receipt--------------------------------------------------------------------------
 				let studentInfo = null;
 				try {
 					const studentRes = await axios.get(`${BASE_URL}/api/student/${item.student_id}`);

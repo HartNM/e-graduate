@@ -94,38 +94,37 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 						const paymentRes = await axios.get(paymentUrl);
 						const paymentData = paymentRes.data;
 
-						// เช็คว่ามีข้อมูลและ success เป็น 1 หรือไม่ (API ส่งกลับเป็น Array)
 						if (Array.isArray(paymentData) && paymentData.length > 0) {
 							const payInfo = paymentData[0];
-
 							if (payInfo.success == 1) {
-								// A. อัปเดตลงฐานข้อมูล
+								let dateForSQL = null;
+								if (payInfo.payment_create) {
+									const [day, month, thaiYear] = payInfo.payment_create.split("/");
+									const engYear = parseInt(thaiYear) - 543;
+									dateForSQL = `${engYear}-${month}-${day} 00:00:00`;
+								}
+
 								const updateQuery = `
                                     UPDATE request_exam 
-                                    SET status =@status, 
+                                    SET status = @status, 
 										receipt_vol = @vol, 
                                         receipt_No = @no, 
                                         receipt_pay_date = @date 
                                     WHERE request_exam_id = @id
                                 `;
-
 								await pool
 									.request()
 									.input("status", "5")
 									.input("vol", payInfo.receipt_book)
 									.input("no", payInfo.receipt_no)
-									.input("date", payInfo.payment_create) // วันที่เป็น string เช่น "02/12/2568"
+									.input("date", dateForSQL)
 									.input("id", item.request_exam_id)
 									.query(updateQuery);
 
-								// B. อัปเดตค่าใน Object item เพื่อส่งกลับไปให้ Frontend เห็นทันที
 								item.status = 5;
 								item.receipt_vol = payInfo.receipt_book;
 								item.receipt_No = payInfo.receipt_no;
-								item.receipt_pay_date = payInfo.payment_create;
-
-								// (Optional) ถ้าต้องการเปลี่ยน status เป็น 5 (จ่ายแล้ว) โดยอัตโนมัติ ให้ทำตรงนี้
-								// item.status = 5;
+								item.receipt_pay_date = dateForSQL;
 							} else {
 								console.log("ไม่มีข้อมูล ", item.student_id);
 							}

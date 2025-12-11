@@ -153,22 +153,11 @@ const RequestEngTest = () => {
 					throw new Error("ระบบคำร้องขอทดสอบความรู้ทางภาษาอังกฤษยังไม่เปิด");
 				}
 
-				const countFailOrAbsent = request.filter((row) => row.exam_results === "ไม่ผ่าน" || row.exam_results === "ขาดสอบ").length;
 				if (!request.length) {
 					console.log("ลำดับ : 1 ไม่มีคำร้อง (เปิด)");
 					setLatestRequest(false);
-				} else if (countFailOrAbsent > 2) {
-					console.log("ลำดับ : 2 ไม่ผ่านเกิน 3 ครั้ง (ปิด)");
-					setLatestRequest(true);
-					throw new Error("สอบไม่ผ่านเกิน 3 ครั้ง");
-				} else if (selectedTerm === request[0].term) {
-					console.log("ลำดับ : 3 เทอมนี้ลงแล้ว (ปิด)");
-					setLatestRequest(true);
-				} else if (request[0].exam_results === "ไม่ผ่าน" || request[0].exam_results === "ขาดสอบ") {
-					console.log("ลำดับ : 4 รอบที่แล้วไม่ผ่าน (เปิด)");
-					setLatestRequest(false);
 				} else {
-					console.log("ลำดับ : 5 (ปิด)");
+					console.log("ลำดับ : 2 มีคำร้อง (ปิด)");
 					setLatestRequest(true);
 				}
 			} catch (e) {

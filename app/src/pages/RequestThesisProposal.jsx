@@ -149,6 +149,25 @@ const RequestThesisProposal = () => {
 					/* if (user_id === "674140101") {
 					} */
 					{
+						const requestReq = await fetch(`${BASE_URL}/api/requestExamAll`, {
+							method: "POST",
+							headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+							body: JSON.stringify({ term: selectedTerm }),
+						});
+						const requestData = await requestReq.json();
+						if (!requestReq.ok) throw new Error(requestData.message);
+						console.log("requestData", requestData);
+
+						if (requestData.length > 0) {
+							const latestRequest = requestData.reduce((prev, current) => (Number(prev.request_exam_id) > Number(current.request_exam_id) ? prev : current));
+							console.log("ผลการสอบล่าสุด:", latestRequest.exam_results);
+							if (latestRequest.exam_results === "ไม่ผ่าน" || latestRequest.exam_results === "ขาดสอบ" || latestRequest.exam_results === null) {
+								throw new Error("ยังสอบประมวลความรู้/วัดคุณสมบัติ ไม่ผ่าน");
+							}
+						} else {
+							throw new Error("ยังสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ ไม่ผ่าน");
+						}
+
 						const registrationRes = await fetch(`${BASE_URL}/api/allStudyGroupIdCourseRegistration`, {
 							method: "POST",
 							headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -189,9 +208,23 @@ const RequestThesisProposal = () => {
 						}
 					}
 
-					if (ThesisProposalData[0]?.status === "6" || ThesisProposalData[0]?.status === undefined) {
+					/* if (ThesisProposalData[0]?.status === "6" || ThesisProposalData[0]?.status === undefined) {
 						setLatestRequest(false);
 					} else {
+						setLatestRequest(true);
+					} */
+
+					if (!ThesisProposalData.length) {
+						console.log("ลำดับ : 1 ไม่มีคำร้อง (เปิด)");
+						setLatestRequest(false);
+					} else if (selectedTerm === ThesisProposalData[0].term) {
+						console.log("ลำดับ : 2 เทอมนี้ลงแล้ว (ปิด)");
+						setLatestRequest(true);
+					} else if (ThesisProposalData[0].exam_results === "ไม่ผ่าน" || ThesisProposalData[0].exam_results === "ขาดสอบ") {
+						console.log("ลำดับ : 3 รอบที่แล้วไม่ผ่าน (เปิด)");
+						setLatestRequest(false);
+					} else {
+						console.log("ลำดับ : 4 (ปิด)");
 						setLatestRequest(true);
 					}
 				}
@@ -421,7 +454,7 @@ const RequestThesisProposal = () => {
 				</Box>
 				<Box>
 					{role === "student" && (
-						<Button onClick={() => handleOpenAdd()} disabled={latestRequest ? latestRequest.status !== "0" && latestRequest.status !== "6" && latestRequest.exam_results !== false : false}>
+						<Button onClick={() => handleOpenAdd()} disabled={latestRequest}>
 							เพิ่มคำร้อง
 						</Button>
 					)}
