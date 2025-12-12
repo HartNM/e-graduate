@@ -100,13 +100,10 @@ const RequestExam = () => {
 				}
 
 				if (!currentTerm && termInfodata.length > 0) {
-					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก close_date
 					currentTerm = [...termInfodata].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
 				}
 				if (currentTerm) {
 					setSelectedTerm(currentTerm.term);
-				} else {
-					console.warn("ไม่พบข้อมูลเทอม");
 				}
 			} catch (e) {
 				notify("error", e.message);
@@ -182,7 +179,6 @@ const RequestExam = () => {
 					});
 					const registrationData = await registrationRes.json();
 					if (!registrationRes.ok) throw new Error(registrationData.message);
-					/* if (!registrationData) throw new Error("รอเจ้าหน้าที่ประจำสาขากรอกรายวิชาบังคับ"); */
 					console.log("ที่ต้องลง :", registrationData);
 
 					const registerCoursesRes = await fetch("/mua-proxy/FrontEnd_Tabian/apiforall/ListSubjectPass", {
@@ -233,6 +229,7 @@ const RequestExam = () => {
 					console.log("ลำดับ : 5 (ปิด)");
 					setIsAddButtonDisabled(true);
 				}
+				
 			} catch (e) {
 				notify("error", e.message, 10000);
 				console.error(e);

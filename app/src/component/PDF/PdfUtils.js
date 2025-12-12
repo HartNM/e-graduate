@@ -115,3 +115,63 @@ export const drawMiddleText = (page, text, x, y, height, font = THSarabunNewFont
 
 	page.drawText(text, { x, y: centerY, size, font });
 };
+
+export async function fetchPersonDataAndSignature(pdfDoc, data, ids) {
+	const signatureImages = {};
+	try {
+		for (const [role, prop] of Object.entries(ids)) {
+			const id = data?.[prop];
+			if (!id || isNaN(Number(id))) continue;
+			// 1. ดึงรูปภาพลายเซ็น
+			try {
+				const imgRes = await fetch(`https://e-par.kpru.ac.th/timeKPRU/contents/signature/${id}.jpg`);
+				if (imgRes.ok) {
+					const imgBuffer = await imgRes.arrayBuffer();
+					signatureImages[role] = await pdfDoc.embedJpg(imgBuffer);
+				}
+			} catch (imgError) {
+				console.warn(`Cannot fetch signature for ${role} (ID: ${id})`, imgError);
+			}
+			// 2. ดึงชื่อ-นามสกุล
+			try {
+				const nameRes = await fetch(`https://mis.kpru.ac.th/api/TabianAPI/${id}`);
+				if (nameRes.ok) {
+					const nameData = await nameRes.json();
+					if (nameData?.AjDetail && nameData.AjDetail.length > 0) {
+						const info = nameData.AjDetail[0];
+						const nameProp = prop.replace("_id", "_name");
+						data[nameProp] = `${info.prename_full_tha}${info.first_name_tha} ${info.last_name_tha}`;
+					}
+				}
+			} catch (nameError) {
+				console.error(`Error fetch name for ID ${id}:`, nameError);
+			}
+		}
+	} catch (e) {
+		console.error("Error in fetchPersonDataAndSignature:", e);
+	}
+	return signatureImages;
+}
+
+export function drawSignature(page, image, x, y, maxWidth = 70, maxHeight = 30) {
+	if (!image) return;
+
+	// คำนวณ Scale เพื่อไม่ให้เกินขนาดที่กำหนด
+	const xScale = maxWidth / image.width;
+	const yScale = maxHeight / image.height;
+	const scaleFactor = Math.min(xScale, yScale);
+
+	const imgWidth = image.width * scaleFactor;
+	const imgHeight = image.height * scaleFactor;
+
+	// คำนวณจุดกึ่งกลาง (x คือจุดกึ่งกลางบรรทัด, y คือฐานบรรทัด)
+	const centeredX = x - imgWidth / 2;
+	const centeredY = y + 3; // ขยับขึ้นจากเส้นบรรทัดเล็กน้อย (ปรับค่าได้)
+
+	page.drawImage(image, {
+		x: centeredX,
+		y: centeredY,
+		width: imgWidth,
+		height: imgHeight,
+	});
+}

@@ -1,19 +1,21 @@
 import fontkit from "@pdf-lib/fontkit";
-import { PDFDocument, rgb } from "pdf-lib";
+import { PDFDocument } from "pdf-lib";
 import { Button } from "@mantine/core";
-import { setDefaultFont, drawGrid, draw, drawRect, drawCenterXText, formatThaiDate, formatThaiDateShort } from "./PdfUtils.js";
+import { setDefaultFont, draw, drawRect, drawCenterXText, formatThaiDate, formatThaiDateShort, fetchPersonDataAndSignature, drawSignature } from "./PdfUtils.js";
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 async function fillPdf(data) {
+	// สร้าง pdf
 	const pdfDoc = await PDFDocument.create();
 	pdfDoc.registerFontkit(fontkit);
 	const page = pdfDoc.addPage([595, 842]);
 
+	// ดึง Font
 	await setDefaultFont(pdfDoc);
 	const THSarabunNewBytesBold = await fetch("/fonts/THSarabunNew Bold.ttf").then((res) => res.arrayBuffer());
 	const THSarabunNewBold = await pdfDoc.embedFont(THSarabunNewBytesBold);
 
-	/* drawGrid(page); */
+	// ดึงวันสอบ
 	const token = localStorage.getItem("token");
 	let KQ_exam_date;
 	try {
@@ -29,30 +31,20 @@ async function fillPdf(data) {
 	} catch (e) {
 		console.error("Error fetch allRequestExamInfo:", e);
 	}
-
+	
+	// ดึงลายเซ็น ชื่อ
+	if (data) {
+		data.finance_approvals_id = 1629900598264;
+	}
 	const ids = {
 		advisor: "advisor_approvals_id",
 		chairpersons: "chairpersons_approvals_id",
 		registrar: "registrar_approvals_id",
+		finance: "finance_approvals_id",
 	};
-	try {
-		for (const [role, prop] of Object.entries(ids)) {
-			const id = data?.[prop];
-			if (!id || isNaN(Number(id))) continue;
-			const res = await fetch(`${BASE_URL}/api/personnelInfo`, {
-				method: "POST",
-				headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ user_id: id }),
-			});
-			const person = await res.json();
-			if (person) {
-				data[prop] = person.name;
-			}
-		}
-	} catch (e) {
-		console.error("Error fetch personnelInfo:", e);
-	}
+	const signatureImages = await fetchPersonDataAndSignature(pdfDoc, data, ids);
 
+	// แปลงวันที่
 	const [request_date_day, request_date_month, request_date_year] = formatThaiDate(data?.request_date);
 	const [exam_date_day, exam_date_month, exam_date_year] = formatThaiDate(KQ_exam_date);
 	const [advisor_approvals_date_day, advisor_approvals_date_month, advisor_approvals_date_year] = formatThaiDateShort(data?.advisor_approvals_date);
@@ -63,9 +55,10 @@ async function fillPdf(data) {
 	let y = 760;
 	let space = 20;
 
+	// ข้อมูลวาด pdf
 	drawCenterXText(page, `คำร้อง${data?.request_type}`, 780, THSarabunNewBold, 20);
-
 	const drawItems = [
+		// คำร้อง
 		{ text: `มหาวิทยาลัยราชภัฏกำแพงเพชร`, x: 420, y: (y -= space) },
 		{ text: `วันที่................เดือน...........................พ.ศ...................`, x: 350, y: (y -= space) },
 		{ text: request_date_day, x: 380, y: y + 2 },
@@ -89,70 +82,97 @@ async function fillPdf(data) {
 		{ text: data?.term, x: 130, y: y + 2 },
 		{ text: `${exam_date_day} ${exam_date_month} ${exam_date_year}`, x: 210, y: y + 2 },
 		{ text: `จึงเรียนมาเพื่อโปรดพิจารณา`, x: 100, y: (y -= space) },
+		
 		{ text: `ลงชื่อ...........................................................................`, x: 310, y: (y -= space * 2) },
-		{ text: data?.student_name, x: 370, y: y + 2 },
+		{ text: data?.student_name, x: 415, y: y + 2, centered: true },
 		{ text: `(.........................................................................)`, x: 330, y: (y -= space) },
-		{ text: data?.student_name, x: 370, y: y + 2 },
+		{ text: data?.student_name, x: 415, y: y + 2, centered: true },
 		{ text: `นักศึกษา`, x: 400, y: (y -= space) },
 		{ text: `วันที่................/........................../......................`, x: 330, y: (y -= space) },
 		{ text: request_date_day, x: 360, y: y + 2 },
 		{ text: request_date_month, x: 400, y: y + 2 },
 		{ text: request_date_year, x: 465, y: y + 2 },
 
+		// อาจารย์ที่ปรึกษา
 		{ text: `1. ความเห็นของอาจารย์ที่ปรึกษาหมู่เรียน`, x: 60, y: (y -= space * 2), font: THSarabunNewBold, show: typeof data?.advisor_approvals === "boolean" },
 		{ text: data?.advisor_approvals ? "เห็นควรอนุญาต" : "ไม่อนุญาต", x: 80, y: (y -= space), show: typeof data?.advisor_approvals === "boolean" },
 		{ text: `เนื่องจาก ${data?.comment}`, x: 80, y: (y -= space), show: typeof data?.advisor_approvals === "boolean" && !data.advisor_approvals },
 		{ text: `ลงชื่อ.......................................................................`, x: 75, y: (y -= space * 2), show: typeof data?.advisor_approvals === "boolean" },
-		{ text: data?.advisor_approvals_id, x: 140, y: y + 2, show: typeof data?.advisor_approvals === "boolean" },
+		{ text: "", x: 175, y: y + 2, show: typeof data?.advisor_approvals === "boolean", image: signatureImages.advisor },
 		{ text: `(.....................................................................) `, x: 95, y: (y -= space), show: typeof data?.advisor_approvals === "boolean" },
-		{ text: data?.advisor_approvals_id, x: 140, y: y + 2, show: typeof data?.advisor_approvals === "boolean" },
+		{ text: data?.advisor_approvals_name, x: 175, y: y + 2, show: typeof data?.advisor_approvals === "boolean", centered: true },
 		{ text: `อาจารย์ที่ปรึกษา`, x: 145, y: (y -= space), show: typeof data?.advisor_approvals === "boolean" },
 		{ text: `วันที่ ........../................./...................`, x: 110, y: (y -= space), show: typeof data?.advisor_approvals === "boolean" },
 		{ text: advisor_approvals_date_day, x: 135, y: y + 2, show: typeof data?.advisor_approvals === "boolean" },
 		{ text: advisor_approvals_date_month, x: 170, y: y + 2, show: typeof data?.advisor_approvals === "boolean" },
 		{ text: advisor_approvals_date_year, x: 210, y: y + 2, show: typeof data?.advisor_approvals === "boolean" },
 
+		// ประธานกรรมการ
 		{ text: `2. ความเห็นประธานกรรมการบัณฑิตศึกษาประจำสาขาวิชา`, x: 310, y: (y += space * 7), font: THSarabunNewBold, show: typeof data?.chairpersons_approvals === "boolean" },
 		{ text: data?.chairpersons_approvals ? "เห็นควรอนุญาต" : "ไม่อนุญาต", x: 330, y: (y -= space), show: typeof data?.chairpersons_approvals === "boolean" },
 		{ text: `เนื่องจาก ${data?.comment}`, x: 330, y: (y -= space), show: typeof data?.chairpersons_approvals === "boolean" && !data.chairpersons_approvals },
 		{ text: `ลงชื่อ.......................................................................`, x: 325, y: (y -= space * 2), show: typeof data?.chairpersons_approvals === "boolean" },
-		{ text: data?.chairpersons_approvals_id, x: 390, y: y + 2, show: typeof data?.chairpersons_approvals === "boolean" },
+		{ text: "", x: 425, y: y + 2, show: typeof data?.chairpersons_approvals === "boolean", image: signatureImages.chairpersons },
 		{ text: `(.....................................................................) `, x: 345, y: (y -= space), show: typeof data?.chairpersons_approvals === "boolean" },
-		{ text: data?.chairpersons_approvals_id, x: 390, y: y + 2, show: typeof data?.chairpersons_approvals === "boolean" },
+		{ text: data?.chairpersons_approvals_name, x: 425, y: y + 2, show: typeof data?.chairpersons_approvals === "boolean", centered: true },
 		{ text: `ประธานกรรมการบัณฑิตศึกษาประจำสาขาวิชา`, x: 340, y: (y -= space), show: typeof data?.chairpersons_approvals === "boolean" },
 		{ text: `วันที่ ........../................./...................`, x: 360, y: (y -= space), show: typeof data?.chairpersons_approvals === "boolean" },
 		{ text: chairpersons_approvals_date_day, x: 385, y: y + 2, show: typeof data?.chairpersons_approvals === "boolean" },
 		{ text: chairpersons_approvals_date_month, x: 420, y: y + 2, show: typeof data?.chairpersons_approvals === "boolean" },
 		{ text: chairpersons_approvals_date_year, x: 460, y: y + 2, show: typeof data?.chairpersons_approvals === "boolean" },
 
+		// นายทะเบียน
 		{ text: `3. การตรวจสอบของสำนักส่งเสริมวิชาการและงานทะเบียน`, x: 60, y: (y -= space * 1.5), font: THSarabunNewBold, show: typeof data?.registrar_approvals === "boolean" },
 		{ text: data?.registrar_approvals ? `มีสภาพการเป็นนักศึกษา ภาคเรียนที่ ${data?.term}` : `ไม่อนุญาต`, x: 80, y: (y -= space), show: typeof data?.registrar_approvals === "boolean" },
 		{ text: data?.registrar_approvals ? `ลงทะเบียนเรียนครบตามหลักสูตร` : `เนื่องจาก ${data?.comment}`, x: 80, y: (y -= space), show: typeof data?.registrar_approvals === "boolean" },
-		{ text: `ให้ชำระค่าธรรมเนียมที่ฝ่ายการเงิน`, x: 60, y: (y -= space), show: typeof data?.registrar_approvals === "boolean" && data?.registrar_approvals },
+		{ text: ``, x: 60, y: (y -= space), show: typeof data?.registrar_approvals === "boolean" && data?.registrar_approvals }, //ให้ชำระค่าธรรมเนียมที่ฝ่ายการเงิน
 		{ text: `ลงชื่อ.......................................................................`, x: 75, y: (y -= space), show: typeof data?.registrar_approvals === "boolean" },
-		{ text: data?.registrar_approvals_id, x: 140, y: y + 2, show: typeof data?.registrar_approvals === "boolean" },
+		{ text: "", x: 175, y: y + 2, show: typeof data?.registrar_approvals === "boolean", image: signatureImages.registrar },
 		{ text: `(.....................................................................) `, x: 95, y: (y -= space), show: typeof data?.registrar_approvals === "boolean" },
-		{ text: data?.registrar_approvals_id, x: 140, y: y + 2, show: typeof data?.registrar_approvals === "boolean" },
+		{ text: data?.registrar_approvals_name, x: 175, y: y + 2, show: typeof data?.registrar_approvals === "boolean", centered: true },
 		{ text: `นายทะเบียน`, x: 150, y: (y -= space), show: typeof data?.registrar_approvals === "boolean" },
 		{ text: `วันที่ ........../................./...................`, x: 110, y: (y -= space), show: typeof data?.registrar_approvals === "boolean" },
 		{ text: registrar_approvals_date_day, x: 135, y: y + 2, show: typeof data?.registrar_approvals === "boolean" },
 		{ text: registrar_approvals_date_month, x: 170, y: y + 2, show: typeof data?.registrar_approvals === "boolean" },
 		{ text: registrar_approvals_date_year, x: 210, y: y + 2, show: typeof data?.registrar_approvals === "boolean" },
 
+		// การเงิน
 		{ text: `4. ชำระค่าธรรมเนียมการสอบแล้ว ภาคเรียนที่ ${data?.term}`, x: 310, y: (y += space * 7), font: THSarabunNewBold, show: data?.receipt_vol !== null },
 		{ text: data?.education_level === "ปริญญาโท" ? "ปริญญาโท จำนวน 1,000 บาท (หนึ่งพันบาทถ้วน)" : "ปริญญาเอก จำนวน 1,500 บาท (หนึ่งพันห้าร้อยบาทถ้วน)", x: 330, y: (y -= space), show: data?.receipt_vol !== null },
 		{ text: `ตามใบเสร็จรับเงิน เล่มที่ ${data?.receipt_vol} เลขที่ ${data?.receipt_No}`, x: 310, y: (y -= space), show: data?.receipt_vol !== null },
 		{ text: `ลงชื่อ.......................................................................`, x: 325, y: (y -= space * 2), show: data?.receipt_vol !== null },
-		{ text: "นายณัฐวุฒิ มาตกาง", x: 390, y: y + 2, show: data?.receipt_vol !== null },
+		{ text: "", x: 425, y: y + 2, show: data?.receipt_vol !== null, image: signatureImages.finance },
 		{ text: `(.....................................................................) `, x: 345, y: (y -= space), show: data?.receipt_vol !== null },
-		{ text: "นายณัฐวุฒิ มาตกาง", x: 390, y: y + 2, show: data?.receipt_vol !== null },
+		{ text: data?.finance_approvals_name, x: 425, y: y + 2, show: data?.receipt_vol !== null, centered: true },
 		{ text: `เจ้าหน้าที่การเงิน`, x: 395, y: (y -= space), show: data?.receipt_vol !== null },
 		{ text: `วันที่ ........../................./...................`, x: 360, y: (y -= space), show: data?.receipt_vol !== null },
 		{ text: receipt_pay_date_day, x: 385, y: y + 2, show: data?.receipt_vol !== null },
 		{ text: receipt_pay_date_month, x: 420, y: y + 2, show: data?.receipt_vol !== null },
 		{ text: receipt_pay_date_year, x: 460, y: y + 2, show: data?.receipt_vol !== null },
 	];
-	drawItems.filter((item) => item.show !== false).forEach((item) => draw(page, item.text, item.x, item.y, item.font, item.size));
+
+	// วาด pdf
+	drawItems
+		.filter((item) => item.show !== false)
+		.forEach((item) => {
+			let drawX = item.x;
+
+			// ถ้ามี flag centered ให้คำนวณหาจุดกึ่งกลาง
+			if (item.centered && item.text) {
+				const fontToUse = item.font || THSarabunNewBold;
+				const sizeToUse = item.size || 14;
+				const textWidth = fontToUse.widthOfTextAtSize(item.text, sizeToUse);
+				drawX = item.x - textWidth / 2;
+			}
+
+			// วาดข้อความ (ใช้ drawX ที่คำนวณแล้ว)
+			draw(page, item.text, drawX, item.y, item.font, item.size);
+
+			// วาดรูปภาพ (โค้ดเดิม)
+			if (item.image) {
+				drawSignature(page, item.image, item.x, item.y);
+			}
+		});
 
 	typeof data?.advisor_approvals === "boolean" && drawRect(page, 50, y + space * 8, 250, space * 8.5);
 	typeof data?.chairpersons_approvals === "boolean" && drawRect(page, 300, y + space * 8, 250, space * 8.5);
