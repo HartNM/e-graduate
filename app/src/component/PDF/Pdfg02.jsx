@@ -1,7 +1,8 @@
 import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument } from "pdf-lib";
 import { Button } from "@mantine/core";
-import { setDefaultFont, draw, drawRect, drawCenterXText, formatThaiDate, formatThaiDateShort, fetchPersonDataAndSignature, drawSignature } from "./PdfUtils.js";
+import { useState } from "react";
+import { setDefaultFont, draw, drawRect, drawCenterXText, formatThaiDate, formatThaiDateShort, fetchPersonDataAndSignature, drawSignature, drawGrid } from "./PdfUtils.js";
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 async function fillPdf(data) {
@@ -54,7 +55,7 @@ async function fillPdf(data) {
 
 	let y = 760;
 	let space = 20;
-
+	/* drawGrid(page); */
 	drawCenterXText(page, `คำร้องขอทดสอบความรู้ทางภาษาอังกฤษ`, 780, THSarabunNewBold, 20);
 
 	const drawItems = [
@@ -80,7 +81,7 @@ async function fillPdf(data) {
 		{ text: data?.term, x: 130, y: y + 2 },
 		{ text: `${exam_date_day} ${exam_date_month} ${exam_date_year}`, x: 210, y: y + 2 },
 		{ text: `จึงเรียนมาเพื่อโปรดพิจารณา`, x: 100, y: (y -= space) },
-		
+
 		{ text: `ลงชื่อ...........................................................................`, x: 310, y: (y -= space * 2) },
 		{ text: data?.student_name, x: 415, y: y + 2, centered: true },
 		{ text: `(.........................................................................)`, x: 330, y: (y -= space) },
@@ -101,7 +102,7 @@ async function fillPdf(data) {
 		{ text: "", x: 175, y: y + 2, show: typeof data?.advisor_approvals === "boolean", image: signatureImages.advisor },
 
 		{ text: `(.....................................................................) `, x: 95, y: (y -= space), show: typeof data?.advisor_approvals === "boolean" },
-		{ text: data?.advisor_approvals_name, x: 140, y: y + 2, show: typeof data?.advisor_approvals === "boolean" },
+		{ text: data?.advisor_approvals_name, x: 177, y: y + 2, show: typeof data?.advisor_approvals === "boolean", centered: true },
 		{ text: `อาจารย์ที่ปรึกษา`, x: 145, y: (y -= space), show: typeof data?.advisor_approvals === "boolean" },
 		{ text: `วันที่ ........../................./...................`, x: 110, y: (y -= space), show: typeof data?.advisor_approvals === "boolean" },
 		{ text: advisor_approvals_date_day, x: 135, y: y + 2, show: typeof data?.advisor_approvals === "boolean" },
@@ -118,7 +119,7 @@ async function fillPdf(data) {
 		{ text: "", x: 425, y: y + 2, show: typeof data?.chairpersons_approvals === "boolean", image: signatureImages.chairpersons },
 
 		{ text: `(.....................................................................) `, x: 345, y: (y -= space), show: typeof data?.chairpersons_approvals === "boolean" },
-		{ text: data?.chairpersons_approvals_name, x: 390, y: y + 2, show: typeof data?.chairpersons_approvals === "boolean" },
+		{ text: data?.chairpersons_approvals_name, x: 427, y: y + 2, show: typeof data?.chairpersons_approvals === "boolean", centered: true },
 		{ text: `ประธานกรรมการบัณฑิตศึกษาประจำสาขาวิชา`, x: 340, y: (y -= space), show: typeof data?.chairpersons_approvals === "boolean" },
 		{ text: `วันที่ ........../................./...................`, x: 360, y: (y -= space), show: typeof data?.chairpersons_approvals === "boolean" },
 		{ text: chairpersons_approvals_date_day, x: 385, y: y + 2, show: typeof data?.chairpersons_approvals === "boolean" },
@@ -136,7 +137,7 @@ async function fillPdf(data) {
 		{ text: "", x: 175, y: y + 2, show: typeof data?.registrar_approvals === "boolean", image: signatureImages.registrar },
 
 		{ text: `(.....................................................................) `, x: 95, y: (y -= space), show: typeof data?.registrar_approvals === "boolean" },
-		{ text: data?.registrar_approvals_name, x: 140, y: y + 2, show: typeof data?.registrar_approvals === "boolean" },
+		{ text: data?.registrar_approvals_name, x: 177, y: y + 2, show: typeof data?.registrar_approvals === "boolean", centered: true },
 		{ text: `นายทะเบียน`, x: 150, y: (y -= space), show: typeof data?.registrar_approvals === "boolean" },
 		{ text: `วันที่ ........../................./...................`, x: 110, y: (y -= space), show: typeof data?.registrar_approvals === "boolean" },
 		{ text: registrar_approvals_date_day, x: 135, y: y + 2, show: typeof data?.registrar_approvals === "boolean" },
@@ -146,7 +147,7 @@ async function fillPdf(data) {
 		// --- 4. การเงิน (ปรับปรุงให้เหมือน Pdfg01) ---
 		{ text: `4. ชำระค่าธรรมเนียมการสอบแล้ว ภาคเรียนที่ ${data?.term}`, x: 310, y: (y += space * 7), font: THSarabunNewBold, show: data?.receipt_vol !== null },
 		{ text: "จำนวน 1,000 บาท (หนึ่งพันบาทถ้วน)", x: 330, y: (y -= space), show: data?.receipt_vol !== null },
-		{ text: `ตามใบเสร็จรับเงิน เล่มที่ ${data?.receipt_vol} เลขที่ ${data?.receipt_vol}`, x: 310, y: (y -= space), show: data?.receipt_vol !== null },
+		{ text: `ตามใบเสร็จรับเงิน เล่มที่ ${data?.receipt_vol} เลขที่ ${data?.receipt_No}`, x: 310, y: (y -= space), show: data?.receipt_vol !== null },
 		{ text: `ลงชื่อ.......................................................................`, x: 325, y: (y -= space * 2), show: data?.receipt_vol !== null },
 
 		// รูปภาพลายเซ็น
@@ -155,7 +156,7 @@ async function fillPdf(data) {
 		{ text: `(.....................................................................) `, x: 345, y: (y -= space), show: data?.receipt_vol !== null },
 
 		// ชื่อการเงิน (ใช้ค่าที่ fetch มา)
-		{ text: data?.finance_approvals_name, x: 390, y: y + 2, show: data?.receipt_vol !== null },
+		{ text: data?.finance_approvals_name, x: 427, y: y + 2, show: data?.receipt_vol !== null, centered: true },
 
 		{ text: `เจ้าหน้าที่การเงิน`, x: 395, y: (y -= space), show: data?.receipt_vol !== null },
 		{ text: `วันที่ ........../................./...................`, x: 360, y: (y -= space), show: data?.receipt_vol !== null },
@@ -164,14 +165,18 @@ async function fillPdf(data) {
 		{ text: receipt_pay_date_year, x: 460, y: y + 2, show: data?.receipt_vol !== null },
 	];
 
-	// --- ส่วน Loop วาด (ใช้ logic แบบ Pdfg01 เพื่อรองรับรูปภาพ) ---
+	
 	drawItems
 		.filter((item) => item.show !== false)
 		.forEach((item) => {
-			// วาดข้อความ
-			draw(page, item.text, item.x, item.y, item.font, item.size);
-
-			// วาดรูปลายเซ็น (ถ้ามี)
+			let drawX = item.x;
+			if (item.centered && item.text) {
+				const fontToUse = item.font || THSarabunNewBold;
+				const sizeToUse = item.size || 14;
+				const textWidth = fontToUse.widthOfTextAtSize(item.text, sizeToUse);
+				drawX = item.x - textWidth / 2;
+			}
+			draw(page, item.text, drawX, item.y, item.font, item.size);
 			if (item.image) {
 				drawSignature(page, item.image, item.x, item.y);
 			}
@@ -187,32 +192,48 @@ async function fillPdf(data) {
 }
 
 export default function Pdfg02({ data, showType }) {
+	const [loading, setLoading] = useState(false);
+
 	const handleOpen = async () => {
-		const blob = await fillPdf(data);
-		const url = URL.createObjectURL(blob);
-		window.open(url, "_blank");
+		setLoading(true);
+		try {
+			const blob = await fillPdf(data);
+			const url = URL.createObjectURL(blob);
+			window.open(url, "_blank");
+		} catch (error) {
+			console.error("Error generating PDF:", error);
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	const handlePrint = async () => {
-		const blob = await fillPdf(data);
-		const url = URL.createObjectURL(blob);
-
-		const iframe = document.createElement("iframe");
-		iframe.style.display = "none";
-		iframe.src = url;
-		document.body.appendChild(iframe);
-		iframe.onload = () => {
-			iframe.contentWindow.print();
-		};
+		setLoading(true);
+		try {
+			const blob = await fillPdf(data);
+			const url = URL.createObjectURL(blob);
+			const iframe = document.createElement("iframe");
+			iframe.style.display = "none";
+			iframe.src = url;
+			document.body.appendChild(iframe);
+			iframe.onload = () => {
+				iframe.contentWindow.print();
+			};
+		} catch (error) {
+			console.error("Error printing PDF:", error);
+		} finally {
+			setLoading(false);
+		}
 	};
+
 	return (
 		<>
 			{showType === "view" ? (
-				<Button size="xs" color="gray" onClick={handleOpen}>
+				<Button size="xs" color="gray" onClick={handleOpen} loading={loading}>
 					ข้อมูล
 				</Button>
 			) : (
-				<Button size="xs" color="blue" onClick={handlePrint}>
+				<Button size="xs" color="blue" onClick={handlePrint} loading={loading}>
 					พิมพ์
 				</Button>
 			)}

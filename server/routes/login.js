@@ -68,7 +68,11 @@ router.post("/login", async (req, res) => {
 			if (loginData[0].AJStatus === "1") {
 				roles.push("advisor");
 			}
-
+			// test ---------------------------------------
+			if (username === "1629900598264"){
+				roles.push("advisor");
+			}
+			// test ---------------------------------------
 			const db = await poolPromise;
 			const check_thesis = await db.request().input("user_id", loginData[0].employee_id).query("SELECT TOP 1 * FROM request_thesis_proposal WHERE thesis_advisor_id = @user_id");
 			console.log(check_thesis.recordset[0]);

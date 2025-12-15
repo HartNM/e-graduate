@@ -63,8 +63,15 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 				ID_TEACHER: user_id,
 			});
 			const groupNumbers = apiResponse.data.map((item) => item.GROUP_NO);
+			// test ---------------------------------------
+		/* 	console.log(groupNumbers);
+			if (user_id === "1629900598264") {
+				groupNumbers = ["6441401"];
+			}
+			console.log(groupNumbers); */
+			// test ---------------------------------------
 			if (groupNumbers.length === 0) {
-				query += ` WHERE 1=0 AND term = @term`;
+				query += ` WHERE 1=0`;
 			} else {
 				const groupListString = groupNumbers.map((group) => `'${group}'`).join(", ");
 				query += ` WHERE study_group_id IN (${groupListString}) AND term = @term`; //product

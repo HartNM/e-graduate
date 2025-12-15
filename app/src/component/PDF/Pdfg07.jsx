@@ -126,24 +126,17 @@ async function fillPdf(data) {
 		{ text: dean_approvals_date_year, x: 335, y: y + 2, show: data?.dean_approvals !== null },
 	];
 
-	// 3. [แก้ไข] Loop การวาดให้รองรับ centered และ image
 	drawItems
 		.filter((item) => item.show !== false)
 		.forEach((item) => {
 			let drawX = item.x;
-
-			// Logic การจัดกึ่งกลางข้อความ
 			if (item.centered && item.text) {
 				const fontToUse = item.font || THSarabunNewBold;
 				const sizeToUse = item.size || 14;
 				const textWidth = fontToUse.widthOfTextAtSize(item.text, sizeToUse);
 				drawX = item.x - textWidth / 2;
 			}
-
-			// วาดข้อความ
 			draw(page, item.text, drawX, item.y, item.font, item.size);
-
-			// วาดรูปภาพ
 			if (item.image) {
 				drawSignature(page, item.image, item.x, item.y);
 			}
