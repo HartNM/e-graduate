@@ -59,7 +59,7 @@ const PrintExam = () => {
 
 		const getRequest = async () => {
 			try {
-				const requestReq = await fetch(`${BASE_URL}/api/allRequestThesisProposal`, {
+				const requestReq = await fetch(`${BASE_URL}/api/allRequestThesisDefense`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 					body: JSON.stringify({ term: selectedTerm }),
@@ -82,7 +82,7 @@ const PrintExam = () => {
 	const filteredData = request.filter((p) => {
 		const filterStatus = p.status === "5";
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
-
+		
 		return filterStatus && matchesSearch;
 	});
 
@@ -119,7 +119,7 @@ const PrintExam = () => {
 					<Button size="xs" color="green" onClick={handleExport} disabled={filteredData.length === 0}>
 						Export Excel
 					</Button>
-					<PdfPrintExam data={filteredData} />
+					<PdfPrintExam data={filteredData} typeRQ={"4"}/>
 				</Group>
 			</Group>
 

@@ -234,6 +234,19 @@ const RequestThesisProposal = () => {
 								hasData = false;
 							}
 						}
+						
+						/* const currentLoopTermStr = `${loopTerm}/${loopYear}`;
+						console.log("user_id", user_id);
+						console.log("currentLoopTermStr", currentLoopTermStr);
+
+						const registerCoursesRes = await fetch("https://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListRegister", {
+							method: "POST",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify({ ID_NO: user_id, TERM: currentLoopTermStr }),
+						});
+
+						const registerCoursesData = await registerCoursesRes.json();
+						allRegisteredCourses = [...registerCoursesData]; */
 
 						console.log("รายวิชาที่ลงทั้งหมด (ทุกเทอม):", allRegisteredCourses);
 

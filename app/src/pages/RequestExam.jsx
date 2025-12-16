@@ -119,18 +119,13 @@ const RequestExam = () => {
 				const checkOpenKQRes = await fetch(`${BASE_URL}/api/checkOpenKQ`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-					body: JSON.stringify({ type: "คำร้องขอสอบประมวลความรู้/วัดคุณสมบัติ" }),
 				});
 				const checkOpenKQData = await checkOpenKQRes.json();
-
+				console.log(checkOpenKQData);
 				setOpenKQ(checkOpenKQData.status);
-
-				if (!checkOpenKQRes.ok && checkOpenKQRes.status !== 403) {
-					throw new Error(checkOpenKQData.message);
-				}
 			} catch (e) {
 				console.error("Error fetching checkOpenKQ:", e);
-				setOpenKQ(false); // Error ให้ถือว่าปิด
+				setOpenKQ(false);
 			}
 		};
 		fetchOpenStatus();
@@ -229,7 +224,6 @@ const RequestExam = () => {
 					console.log("ลำดับ : 5 (ปิด)");
 					setIsAddButtonDisabled(true);
 				}
-				
 			} catch (e) {
 				notify("error", e.message, 10000);
 				console.error(e);

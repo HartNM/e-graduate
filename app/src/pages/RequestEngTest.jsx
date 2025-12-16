@@ -104,14 +104,11 @@ const RequestEngTest = () => {
 				const checkOpenKQRes = await fetch(`${BASE_URL}/api/checkOpenKQ`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-					body: JSON.stringify({ type: "คำร้องขอทดสอบความรู้ทางภาษาอังกฤษ" }),
 				});
 				const checkOpenKQData = await checkOpenKQRes.json();
 				setOpenKQ(checkOpenKQData.status);
-				if (!checkOpenKQRes.ok) throw new Error(checkOpenKQData.message);
 			} catch (e) {
 				console.error("Error fetching checkOpenKQ:", e);
-				notify("error", e.message || "ไม่สามารถตรวจสอบสถานะการเปิดระบบได้");
 				setOpenKQ(false);
 			}
 		};

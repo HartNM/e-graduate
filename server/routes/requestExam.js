@@ -25,7 +25,6 @@ const statusMap = {
 
 router.post("/checkOpenKQ", authenticateToken, async (req, res) => {
 	try {
-		const { type } = req.body;
 		const pool = await poolPromise;
 		const result = await pool.query(`
 			SELECT TOP 1 *
@@ -33,10 +32,12 @@ router.post("/checkOpenKQ", authenticateToken, async (req, res) => {
 			WHERE CAST(GETDATE() AS DATE) BETWEEN KQ_open_date AND KQ_close_date
 			ORDER BY request_exam_info_id DESC
 		`);
+
 		if (result.recordset.length === 0) {
-			return res.status(403).json({ status: false, message: `ระบบ${type}ยังไม่เปิด` });
+			return res.status(200).json({ status: false });
+		} else {
+			return res.status(200).json({ status: true });
 		}
-		res.status(200).json({ status: true });
 	} catch (err) {
 		console.error("checkOpenKQ:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาด" });
@@ -62,13 +63,16 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 			const apiResponse = await axios.post("https://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/FindGroup", {
 				ID_TEACHER: user_id,
 			});
-			const groupNumbers = apiResponse.data.map((item) => item.GROUP_NO);
+			/* const groupNumbers = apiResponse.data.map((item) => item.GROUP_NO); */
 			// test ---------------------------------------
-		/* 	console.log(groupNumbers);
-			if (user_id === "1629900598264") {
-				groupNumbers = ["6441401"];
+			let groupNumbers = [];
+			if (apiResponse.data && Array.isArray(apiResponse.data)) {
+				groupNumbers = apiResponse.data.map((item) => item.GROUP_NO);
+			} else {
+				groupNumbers = ["6641401"];
 			}
-			console.log(groupNumbers); */
+			console.log(groupNumbers);
+
 			// test ---------------------------------------
 			if (groupNumbers.length === 0) {
 				query += ` WHERE 1=0`;

@@ -107,7 +107,7 @@ const PrintExam = () => {
 		<Box>
 			<ModalInform opened={inform.open} onClose={close} message={inform.message} type={inform.type} />
 			<Text size="1.5rem" fw={900} mb="md">
-				พิมพ์ใบรายชื่อผู้มีสิทธิสอบประมวลความรู้/วัดคุณสมบัติ
+				พิมพ์ใบรายชื่อผู้มีสิทธิสอบความรู้ทางภาษาอังกฤษ
 			</Text>
 			<Group justify="space-between">
 				<Group>
@@ -118,7 +118,7 @@ const PrintExam = () => {
 					<Button size="xs" color="green" onClick={handleExport} disabled={filteredData.length === 0}>
 						Export Excel
 					</Button>
-					<PdfPrintExam data={filteredData} />
+					<PdfPrintExam data={filteredData} typeRQ={"2"}/>
 				</Group>
 			</Group>
 

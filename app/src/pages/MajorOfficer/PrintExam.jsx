@@ -121,7 +121,7 @@ const PrintExam = () => {
 					<Button size="xs" color="green" onClick={handleExport} disabled={filteredData.length === 0}>
 						Export Excel
 					</Button>
-					<PdfPrintExam data={filteredData} />
+					<PdfPrintExam data={filteredData} typeRQ={"1"} />
 				</Group>
 			</Group>
 
