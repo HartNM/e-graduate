@@ -74,7 +74,7 @@ const ExamResults = () => {
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
 				const data = await res.json();
-				if (!res.ok) throw new Error(data.message);
+				if (!res.ok) throw new Error(data.message);		
 				setGroup(data);
 			} catch (e) {
 				notify("error", e.message);

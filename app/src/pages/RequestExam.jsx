@@ -66,6 +66,22 @@ const RequestExam = () => {
 	useEffect(() => {
 		const getTerm = async () => {
 			try {
+				/* const registerCoursesRes = await fetch("https://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListRegister", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ ID_NO: "674140116", TERM: "2/2568" }),
+				});
+				const registerCoursesData = await registerCoursesRes.json();
+				console.log("asdasadasd", registerCoursesData);
+
+				const registerCoursesRes2 = await fetch("/mua-proxy/FrontEnd_Tabian/apiforall/ListRegister", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ ID_NO: "674140116", TERM: "2/2568" }),
+				});
+				const registerCoursesData2 = await registerCoursesRes2.json();
+				console.log("asdasadasd2", registerCoursesData2); */
+
 				const termInfoReq = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },

@@ -242,7 +242,7 @@ const RequestThesisProposal = () => {
 						const registerCoursesRes = await fetch("https://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListRegister", {
 							method: "POST",
 							headers: { "Content-Type": "application/json" },
-							body: JSON.stringify({ ID_NO: user_id, TERM: currentLoopTermStr }),
+							body: JSON.stringify({ ID_NO: 664140101, TERM: 2/2568 }),
 						});
 
 						const registerCoursesData = await registerCoursesRes.json();
