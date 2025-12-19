@@ -183,7 +183,7 @@ const RequestThesisDefense = () => {
 
 						const allCodes = registerCoursesData.map((c) => c.SJCODE); */
 						/* ---------------------------------------------------------------------------------------- */
-						let allRegisteredCourses = []; // ตัวแปรเก็บรายวิชาที่ลงทะเบียนทั้งหมด (ทุกเทอมรวมกัน)
+						/* let allRegisteredCourses = []; // ตัวแปรเก็บรายวิชาที่ลงทะเบียนทั้งหมด (ทุกเทอมรวมกัน)
 						let hasData = true;
 
 						// หาปีเริ่มต้นจากรหัสนักศึกษา (เช่น 674140116 -> เริ่มปี 2567)
@@ -227,11 +227,18 @@ const RequestThesisDefense = () => {
 								console.log(`เทอม ${currentLoopTermStr} ไม่มีข้อมูล -> จบการดึงข้อมูล`);
 								hasData = false;
 							}
-						}
+						} */
+						const response = await fetch(`${BASE_URL}/api/get-all-courses`, {
+							// URL ของ Backend คุณ
+							method: "POST",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify({ user_id: user_id }),
+						});
+						const result = await response.json();
 
-						console.log("รายวิชาที่ลงทั้งหมด (ทุกเทอม):", allRegisteredCourses);
+						console.log("รายวิชาที่ลงทั้งหมด (ทุกเทอม):", result.data);
 
-						const allCodes = allRegisteredCourses.map((c) => c.SJCODE);
+						const allCodes = result.data.map((c) => c.SJCODE);
 
 						const missing = registrationData.course_last.filter((code) => !allCodes.includes(code));
 						console.log("ที่ขาด :", missing);

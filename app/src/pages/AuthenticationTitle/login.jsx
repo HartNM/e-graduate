@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { Button, Group, Paper, PasswordInput, Stack, Text, TextInput, Center, Space, Image, LoadingOverlay } from "@mantine/core";
+import { Button, Group, Paper, PasswordInput, Stack, Text, TextInput, Center, Image, LoadingOverlay, Container, Title, Box, rem } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useNavigate } from "react-router-dom";
+import { IconUser, IconLock } from "@tabler/icons-react"; // npm install @tabler/icons-react
 import myImage from "../../assets/logo.png";
 import ModalInform from "../../component/Modal/ModalInform";
+
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 const AuthenticationForm = () => {
@@ -19,8 +21,8 @@ const AuthenticationForm = () => {
 			password: "",
 		},
 		validate: {
-			username: (value) => (value.trim().length > 0 ? null : "กรอกชื่อผู้ใช้"),
-			password: (value) => (value.trim().length > 0 ? null : "กรอกรหัสผ่าน"),
+			username: (value) => (value.trim().length > 0 ? null : "กรุณากรอกชื่อผู้ใช้"),
+			password: (value) => (value.trim().length > 0 ? null : "กรุณากรอกรหัสผ่าน"),
 		},
 	});
 
@@ -31,15 +33,6 @@ const AuthenticationForm = () => {
 	const handleLogin = async () => {
 		try {
 			setLoading(true);
-			/* const routeMap = {
-				student: "/student",
-				dean: "/dean",
-				officer_major: "/major-officer",
-				chairpersons: "/chairpersons",
-				officer_registrar: "/registrar-officer",
-				advisor: "/advisor",
-			}; */
-
 			const response = await fetch(`${BASE_URL}/api/login`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
@@ -47,7 +40,7 @@ const AuthenticationForm = () => {
 			});
 			const data = await response.json();
 			if (!response.ok) {
-				throw new Error(data.message);
+				throw new Error(data.message || "เกิดข้อผิดพลาดในการเชื่อมต่อ");
 			}
 			localStorage.setItem("token", data.token);
 			setInformMessage(data.message);
@@ -58,8 +51,6 @@ const AuthenticationForm = () => {
 				} else {
 					navigate("/personnel");
 				}
-
-				/* navigate(routeMap[data.role] || "/"); */
 			}, 1000);
 		} catch (error) {
 			console.error("Login error:", error);
@@ -72,37 +63,54 @@ const AuthenticationForm = () => {
 	};
 
 	return (
-		<Center bg="#e9ecef" h="100vh">
+		<Box
+			style={{
+				minHeight: "100vh",
+				display: "flex",
+				alignItems: "center",
+				justifyContent: "center",
+				// พื้นหลังแบบ Gradient ไล่โทนสีฟ้า-เทา
+				background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+				padding: rem(20),
+			}}
+		>
 			<ModalInform opened={openInform} onClose={() => setOpenInform(false)} message={informMessage} type={informtype} />
-			<Paper radius="md" p="lg" withBorder style={{ maxWidth: 400, minWidth: 400 }}>
-				<LoadingOverlay visible={loading} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />
-				<Space h="xl" />
-				<Center>
-					<Image src={myImage} h={200} w="auto" fit="contain" />
-				</Center>
-				<Space h="xl" />
-				<Center style={{ flexDirection: "column" }}>
-					<Text size="lg" fw={500}>
-						ระบบสารสนเทศบัณฑิตศึกษา
-					</Text>
-					<Text size="lg" fw={500}>
-						มหาวิทยาลัยราชภัฏกําแพงเพชร
-					</Text>
-				</Center>
-				<Space h="xl" />
-				<form onSubmit={loginForm.onSubmit(handleLogin)}>
-					<Stack>
-						<TextInput label="ชื่อผู้ใช้" placeholder="ชื่อผู้ใช้ของคุณ" radius="md" {...loginForm.getInputProps("username")} />
-						<PasswordInput label="รหัสผ่าน" placeholder="รหัสผ่านของคุณ" radius="md" {...loginForm.getInputProps("password")} />
+
+			<Container size={420} w="100%">
+				<Paper radius="lg" p={40} withBorder shadow="xl" style={{ position: "relative", overflow: "hidden" }}>
+					<LoadingOverlay visible={loading} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />
+
+					<Stack align="center" gap="md">
+						<Image src={myImage} h={160} w="auto" fit="contain" alt="University Logo" />
+
+						<Box mb="xl">
+							<Title order={3} ta="center" fw={700} c="blue.9">
+								ระบบสารสนเทศบัณฑิตศึกษา
+							</Title>
+							<Text ta="center" size="sm" c="dimmed" fw={500}>
+								มหาวิทยาลัยราชภัฏกำแพงเพชร
+							</Text>
+						</Box>
 					</Stack>
-					<Group mt="xl">
-						<Button type="submit" fullWidth>
-							Login
-						</Button>
-					</Group>
-				</form>
-			</Paper>
-		</Center>
+
+					<form onSubmit={loginForm.onSubmit(handleLogin)}>
+						<Stack gap="md">
+							<TextInput label="ชื่อผู้ใช้" placeholder="ชื่อผู้ใช้ของคุณ" size="md" radius="md" leftSection={<IconUser size={18} stroke={1.5} />} {...loginForm.getInputProps("username")} />
+
+							<PasswordInput label="รหัสผ่าน" placeholder="รหัสผ่านของคุณ" size="md" radius="md" leftSection={<IconLock size={18} stroke={1.5} />} {...loginForm.getInputProps("password")} />
+
+							<Button type="submit" fullWidth size="md" radius="md" mt="xl" variant="filled" color="blue.8" style={{ transition: "transform 0.1s ease" }} active={{ transform: "scale(0.98)" }}>
+								เข้าสู่ระบบ
+							</Button>
+						</Stack>
+					</form>
+
+					{/* <Text ta="center" size="xs" c="dimmed" mt="xl">
+						&copy; {new Date().getFullYear()} Kamphaeng Phet Rajabhat University
+					</Text> */}
+				</Paper>
+			</Container>
+		</Box>
 	);
 };
 

@@ -3,38 +3,42 @@
 	display: block;
 	width: 100%;
 	padding: 0.5rem 0.5rem;
-	color: #212529;
-	font-size: 0.875rem;
-	border-radius: 4px;
+	color: var(--mantine-color-gray-7);
+	font-size: var(--mantine-font-size-sm);
+	border-radius: 8px;
+	margin: 4px 12px;
+	width: calc(100% - 24px);
+	transition: all 0.2s ease;
 }
 
 .control:hover {
-	background-color: light-dark(#e9ecef, #333333);
+	background-color: var(--mantine-color-blue-0);
+}
+
+.control[data-active="true"] {
+	background-color: var(--mantine-color-blue-light);
+	color: var(--mantine-color-blue-filled);
 }
 
 .link {
 	font-weight: 500;
 	display: block;
 	text-decoration: none;
-	padding: 0.5rem 1rem;
-	padding-left: 1rem;
-	margin-left: 1.3rem;
-	font-size: 0.875rem;
-	border-left: 1px solid #dee2e6;
-	color: inherit;
+	padding: 8px 12px;
+	padding-left: 12px;
+	margin: 2px 12px 2px 24px;
+	font-size: var(--mantine-font-size-xs);
+	border-radius: 6px;
+	transition: all 0.2s ease;
+}
+
+.link:hover {
+	background-color: var(--mantine-color-blue-0);
 }
 
 .link[data-active="true"] {
 	background-color: var(--mantine-color-blue-light);
 	color: var(--mantine-color-blue-filled);
-}
-
-.control[data-active="true"] {
-	color: var(--mantine-color-blue-filled);
-}
-
-.link:hover {
-	background-color: light-dark(#e9ecef, #333333);
 }
 
 .chevron {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Avatar, Group, Text, UnstyledButton, Select } from "@mantine/core";
+import { Avatar, Group, Text, UnstyledButton, Select, Box } from "@mantine/core";
 import classes from "./UserButton.module.css";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
@@ -50,10 +50,8 @@ export function UserButton() {
 				navigate("/dean");
 				break;
 			default:
-				// กรณีไม่พบ role ที่ตรงกัน หรือ role เป็น null/undefined
 				console.warn(`No navigation path defined for role: ${role}`);
-			// คุณอาจต้องการ navigate ไปหน้าหลัก
-			// navigate('/');
+				navigate("/");
 		}
 	};
 
@@ -107,16 +105,20 @@ export function UserButton() {
 	}));
 
 	return (
-		<UnstyledButton className={classes.user}>
-			<div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-				<Group align="center" spacing="sm">
-					<Avatar radius="xl" />
-					<Text size="sm" fw={500}>
-						{userName}
-					</Text>
+		<Box style={{ borderBottom: "1px solid var(--mantine-color-gray-2)" }}>
+			<UnstyledButton className={classes.user} style={{ width: "100%", padding: "12px"/* , borderRadius: "12px", backgroundColor: "var(--mantine-color-gray-0)"  */}}>
+				<Group>
+					<Avatar src={null} alt={userName} color="blue" radius="xl">
+						{userName?.charAt(0)}
+					</Avatar>
+					<div style={{ flex: 1 }}>
+						<Text size="sm" fw={600} c="dark">
+							{userName}
+						</Text>
+					</div>
 				</Group>
-				{activeRole !== "student" && <Select value={activeRole} onChange={handleSwitch} data={selectData} placeholder="เลือกบทบาท" style={{ width: "100%" }} size="xs" variant="default" />}
-			</div>
-		</UnstyledButton>
+				{activeRole !== "student" && <Select mt="md" value={activeRole} onChange={handleSwitch} data={selectData} size="xs" radius="md" />}
+			</UnstyledButton>
+		</Box>
 	);
 }

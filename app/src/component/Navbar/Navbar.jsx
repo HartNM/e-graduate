@@ -1,8 +1,8 @@
 //NavbarNested
 import { Box, ScrollArea, Select } from "@mantine/core";
 import { IconLogout } from "@tabler/icons-react";
-import { LinksGroup } from "../NavbarLinksGroup";
-import { UserButton } from "../UserButton";
+import { LinksGroup } from "../NavbarLinksGroup/NavbarLinksGroup.jsx";
+import { UserButton } from "../UserButton/UserButton.jsx";
 import classes from "./Navbar.module.css";
 import { Text } from "@mantine/core";
 import { useNavigate } from "react-router-dom";

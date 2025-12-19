@@ -10,7 +10,7 @@ const PORT = process.env.PORT;
 const majors = require("./routes/majors");
 app.use("/api", majors);
 
-const externalApiStudent = require("./externalApi/student");
+const externalApiStudent = require("./externalApi/kpruApi");
 app.use("/api", externalApiStudent);
 const loginRoutes = require("./routes/login");
 app.use("/api", loginRoutes);

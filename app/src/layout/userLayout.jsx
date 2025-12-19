@@ -1,13 +1,10 @@
 //userLayout
 import { useEffect } from "react";
-import { Outlet, useLocation, useNavigate, Navigate } from "react-router-dom";
-import { AppShell, Box, Burger, Text, Image, Space, Select } from "@mantine/core";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { AppShell, Box, Burger, Text, Image, Space } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { NavbarNested } from "../component/Navbar";
+import { NavbarNested } from "../component/Navbar/Navbar.jsx";
 import myImage from "../assets/logo.png";
-import { Suspense } from "react";
-import { ActionIcon, useMantineColorScheme, useComputedColorScheme } from "@mantine/core";
-import { IconSun, IconMoon } from "@tabler/icons-react";
 import { jwtDecode } from "jwt-decode";
 
 const UserLayout = (item) => {
@@ -26,38 +23,33 @@ const UserLayout = (item) => {
 	if (decoded.exp && decoded.exp < now) {
 		return navigate("/login");
 	}
-	
-	const { setColorScheme } = useMantineColorScheme();
-	const computedColorScheme = useComputedColorScheme("light", { getInitialValueInEffect: true });
 
 	return (
-		<AppShell header={{ height: 60 }} navbar={{ width: 300, breakpoint: "sm", collapsed: { mobile: !opened } }} padding="md" style={{ backgroundColor: "#f1f3f5" }}>
-			<AppShell.Header style={{ display: "Flex", alignItems: "Center", justifyContent: "space-between" }}>
-				<Box style={{ display: "Flex", alignItems: "Center", marginLeft: "20px" }}>
+		<AppShell header={{ height: 70 }} navbar={{ width: 300, breakpoint: "sm", collapsed: { mobile: !opened } }} padding="md" style={{ backgroundColor: "var(--mantine-color-gray-0)" }}>
+			<AppShell.Header px="md" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid var(--mantine-color-gray-2)", boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}>
+				<Box style={{ display: "flex", alignItems: "center" }}>
 					<Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
-					<Space w="md" hiddenFrom="sm" />
-					<Image src={myImage} h="40" w="auto" fit="contain" />
+					<Image src={myImage} h={45} w="auto" fit="contain" />
 					<Space w="md" />
 					<Text>ระบบสารสนเทศบัณฑิตศึกษา</Text>
 				</Box>
-				<Box style={{ display: "Flex", alignItems: "Center", marginRight: "20px" }}>
-					{/* <ActionIcon onClick={() => setColorScheme(computedColorScheme === "light" ? "dark" : "light")} variant="default" size="xl" aria-label="Toggle color scheme">
-						<Box lightHidden>
-							<IconSun stroke={1.5} />
-						</Box>
-						<Box darkHidden>
-							<IconMoon stroke={1.5} />
-						</Box>
-					</ActionIcon> */}
-				</Box>
 			</AppShell.Header>
 
-			<AppShell.Navbar>
+			<AppShell.Navbar p="0">
 				<NavbarNested menu={item.item} />
 			</AppShell.Navbar>
 
 			<AppShell.Main>
-				<Box style={{ backgroundColor: "#fff", color: "#000000", border: "1px solid #e0e0e0", borderRadius: "8px", padding: "16px" }}>
+				<Box
+					style={{
+						backgroundColor: "#fff",
+						minHeight: "calc(100vh - 120px)",
+						borderRadius: "16px",
+						border: "1px solid var(--mantine-color-gray-2)",
+						boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03)",
+						padding: "24px",
+					}}
+				>
 					<Outlet />
 				</Box>
 			</AppShell.Main>
