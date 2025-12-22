@@ -89,7 +89,7 @@ export function UserButton() {
 				Authorization: `Bearer ${localStorage.getItem("token")}`,
 			},
 			body: JSON.stringify({ role }),
-		});
+		});	
 		const data = await res.json();
 		if (!res.ok) throw new Error(data.message);
 
@@ -108,9 +108,10 @@ export function UserButton() {
 		<Box style={{ borderBottom: "1px solid var(--mantine-color-gray-2)" }}>
 			<UnstyledButton className={classes.user} style={{ width: "100%", padding: "12px"/* , borderRadius: "12px", backgroundColor: "var(--mantine-color-gray-0)"  */}}>
 				<Group>
-					<Avatar src={null} alt={userName} color="blue" radius="xl">
+					{/* <Avatar src={null} alt={userName} color="blue" radius="xl">
 						{userName?.charAt(0)}
-					</Avatar>
+					</Avatar> */}
+					<Avatar color="blue" radius="xl" />
 					<div style={{ flex: 1 }}>
 						<Text size="sm" fw={600} c="dark">
 							{userName}

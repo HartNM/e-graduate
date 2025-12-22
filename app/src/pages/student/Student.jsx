@@ -39,7 +39,7 @@ const Student = () => {
 				} */
 				newMenu.push({ label: `คำร้องขอสอบ${education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, icon: IconClipboardText, links: "/student/RequestExam" });
 				newMenu.push({ label: `คำร้องขอยกเลิกการเข้าสอบ${education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, icon: IconClipboardX, links: "/student/RequestExamCancel" });
-				education_level === "ปริญญาเอก" && newMenu.push({ label: "คำร้องขอทดสอบความรู้ทางภาษาอังกฤษ", icon: IconCertificate, links: "/student/RequestEngTest" });
+				/* education_level === "ปริญญาเอก" &&  */newMenu.push({ label: "คำร้องขอทดสอบความรู้ทางภาษาอังกฤษ", icon: IconCertificate, links: "/student/RequestEngTest" });
 				newMenu.push({ label: `คำร้องขอสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconReport, links: "/student/RequestThesisProposal" });
 				newMenu.push({ label: `คำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconFileText, links: "/student/RequestThesisDefense" });
 

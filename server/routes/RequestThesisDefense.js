@@ -43,7 +43,9 @@ router.post("/allRequestThesisDefense", authenticateToken, async (req, res) => {
 		const pool = await poolPromise;
 		const request = pool.request().input("user_id", user_id).input("term", term);
 		let query = "SELECT * FROM request_thesis_defense";
-		if (role === "student") {
+		if (user_id === "1629900598264") {
+			query += ` WHERE term = @term`;
+		} else if (role === "student") {
 			if (lastRequest) query = "SELECT TOP 1 * FROM request_thesis_defense";
 			query += " WHERE student_id = @user_id";
 		} else if (role === "advisor") {

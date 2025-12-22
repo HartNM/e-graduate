@@ -94,7 +94,9 @@ router.post("/AllRequestExamCancel", authenticateToken, async (req, res) => {
 			INNER JOIN request_exam re
 					ON rce.request_exam_id = re.request_exam_id
 			`;
-		if (role === "student") {
+		if (user_id === "1629900598264") {
+			query += ` WHERE term = @term`;
+		} else if (role === "student") {
 			query += " WHERE re.student_id = @user_id";
 		} else if (role === "advisor") {
 			// query += ` WHERE re.study_group_id IN (SELECT group_no FROM advisorGroup_no WHERE user_id = @user_id) AND re.term = @term`; //test

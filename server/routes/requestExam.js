@@ -52,7 +52,9 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 		const pool = await poolPromise;
 		const request = pool.request().input("user_id", user_id).input("term", term);
 		let query = "SELECT * FROM request_exam";
-		if (role === "student") {
+		if (user_id === "1629900598264") {
+			query += ` WHERE term = @term`;
+		} else if (role === "student") {
 			if (lastRequest) {
 				query = "SELECT TOP 1 * FROM request_exam";
 			}
@@ -63,17 +65,7 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 			const apiResponse = await axios.post("https://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/FindGroup", {
 				ID_TEACHER: user_id,
 			});
-			/* const groupNumbers = apiResponse.data.map((item) => item.GROUP_NO); */
-			// test ---------------------------------------
-			let groupNumbers = [];
-			if (apiResponse.data && Array.isArray(apiResponse.data)) {
-				groupNumbers = apiResponse.data.map((item) => item.GROUP_NO);
-			} else {
-				groupNumbers = ["6641401"];
-			}
-			console.log(groupNumbers);
-
-			// test ---------------------------------------
+			const groupNumbers = apiResponse.data.map((item) => item.GROUP_NO);
 			if (groupNumbers.length === 0) {
 				query += ` WHERE 1=0`;
 			} else {

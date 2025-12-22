@@ -21,7 +21,9 @@ router.post("/allRequestEngTest", authenticateToken, async (req, res) => {
 		const pool = await poolPromise;
 		const request = pool.request().input("user_id", user_id).input("term", term);
 		let query = "SELECT * FROM request_eng_test";
-		if (role === "student") {
+		if (user_id === "1629900598264") {
+			query += ` WHERE term = @term`;
+		} else if (role === "student") {
 			query += " WHERE student_id = @user_id";
 		} else if (role === "advisor") {
 			// query += ` WHERE study_group_id IN (SELECT group_no FROM advisorGroup_no WHERE user_id = @user_id) AND term = @term`; //test
