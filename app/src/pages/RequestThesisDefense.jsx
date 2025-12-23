@@ -142,9 +142,9 @@ const RequestThesisDefense = () => {
 				setRequest(ThesisDefenseData);
 
 				if (role === "student") {
-					/* if (user_id === "674140101") {
-					} */
+					/* if (user_id === "674140101") */
 					{
+						//use
 						/* const ThesisProposalRes = await fetch(`${BASE_URL}/api/allRequestThesisProposal`, {
 							method: "POST",
 							headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -171,82 +171,22 @@ const RequestThesisDefense = () => {
 						const registrationData = await registrationRes.json();
 						if (!registrationRes.ok) throw new Error(registrationData.message);
 						console.log("ที่ต้องลง :", registrationData);
-						/* ---------------------------------------------------------------------------------------- */
-						/* const registerCoursesRes = await fetch("/mua-proxy/FrontEnd_Tabian/apiforall/ListSubjectPass", {
-							method: "POST",
-							headers: { "Content-Type": "application/json" },
-							body: JSON.stringify({ ID_NO: user_id }),
-						});
-						const registerCoursesData = await registerCoursesRes.json();
-						if (!registerCoursesRes.ok) throw new Error(registerCoursesData.message);
-						console.log("ที่ลง :", registerCoursesData);
 
-						const allCodes = registerCoursesData.map((c) => c.SJCODE); */
-						/* ---------------------------------------------------------------------------------------- */
-						/* let allRegisteredCourses = []; // ตัวแปรเก็บรายวิชาที่ลงทะเบียนทั้งหมด (ทุกเทอมรวมกัน)
-						let hasData = true;
-
-						// หาปีเริ่มต้นจากรหัสนักศึกษา (เช่น 674140116 -> เริ่มปี 2567)
-						let loopYear = 2500 + parseInt(user_id.toString().substring(0, 2));
-						let loopTerm = 1;
-
-						console.log(`เริ่มดึงข้อมูลตั้งแต่ปี: ${loopYear}`);
-
-						while (hasData) {
-							const currentLoopTermStr = `${loopTerm}/${loopYear}`;
-
-							// ยิง API ดึงข้อมูลทีละเทอม
-							const registerCoursesRes = await fetch("/mua-proxy/FrontEnd_Tabian/apiforall/ListRegister", {
-								method: "POST",
-								headers: { "Content-Type": "application/json" },
-								body: JSON.stringify({ ID_NO: user_id, TERM: currentLoopTermStr }),
-							});
-
-							const registerCoursesData = await registerCoursesRes.json();
-
-							if (!registerCoursesRes.ok) {
-								console.error(`Error fetching term ${currentLoopTermStr}:`, registerCoursesData.message);
-								break; // หรือ handle error ตามต้องการ
-							}
-
-							// ตรวจสอบว่ามีข้อมูลหรือไม่
-							if (Array.isArray(registerCoursesData) && registerCoursesData.length > 0) {
-								console.log(`ดึงข้อมูลเทอม ${currentLoopTermStr} สำเร็จ:`, registerCoursesData.length, "วิชา");
-
-								// เอาข้อมูลมาต่อรวมกัน
-								allRegisteredCourses = [...allRegisteredCourses, ...registerCoursesData];
-
-								// ขยับไปเทอมถัดไป
-								loopTerm++;
-								if (loopTerm > 3) {
-									loopTerm = 1;
-									loopYear++;
-								}
-							} else {
-								// ถ้าได้ [] (ว่างเปล่า) ให้หยุด Loop
-								console.log(`เทอม ${currentLoopTermStr} ไม่มีข้อมูล -> จบการดึงข้อมูล`);
-								hasData = false;
-							}
-						} */
 						const response = await fetch(`${BASE_URL}/api/get-all-courses`, {
-							// URL ของ Backend คุณ
 							method: "POST",
 							headers: { "Content-Type": "application/json" },
 							body: JSON.stringify({ user_id: user_id }),
 						});
 						const result = await response.json();
-
 						console.log("รายวิชาที่ลงทั้งหมด (ทุกเทอม):", result.data);
 
 						const allCodes = result.data.map((c) => c.SJCODE);
-
 						const missing = registrationData.course_last.filter((code) => !allCodes.includes(code));
 						console.log("ที่ขาด :", missing);
 
 						if (missing.length > 1) {
-							const res = await fetch("/mua-proxy/FrontEnd_Tabian/apiforall/ListSubjectAll");
+							const res = await fetch(`${BASE_URL}/api/get-all-subjects`);
 							const subjects = await res.json();
-
 							const subjMap = new Map(subjects.map((s) => [s.SUBJCODE, s.SUBJNAME]));
 							const coursesData = missing.map((course_id) => ({
 								course_id,
@@ -259,12 +199,6 @@ const RequestThesisDefense = () => {
 							return;
 						}
 					}
-
-					/* if (ThesisDefenseData[0]?.status === "6" || ThesisDefenseData[0]?.status === undefined) {
-						setLatestRequest(false);
-					} else {
-						setLatestRequest(true);
-					} */
 
 					if (!ThesisDefenseData.length) {
 						console.log("ลำดับ : 1 ไม่มีคำร้อง (เปิด)");

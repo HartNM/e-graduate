@@ -2,6 +2,7 @@ import { rgb } from "pdf-lib";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
 import timezone from "dayjs/plugin/timezone.js";
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -124,7 +125,8 @@ export async function fetchPersonDataAndSignature(pdfDoc, data, ids) {
 			if (!id || isNaN(Number(id))) continue;
 			// 1. ดึงรูปภาพลายเซ็น
 			try {
-				const imgRes = await fetch(`https://e-par.kpru.ac.th/timeKPRU/contents/signature/${id}.jpg`);
+				const imgRes = await fetch(`${BASE_URL}/api/signature/${id}`);
+
 				if (imgRes.ok) {
 					const imgBuffer = await imgRes.arrayBuffer();
 					signatureImages[role] = await pdfDoc.embedJpg(imgBuffer);
@@ -134,7 +136,8 @@ export async function fetchPersonDataAndSignature(pdfDoc, data, ids) {
 			}
 			// 2. ดึงชื่อ-นามสกุล
 			try {
-				const nameRes = await fetch(`https://mis.kpru.ac.th/api/TabianAPI/${id}`);
+				const nameRes = await fetch(`${BASE_URL}/api/personnel/${id}`);
+
 				if (nameRes.ok) {
 					const nameData = await nameRes.json();
 					if (nameData?.AjDetail && nameData.AjDetail.length > 0) {

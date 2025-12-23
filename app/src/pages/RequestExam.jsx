@@ -66,22 +66,6 @@ const RequestExam = () => {
 	useEffect(() => {
 		const getTerm = async () => {
 			try {
-				/* const registerCoursesRes = await fetch("https://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListRegister", {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ ID_NO: "674140116", TERM: "2/2568" }),
-				});
-				const registerCoursesData = await registerCoursesRes.json();
-				console.log("asdasadasd", registerCoursesData);
-
-				const registerCoursesRes2 = await fetch("/mua-proxy/FrontEnd_Tabian/apiforall/ListRegister", {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ ID_NO: "674140116", TERM: "2/2568" }),
-				});
-				const registerCoursesData2 = await registerCoursesRes2.json();
-				console.log("asdasadasd2", registerCoursesData2); */
-
 				const termInfoReq = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -180,8 +164,7 @@ const RequestExam = () => {
 				if (openKQ === false) {
 					throw new Error("ระบบคำร้องขอสอบประมวลความรู้/วัดคุณสมบัติยังไม่เปิด");
 				}
-				/* if (user_id === "674140101") {
-				} */
+				/* if (user_id === "674140101") */
 				{
 					const registrationRes = await fetch(`${BASE_URL}/api/allStudyGroupIdCourseRegistration`, {
 						method: "POST",
@@ -192,11 +175,12 @@ const RequestExam = () => {
 					if (!registrationRes.ok) throw new Error(registrationData.message);
 					console.log("ที่ต้องลง :", registrationData);
 
-					const registerCoursesRes = await fetch("/mua-proxy/FrontEnd_Tabian/apiforall/ListSubjectPass", {
+					const registerCoursesRes = await fetch(`${BASE_URL}/api/get-passed-courses`, {
 						method: "POST",
 						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify({ ID_NO: user_id }),
+						body: JSON.stringify({ user_id: user_id }),
 					});
+
 					const registerCoursesData = await registerCoursesRes.json();
 					if (!registerCoursesRes.ok) throw new Error(registerCoursesData.message);
 					console.log("ที่ลง :", registerCoursesData);
@@ -206,7 +190,7 @@ const RequestExam = () => {
 					console.log("ที่ขาด :", missing);
 
 					if (missing.length > 0) {
-						const res = await fetch("/mua-proxy/FrontEnd_Tabian/apiforall/ListSubjectAll");
+						const res = await fetch(`${BASE_URL}/api/get-all-subjects`);
 						const subjects = await res.json();
 
 						const subjMap = new Map(subjects.map((s) => [s.SUBJCODE, s.SUBJNAME]));

@@ -50,7 +50,7 @@ const CourseRegistration = () => {
 	useEffect(() => {
 		const fetchAll = async () => {
 			try {
-				const ListSubjectAll = await fetch("/mua-proxy/FrontEnd_Tabian/apiforall/ListSubjectAll");
+				const ListSubjectAll = await fetch(`${BASE_URL}/api/get-all-subjects`);
 				const subjects = await ListSubjectAll.json();
 
 				const uniqueSubjectsMap = new Map();

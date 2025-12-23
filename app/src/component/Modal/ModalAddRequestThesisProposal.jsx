@@ -22,7 +22,11 @@ const ModalAddRequestThesisProposal = ({ opened, onClose, title, form, handleAdd
 
 					const selectedMajor = majorsData.find((m) => m.major_id === form.values.major_id);
 					if (selectedMajor) {
-						const facultyMembersRes = await fetch(`/git-proxy/FrontEnd_Admission/admissionnew2022/loadMember/${selectedMajor.id_fac}`);
+						const facultyMembersRes = await fetch(`${BASE_URL}/api/get-faculty-members/${selectedMajor.id_fac}`, {
+							method: "GET",
+							headers: { "Content-Type": "application/json" },
+						});
+
 						const facultyMembersData = await facultyMembersRes.json();
 						if (!facultyMembersRes.ok) throw new Error("ไม่สามารถดึงข้อมูลบุคลากรได้");
 

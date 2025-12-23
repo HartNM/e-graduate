@@ -108,7 +108,10 @@ const AssignChairpersons = () => {
 			}
 
 			// ✅ 9. Fetch ข้อมูลบุคลากร (loadMember) "ณ ตอนนี้"
-			const facultyMembersRes = await fetch(`/git-proxy/FrontEnd_Admission/admissionnew2022/loadMember/${majorName.id_fac}`);
+			const facultyMembersRes = await fetch(`${BASE_URL}/api/get-faculty-members/${majorName.id_fac}`, {
+				method: "GET",
+				headers: { "Content-Type": "application/json" },
+			});
 			const facultyMembersData = await facultyMembersRes.json();
 			if (!facultyMembersRes.ok) throw new Error("ไม่สามารถดึงข้อมูลบุคลากรได้");
 

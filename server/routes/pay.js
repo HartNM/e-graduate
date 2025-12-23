@@ -1,30 +1,3 @@
-/* 
-$center = $data[0]['codeOrg'];
-$citizent = $data[0]['citizen_id'];
-$_POST['orderRef1'] = $_POST['orderRef1'];
-$_POST['name'] = $data[0]['FULLNAME'].$data[0]['FRISTNAME_LOGIN'];
-$_POST['lname'] = $data[0]['LASTNAME_LOGIN'];
-$_POST['amount'] = $data[0]['amount'];
-$add1 = $data[0]['message3_1'];
-$add2 = $data[0]['message3_2'];
-$add3 = $data[0]['message3_3'];
-$NameOther1 = $data[0]['title_1'];
-$NameOther1_2 = $data[0]['title_2'];
-$NameOther1_3 = $data[0]['title_3'];
-$NameOther1_4 = $data[0]['title_4'];
-$NameOther1_5 = $data[0]['title_5'];
-$NameOther1_6 = $data[0]['title_6'];
-$NameOther1_7 = $data[0]['title_7'];
-$NameOther1_8 = $data[0]['title_8'];
-$NameOther1_9 = $data[0]['title_9'];
-$NameOther1_10 = $data[0]['title_10'];
-$NameOther1_11 = $data[0]['title_11'];
-$NameOther1_12 = $data[0]['title_12'];
-$NameOther1_13 = $data[0]['title_13'];
-$NameOther1_14 = $data[0]['title_14'];
-$NameOther1_15 = $data[0]['title_15'];
-$NameOther1_16 = $data[0]['title_16']; */
-
 const express = require("express");
 const router = express.Router();
 const authenticateToken = require("../middleware/authenticateToken");
