@@ -10,6 +10,7 @@ import Pdfg01 from "../component/PDF/Pdfg03-04.jsx";
 import { useForm } from "@mantine/form";
 import { jwtDecode } from "jwt-decode";
 import ModalCheckCourse from "../component/Modal/ModalCheckCourse";
+import PrintReceipt from "../component/button/printReceipt";
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 const RequestThesisDefense = () => {
@@ -378,11 +379,12 @@ const RequestThesisDefense = () => {
 									ชำระค่าธรรมเนียม
 								</Button>
 							)}
-							{(item.status == 5 || item.status == 0 || item.status > 6) && (
+							{item.receipt_vol != null && <PrintReceipt item={item} />}
+							{/* {(item.status == 5 || item.status == 0 || item.status > 6) && (
 								<Button size="xs" color="green">
 									พิมพ์ใบเสร็จ
 								</Button>
-							)}
+							)} */}
 						</>
 					)}
 					<Pdfg01 data={item} showType={item.status == 0 ? undefined : (role === "advisor" && item.status <= 1) || (role === "chairpersons" && item.status <= 2) || (role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />

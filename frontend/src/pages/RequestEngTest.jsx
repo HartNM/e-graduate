@@ -8,6 +8,7 @@ import ModalInform from "../component/Modal/ModalInform";
 import Pdfg02 from "../component/PDF/Pdfg02";
 import { useForm } from "@mantine/form";
 import { jwtDecode } from "jwt-decode";
+import PrintReceipt from "../component/button/printReceipt";
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 const RequestEngTest = () => {
@@ -311,13 +312,14 @@ const RequestEngTest = () => {
 									ชำระค่าธรรมเนียม
 								</Button>
 							)}
-							{item.status === "5" && (
+							{item.receipt_vol != null && <PrintReceipt item={item} />}
+							{/* {item.status === "5" && (
 								<>
 									<Button size="xs" color="green">
 										พิมพ์ใบเสร็จ
 									</Button>
 								</>
-							)}
+							)} */}
 						</>
 					)}
 					<Pdfg02 data={item} showType={item.status == 0 ? undefined : (role === "advisor" && item.status <= 1) || (role === "chairpersons" && item.status <= 2) || (role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />

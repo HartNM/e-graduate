@@ -10,7 +10,7 @@ import ModalCheckCourse from "../component/Modal/ModalCheckCourse";
 import Pdfg01 from "../component/PDF/Pdfg01";
 import { useForm } from "@mantine/form";
 import { jwtDecode } from "jwt-decode";
-import PrintReceipt from "../component/ิbutton/printReceipt";
+import PrintReceipt from "../component/button/printReceipt";
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 const RequestExam = () => {
