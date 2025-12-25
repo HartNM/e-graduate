@@ -1,7 +1,7 @@
 # Ignore node_modules ทั้ง frontend และ backend
-app/node_modules/
-app/dist/
-server/node_modules/
+frontend/node_modules/
+frontend/dist/
+backend/node_modules/
 
 # Logs
 **/*.log
@@ -15,9 +15,9 @@ yarn-error.log*
 Thumbs.db
 
 # dotenv files
-*.env
-*.env.local
-*.env.*.local
+#*.env
+#*.env.local
+#*.env.*.local
 
 # IDE / Editor settings
 .vscode/
@@ -28,5 +28,5 @@ Thumbs.db
 *.sln
 
 # Optional: If using dist/ for backend builds
-server/sc.js
-server/scaddrq.js
+backend/sc.js
+backend/scaddrq.js
