@@ -1,4 +1,4 @@
-import fontkit from "@pdf-lib/fontkit";
+/* import fontkit from "@pdf-lib/fontkit";
 import { PDFDocument } from "pdf-lib";
 import { Button } from "@mantine/core";
 import { useState } from "react";
@@ -37,7 +37,7 @@ async function fillPdf(data) {
 
 	// ดึงลายเซ็น ชื่อ
 	if (data) {
-		data.finance_approvals_id = 1629900598264;
+		data.finance_approvals_id = 3630100364381;
 	}
 	const ids = {
 		advisor: "advisor_approvals_id",
@@ -96,7 +96,6 @@ async function fillPdf(data) {
 		{ text: `ขอสอบ${data?.request_type}`, x: 360, y: y + 2 },
 		{ text: `ในภาคเรียนที่ ....................... ในวันที่.....................................................`, x: 60, y: (y -= space) },
 		{ text: data?.term, x: 130, y: y + 2 },
-		/* { text: `${exam_date_day} ${exam_date_month} ${exam_date_year}`, x: 210, y: y + 2 }, */
 		{ text: examDateText, x: 210, y: y + 2 },
 		{ text: `จึงเรียนมาเพื่อโปรดพิจารณา`, x: 100, y: (y -= space) },
 
@@ -241,4 +240,95 @@ export default function Pdfg01({ data, showType }) {
 			)}
 		</>
 	);
+}
+ */
+
+import { Button } from "@mantine/core";
+import { useState } from "react";
+import axios from "axios";
+
+const BASE_URL = import.meta.env.VITE_API_URL;
+
+export default function Pdfg01({ data, showType }) {
+    const [loading, setLoading] = useState(false);
+
+    // ฟังก์ชันสำหรับขอไฟล์ PDF จาก Backend
+    const fetchPdfFromBackend = async () => {
+        const token = localStorage.getItem("token");
+        try {
+            // ส่ง request_exam_id หรือข้อมูลที่จำเป็นไปให้ Backend สร้างไฟล์
+            const response = await axios.post(
+                `${BASE_URL}/api/generate-report`, // URL นี้ต้องตรงกับ Route ที่คุณสร้างใน Backend
+                { 
+                    report_type: "g01", // บอก Backend ว่าขอแบบฟอร์ม ก.01
+                    request_exam_id: data?.request_exam_id, // ส่ง ID อ้างอิง
+                    term: data?.term // ส่งข้อมูลเสริมถ้าจำเป็น
+                },
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                    responseType: "blob", // สำคัญมาก! ต้องบอกว่ารับข้อมูลเป็นไฟล์ (Binary)
+                }
+            );
+            return response.data;
+        } catch (error) {
+            console.error("Error generating PDF:", error);
+            alert("เกิดข้อผิดพลาดในการสร้างเอกสาร PDF");
+            throw error;
+        }
+    };
+
+    const handleOpen = async () => {
+        setLoading(true);
+        try {
+            const blob = await fetchPdfFromBackend();
+            // สร้าง URL ชั่วคราวสำหรับไฟล์ PDF ที่ได้มา
+            const url = URL.createObjectURL(blob);
+            window.open(url, "_blank");
+            
+            // คืนหน่วยความจำเมื่อไม่ใช้แล้ว (Optional)
+            setTimeout(() => URL.revokeObjectURL(url), 10000);
+        } catch (error) {
+            // Error alert handled in fetchPdfFromBackend
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handlePrint = async () => {
+        setLoading(true);
+        try {
+            const blob = await fetchPdfFromBackend();
+            const url = URL.createObjectURL(blob);
+            
+            // สร้าง Iframe ล่องหนเพื่อสั่งพิมพ์
+            const iframe = document.createElement("iframe");
+            iframe.style.display = "none";
+            iframe.src = url;
+            document.body.appendChild(iframe);
+            
+            iframe.onload = () => {
+                iframe.contentWindow.print();
+                // ลบ iframe เมื่อพิมพ์เสร็จ (หรือปล่อยไว้ก็ได้)
+
+            };
+        } catch (error) {
+            // Error alert handled in fetchPdfFromBackend
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <>
+            {showType === "view" ? (
+                <Button size="xs" color="gray" onClick={handleOpen} loading={loading}>
+                    ข้อมูล
+                </Button>
+            ) : (
+                <Button size="xs" color="blue" onClick={handlePrint} loading={loading}>
+                    พิมพ์
+                </Button>
+            )}
+        </>
+    );
 }

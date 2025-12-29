@@ -8,7 +8,7 @@ const SECRET_KEY = process.env.SECRET_KEY;
 const authenticateToken = require("../middleware/authenticateToken");
 /* const axios = require("axios");
 const BASE_URL = process.env.VITE_API_URL; */
-const { getStudentData } = require("../externalApi/studentService");
+const { getStudentData } = require("../services/studentService");
 
 router.post("/login", async (req, res) => {
 	const { username, password } = req.body;

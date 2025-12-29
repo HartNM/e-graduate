@@ -4,7 +4,7 @@ const authenticateToken = require("../middleware/authenticateToken");
 const { poolPromise } = require("../db");
 /* const axios = require("axios");
 const BASE_URL = process.env.VITE_API_URL; */
-const { getStudentData } = require("../externalApi/studentService");
+const { getStudentData } = require("../services/studentService");
 
 const statusMap = {
 	0: "ยกเลิก",
@@ -50,7 +50,6 @@ router.post("/allExamEligibleListPrint", authenticateToken, async (req, res) => 
 		});
 		const allStudentIds = Object.values(output).flatMap((group) => group.map((s) => s.student_id));
 		/* const promises = allStudentIds.map((studentId) => axios.get(`${BASE_URL}/api/student/${studentId}`)); */
-		const { getStudentData } = require('../externalApi/studentService');
 		const promises = allStudentIds.map((studentId) => getStudentData(studentId));
 		
 		const studentResults = await Promise.all(promises);

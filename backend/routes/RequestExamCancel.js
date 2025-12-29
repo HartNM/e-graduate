@@ -4,7 +4,7 @@ const authenticateToken = require("../middleware/authenticateToken");
 const { sql, poolPromise } = require("../db");
 const axios = require("axios");
 /* const BASE_URL = process.env.VITE_API_URL; */
-const { getStudentData } = require("../externalApi/studentService");
+const { getStudentData } = require("../services/studentService");
 
 const statusMap = {
 	0: "อนุมัติ",
@@ -109,8 +109,10 @@ router.post("/AllRequestExamCancel", authenticateToken, async (req, res) => {
 			if (groupNumbers.length === 0) {
 				query += ` WHERE 1=0 AND term = @term`;
 			} else {
-				const groupListString = groupNumbers.map((group) => `'${group}'`).join(", ");
-				query += ` WHERE re.study_group_id IN (${groupListString}) AND re.term = @term`; //product
+				/* const groupListString = groupNumbers.map((group) => `'${group}'`).join(", ");
+				query += ` WHERE re.study_group_id IN (${groupListString}) AND re.term = @term`; */ //product
+				request.input("groupNumbers", groupNumbers.join(","));
+				query += ` WHERE re.study_group_id IN ((SELECT value FROM STRING_SPLIT(@groupNumbers, ','))) AND re.term = @term`;
 			}
 		} else if (role === "chairpersons") {
 			// query += ` WHERE re.major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND (rce.status IN (0, 8, 9) OR (rce.status = 5 AND rce.advisor_approvals_id IS NOT NULL AND rce.chairpersons_approvals_id IS NOT NULL)) AND re.term = @term`; //test

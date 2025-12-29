@@ -56,7 +56,7 @@ async function fillPdf(data) {
 
 	// --- ส่วนที่เพิ่มใหม่: Logic การดึงรูปภาพลายเซ็นและชื่อ ---
 	if (data) {
-		data.finance_approvals_id = 1629900598264; // Fix ID การเงิน
+		data.finance_approvals_id = 3630100364381; // Fix ID การเงิน
 	}
 	const ids = {
 		advisor: "advisor_approvals_id",

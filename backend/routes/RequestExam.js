@@ -4,12 +4,7 @@ const authenticateToken = require("../middleware/authenticateToken");
 const { sql, poolPromise } = require("../db");
 const axios = require("axios");
 /* const BASE_URL = process.env.VITE_API_URL; */
-const { getStudentData } = require("../externalApi/studentService");
-
-const convertToBool = (val) => {
-	if (val === null || val === undefined) return null;
-	return val === "1" || val === 1 || val === true;
-};
+const { getStudentData } = require("../services/studentService");
 
 const statusMap = {
 	0: "ยกเลิก",
@@ -70,8 +65,10 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 			if (groupNumbers.length === 0) {
 				query += ` WHERE 1=0`;
 			} else {
-				const groupListString = groupNumbers.map((group) => `'${group}'`).join(", ");
-				query += ` WHERE study_group_id IN (${groupListString}) AND term = @term`; //product
+				/* const groupListString = groupNumbers.map((group) => `'${group}'`).join(", ");
+				query += ` WHERE study_group_id IN (${groupListString}) AND term = @term`; */ //product
+				request.input("groupNumbers", groupNumbers.join(","));
+				query += ` WHERE study_group_id IN ((SELECT value FROM STRING_SPLIT(@groupNumbers, ','))) AND term = @term`;
 			}
 		} else if (role === "chairpersons") {
 			// query += ` WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND (status IN (0, 2, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL)) AND term = @term`; //test
@@ -195,7 +192,7 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 			.input("major_id", major_id)
 			.input("faculty_name", faculty_name)
 			.input("request_type", requestType)
-			.input("term", term /* infoRes.recordset[0].term */)
+			.input("term", term)
 			.input("status", "1")
 			//receipt_pay
 			.input("receipt_pay", receipt_pay).query(`

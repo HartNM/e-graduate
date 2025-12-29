@@ -4,7 +4,7 @@ const authenticateToken = require("../middleware/authenticateToken");
 const { poolPromise } = require("../db");
 const axios = require("axios");
 /* const BASE_URL = process.env.VITE_API_URL; */
-const { getStudentData } = require("../externalApi/studentService");
+const { getStudentData } = require("../services/studentService");
 
 const dayjs = require("dayjs");
 const utc = require("dayjs/plugin/utc");
