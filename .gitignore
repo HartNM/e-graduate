@@ -39,6 +39,7 @@ out/
 .idea/
 *.swp
 *.swo
+.e-graduate.code-workspace
 
 # --------------------------------------------------------------------
 # Frontend Specific (Vite / React)

@@ -12,24 +12,12 @@ const RequestEngTest = lazy(() => import("./pages/RequestEngTest.jsx"));
 const RequestThesisProposal = lazy(() => import("./pages/RequestThesisProposal.jsx"));
 const RequestThesisDefense = lazy(() => import("./pages/RequestThesisDefense.jsx"));
 
-/* const PostponeProposalExam = lazy(() => import("./pages/PostponeProposalExam.jsx"));
-const PostponeDefenseExam = lazy(() => import("./pages/PostponeDefenseExam.jsx"));
-const PlagiarismReport = lazy(() => import("./pages/PlagiarismReport.jsx"));
-const PlagiarismProposal = lazy(() => import("./pages/PlagiarismProposal.jsx"));
-const PlagiarismDefense = lazy(() => import("./pages/PlagiarismDefense.jsx")); 
-const RequestGraduation = lazy(() => import("./pages/RequestGraduation.jsx")); */
-
-/* const Admin = lazy(() => import("./pages/Admin/Admin.jsx"));
-const AssignFinanceOfficer = lazy(() => import("./pages/Admin/AssignFinanceOfficer.jsx"));
-const AssignRegistrarOfficer = lazy(() => import("./pages/Admin/AssignRegistrarOfficer.jsx")); */
-
-//------------------------------------------------------------------------------------------------------------------
 const Chairpersons = lazy(() => import("./pages/chairpersons/Chairpersons.jsx"));
-//------------------------------------------------------------------------------------------------------------------
+
 const Advisor = lazy(() => import("./pages/Advisor/Advisor.jsx"));
-//------------------------------------------------------------------------------------------------------------------
+
 const Research_advisor = lazy(() => import("./pages/research_advisor/research_advisor.jsx"));
-//------------------------------------------------------------------------------------------------------------------
+
 const RegistrarOfficer = lazy(() => import("./pages/RegistrarOfficer/RegistrarOfficer.jsx"));
 const CourseRegistrationR = lazy(() => import("./pages/RegistrarOfficer/CourseRegistrationR.jsx"));
 const ExamScheduleSetupPage = lazy(() => import("./pages/RegistrarOfficer/ExamScheduleSetupPage.jsx"));
@@ -37,22 +25,21 @@ const AssignMajorOfficer = lazy(() => import("./pages/RegistrarOfficer/AssignMaj
 const ExamResultsPrint = lazy(() => import("./pages/RegistrarOfficer/ExamResultsPrint.jsx"));
 const ExamProposalResultsPrint = lazy(() => import("./pages/RegistrarOfficer/ExamProposalResultsPrint.jsx"));
 const ExamDefenseResultsPrint = lazy(() => import("./pages/RegistrarOfficer/ExamDefenseResultsPrint.jsx"));
-//------------------------------------------------------------------------------------------------------------------
+
 const Student = lazy(() => import("./pages/student/Student.jsx"));
-//------------------------------------------------------------------------------------------------------------------
+
 const Dean = lazy(() => import("./pages/dean/dean.jsx"));
-//------------------------------------------------------------------------------------------------------------------
+
 const MajorOfficer = lazy(() => import("./pages/MajorOfficer/MajorOfficer.jsx"));
 const PrintExam = lazy(() => import("./pages/MajorOfficer/PrintExam.jsx"));
 const PrintEngTest = lazy(() => import("./pages/MajorOfficer/PrintEngTest.jsx"));
 const PrintThesisProposal = lazy(() => import("./pages/MajorOfficer/PrintThesisProposal.jsx"));
 const PrintThesisDefense = lazy(() => import("./pages/MajorOfficer/PrintThesisDefense.jsx"));
-const AssignChairpersons = lazy(() => import("./pages/MajorOfficer/AssignChairpersons.jsx"));
-const CourseRegistrationM = lazy(() => import("./pages/MajorOfficer/CourseRegistrationM.jsx"));
-/* const ExamEligibleListPrint = lazy(() => import("./pages/MajorOfficer/ExamEligibleListPrint.jsx")); */
 const ExamResults = lazy(() => import("./pages/MajorOfficer/ExamResults.jsx"));
 const ExamProposalResults = lazy(() => import("./pages/MajorOfficer/ExamProposalResults.jsx"));
 const ExamDefenseResults = lazy(() => import("./pages/MajorOfficer/ExamDefenseResults.jsx"));
+const CourseRegistrationM = lazy(() => import("./pages/MajorOfficer/CourseRegistrationM.jsx"));
+const AssignChairpersons = lazy(() => import("./pages/MajorOfficer/AssignChairpersons.jsx"));
 
 function AppRoutes() {
 	return (
@@ -63,11 +50,6 @@ function AppRoutes() {
 					<Route path="/" element={<Navigate to="/login" replace />} />
 					<Route path="/login" element={<AuthenticationForm />} />
 					<Route path="/personnel" element={<Personnel />} />
-
-					{/* <Route path="/admin" element={<Admin />}>
-						<Route path="AssignFinanceOfficer" element={<AssignFinanceOfficer />} />
-						<Route path="AssignRegistrarOfficer" element={<AssignRegistrarOfficer />} />
-					</Route> */}
 
 					<Route path="/registrar-officer" element={<RegistrarOfficer />}>
 						<Route path="CourseRegistration" element={<CourseRegistrationR />} />
@@ -87,38 +69,15 @@ function AppRoutes() {
 						<Route path="RequestEngTest" element={<RequestEngTest />} />
 						<Route path="RequestThesisProposal" element={<RequestThesisProposal />} />
 						<Route path="RequestThesisDefense" element={<RequestThesisDefense />} />
-
-						{/* <Route path="PostponeProposalExam" element={<PostponeProposalExam />} />
-						<Route path="PostponeDefenseExam" element={<PostponeDefenseExam />} />
-						<Route path="PlagiarismReport" element={<PlagiarismReport />} />
-						<Route path="PlagiarismProposal" element={<PlagiarismProposal />} />
-						<Route path="PlagiarismDefense" element={<PlagiarismDefense />} />
-						<Route path="RequestGraduation" element={<RequestGraduation />} /> */}
 					</Route>
 					<Route path="/advisor" element={<Advisor />}>
 						<Route path="RequestExam" element={<RequestExam />} />
 						<Route path="RequestExamCancel" element={<RequestExamCancel />} />
 						<Route path="RequestEngTest" element={<RequestEngTest />} />
-						<Route path="RequestThesisProposal" element={<RequestThesisProposal />} />
-						<Route path="RequestThesisDefense" element={<RequestThesisDefense />} />
-
-						{/* <Route path="PostponeProposalExam" element={<PostponeProposalExam />} />
-						<Route path="PostponeDefenseExam" element={<PostponeDefenseExam />} />
-						<Route path="PlagiarismReport" element={<PlagiarismReport />} />
-						<Route path="PlagiarismProposal" element={<PlagiarismProposal />} />
-						<Route path="PlagiarismDefense" element={<PlagiarismDefense />} />
-						<Route path="RequestGraduation" element={<RequestGraduation />} /> */}
 					</Route>
 					<Route path="/research_advisor" element={<Research_advisor />}>
 						<Route path="RequestThesisProposal" element={<RequestThesisProposal />} />
 						<Route path="RequestThesisDefense" element={<RequestThesisDefense />} />
-
-						{/* <Route path="PostponeProposalExam" element={<PostponeProposalExam />} />
-						<Route path="PostponeDefenseExam" element={<PostponeDefenseExam />} />
-						<Route path="PlagiarismReport" element={<PlagiarismReport />} />
-						<Route path="PlagiarismProposal" element={<PlagiarismProposal />} />
-						<Route path="PlagiarismDefense" element={<PlagiarismDefense />} />
-						<Route path="RequestGraduation" element={<RequestGraduation />} /> */}
 					</Route>
 					<Route path="/chairpersons" element={<Chairpersons />}>
 						<Route path="RequestExam" element={<RequestExam />} />
@@ -126,16 +85,8 @@ function AppRoutes() {
 						<Route path="RequestEngTest" element={<RequestEngTest />} />
 						<Route path="RequestThesisProposal" element={<RequestThesisProposal />} />
 						<Route path="RequestThesisDefense" element={<RequestThesisDefense />} />
-
-						{/* <Route path="PostponeProposalExam" element={<PostponeProposalExam />} />
-						<Route path="PostponeDefenseExam" element={<PostponeDefenseExam />} />
-						<Route path="PlagiarismReport" element={<PlagiarismReport />} />
-						<Route path="PlagiarismProposal" element={<PlagiarismProposal />} />
-						<Route path="PlagiarismDefense" element={<PlagiarismDefense />} />
-						<Route path="RequestGraduation" element={<RequestGraduation />} /> */}
 					</Route>
 					<Route path="/dean" element={<Dean />}>
-						<Route path="RequestExam" element={<RequestExam />} />
 						<Route path="RequestExamCancel" element={<RequestExamCancel />} />
 					</Route>
 					<Route path="/major-officer" element={<MajorOfficer />}>
