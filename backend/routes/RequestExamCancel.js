@@ -10,7 +10,7 @@ const statusMap = {
 	0: "อนุมัติ",
 	5: "ไม่อนุมัติ",
 	7: "รออาจารย์ที่ปรึกษาอนุญาต",
-	8: "รอประธานกรรมการปะจำสาขาวิชาอนุญาต",
+	8: "รอประธานกรรมการประจำสาขาวิชาอนุญาต",
 	9: "รอคณบดีอนุญาต",
 };
 
@@ -65,7 +65,7 @@ router.post("/CheckOpenREC", authenticateToken, async (req, res) => {
 
 router.post("/AllRequestExamCancel", authenticateToken, async (req, res) => {
 	const { term } = req.body;
-	const { user_id, role, employee_id, major_ids } = req.user;
+	const { user_id, role, employee_id, major_ids, faculty } = req.user;
 	try {
 		const pool = await poolPromise;
 		const request = pool.request().input("user_id", user_id).input("term", term);
@@ -120,7 +120,26 @@ router.post("/AllRequestExamCancel", authenticateToken, async (req, res) => {
 			request.input("major_ids_str", major_ids.join(","));
 			query += ` WHERE re.major_id IN ((SELECT value FROM STRING_SPLIT(@major_ids_str, ','))) AND (rce.status IN (0, 8, 9) OR (rce.status = 5 AND rce.advisor_approvals_id IS NOT NULL AND rce.chairpersons_approvals_id IS NOT NULL)) AND re.term = @term`;
 		} else if (role === "dean") {
-			query += ` WHERE re.faculty_name IN (SELECT faculty_name FROM users WHERE user_id = @user_id) AND (rce.status IN (0, 9) OR (rce.status = 5 AND rce.advisor_approvals_id IS NOT NULL AND rce.chairpersons_approvals_id IS NOT NULL AND rce.dean_approvals_id IS NOT NULL)) AND re.term = @term`;
+			/* query += ` WHERE re.faculty_name IN (SELECT faculty_name FROM users WHERE user_id = @user_id) AND (rce.status IN (0, 9) OR (rce.status = 5 AND rce.advisor_approvals_id IS NOT NULL AND rce.chairpersons_approvals_id IS NOT NULL AND rce.dean_approvals_id IS NOT NULL)) AND re.term = @term`; */
+			const majorListQuery = `
+                SELECT major_id 
+                FROM [dbRequestSubmission].[dbo].[majors] 
+                WHERE faculty_name = @faculty_name
+            `;
+			const majorReq = await pool.request().input("faculty_name", faculty).query(majorListQuery);
+			const deanMajorIds = majorReq.recordset.map((m) => m.major_id);
+			if (deanMajorIds.length > 0) {
+				request.input("dean_major_ids_str", deanMajorIds.join(","));
+				query += ` 
+                    WHERE re.major_id IN ((SELECT value FROM STRING_SPLIT(@dean_major_ids_str, ','))) 
+                    AND (
+                        rce.status IN (0, 9) 
+                        OR (rce.status = 5 AND rce.advisor_approvals_id IS NOT NULL AND rce.chairpersons_approvals_id IS NOT NULL AND rce.dean_approvals_id IS NOT NULL)
+                    ) 
+                    AND re.term = @term`;
+			} else {
+				query += ` WHERE 1=0 AND re.term = @term`;
+			}
 		}
 		query += " ORDER BY request_cancel_exam_id DESC";
 		const result = await request.query(query);
@@ -151,7 +170,7 @@ router.post("/AllRequestExamCancel", authenticateToken, async (req, res) => {
 					advisor_approvals: item.advisor_approvals === null ? null : item.advisor_approvals === "1",
 					chairpersons_approvals: item.chairpersons_approvals === null ? null : item.chairpersons_approvals === "1",
 				};
-			})
+			}),
 		);
 		res.status(200).json(enrichedData);
 	} catch (err) {
@@ -231,10 +250,7 @@ router.post("/ApproveRequestExamCancel", authenticateToken, async (req, res) => 
 			}
 			status = statusCancel;
 		} else {
-			const checkStatus = await pool
-				.request()
-				.input("request_exam_id", request_exam_id)
-				.query("SELECT advisor_approvals, chairpersons_approvals,registrar_approvals,receipt_vol FROM request_exam WHERE request_exam_id = @request_exam_id");
+			const checkStatus = await pool.request().input("request_exam_id", request_exam_id).query("SELECT advisor_approvals, chairpersons_approvals,registrar_approvals,receipt_vol FROM request_exam WHERE request_exam_id = @request_exam_id");
 			if (checkStatus.recordset[0].advisor_approvals === null) status = "1";
 			else if (checkStatus.recordset[0].chairpersons_approvals === null) status = "2";
 			else if (checkStatus.recordset[0].registrar_approvals === null) status = "3";

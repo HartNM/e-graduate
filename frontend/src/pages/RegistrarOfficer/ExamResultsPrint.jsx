@@ -17,8 +17,28 @@ const ExamResultsPrint = () => {
 	};
 
 	useEffect(() => {
-		const fetchTermAndData = async () => {
+		const getTerm = async () => {
 			try {
+				const termInfoReq = await fetch(`${BASE_URL}/api/allTerm`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				});
+				const termInfodata = await termInfoReq.json();
+				if (!termInfoReq.ok) throw new Error(termInfodata.message);
+
+				setTerm(termInfodata.termList);
+				setSelectedTerm(termInfodata.currentTerm);
+			} catch (e) {
+				notify("error", e.message);
+				console.error("Error fetching allRequestExamInfo:", e);
+			}
+		};
+		getTerm();
+	}, []);
+
+	useEffect(() => {
+		const fetchTermAndData = async () => {
+			/* try {
 				const res = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -42,7 +62,7 @@ const ExamResultsPrint = () => {
 				}
 			} catch (e) {
 				notify("error", e.message);
-			}
+			} */
 			try {
 				const res = await fetch(`${BASE_URL}/api/allExamResultsPrint`, {
 					method: "POST",
@@ -66,7 +86,7 @@ const ExamResultsPrint = () => {
 			<Group justify="space-between">
 				<Group>
 					<Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />
-					<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} />
+					<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} style={{ width: 80 }}/>
 				</Group>
 			</Group>
 			<Space h="md" />

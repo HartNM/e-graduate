@@ -1,15 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const authenticateToken = require("../middleware/authenticateToken");
-const { sql, poolPromise } = require("../db");
+const { poolPromise } = require("../db");
 const axios = require("axios");
-/* const BASE_URL = process.env.VITE_API_URL; */
 const { getStudentData } = require("../services/studentService");
 
 const statusMap = {
 	0: "ยกเลิก",
 	1: "รออาจารย์ที่ปรึกษาอนุญาต",
-	2: "รอประธานกรรมการปะจำสาขาวิชาอนุญาต",
+	2: "รอประธานกรรมการประจำสาขาวิชาอนุญาต",
 	3: "รอเจ้าหน้าที่ทะเบียนตรวจสอบ",
 	4: "รอการชำระค่าธรรมเนียม",
 	5: "อนุญาต",
@@ -57,7 +56,6 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 			query += " WHERE student_id = @user_id";
 		} else if (role === "advisor") {
 			// query += ` WHERE study_group_id IN (SELECT group_no FROM advisorGroup_no WHERE user_id = @user_id) AND term = @term`; //test
-
 			const apiResponse = await axios.post("https://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/FindGroup", {
 				ID_TEACHER: user_id,
 			});
@@ -88,7 +86,7 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 		const enrichedData = await Promise.all(
 			result.recordset.map(async (item) => {
 				//---------------------------------------------------------------receipt--------------------------------------------------------------------------
-				if (item.status === "4") {
+				if (item.status === "4" && role === "student") {
 					try {
 						// เรียก API e-payment
 						const paymentUrl = `https://e-payment.kpru.ac.th/pay/api/showlistcustomer/${item.student_id}/81914`;
@@ -113,14 +111,7 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
                                         receipt_pay_date = @date 
                                     WHERE request_exam_id = @id
                                 `;
-								await pool
-									.request()
-									.input("status", "5")
-									.input("vol", payInfo.receipt_book)
-									.input("no", payInfo.receipt_no)
-									.input("date", dateForSQL)
-									.input("id", item.request_exam_id)
-									.query(updateQuery);
+								await pool.request().input("status", "5").input("vol", payInfo.receipt_book).input("no", payInfo.receipt_no).input("date", dateForSQL).input("id", item.request_exam_id).query(updateQuery);
 
 								item.status = 5;
 								item.receipt_vol = payInfo.receipt_book;
@@ -138,9 +129,6 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 				//---------------------------------------------------------------receipt--------------------------------------------------------------------------
 				let studentInfo;
 				try {
-					/* const studentRes = await axios.get(`${BASE_URL}/api/student/${item.student_id}`);
-					student = studentRes.data; */
-					// 1. เรียกฟังก์ชันตรงๆ (ไม่ต้อง axios.get หาตัวเอง)
 					const data = await getStudentData(item.student_id);
 
 					// 2. เช็คว่ามีข้อมูลไหม (เพราะ getStudentData คืนค่า null ได้ถ้าไม่เจอ)
@@ -162,12 +150,12 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 					chairpersons_approvals: item.chairpersons_approvals === null ? null : item.chairpersons_approvals === "1",
 					registrar_approvals: item.registrar_approvals === null ? null : item.registrar_approvals === "1",
 				};
-			})
+			}),
 		);
 		/* console.log(enrichedData); */
 		res.status(200).json(enrichedData);
 	} catch (err) {
-		console.error("requestExamAll:", err);
+		console.error("requestExamAll:", err);	
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลคำร้อง" });
 	}
 });
@@ -175,16 +163,10 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 router.post("/addRequestExam", authenticateToken, async (req, res) => {
 	const { student_id, study_group_id, major_id, major_name, faculty_name, education_level, term } = req.body;
 	try {
-		const pool = await poolPromise;
-
-		/* const infoRes = await pool.request().query(`SELECT TOP 1 *
-			FROM request_exam_info
-			WHERE CAST(GETDATE() AS DATE) BETWEEN KQ_open_date AND KQ_close_date
-			ORDER BY request_exam_info_id DESC`);
-		console.log(infoRes); */
-
 		const requestType = `ขอสอบ${education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`;
 		const receipt_pay = education_level === "ปริญญาโท" ? 1000 : 1500;
+
+		const pool = await poolPromise;
 		const result = await pool
 			.request()
 			.input("student_id", student_id)
@@ -194,7 +176,6 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 			.input("request_type", requestType)
 			.input("term", term)
 			.input("status", "1")
-			//receipt_pay
 			.input("receipt_pay", receipt_pay).query(`
 				INSERT INTO request_exam (
 					student_id,
@@ -309,13 +290,7 @@ router.post("/payRequestExam", authenticateToken, async (req, res) => {
 	const { request_exam_id, receipt_vol, receipt_No, receipt_pay } = req.body;
 	try {
 		const pool = await poolPromise;
-		const result = await pool
-			.request()
-			.input("request_exam_id", request_exam_id)
-			.input("receipt_vol", receipt_vol)
-			.input("receipt_No", receipt_No)
-			.input("receipt_pay", receipt_pay)
-			.input("status", "5").query(`
+		const result = await pool.request().input("request_exam_id", request_exam_id).input("receipt_vol", receipt_vol).input("receipt_No", receipt_No).input("receipt_pay", receipt_pay).input("status", "5").query(`
 			UPDATE request_exam
 			SET receipt_vol = @receipt_vol,
 				receipt_No = @receipt_No,

@@ -7,7 +7,7 @@ const ModalCheckCourse = ({ opened, onClose, missingCoures, type }) => (
 		title={
 			<Box className="flex items-center gap-2">
 				<Title order={4} c="red">
-					ลงทะเบียนเรียนไม่ครบ
+					ท่านลงทะเบียนไม่สมบูรณ์
 				</Title>
 			</Box>
 		}

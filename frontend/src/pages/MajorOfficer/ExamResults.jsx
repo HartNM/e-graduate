@@ -1,25 +1,38 @@
 //ผลการสอบประมวลความรู้/สอบวัดคุณสมบัติ
 import { Box, Text, ScrollArea, Table, Group, Button, Space, Modal, Checkbox, Select } from "@mantine/core";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useForm } from "@mantine/form";
+import { jwtDecode } from "jwt-decode";
 import ModalInform from "../../component/Modal/ModalInform";
 import PDFExamPrint from "../../component/PDF/PdfExamResultsPrint";
 import * as XLSX from "xlsx";
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 const ExamResults = () => {
+	const token = localStorage.getItem("token");
+	const { role } = useMemo(() => {
+		if (!token) return { role: "" };
+		try {
+			return jwtDecode(token);
+		} catch (error) {
+			console.error("Invalid token:", error);
+			return { role: "" };
+		}
+	}, [token]);
+
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
 	const close = () => setInform((s) => ({ ...s, open: false }));
-
 	const [openModal, setOpenModal] = useState(false);
-	const token = localStorage.getItem("token");
+
 	const [term, setTerm] = useState([]);
 	const [reloadTable, setReloadTable] = useState(false);
 	const [group, setGroup] = useState([]);
 	const [selectedTerm, setSelectedTerm] = useState("");
 	const [selectedType, setSelectedType] = useState("");
 	const [selectedGroupId, setSelectedGroupId] = useState("");
+	const [filterLevel, setFilterLevel] = useState("");
+
 	const form = useForm({});
 
 	const parseTerm = (termStr) => {
@@ -29,41 +42,23 @@ const ExamResults = () => {
 	const statusColor = { ผ่าน: "green", ไม่ผ่าน: "red", ขาดสอบ: "gray" };
 
 	useEffect(() => {
-		const fetchTerm = async () => {
+		const getTerm = async () => {
 			try {
-				const res = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
+				const termInfoReq = await fetch(`${BASE_URL}/api/allTerm`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
-				const data = await res.json();
-				if (!res.ok) throw new Error(data.message);
+				const termInfodata = await termInfoReq.json();
+				if (!termInfoReq.ok) throw new Error(termInfodata.message);
 
-				// เก็บ term ทั้งหมด
-				setTerm(data.map((item) => item.term));
-
-				// หาวันนี้
-				const today = new Date();
-
-				// หา term ที่อยู่ในช่วง open-close
-				let currentTerm = data.find((item) => {
-					const open = new Date(item.term_open_date);
-					const close = new Date(item.term_close_date);
-					return today >= open && today <= close;
-				});
-
-				if (!currentTerm && data.length > 0) {
-					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก close_date
-					currentTerm = [...data].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
-				}
-
-				if (currentTerm) {
-					setSelectedTerm(currentTerm.term);
-				}
+				setTerm(termInfodata.termList);
+				setSelectedTerm(termInfodata.currentTerm);
 			} catch (e) {
 				notify("error", e.message);
+				console.error("Error fetching allRequestExamInfo:", e);
 			}
 		};
-		fetchTerm();
+		getTerm();
 	}, []);
 
 	useEffect(() => {
@@ -72,9 +67,10 @@ const ExamResults = () => {
 				const res = await fetch(`${BASE_URL}/api/AllExamResults`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+					body: JSON.stringify({ term: selectedTerm }),
 				});
 				const data = await res.json();
-				if (!res.ok) throw new Error(data.message);		
+				if (!res.ok) throw new Error(data.message);
 				setGroup(data);
 			} catch (e) {
 				notify("error", e.message);
@@ -82,7 +78,36 @@ const ExamResults = () => {
 			setReloadTable(false);
 		};
 		fetchData();
-	}, [reloadTable]);
+	}, [reloadTable, selectedTerm]);
+
+	const filteredGroups = useMemo(() => {
+		const grouped = group
+			.filter((i) => {
+				const matchesTerm = !selectedTerm || i.term === selectedTerm;
+				const matchesType = !selectedType || i.request_type === selectedType;
+
+				let matchesLevel = true;
+				if (filterLevel && filterLevel !== "") {
+					const groupIdStr = String(i.study_group_id);
+					const subCode = groupIdStr.substring(2, 5);
+					if (filterLevel === "ปริญญาเอก") {
+						matchesLevel = subCode === "427";
+					} else if (filterLevel === "ปริญญาโท") {
+						matchesLevel = subCode !== "427";
+					}
+				}
+				return matchesTerm && matchesType && matchesLevel;
+			})
+			.sort((a, b) => parseTerm(b.term) - parseTerm(a.term))
+			.reduce((acc, i) => {
+				const key = `${i.study_group_id}-${i.term}`;
+				if (!acc[key]) acc[key] = [];
+				acc[key].push(i);
+				return acc;
+			}, {});
+
+		return Object.entries(grouped);
+	}, [group, selectedTerm, selectedType, filterLevel]);
 
 	const handleFormClick = (students) => {
 		const groupId = students[0].study_group_id;
@@ -113,16 +138,32 @@ const ExamResults = () => {
 		}
 	};
 
-	const exportToExcel = (studentsToExport, fileName = "ผลการสอบ.xlsx") => {
-		const dataForSheet = studentsToExport.map((s) => ({
-			รหัสนักศึกษา: s.student_id,
-			"ชื่อ-สกุล": s.name,
-			ผลสอบ: s.exam_results,
-			//วันที่สอบ: s.thesis_exam_date ? new Date(s.thesis_exam_date).toLocaleDateString("th-TH") : "",
-			หมู่เรียน: s.study_group_id,
-			เทอม: s.term,
-		}));
-		const ws = XLSX.utils.json_to_sheet(dataForSheet);
+	const exportToExcel = (studentsToExport) => {
+		if (!studentsToExport || studentsToExport.length === 0) {
+			notify("error", "ไม่มีข้อมูลสำหรับ Export");
+			return;
+		}
+
+		const firstRow = studentsToExport[0];
+		const term = firstRow.term || "-";
+		const studyGroup = firstRow.study_group_id || "-";
+		const requestType = firstRow.request_type.replace("ขอสอบ", "") || "-";
+		const major_name = firstRow.major_name || "-";
+
+		const mainHeader = [[`ผลการสอบ${requestType} สาขา${major_name} หมู่เรียน ${studyGroup} ปีการศึกษา ${term}`]];
+		const subHeader = [["รหัสนักศึกษา", "ชื่อ-สกุล", "ผลสอบ"]];
+		const dataRows = studentsToExport.map((s) => [s.student_id, s.name, s.exam_results || "-"]);
+
+		const ws = XLSX.utils.aoa_to_sheet([]);
+
+		XLSX.utils.sheet_add_aoa(ws, mainHeader, { origin: "A1" });
+		XLSX.utils.sheet_add_aoa(ws, subHeader, { origin: "A2" });
+		XLSX.utils.sheet_add_aoa(ws, dataRows, { origin: "A3" });
+
+		ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 2 } }];
+		ws["!cols"] = [{ wch: 15 }, { wch: 25 }, { wch: 10 }];
+
+		const fileName = `ผลการสอบ${requestType}_${studyGroup}_${term}.xlsx`;
 		const wb = XLSX.utils.book_new();
 		XLSX.utils.book_append_sheet(wb, ws, "ผลการสอบ");
 		XLSX.writeFile(wb, fileName);
@@ -147,22 +188,24 @@ const ExamResults = () => {
 							)}
 						</Table.Td>
 					</Table.Tr>
-				))
-			)
+				)),
+			),
 		);
 	};
+
 	return (
 		<Box>
 			<ModalInform opened={inform.open} onClose={close} message={inform.message} type={inform.type} />
 			<Text size="1.5rem" fw={900} mb="md">
-				กรอกผลการสอบประมวลความรู้/สอบวัดคุณสมบัติ
+				{role === "officer_major" ? "กรอก" : "พิมพ์"}ผลการสอบประมวลความรู้/สอบวัดคุณสมบัติ
 			</Text>
 
 			{!selectedGroupId ? (
 				<Box>
 					<Group>
-						<Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />
-						<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} />
+						<Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} clearable />
+						<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} allowDeselect={false} onChange={setSelectedTerm} style={{ width: 80 }} />
+						{/* {role === "officer_major" && <Select placeholder="ระดับการศึกษา" data={["ปริญญาโท", "ปริญญาเอก"]} value={filterLevel} onChange={setFilterLevel} clearable style={{ width: 150 }} />} */}
 					</Group>
 					<Space h="md" />
 					<ScrollArea type="scroll" offsetScrollbars style={{ borderRadius: 8, border: "1px solid #e0e0e0" }}>
@@ -172,21 +215,11 @@ const ExamResults = () => {
 									<Table.Th>รหัสหมู่เรียน</Table.Th>
 									<Table.Th>เทอมการศึกษา</Table.Th>
 									<Table.Th>คำขอ</Table.Th>
-									<Table.Th>ดำเนินการ</Table.Th>
+									<Table.Th style={{ textAlign: "center" }}>ดำเนินการ</Table.Th>
 								</Table.Tr>
 							</Table.Thead>
 							<Table.Tbody>
-								{Object.entries(
-									group
-										.filter((i) => (!selectedTerm || i.term === selectedTerm) && (!selectedType || i.request_type === selectedType))
-										.sort((a, b) => parseTerm(b.term) - parseTerm(a.term))
-										.reduce((acc, i) => {
-											const key = `${i.study_group_id}-${i.term}`;
-											if (!acc[key]) acc[key] = [];
-											acc[key].push(i);
-											return acc;
-										}, {})
-								).map(([key, students]) => {
+								{filteredGroups.map(([key, students]) => {
 									const allFilled = students.every((s) => s.exam_results != null);
 									return (
 										<Table.Tr key={key}>
@@ -194,14 +227,16 @@ const ExamResults = () => {
 											<Table.Td>{students[0].term}</Table.Td>
 											<Table.Td>{[...new Set(students.map((s) => s.request_type))].join(", ")}</Table.Td>
 											<Table.Td>
-												<Group>
-													<Button size="xs" color={allFilled ? "yellow" : "blue"} onClick={() => handleFormClick(students)}>
-														{allFilled ? "แก้ไข" : "กรอก"}
-													</Button>
+												<Group justify="center">
+													{role === "officer_major" && (
+														<Button size="xs" color={allFilled ? "yellow" : "blue"} onClick={() => handleFormClick(students)}>
+															{allFilled ? "จัดการผลสอบ" : "กรอก"}
+														</Button>
+													)}
 													<Button size="xs" onClick={() => PDFExamPrint(students)}>
 														พิมพ์
 													</Button>
-													<Button size="xs" color="teal" onClick={() => exportToExcel(students, `ผลการสอบประมวลความรู้_วัดคุณสมบัติ_${students[0].study_group_id}.xlsx`)}>
+													<Button size="xs" color="teal" onClick={() => exportToExcel(students)}>
 														Export Excel
 													</Button>
 												</Group>
@@ -230,7 +265,7 @@ const ExamResults = () => {
 								<Table.Tr>
 									<Table.Th>รหัสนักศึกษา</Table.Th>
 									<Table.Th>ชื่อ</Table.Th>
-									<Table.Th>ผลสอบ</Table.Th>
+									<Table.Th style={{ textAlign: "center" }}>ผลสอบ</Table.Th>
 								</Table.Tr>
 							</Table.Thead>
 							<Table.Tbody>{renderStudentRows(selectedGroupId, form, statusColor, true)}</Table.Tbody>
@@ -250,7 +285,7 @@ const ExamResults = () => {
 					</Table.Thead>
 					<Table.Tbody>{renderStudentRows(selectedGroupId, form, statusColor, false)}</Table.Tbody>
 				</Table>
-				<Group grow>
+				<Group grow mt="md">
 					<Button color="yellow" onClick={() => setOpenModal(false)}>
 						แก้ไข
 					</Button>

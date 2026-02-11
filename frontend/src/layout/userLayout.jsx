@@ -4,25 +4,52 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { AppShell, Box, Burger, Text, Image, Space } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { NavbarNested } from "../component/Navbar/Navbar.jsx";
-import myImage from "../assets/logo.png";
+import myImage from "../assets/images/logo.png";
 import { jwtDecode } from "jwt-decode";
 
 const UserLayout = (item) => {
 	const navigate = useNavigate();
 	const [opened, { toggle }] = useDisclosure();
 	const location = useLocation();
-
 	useEffect(() => {
 		toggle(false);
 	}, [location]);
 
-	const token = localStorage.getItem("token");
+	useEffect(() => {
+		const checkToken = () => {
+			const token = localStorage.getItem("token");
 
-	const decoded = jwtDecode(token);
-	const now = Date.now() / 1000; // วินาทีปัจจุบัน
-	if (decoded.exp && decoded.exp < now) {
-		return navigate("/login");
-	}
+			// ถ้าไม่มี Token ให้ดีดไป Login เลย
+			if (!token) {
+				navigate("/login");
+				return;
+			}
+
+			try {
+				const decoded = jwtDecode(token);
+				const now = Date.now() / 1000; // วินาทีปัจจุบัน
+
+				// ถ้าหมดอายุ
+				if (decoded.exp && decoded.exp < now) {
+					localStorage.removeItem("token"); // ลบ Token ที่หมดอายุทิ้ง
+					navigate("/login");
+				}
+			} catch (error) {
+				// กรณี Token พัง หรือ decode ไม่ได้
+				localStorage.removeItem("token");
+				navigate("/login");
+			}
+		};
+
+		// เช็คครั้งแรกทันทีที่ component โหลด หรือเปลี่ยนหน้า
+		checkToken();
+
+		// เช็คซ้ำทุกๆ 10 วินาที (ป้องกันการเปิดหน้าค้างไว้แล้ว Token หมดอายุ)
+		const interval = setInterval(checkToken, 10000);
+
+		// Clear interval เมื่อ component ถูกทำลาย
+		return () => clearInterval(interval);
+	}, [navigate, location]);
 
 	return (
 		<AppShell header={{ height: 70 }} navbar={{ width: 300, breakpoint: "sm", collapsed: { mobile: !opened } }} padding="md" style={{ backgroundColor: "var(--mantine-color-gray-0)" }}>

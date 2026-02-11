@@ -147,7 +147,25 @@ const CourseRegistration = () => {
 		}
 	};
 
-	const classRows = tableData.map((item, index) => (
+	const [filterLevel, setFilterLevel] = useState("");
+
+	const filteredTableData = useMemo(() => {
+		if (filterLevel === "ทั้งหมด") return tableData;
+
+		return tableData.filter((item) => {
+			const groupId = String(item.study_group_id);
+			const subCode = groupId.substring(2, 5); // ดึงตัวที่ 3-5 (index 2,3,4)
+
+			if (filterLevel === "ปริญญาเอก") {
+				return subCode === "427";
+			} else if (filterLevel === "ปริญญาโท") {
+				return subCode !== "427"; // หรือเงื่อนไขอื่นๆ ของ ป.โท ถ้ามี
+			}
+			return true;
+		});
+	}, [tableData, filterLevel]);
+
+	const classRows = filteredTableData.map((item, index) => (
 		<Table.Tr key={index}>
 			<Table.Td>{Form.values.major_name}</Table.Td>
 			<Table.Td>{item.study_group_id}</Table.Td>
@@ -160,7 +178,7 @@ const CourseRegistration = () => {
 			</Table.Td>
 
 			<Table.Td>
-				<Group>
+				<Group style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
 					<Button color="green" size="xs" onClick={() => handleOpenEdit(item)}>
 						แก้ไข
 					</Button>
@@ -180,7 +198,7 @@ const CourseRegistration = () => {
 			const filtered = fullCourses.filter((item) => (item?.value || "").toLowerCase().includes(query.toLowerCase()) || (item?.label || "").toLowerCase().includes(query.toLowerCase())).slice(0, 50);
 			setData(filtered);
 		}, 300),
-		[fullCourses]
+		[fullCourses],
 	);
 
 	return (
@@ -206,7 +224,8 @@ const CourseRegistration = () => {
 			</Text>
 			<Space h="sm" />
 			<Box>
-				<Flex justify="flex-end">
+				<Flex justify="space-between" align="flex-end">
+					<Select placeholder="ระดับการศึกษา" data={["ปริญญาโท", "ปริญญาเอก"]} value={filterLevel} onChange={setFilterLevel} style={{ width: 200 }} />
 					<Button variant="filled" onClick={() => handleOpenAdd()}>
 						เพิ่มข้อมูล
 					</Button>

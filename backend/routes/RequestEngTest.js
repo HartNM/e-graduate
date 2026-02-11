@@ -59,7 +59,7 @@ router.post("/allRequestEngTest", authenticateToken, async (req, res) => {
 		const enrichedData = await Promise.all(
 			result.recordset.map(async (item) => {
 				//---------------------------------------------------------------receipt--------------------------------------------------------------------------
-				if (item.status === "4") {
+				if (item.status === "4" && role === "student") {
 					try {
 						// เรียก API e-payment
 						const paymentUrl = `https://e-payment.kpru.ac.th/pay/api/showlistcustomer/${item.student_id}/81914`;
@@ -140,23 +140,18 @@ router.post("/allRequestEngTest", authenticateToken, async (req, res) => {
 });
 
 router.post("/addRequestEngTest", authenticateToken, async (req, res) => {
-	const { student_id, study_group_id, major_id, faculty_name } = req.body;
+	const { student_id, study_group_id, major_id, faculty_name ,term} = req.body;
 	try {
 		const pool = await poolPromise;
-		const infoRes = await pool.request().query(`SELECT TOP 1 *
-			FROM request_exam_info
-			WHERE CAST(GETDATE() AS DATE) BETWEEN term_open_date AND term_close_date
-			ORDER BY request_exam_info_id DESC`);
 		const result = await pool
 			.request()
 			.input("student_id", student_id)
 			.input("study_group_id", study_group_id)
 			.input("major_id", major_id)
 			.input("faculty_name", faculty_name)
-			.input("request_type", "คำร้องขอทดสอบความรู้ทางภาษาอังกฤษ")
-			.input("term", infoRes.recordset[0].term)
+			.input("request_type", "ขอสอบความรู้ทางภาษาอังกฤษ")
+			.input("term", term)
 			.input("status", "1")
-			//receipt_pay
 			.input("receipt_pay", 1000).query(`
 			INSERT INTO request_eng_test (
 				student_id,

@@ -34,6 +34,42 @@ router.get("/student/:student_id", async (req, res) => {
 	}
 });
 
+/* router.post("/get-all-courses", async (req, res) => {
+	try {
+		const { user_id, term } = req.body;
+		if (!user_id || !term) {
+			return res.status(400).json({ message: "User ID and Term are required" });
+		}
+
+		try {
+			const response = await axios.post(
+				"https://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/ListRegister",
+				{
+					ID_NO: user_id,
+					TERM: term,
+				},
+				{
+					headers: { "Content-Type": "application/json" },
+					timeout: 5000,
+				},
+			);
+			const registerCoursesData = response.data;
+			const courses = Array.isArray(registerCoursesData) ? registerCoursesData : [];
+			res.json({
+				success: true,
+				total_courses: courses.length,
+				data: courses,
+			});
+		} catch (error) {
+			console.error(`Error fetching data for term ${term}:`, error.message);
+			res.status(500).json({ message: "Error fetching data from registration system" });
+		}
+	} catch (globalError) {
+		console.error("Server Error:", globalError);
+		res.status(500).json({ message: "Internal Server Error" });
+	}
+}); */
+
 router.post("/get-all-courses", async (req, res) => {
 	try {
 		const { user_id } = req.body;

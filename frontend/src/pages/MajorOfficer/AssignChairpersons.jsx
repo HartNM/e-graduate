@@ -171,7 +171,7 @@ const AssignChairpersons = () => {
 			<Table.Td>{majorName?.major_name}</Table.Td>
 			<Table.Td>{item.name}</Table.Td>
 			<Table.Td>
-				<Group>
+				<Group style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
 					<Button color="red" size="xs" onClick={() => handleOpenDelete(item)}>
 						ลบ
 					</Button>

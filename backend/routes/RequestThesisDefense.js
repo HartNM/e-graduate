@@ -69,7 +69,7 @@ router.post("/allRequestThesisDefense", authenticateToken, async (req, res) => {
 		const enrichedData = await Promise.all(
 			result.recordset.map(async (item) => {
 				//---------------------------------------------------------------receipt--------------------------------------------------------------------------
-				if (item.status === "4") {
+				if (item.status === "4" && role === "student") {
 					try {
 						// เรียก API e-payment
 						const paymentUrl = `https://e-payment.kpru.ac.th/pay/api/showlistcustomer/${item.student_id}/81914`;
@@ -94,14 +94,7 @@ router.post("/allRequestThesisDefense", authenticateToken, async (req, res) => {
 										receipt_pay_date = @date 
 									WHERE request_exam_id = @id
 								`;
-								await pool
-									.request()
-									.input("status", "5")
-									.input("vol", payInfo.receipt_book)
-									.input("no", payInfo.receipt_no)
-									.input("date", dateForSQL)
-									.input("id", item.request_exam_id)
-									.query(updateQuery);
+								await pool.request().input("status", "5").input("vol", payInfo.receipt_book).input("no", payInfo.receipt_no).input("date", dateForSQL).input("id", item.request_exam_id).query(updateQuery);
 
 								item.status = 5;
 								item.receipt_vol = payInfo.receipt_book;
@@ -143,7 +136,7 @@ router.post("/allRequestThesisDefense", authenticateToken, async (req, res) => {
 					chairpersons_approvals: item.chairpersons_approvals === null ? null : item.chairpersons_approvals === "1",
 					registrar_approvals: item.registrar_approvals === null ? null : item.registrar_approvals === "1",
 				};
-			})
+			}),
 		);
 
 		res.status(200).json(enrichedData);
@@ -154,14 +147,11 @@ router.post("/allRequestThesisDefense", authenticateToken, async (req, res) => {
 });
 
 router.post("/addRequestThesisDefense", authenticateToken, async (req, res) => {
-	const { student_id, study_group_id, major_id, faculty_name, thesis_exam_date, thesis_advisor_id, research_name, request_type, education_level } = req.body;
+	const { student_id, study_group_id, major_id, faculty_name, thesis_exam_date, thesis_advisor_id, research_name, request_type, education_level, term } = req.body;
 	try {
-		const pool = await poolPromise;
-		const infoRes = await pool.request().query(`SELECT TOP 1 *
-			FROM request_exam_info
-			WHERE CAST(GETDATE() AS DATE) BETWEEN term_open_date AND term_close_date
-			ORDER BY request_exam_info_id DESC`);
 		const receipt_pay = education_level === "ปริญญาโท" ? 3000 : 7000;
+
+		const pool = await poolPromise;
 		const result = await pool
 			.request()
 			.input("student_id", student_id)
@@ -170,8 +160,8 @@ router.post("/addRequestThesisDefense", authenticateToken, async (req, res) => {
 			.input("major_id", major_id)
 			.input("faculty_name", faculty_name)
 			.input("research_name", research_name)
-			.input("request_type", request_type.replace("โครงร่าง", ""))
-			.input("term", infoRes.recordset[0].term)
+			.input("request_type", request_type.replace("โครงร่าง", "ขอสอบ"))
+			.input("term", term)
 			.input("status", "1")
 			//receipt_pay
 			.input("receipt_pay", receipt_pay).query(`
@@ -288,13 +278,7 @@ router.post("/payRequestThesisDefense", authenticateToken, async (req, res) => {
 	const { request_thesis_defense_id, receipt_vol, receipt_No, receipt_pay } = req.body;
 	try {
 		const pool = await poolPromise;
-		const result = await pool
-			.request()
-			.input("request_thesis_defense_id", request_thesis_defense_id)
-			.input("receipt_vol", receipt_vol)
-			.input("receipt_No", receipt_No)
-			.input("receipt_pay", receipt_pay)
-			.input("status", "5").query(`
+		const result = await pool.request().input("request_thesis_defense_id", request_thesis_defense_id).input("receipt_vol", receipt_vol).input("receipt_No", receipt_No).input("receipt_pay", receipt_pay).input("status", "5").query(`
 				UPDATE request_thesis_defense
 				SET receipt_vol = @receipt_vol ,
 					receipt_No = @receipt_No ,

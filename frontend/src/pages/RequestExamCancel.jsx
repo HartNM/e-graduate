@@ -1,10 +1,11 @@
-//คำร้องขอยกเลิกประมวลความรู้/วัดคุณสมบัติ 
+//คำร้องขอยกเลิกประมวลความรู้/วัดคุณสมบัติ
 import { useState, useEffect, useMemo } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
 import ModalAddCancel from "../component/Modal/ModalAddCancel";
 import ModalApprove from "../component/Modal/ModalApprove";
 import ModalInform from "../component/Modal/ModalInform";
-import Pdfg07 from "../component/PDF/Pdfg07";
+// import Pdfg07 from "../component/PDF/Pdfg07";
+import PdfButton from "../component/PDF/PdfButton";
 import { jwtDecode } from "jwt-decode";
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -47,6 +48,50 @@ const RequestExamCancel = () => {
 	useEffect(() => {
 		const getTerm = async () => {
 			try {
+				const termInfoReq = await fetch(`${BASE_URL}/api/allTerm`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+				});
+				const termInfodata = await termInfoReq.json();
+				if (!termInfoReq.ok) throw new Error(termInfodata.message);
+
+				setTerm(termInfodata.termList);
+				setSelectedTerm(termInfodata.currentTerm);
+			} catch (e) {
+				notify("error", e.message);
+				console.error("Error fetching allRequestExamInfo:", e);
+			}
+		};
+		getTerm();
+	}, []);
+
+	useEffect(() => {
+		if (role !== "student") return;
+		const fetchOpenStatus = async () => {
+			try {
+				const checkOpenKQRes = await fetch(`${BASE_URL}/api/checkKQStatus`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+					body: JSON.stringify({ student_id: user_id }),
+				});
+				const checkOpenKQData = await checkOpenKQRes.json();
+				if (!checkOpenKQRes.ok) throw new Error(checkOpenKQData.message);
+
+				setSelectedTerm(checkOpenKQData.currentTerm)
+				setActualCurrentTerm(checkOpenKQData.currentTerm);
+				/* setPaymentCloseDate(checkOpenKQData.KQ_close_date);
+				setOpenKQ(checkOpenKQData.isOpen); */
+			} catch (e) {
+				notify("error", e.message);
+				console.error("Error fetching checkOpenKQ:", e);
+			}
+		};
+		fetchOpenStatus();
+	}, []);
+
+	/* useEffect(() => {
+		const getTerm = async () => {
+			try {
 				const termInfoReq = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -84,7 +129,7 @@ const RequestExamCancel = () => {
 		};
 		getTerm();
 	}, []);
-
+ */
 	useEffect(() => {
 		if (!selectedTerm) return;
 		if (request != null && role === "student") return;
@@ -255,7 +300,7 @@ const RequestExamCancel = () => {
 						</Pill>
 						<br />
 						{!item.advisor_approvals && "อาจารย์ที่ปรึกษา"}
-						{item.advisor_approvals && !item.chairpersons_approvals && "ประธานกรรมการปะจำสาขาวิชา"}
+						{item.advisor_approvals && !item.chairpersons_approvals && "ประธานกรรมการประจำสาขาวิชา"}
 						{item.advisor_approvals && item.chairpersons_approvals && !item.registrar_approvals && "เจ้าหน้าที่ทะเบียน"}
 					</>
 				)}
@@ -271,8 +316,8 @@ const RequestExamCancel = () => {
 			</Table.Td>
 
 			<Table.Td style={{ maxWidth: "150px" }}>
-				<Group>
-					<Pdfg07 data={item} showType={item.status == 5 || item.status == 0 ? undefined : (role === "advisor" && item.status <= 7) || (role === "chairpersons" && item.status <= 8) || (role === "dean" && item.status <= 9) ? "view" : undefined} />
+				<Group style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+					<PdfButton data={item} showType={item.status == 5 || item.status == 0 ? undefined : (role === "advisor" && item.status <= 7) || (role === "chairpersons" && item.status <= 8) || (role === "dean" && item.status <= 9) ? "view" : undefined} />
 					{((role === "advisor" && item.status === "7") || (role === "chairpersons" && item.status === "8") || (role === "dean" && item.status === "9")) && (
 						<Button
 							size="xs"
@@ -282,7 +327,7 @@ const RequestExamCancel = () => {
 								setOpenApproveState("cancel");
 								setOpenApprove(true);
 							}}
-							disabled={item.term !== actualCurrentTerm}
+							/* disabled={item.term !== actualCurrentTerm} */
 						>
 							ลงความเห็น
 						</Button>
@@ -316,9 +361,9 @@ const RequestExamCancel = () => {
 			<Group justify="space-between">
 				<Box>
 					<Flex align="flex-end" gap="sm">
-						{role !== "student" && <TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
+						{role !== "student" && <TextInput placeholder="ค้นหา ชื่่อ รหัสนักศึกษา" value={search} onChange={(e) => setSearch(e.target.value)} />}
 						{role !== "student" && <Select placeholder="ชนิดคำขอ" data={["ขอยกเลิกการเข้าสอบประมวลความรู้", "ขอยกเลิกการเข้าสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
-						<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} allowDeselect={false} />
+						<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} allowDeselect={false} style={{ width: 80 }}/>
 					</Flex>
 				</Box>
 				<Box>

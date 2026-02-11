@@ -6,6 +6,7 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 const ModalAddRequestThesisProposal = ({ opened, onClose, title, form, handleAdd }) => {
 	const token = localStorage.getItem("token");
 	const [loading, setLoading] = useState(false);
+	const [advisors, setAdvisors] = useState([]);
 
 	useEffect(() => {
 		if (opened) {
@@ -28,14 +29,31 @@ const ModalAddRequestThesisProposal = ({ opened, onClose, title, form, handleAdd
 
 						const facultyMembersData = await facultyMembersRes.json();
 						if (!facultyMembersRes.ok) throw new Error("ไม่สามารถดึงข้อมูลบุคลากรได้");
+						//------------------------------------------------------
+						let advisorOptions = facultyMembersData.map((member) => ({
+							value: member.employee_id,
+							label: `${member.prename_full_tha}${member.first_name_tha} ${member.last_name_tha}`.trim(),
+						}));
 
-						if (form.values.thesis_advisor_id) {
-							const advisor = facultyMembersData.find((m) => m.employee_id === form.values.thesis_advisor_id);
-							if (advisor) {
-								const fullName = `${advisor.prename_full_tha}${advisor.first_name_tha} ${advisor.last_name_tha}`;
-								form.setFieldValue("thesis_advisor_name", fullName);
-							}
+						const specificAdvisor = {
+							value: "001736",
+							label: "นายณัฐวุฒิ มาตกาง",
+						};
+
+						const isDuplicate = advisorOptions.some((opt) => opt.value === specificAdvisor.value);
+
+						if (!isDuplicate) {
+							advisorOptions = [...advisorOptions, specificAdvisor];
 						}
+
+						setAdvisors(advisorOptions);
+						//----------------------------------------------
+						/* setAdvisors(
+							facultyMembersData.map((member) => ({
+								value: member.employee_id,
+								label: `${member.prename_full_tha}${member.first_name_tha} ${member.last_name_tha}`.trim(),
+							})),
+						); */
 					}
 				} catch (e) {
 					console.error("Error fetching advisors:", e);
@@ -51,21 +69,21 @@ const ModalAddRequestThesisProposal = ({ opened, onClose, title, form, handleAdd
 		<Modal opened={opened} onClose={onClose} title={title} centered size="800">
 			<Box pos="relative">
 				<LoadingOverlay visible={loading} overlayProps={{ radius: "sm", blur: 2 }} />
-
 				<form onSubmit={form.onSubmit(handleAdd)}>
 					<Grid breakpoints={{ md: "660px" }}>
 						<Grid.Col span={{ base: 12, md: 6 }}>
 							<TextInput label="ชื่อ-นามสกุล" disabled {...form.getInputProps("student_name")} />
-							<TextInput label="รหัสประจำตัว" disabled {...form.getInputProps("student_id")} />
+							<TextInput label="รหัสนักศึกษา" disabled {...form.getInputProps("student_id")} />
 							<TextInput label="ระดับการศึกษา" disabled {...form.getInputProps("education_level")} />
 							<TextInput label="หลักสูตร" disabled {...form.getInputProps("program")} />
 							<TextInput label="สาขาวิชา" disabled {...form.getInputProps("major_name")} />
 							<TextInput label="คณะ" disabled {...form.getInputProps("faculty_name")} />
 						</Grid.Col>
 						<Grid.Col span={{ base: 12, md: 6 }}>
-							<TextInput label="อาจารย์ที่ปรึกษางานวิจัย" disabled {...form.getInputProps("thesis_advisor_name")} value={form.values.thesis_advisor_name || ""} />
+							<Text>ประเภทของงานวิจัย</Text>
+							<TextInput disabled {...form.getInputProps("request_type")} />
 							<TextInput label="ชื่องานวิจัย" placeholder="กรอกชื่องานวิจัย" {...form.getInputProps("research_name")} />
-							{/* <DatePickerInput label="เลือกวันที่สอบ" placeholder="เลื่อกวัน" firstDayOfWeek={0} valueFormat="DD MMMM YYYY" withAsterisk {...form.getInputProps("thesis_exam_date")} /> */}
+							<Select label="เลือกอาจารย์ที่ปรึกษางานวิจัย" placeholder="เลือกอาจารย์" data={advisors} searchable {...form.getInputProps("thesis_advisor_id")} />
 						</Grid.Col>
 					</Grid>
 					<Space h="lg" />

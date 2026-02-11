@@ -1,4 +1,4 @@
-//คำร้องขอสอบประมวลความรู้/วัดคุณสมบัติ 
+//คำร้องขอสอบประมวลความรู้/วัดคุณสมบัติ
 import { useState, useEffect, useMemo } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
 import { useParams } from "react-router-dom";
@@ -7,7 +7,7 @@ import ModalApprove from "../component/Modal/ModalApprove";
 import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
 import ModalCheckCourse from "../component/Modal/ModalCheckCourse";
-import Pdfg01 from "../component/PDF/Pdfg01";
+import PdfButton from "../component/PDF/PdfButton";
 import { useForm } from "@mantine/form";
 import { jwtDecode } from "jwt-decode";
 import PrintReceipt from "../component/button/printReceipt";
@@ -63,47 +63,43 @@ const RequestExam = () => {
 
 	const [paymentCloseDate, setPaymentCloseDate] = useState(null);
 
+	const [statusNew, setStatusNew] = useState(null);
+	const [statusOld, setStatusOld] = useState(null);
+
 	useEffect(() => {
 		const getTerm = async () => {
 			try {
-				const termInfoReq = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
+				const termInfoReq = await fetch(`${BASE_URL}/api/allTerm`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
 				const termInfodata = await termInfoReq.json();
 				if (!termInfoReq.ok) throw new Error(termInfodata.message);
-				setTerm(termInfodata.map((item) => item.term));
 
-				const today = new Date();
-				// หา term ที่อยู่ในช่วง open-close
-				let currentTerm = termInfodata.find((item) => {
-					const open = new Date(item.term_open_date);
-					const close = new Date(item.term_close_date);
-					return today >= open && today <= close;
-				});
+				setTerm(termInfodata.termList);
 
-				if (currentTerm) {
-					setActualCurrentTerm(currentTerm.term);
-					console.log("เทอมปัจจุบัน", currentTerm.term);
-					const options = {
-						day: "2-digit",
-						month: "2-digit",
-						year: "numeric",
-						calendar: "buddhist",
-						numberingSystem: "latn",
-						timeZone: "Asia/Bangkok",
-					};
-					const formattedDate = new Intl.DateTimeFormat("th-TH", options).format(new Date(currentTerm.KQ_close_date));
-					setPaymentCloseDate(formattedDate);
+				setStatusNew(termInfodata.statusNew);
+				setStatusOld(termInfodata.statusOld);
+
+				if (role === "student" && user_id) {
+					const yearStr = String(user_id).substring(0, 2);
+					const yearInt = parseInt(yearStr, 10);
+
+					let myStatus = null;
+
+					if (yearInt >= 67) {
+						myStatus = termInfodata.statusNew;
+					} else {
+						myStatus = termInfodata.statusOld;
+					}
+
+					// Set State ตามสถานะที่ได้
+					setActualCurrentTerm(myStatus.currentTerm);
+					setSelectedTerm(myStatus.currentTerm);
+					setOpenKQ(myStatus.isOpen);
+					setPaymentCloseDate(myStatus.closeDate);
 				} else {
-					setActualCurrentTerm("");
-				}
-
-				if (!currentTerm && termInfodata.length > 0) {
-					currentTerm = [...termInfodata].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
-				}
-				if (currentTerm) {
-					setSelectedTerm(currentTerm.term);
+					setSelectedTerm(termInfodata.currentTerm);
 				}
 			} catch (e) {
 				notify("error", e.message);
@@ -113,23 +109,29 @@ const RequestExam = () => {
 		getTerm();
 	}, []);
 
-	useEffect(() => {
+	/* useEffect(() => {	
+		if (role !== "student") return;
 		const fetchOpenStatus = async () => {
 			try {
-				const checkOpenKQRes = await fetch(`${BASE_URL}/api/checkOpenKQ`, {
+				const checkOpenKQRes = await fetch(`${BASE_URL}/api/checkKQStatus`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+					body: JSON.stringify({ student_id: user_id }),
 				});
 				const checkOpenKQData = await checkOpenKQRes.json();
-				console.log(checkOpenKQData);
-				setOpenKQ(checkOpenKQData.status);
+				if (!checkOpenKQRes.ok) throw new Error(checkOpenKQData.message);
+
+				setSelectedTerm(checkOpenKQData.currentTerm)
+				setActualCurrentTerm(checkOpenKQData.currentTerm);
+				setPaymentCloseDate(checkOpenKQData.KQ_close_date);
+				setOpenKQ(checkOpenKQData.isOpen);
 			} catch (e) {
+				notify("error", e.message);
 				console.error("Error fetching checkOpenKQ:", e);
-				setOpenKQ(false);
 			}
 		};
 		fetchOpenStatus();
-	}, []);
+	}, []); */
 
 	useEffect(() => {
 		if (!selectedTerm) return;
@@ -162,7 +164,7 @@ const RequestExam = () => {
 		const fetchStudentData = async () => {
 			try {
 				if (openKQ === false) {
-					throw new Error("ระบบคำร้องขอสอบประมวลความรู้/วัดคุณสมบัติยังไม่เปิด");
+					throw new Error("ยังไม่เปิดให้ยื่นคำร้องในขณะนี้");
 				}
 				/* if (user_id === "674140101") */
 				{
@@ -230,7 +232,7 @@ const RequestExam = () => {
 			}
 		};
 		fetchStudentData();
-	}, [request, openKQ, selectedTerm]);
+	}, [request, openKQ]);
 
 	const handleOpenAdd = async () => {
 		try {
@@ -240,7 +242,7 @@ const RequestExam = () => {
 			});
 			const res = await req.json();
 			if (!req.ok) throw new Error(res.message);
-			form.setValues({ ...res, term: selectedTerm });
+			form.setValues({ ...res, term: actualCurrentTerm });
 			setOpenAdd(true);
 		} catch (e) {
 			notify("error", e.message);
@@ -264,6 +266,7 @@ const RequestExam = () => {
 
 			setOpenAdd(false);
 			setRequest((prev) => [...prev, { ...requestData.data, ...form.values }]);
+			setSelectedTerm(actualCurrentTerm);
 			/* setIsAddButtonDisabled(true); */
 		} catch (e) {
 			notify("error", e.message);
@@ -335,89 +338,102 @@ const RequestExam = () => {
 		return matchesSearch && matchesType && matchesTerm;
 	});
 
-	const rows = filteredData.map((item) => (
-		<Table.Tr key={item.request_exam_id}>
-			<Table.Td>{item.student_name}</Table.Td>
-			<Table.Td style={{ textAlign: "center" }}>{item.term}</Table.Td>
-			<Table.Td>{item.request_type}</Table.Td>
-			<Table.Td style={{ textAlign: "center" }}>
-				{item.status <= 4 && item.status > 0 && (
-					<Stepper active={item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
-						{[...Array(4)].map((_, i) => (
-							<Stepper.Step key={i}>
-								<Pill>{item.status_text}</Pill>
-							</Stepper.Step>
-						))}
-					</Stepper>
-				)}
-				{(item.status == 0 || item.status > 6) && (
-					<Pill variant="filled" style={{ backgroundColor: "#ffcccc", color: "#b30000" }}>
-						{item.status_text}
-					</Pill>
-				)}
-				{item.status == 5 && (
-					<Pill variant="filled" style={{ backgroundColor: "#ccffcc", color: "#006600" }}>
-						{item.status_text}
-					</Pill>
-				)}
-				{item.status == 6 && (
-					<>
+	const [activePage, setPage] = useState(1);
+	const itemsPerPage = 10;
+	const startIndex = (activePage - 1) * itemsPerPage;
+	const endIndex = startIndex + itemsPerPage;
+	const paginatedData = filteredData?.slice(startIndex, endIndex) || [];
+	const totalPages = Math.ceil((filteredData?.length || 0) / itemsPerPage);
+
+	const rows = paginatedData.map((item) => {
+		const studentYear = parseInt(String(item.student_id).substring(0, 2));
+		const targetStatus = studentYear >= 67 ? statusNew : statusOld;
+		const isRowOpen = targetStatus?.isOpen;
+		const rowCurrentTerm = targetStatus?.currentTerm;
+
+		return (
+			<Table.Tr key={item.request_exam_id}>
+				<Table.Td>{item.student_name}</Table.Td>
+				<Table.Td style={{ textAlign: "center" }}>{item.term}</Table.Td>
+				<Table.Td>{item.request_type}</Table.Td>
+				<Table.Td style={{ textAlign: "center" }}>
+					{item.status <= 4 && item.status > 0 && (
+						<Stepper active={item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
+							{[...Array(4)].map((_, i) => (
+								<Stepper.Step key={i}>
+									<Pill>{item.status_text}</Pill>
+								</Stepper.Step>
+							))}
+						</Stepper>
+					)}
+					{(item.status == 0 || item.status > 6) && (
 						<Pill variant="filled" style={{ backgroundColor: "#ffcccc", color: "#b30000" }}>
 							{item.status_text}
 						</Pill>
-						<br />
-						{!item.advisor_approvals && "อาจารย์ที่ปรึกษา"}
-						{item.advisor_approvals && !item.chairpersons_approvals && "ประธานกรรมการปะจำสาขาวิชา"}
-						{item.advisor_approvals && item.chairpersons_approvals && !item.registrar_approvals && "เจ้าหน้าที่ทะเบียน"}
-					</>
-				)}
-			</Table.Td>
-			<Table.Td style={{ maxWidth: "150px" }}>
-				<Group>
-					{role === "student" && (
+					)}
+					{item.status == 5 && (
+						<Pill variant="filled" style={{ backgroundColor: "#ccffcc", color: "#006600" }}>
+							{item.status_text}
+						</Pill>
+					)}
+					{item.status == 6 && (
 						<>
-							{item.status === "4" && (
-								<Button
-									size="xs"
-									color="green"
-									onClick={() => {
-										setSelectedRow(item);
-										setOpenPay(true);
-									}}
-									disabled={!openKQ || item.term !== actualCurrentTerm}
-								>
-									ชำระค่าธรรมเนียม
-								</Button>
-							)}
-							{item.receipt_vol != null && <PrintReceipt item={item} />}
+							<Pill variant="filled" style={{ backgroundColor: "#ffcccc", color: "#b30000" }}>
+								{item.status_text}
+							</Pill>
+							<br />
+							{!item.advisor_approvals && "อาจารย์ที่ปรึกษา"}
+							{item.advisor_approvals && !item.chairpersons_approvals && "ประธานกรรมการประจำสาขาวิชา"}
+							{item.advisor_approvals && item.chairpersons_approvals && !item.registrar_approvals && "เจ้าหน้าที่ทะเบียน"}
 						</>
 					)}
-					<Pdfg01 data={item} showType={item.status == 0 ? undefined : (role === "advisor" && item.status <= 1) || (role === "chairpersons" && item.status <= 2) || (role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
-					{((role === "advisor" && item.status == 1) || (role === "chairpersons" && item.status == 2) || (role === "officer_registrar" && item.status == 3)) && (
-						<Button
-							size="xs"
-							color="green"
-							onClick={() => {
-								setSelectedRow(item);
-								setOpenApproveState("add");
-								setOpenApprove(true);
-							}}
-							disabled={!openKQ || item.term !== actualCurrentTerm}
-						>
-							{role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
-						</Button>
-					)}
-				</Group>
-			</Table.Td>
-			{item.exam_results !== null && (
+				</Table.Td>
+				<Table.Td style={{ maxWidth: "150px" }}>
+					<Group style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+						{role === "student" && (
+							<>
+								{item.status === "4" && (
+									<Button
+										size="xs"
+										color="green"
+										onClick={() => {
+											setSelectedRow(item);
+											setOpenPay(true);
+										}}
+										disabled={!isRowOpen || item.term !== rowCurrentTerm}
+									>
+										ชำระค่าธรรมเนียม
+									</Button>
+								)}
+								{item.receipt_vol != null && <PrintReceipt item={item} />}
+							</>
+						)}
+						<PdfButton data={item} showType={item.status == 0 ? undefined : (role === "advisor" && item.status <= 1) || (role === "chairpersons" && item.status <= 2) || (role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
+						{((role === "advisor" && item.status == 1) || (role === "chairpersons" && item.status == 2) || (role === "officer_registrar" && item.status == 3)) && (
+							<Button
+								size="xs"
+								color="green"
+								onClick={() => {
+									setSelectedRow(item);
+									setOpenApproveState("add");
+									setOpenApprove(true);
+								}}
+								disabled={!isRowOpen || item.term !== rowCurrentTerm}
+							>
+								{role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
+							</Button>
+						)}
+					</Group>
+				</Table.Td>
+
 				<Table.Td style={{ textAlign: "center" }}>
 					{item.exam_results === "ผ่าน" && <Text c="green">ผ่าน</Text>}
 					{item.exam_results === "ไม่ผ่าน" && <Text c="red">ไม่ผ่าน</Text>}
 					{item.exam_results === "ขาดสอบ" && <Text c="gray">ขาดสอบ</Text>}
 				</Table.Td>
-			)}
-		</Table.Tr>
-	));
+			</Table.Tr>
+		);
+	});
 
 	return (
 		<Box>
@@ -446,9 +462,9 @@ const RequestExam = () => {
 			<Group justify="space-between">
 				<Box>
 					<Flex align="flex-end" gap="sm">
-						{role !== "student" && <TextInput placeholder="ค้นหา ชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
+						{role !== "student" && <TextInput placeholder="ค้นหา ชื่่อ รหัสนักศึกษา" value={search} onChange={(e) => setSearch(e.target.value)} />}
 						{!["student", "officer_registrar"].includes(role) && <Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
-						<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} allowDeselect={false} />
+						<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} allowDeselect={false} style={{ width: 80 }}/>
 					</Flex>
 				</Box>
 				<Box>
@@ -475,6 +491,19 @@ const RequestExam = () => {
 					<Table.Tbody>{rows}</Table.Tbody>
 				</Table>
 			</ScrollArea>
+			{/* <Center mt="md">
+				<Pagination
+					total={totalPages}
+					value={activePage}
+					onChange={setPage}
+					color="blue" // เลือกสีตามต้องการ
+				/>
+			</Center>
+			<Center mt="xs">
+				<Text size="sm" c="dimmed">
+					แสดงรายการที่ {startIndex + 1} - {Math.min(endIndex, request?.length || 0)} จากทั้งหมด {request?.length || 0}
+				</Text>
+			</Center> */}
 		</Box>
 	);
 };

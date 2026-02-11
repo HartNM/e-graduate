@@ -1,11 +1,11 @@
-//คำร้องขอทดสอบความรู้ทางภาษาอังกฤษ
+//คำร้องขอสอบความรู้ทางภาษาอังกฤษ
 import { useState, useEffect, useMemo } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Flex, Stepper, Pill, Select } from "@mantine/core";
 import ModalApprove from "../component/Modal/ModalApprove";
-import ModalAdd from "../component/Modal/ModalAdd";
+import ModalAdd from "../component/Modal/ModalAddEngTest";
 import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
-import Pdfg02 from "../component/PDF/Pdfg02";
+import PdfButton from "../component/PDF/PdfButton";
 import { useForm } from "@mantine/form";
 import { jwtDecode } from "jwt-decode";
 import PrintReceipt from "../component/button/printReceipt";
@@ -46,50 +46,42 @@ const RequestEngTest = () => {
 	//useForm
 	const form = useForm({});
 
+	const [statusNew, setStatusNew] = useState(null);
+	const [statusOld, setStatusOld] = useState(null);
+
 	useEffect(() => {
 		const getTerm = async () => {
 			try {
-				const termInfoReq = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
+				const termInfoReq = await fetch(`${BASE_URL}/api/allTerm`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
 				const termInfodata = await termInfoReq.json();
 				if (!termInfoReq.ok) throw new Error(termInfodata.message);
-				setTerm(termInfodata.map((item) => item.term));
-				console.log(termInfodata);
 
-				const today = new Date();
-				let currentTerm = termInfodata.find((item) => {
-					const open = new Date(item.term_open_date);
-					const close = new Date(item.term_close_date);
-					return today >= open && today <= close;
-				});
-				if (currentTerm) {
-					setActualCurrentTerm(currentTerm.term);
-					console.log("เทอมปัจจุบัน", currentTerm.term);
+				setTerm(termInfodata.termList);
 
-					const options = {
-						day: "2-digit",
-						month: "2-digit",
-						year: "numeric",
-						calendar: "buddhist",
-						numberingSystem: "latn",
-						timeZone: "Asia/Bangkok",
-					};
-					const formattedDate = new Intl.DateTimeFormat("th-TH", options).format(new Date(currentTerm.KQ_close_date));
-					setPaymentCloseDate(formattedDate);
-					console.log("วันสุดท้ายชำระค่าธรรมเนียม", formattedDate);
+				setStatusNew(termInfodata.statusNew);
+				setStatusOld(termInfodata.statusOld);
+
+				if (role === "student" && user_id) {
+					const yearStr = String(user_id).substring(0, 2);
+					const yearInt = parseInt(yearStr, 10);
+
+					let myStatus = null;
+
+					if (yearInt >= 67) {
+						myStatus = termInfodata.statusNew;
+					} else {
+						myStatus = termInfodata.statusOld;
+					}
+
+					setActualCurrentTerm(myStatus.currentTerm);
+					setSelectedTerm(myStatus.currentTerm);
+					setOpenKQ(myStatus.isOpen);
+					setPaymentCloseDate(myStatus.closeDate);
 				} else {
-					setActualCurrentTerm("");
-				}
-
-				if (!currentTerm && termInfodata.length > 0) {
-					currentTerm = [...termInfodata].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
-				}
-				if (currentTerm) {
-					setSelectedTerm(currentTerm.term);
-				} else {
-					console.warn("ไม่พบข้อมูลเทอม");
+					setSelectedTerm(termInfodata.currentTerm);
 				}
 			} catch (e) {
 				notify("error", e.message);
@@ -97,23 +89,6 @@ const RequestEngTest = () => {
 			}
 		};
 		getTerm();
-	}, []);
-
-	useEffect(() => {
-		const fetchOpenStatus = async () => {
-			try {
-				const checkOpenKQRes = await fetch(`${BASE_URL}/api/checkOpenKQ`, {
-					method: "POST",
-					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-				});
-				const checkOpenKQData = await checkOpenKQRes.json();
-				setOpenKQ(checkOpenKQData.status);
-			} catch (e) {
-				console.error("Error fetching checkOpenKQ:", e);
-				setOpenKQ(false);
-			}
-		};
-		fetchOpenStatus();
 	}, []);
 
 	useEffect(() => {
@@ -148,7 +123,7 @@ const RequestEngTest = () => {
 		const fetchStudentData = async () => {
 			try {
 				if (openKQ === false) {
-					throw new Error("ระบบคำร้องขอทดสอบความรู้ทางภาษาอังกฤษยังไม่เปิด");
+					throw new Error("ยังไม่เปิดให้ยื่นคำร้องในขณะนี้");
 				}
 
 				if (!request.length) {
@@ -174,7 +149,8 @@ const RequestEngTest = () => {
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) throw new Error(requestData.message);
-			form.setValues(requestData);
+
+			form.setValues({ ...requestData, term: actualCurrentTerm });
 			setOpenAdd(true);
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
@@ -195,6 +171,7 @@ const RequestEngTest = () => {
 			setOpenAdd(false);
 			setLatestRequest(true);
 			setRequest((prev) => [...prev, { ...form.values, ...requestData.data }]);
+			setSelectedTerm(actualCurrentTerm);
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching addRequestEngTest:", e);
@@ -256,91 +233,91 @@ const RequestEngTest = () => {
 		return matchesSearch && matchesTerm;
 	});
 
-	const rows = filteredData?.map((item) => (
-		<Table.Tr key={item.request_eng_test_id}>
-			<Table.Td>{item.student_name}</Table.Td>
-			<Table.Td>{item.term}</Table.Td>
-			<Table.Td>ขอทดสอบความรู้ทางภาษาอังกฤษ</Table.Td>
-			<Table.Td style={{ textAlign: "center" }}>
-				{item.status < 5 && item.status > 0 && (
-					<Stepper active={item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
-						{[...Array(4)].map((_, i) => (
-							<Stepper.Step key={i}>
-								<Pill>{item.status_text}</Pill>
-							</Stepper.Step>
-						))}
-					</Stepper>
-				)}
-				{item.status == 0 && (
-					<Pill variant="filled" style={{ backgroundColor: "#ffcccc", color: "#b30000" }}>
-						{item.status_text}
-					</Pill>
-				)}
-				{item.status == 5 && (
-					<Pill variant="filled" style={{ backgroundColor: "#ccffcc", color: "#006600" }}>
-						{item.status_text}
-					</Pill>
-				)}
-				{item.status == 6 && (
-					<>
+	const rows = filteredData?.map((item) => {
+		const studentYear = parseInt(String(item.student_id).substring(0, 2));
+		const targetStatus = studentYear >= 67 ? statusNew : statusOld;
+		const isRowOpen = targetStatus?.isOpen;
+		const rowCurrentTerm = targetStatus?.currentTerm;
+
+		return (
+			<Table.Tr key={item.request_eng_test_id}>
+				<Table.Td>{item.student_name}</Table.Td>
+				<Table.Td>{item.term}</Table.Td>
+				<Table.Td>ขอสอบความรู้ทางภาษาอังกฤษ</Table.Td>
+				<Table.Td style={{ textAlign: "center" }}>
+					{item.status < 5 && item.status > 0 && (
+						<Stepper active={item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
+							{[...Array(4)].map((_, i) => (
+								<Stepper.Step key={i}>
+									<Pill>{item.status_text}</Pill>
+								</Stepper.Step>
+							))}
+						</Stepper>
+					)}
+					{item.status == 0 && (
 						<Pill variant="filled" style={{ backgroundColor: "#ffcccc", color: "#b30000" }}>
 							{item.status_text}
 						</Pill>
-						<br />
-						{!item.advisor_approvals && "อาจารย์ที่ปรึกษา"}
-						{item.advisor_approvals && !item.chairpersons_approvals && "ประธานหลักสูตร"}
-						{item.advisor_approvals && item.chairpersons_approvals && !item.registrar_approvals && "เจ้าหน้าที่ทะเบียน"}
-					</>
-				)}
-				{item.status > 6 && <Text>{item.status_text}</Text>}
-			</Table.Td>
-
-			<Table.Td style={{ maxWidth: "150px" }}>
-				<Group>
-					{role === "student" && (
+					)}
+					{item.status == 5 && (
+						<Pill variant="filled" style={{ backgroundColor: "#ccffcc", color: "#006600" }}>
+							{item.status_text}
+						</Pill>
+					)}
+					{item.status == 6 && (
 						<>
-							{item.status === "4" && (
-								<Button
-									size="xs"
-									color="green"
-									onClick={() => {
-										setSelectedRow(item);
-										setOpenPay(true);
-									}}
-									disabled={!openKQ || item.term !== actualCurrentTerm}
-								>
-									ชำระค่าธรรมเนียม
-								</Button>
-							)}
-							{item.receipt_vol != null && <PrintReceipt item={item} />}
-							{/* {item.status === "5" && (
-								<>
-									<Button size="xs" color="green">
-										พิมพ์ใบเสร็จ
-									</Button>
-								</>
-							)} */}
+							<Pill variant="filled" style={{ backgroundColor: "#ffcccc", color: "#b30000" }}>
+								{item.status_text}
+							</Pill>
+							<br />
+							{!item.advisor_approvals && "อาจารย์ที่ปรึกษา"}
+							{item.advisor_approvals && !item.chairpersons_approvals && "ประธานหลักสูตร"}
+							{item.advisor_approvals && item.chairpersons_approvals && !item.registrar_approvals && "เจ้าหน้าที่ทะเบียน"}
 						</>
 					)}
-					<Pdfg02 data={item} showType={item.status == 0 ? undefined : (role === "advisor" && item.status <= 1) || (role === "chairpersons" && item.status <= 2) || (role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
-					{((role === "advisor" && item.status === "1") || (role === "chairpersons" && item.status === "2") || (role === "officer_registrar" && item.status === "3")) && (
-						<Button
-							size="xs"
-							color="green"
-							onClick={() => {
-								setSelectedRow(item);
-								setOpenApproveState("add");
-								setOpenApprove(true);
-							}}
-							disabled={!openKQ || item.term !== actualCurrentTerm}
-						>
-							{role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
-						</Button>
-					)}
-				</Group>
-			</Table.Td>
-		</Table.Tr>
-	));
+					{item.status > 6 && <Text>{item.status_text}</Text>}
+				</Table.Td>
+
+				<Table.Td style={{ maxWidth: "150px" }}>
+					<Group style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+						{role === "student" && (
+							<>
+								{item.status === "4" && (
+									<Button
+										size="xs"
+										color="green"
+										onClick={() => {
+											setSelectedRow(item);
+											setOpenPay(true);
+										}}
+										disabled={!isRowOpen || item.term !== rowCurrentTerm}
+									>
+										ชำระค่าธรรมเนียม
+									</Button>
+								)}
+								{item.receipt_vol != null && <PrintReceipt item={item} />}
+							</>
+						)}
+						<PdfButton data={item} showType={item.status == 0 ? undefined : (role === "advisor" && item.status <= 1) || (role === "chairpersons" && item.status <= 2) || (role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
+						{((role === "advisor" && item.status === "1") || (role === "chairpersons" && item.status === "2") || (role === "officer_registrar" && item.status === "3")) && (
+							<Button
+								size="xs"
+								color="green"
+								onClick={() => {
+									setSelectedRow(item);
+									setOpenApproveState("add");
+									setOpenApprove(true);
+								}}
+								disabled={!isRowOpen || item.term !== rowCurrentTerm}
+							>
+								{role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
+							</Button>
+						)}
+					</Group>
+				</Table.Td>
+			</Table.Tr>
+		);
+	});
 
 	return (
 		<Box>
@@ -357,19 +334,19 @@ const RequestEngTest = () => {
 				openApproveState={openApproveState}
 				handleApprove={handleApprove}
 				role={role}
-				title={"ลงความเห็นคำร้องขอทดสอบความรู้ทางภาษาอังกฤษ"}
+				title={"ลงความเห็นคำร้องขอสอบความรู้ทางภาษาอังกฤษ"}
 			/>
-			<ModalAdd opened={openAdd} onClose={() => setOpenAdd(false)} form={form.values} handleAdd={handleAdd} title={"เพิ่มคำร้องขอทดสอบความรู้ทางภาษาอังกฤษ"} />
-			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} MoneyRegis={1000} type={`คำร้องขอทดสอบความรู้ทางภาษาอังกฤษ`} stop_date={paymentCloseDate} />
+			<ModalAdd opened={openAdd} onClose={() => setOpenAdd(false)} form={form.values} handleAdd={handleAdd} title={"เพิ่มคำร้องขอสอบความรู้ทางภาษาอังกฤษ"} />
+			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} MoneyRegis={1000} type={`คำร้องขอสอบความรู้ทางภาษาอังกฤษ`} stop_date={paymentCloseDate} />
 
 			<Text size="1.5rem" fw={900} mb="md">
-				คำร้องขอทดสอบความรู้ทางภาษาอังกฤษ
+				คำร้องขอสอบความรู้ทางภาษาอังกฤษ
 			</Text>
 			<Group justify="space-between">
 				<Box>
 					<Flex align="flex-end" gap="sm">
-						{role !== "student" && <TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
-						<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} allowDeselect={false} />
+						{role !== "student" && <TextInput placeholder="ค้นหา ชื่่อ รหัสนักศึกษา" value={search} onChange={(e) => setSearch(e.target.value)} />}
+						<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} allowDeselect={false} style={{ width: 80 }}/>
 					</Flex>
 				</Box>
 				<Box>

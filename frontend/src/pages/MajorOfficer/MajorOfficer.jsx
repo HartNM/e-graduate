@@ -1,5 +1,5 @@
 //เจ้าหน้าที่ประจำคณะ
-import { IconFileText, IconEdit, IconBooks, IconUserCheck, IconCertificate } from "@tabler/icons-react";
+import { IconFileText, IconEdit, IconBooks, IconUserCheck, IconCertificate, IconBook } from "@tabler/icons-react";
 import UserLayout from "../../layout/userLayout.jsx";
 
 const menu = [
@@ -36,13 +36,14 @@ const menu = [
 			{ label: "วิทยานิพนธ์/การค้นคว้าอิสระ", link: "/major-officer/ExamDefenseResults" },
 		],
 	},
-	/* { label: "คำร้องขอทดสอบความรู้ทางภาษาอังกฤษ", icon: IconCertificate, links: "/major-officer/RequestEngTest" }, */
+	{ label: `คู่มือ`, icon: IconBook, links: "/major-officer/Manual" },
+	/* { label: "คำร้องขอสอบความรู้ทางภาษาอังกฤษ", icon: IconCertificate, links: "/major-officer/RequestEngTest" }, */
 	/* { label: "กรอกผลการสอบประมวลความรู้/สอบวัดคุณสมบัติ", icon: IconEdit, links: "/major-officer/ExamResults" },
 	{ label: "กรอกผลการสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ", icon: IconEdit, links: "/major-officer/ExamProposalResults" },
 	{ label: "กรอกผลการสอบวิทยานิพนธ์/การค้นคว้าอิสระ", icon: IconEdit, links: "/major-officer/ExamDefenseResults" }, */
 	/* { label: "กรอกข้อมูลรายวิชาสำหรับสอบประมวลความรู้/สอบวัดคุณสมบัติ", icon: IconBooks, links: "/major-officer/CourseRegistration" }, */
 ];
-/* data.education_level === "ปริญญาเอก" && newMenu.push({ label: "คำร้องขอทดสอบความรู้ทางภาษาอังกฤษ", icon: IconCertificate, links: "/student/RequestEngTest" }); */
+/* data.education_level === "ปริญญาเอก" && newMenu.push({ label: "คำร้องขอสอบความรู้ทางภาษาอังกฤษ", icon: IconCertificate, links: "/student/RequestEngTest" }); */
 
 const MajorOfficer = () => {
 	return (

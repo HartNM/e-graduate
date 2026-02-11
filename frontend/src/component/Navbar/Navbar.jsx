@@ -21,8 +21,12 @@ export function NavbarNested(menu) {
 				<UserButton />
 			</Box>
 
-			<ScrollArea style={{ flex: 1 }}>
+			{/* <ScrollArea style={{ flex: 1 }}>
 				<Box>{links}</Box>
+			</ScrollArea> */}
+
+			<ScrollArea style={{ flex: 1, height: 0 }} scrollbars="y" offsetScrollbars>
+				<Box pb="xl">{links}</Box>
 			</ScrollArea>
 
 			<Box className={classes.footer}>

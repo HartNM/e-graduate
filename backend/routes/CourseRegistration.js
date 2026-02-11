@@ -193,8 +193,7 @@ router.post("/allStudyGroupIdCourseRegistration", authenticateToken, async (req,
 		const data = result.recordset;
 
 		if (data.length === 0) {
-			return res.status(403).json({ message: "รอเจ้าหน้าที่ประกรอกรายวิชาบังคับ" });
-			//return res.status(403).json({ message: "รอเจ้าหน้าที่ประจำสาขากรอกรายวิชาบังคับ" });
+			return res.status(403).json({ message: "ข้อมูลรายวิชาไม่ครบถ้วน ให้นักศึกษาติดต่อสำนักส่งเสริมวิชาการและงานทะเบียน" });
 		}
 
 		// ใช้ Logic จัดกลุ่มเดียวกับ Route แรก แต่ดึงเอาแค่ตัวแรก (เพราะ Query มาเฉพาะ Study Group เดียว)

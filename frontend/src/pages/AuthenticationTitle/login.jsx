@@ -3,7 +3,7 @@ import { Button, Group, Paper, PasswordInput, Stack, Text, TextInput, Center, Im
 import { useForm } from "@mantine/form";
 import { useNavigate } from "react-router-dom";
 import { IconUser, IconLock } from "@tabler/icons-react"; // npm install @tabler/icons-react
-import myImage from "../../assets/logo.png";
+import myImage from "../../assets/images/logo.png";
 import ModalInform from "../../component/Modal/ModalInform";
 
 const BASE_URL = import.meta.env.VITE_API_URL;

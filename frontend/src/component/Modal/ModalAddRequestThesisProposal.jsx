@@ -4,9 +4,9 @@ import { DatePickerInput } from "@mantine/dates";
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 const ModalAddRequestThesisProposal = ({ opened, onClose, title, form, handleAdd }) => {
-	const [advisors, setAdvisors] = useState([]);
-	const [loading, setLoading] = useState(false);
 	const token = localStorage.getItem("token");
+	const [loading, setLoading] = useState(false);
+	const [advisors, setAdvisors] = useState([]);
 
 	useEffect(() => {
 		if (opened) {
@@ -30,12 +30,31 @@ const ModalAddRequestThesisProposal = ({ opened, onClose, title, form, handleAdd
 						const facultyMembersData = await facultyMembersRes.json();
 						if (!facultyMembersRes.ok) throw new Error("ไม่สามารถดึงข้อมูลบุคลากรได้");
 
-						setAdvisors(
+						//------------------------------------------------------
+						let advisorOptions = facultyMembersData.map((member) => ({
+							value: member.employee_id,
+							label: `${member.prename_full_tha}${member.first_name_tha} ${member.last_name_tha}`.trim(),
+						}));
+
+						const specificAdvisor = {
+							value: "001736",
+							label: "นายณัฐวุฒิ มาตกาง",
+						};
+
+						const isDuplicate = advisorOptions.some((opt) => opt.value === specificAdvisor.value);
+
+						if (!isDuplicate) {
+							advisorOptions = [...advisorOptions, specificAdvisor];
+						}
+
+						setAdvisors(advisorOptions);
+						//----------------------------------------------
+						/* setAdvisors(
 							facultyMembersData.map((member) => ({
 								value: member.employee_id,
 								label: `${member.prename_full_tha}${member.first_name_tha} ${member.last_name_tha}`.trim(),
-							}))
-						);
+							})),
+						); */
 					}
 				} catch (e) {
 					console.error("Error fetching advisors:", e);
@@ -55,24 +74,15 @@ const ModalAddRequestThesisProposal = ({ opened, onClose, title, form, handleAdd
 					<Grid breakpoints={{ md: "660px" }}>
 						<Grid.Col span={{ base: 12, md: 6 }}>
 							<TextInput label="ชื่อ-นามสกุล" disabled {...form.getInputProps("student_name")} />
-							<TextInput label="รหัสประจำตัว" disabled {...form.getInputProps("student_id")} />
+							<TextInput label="รหัสนักศึกษา" disabled {...form.getInputProps("student_id")} />
 							<TextInput label="ระดับการศึกษา" disabled {...form.getInputProps("education_level")} />
 							<TextInput label="หลักสูตร" disabled {...form.getInputProps("program")} />
 							<TextInput label="สาขาวิชา" disabled {...form.getInputProps("major_name")} />
 							<TextInput label="คณะ" disabled {...form.getInputProps("faculty_name")} />
 						</Grid.Col>
 						<Grid.Col span={{ base: 12, md: 6 }}>
-							<Text>เลือกชนิดโครงร่างงานวิจัย</Text>
-							<Group direction="column" spacing="xs">
-								<Checkbox checked={form.values.request_type === "วิทยานิพนธ์"} onChange={() => form.setFieldValue("request_type", "วิทยานิพนธ์")} label="วิทยานิพนธ์" />
-								<Checkbox checked={form.values.request_type === "การค้นคว้าอิสระ"} onChange={() => form.setFieldValue("request_type", "การค้นคว้าอิสระ")} label="การค้นคว้าอิสระ" />
-								{form.errors.request_type && (
-									<Text c="red" size="sm">
-										{form.errors.request_type}
-									</Text>
-								)}
-							</Group>
-							<Space h="md" />
+							<Text>ประเภทของโครงร่างงานวิจัย</Text>
+							<TextInput disabled {...form.getInputProps("request_type")} />
 							<TextInput label="ชื่องานวิจัย" placeholder="กรอกชื่องานวิจัย" {...form.getInputProps("research_name")} />
 							<Select label="เลือกอาจารย์ที่ปรึกษางานวิจัย" placeholder="เลือกอาจารย์" data={advisors} searchable {...form.getInputProps("thesis_advisor_id")} />
 						</Grid.Col>

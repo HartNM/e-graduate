@@ -38,14 +38,14 @@ router.post("/login", async (req, res) => {
 			console.log(request); 
 			const result = request.data;
 			*/
-			const result = await getStudentData(username);			
-			
+			const result = await getStudentData(username);
+
 			console.log(result);
 
 			if (
 				result.student_name === "undefined undefined" ||
-				(result.education_level !== "ปริญญาโท" && result.education_level !== "ปริญญาเอก") ||
-				result.STATUS != null /* || result.BDATE !== password */
+				(result.education_level !== "ปริญญาโท" && result.education_level !== "ปริญญาเอก") /* ||
+				result.STATUS != null */ /* || result.BDATE !== password */
 			) {
 				return res.status(401).json({ message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" });
 			}
@@ -63,50 +63,62 @@ router.post("/login", async (req, res) => {
 				body: JSON.stringify({ txtemail: username, txtpass: password }),
 			});
 			const loginData = await loginReq.json();
-			console.log(loginData);
 
 			if (loginData[0].loginstatus === "0") {
 				return res.status(401).json({ message: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง" });
 			}
+
 			let roles = [];
 
 			if (loginData[0].AJStatus === "1") {
 				roles.push("advisor");
 			}
 
+			if (loginData[0].organization_id === "0000000007") {
+				roles.push("officer_registrar");
+			}
+
+			let facultyName = null;
+			try {
+				const tabianReq = await fetch(`https://mis.kpru.ac.th/api/TabianAPI/${username}`);
+				const tabianData = await tabianReq.json();
+				if (tabianData.AjDetail && tabianData.AjDetail.length > 0) {
+					const deanInfo = tabianData.AjDetail.find((item) => item.executive_name === "คณบดี");
+					if (deanInfo) {
+						if (!roles.includes("dean")) roles.push("dean");
+						facultyName = deanInfo.executive_org;
+					}
+				}
+			} catch (apiErr) {
+				console.error("TabianAPI Error:", apiErr);
+			}
+
 			const db = await poolPromise;
 			const check_thesis = await db.request().input("user_id", loginData[0].employee_id).query("SELECT TOP 1 * FROM request_thesis_proposal WHERE thesis_advisor_id = @user_id");
-			console.log(check_thesis.recordset[0]);
-
 			if (check_thesis.recordset[0]) {
 				roles.push("research_advisor");
 			}
-
-			// test ---------------------------------------
-			if (username === "1629900598264") {
-				roles.push("advisor");
-				roles.push("research_advisor");
-				roles.push("dean");
-			}
-			// test ---------------------------------------
 
 			let majorIds = [];
 			const roleReq = await db.request().input("employee_id", loginData[0].employee_id).query("SELECT * FROM roles WHERE user_id = @employee_id");
 			if (roleReq.recordset.length > 0) {
 				for (let i = 0; i < roleReq.recordset.length; i++) {
 					roles.push(roleReq.recordset[i].role);
-
 					const currentMajorId = roleReq.recordset[i].major_id;
-
 					if (currentMajorId && !majorIds.includes(currentMajorId)) {
 						majorIds.push(currentMajorId);
 					}
 				}
 			}
 
-			if (loginData[0].organization_id === "0000000007") {
-				roles.push("officer_registrar");
+			// test ---------------------------------------
+			if (username === "1629900598264") {
+				if (!roles.includes("advisor")) roles.push("advisor");
+				if (!roles.includes("dean")) roles.push("dean");
+				if (!facultyName) facultyName = "คณะครุศาสตร์";
+				if (!roles.includes("research_advisor")) roles.push("research_advisor");
 			}
+			// test ---------------------------------------
 
 			const jwtPayload = {
 				user_id: username,
@@ -114,15 +126,11 @@ router.post("/login", async (req, res) => {
 				name: `${loginData[0].prefix_name}${loginData[0].frist_name} ${loginData[0].last_name}`,
 				employee_id: loginData[0].employee_id,
 				major_ids: majorIds,
-				role: "",
+				faculty: facultyName,
+				role: roles.length === 1 ? roles[0] : "",
 			};
 
-			if (roles.length === 1) {
-				jwtPayload.role = roles[0];
-			}
-
 			const token = jwt.sign(jwtPayload, SECRET_KEY, { expiresIn: "1h" });
-
 			res.status(200).json({ message: "เข้าสู่ระบบสำเร็จ", token });
 		} catch (e) {
 			console.error("Login error:", e);

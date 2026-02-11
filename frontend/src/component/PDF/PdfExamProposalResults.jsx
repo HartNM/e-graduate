@@ -1,6 +1,6 @@
 import { PDFDocument, rgb } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
-import { setDefaultFont, drawRect, drawCenterXText, drawCenteredText, drawMiddleText, drawLine, formatThaiDate } from "./PdfUtils.js";
+import { setDefaultFont, drawRect, drawCenterXText, drawCenteredText, drawMiddleText, drawLine, formatThaiDate, drawGrid } from "./PdfUtils.js";
 
 async function fillPdf(students) {
 	const pdfDoc = await PDFDocument.create();
@@ -9,9 +9,18 @@ async function fillPdf(students) {
 
 	const font = await setDefaultFont(pdfDoc);
 
-	const logoBytes = await fetch("/icons/KPRU-LOGO-line2.png").then((res) => res.arrayBuffer());
+	const logoBytes = await fetch("/images/KPRU-LOGO-line2.png").then((res) => res.arrayBuffer());
 	const logoImage = await pdfDoc.embedPng(logoBytes);
 	const pngDims = logoImage.scale(0.125);
+
+	const isAllThesis = students.every((s) => s.request_type && s.request_type.includes("วิทยานิพนธ์"));
+	const isAllIS = students.every((s) => s.request_type && s.request_type.includes("การค้นคว้าอิสระ"));
+	let titleType = "วิทยานิพนธ์/การค้นคว้าอิสระ";
+	if (isAllThesis) {
+		titleType = "วิทยานิพนธ์";
+	} else if (isAllIS) {
+		titleType = "การค้นคว้าอิสระ";
+	}
 
 	const STUDENTS_PER_PAGE = 25;
 	const ROW_HEIGHT = 20;
@@ -33,34 +42,37 @@ async function fillPdf(students) {
 		});
 
 		let y = 600;
-		drawCenterXText(newPage, `ผลการสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`, 680, font, 16);
+		drawCenterXText(newPage, `ผลการสอบโครงร่าง${titleType}`, 680, font, 16);
 		drawCenterXText(newPage, `สาขาวิชา${students[0].major_name}`, 660, font, 16);
 		drawCenterXText(newPage, date_exam, 640, font, 16);
 
+		const tableHeight = (end - start) * ROW_HEIGHT;
+		const bottomY = y - tableHeight;
 		drawRect(newPage, 60, y, 490, ROW_HEIGHT);
-		drawLine(newPage, 100, y + ROW_HEIGHT, 100, y - (end - start) * ROW_HEIGHT);
-		drawLine(newPage, 230, y + ROW_HEIGHT, 230, y - (end - start) * ROW_HEIGHT);
-		drawLine(newPage, 440, y + ROW_HEIGHT, 440, y - (end - start) * ROW_HEIGHT);
+		drawLine(newPage, 100, y + ROW_HEIGHT, 100, bottomY);
+		drawLine(newPage, 170, y + ROW_HEIGHT, 170, bottomY);
+		drawLine(newPage, 370, y + ROW_HEIGHT, 370, bottomY);
+		drawLine(newPage, 470, y + ROW_HEIGHT, 470, bottomY);
 
 		drawCenteredText(newPage, "ลำดับ", 60, y, 40, ROW_HEIGHT, font, 14);
-		drawCenteredText(newPage, "รหัสนักศึกษา", 100, y, 130, ROW_HEIGHT, font, 14);
-		drawCenteredText(newPage, "ชื่อ - นามสกุล", 230, y, 210, ROW_HEIGHT, font, 14);
-		drawCenteredText(newPage, "ผลการสอบ", 440, y, 110, ROW_HEIGHT, font, 14);
+		drawCenteredText(newPage, "รหัสนักศึกษา", 100, y, 70, ROW_HEIGHT, font, 14);
+		drawCenteredText(newPage, "ชื่อ - นามสกุล", 170, y, 210, ROW_HEIGHT, font, 14);
+		drawCenteredText(newPage, "คำขอสอบ", 370, y, 100, ROW_HEIGHT, font, 14);
+		drawCenteredText(newPage, "ผลการสอบ", 470, y, 80, ROW_HEIGHT, font, 14);
 
 		for (let i = start; i < end; i++) {
 			y -= ROW_HEIGHT;
 			drawRect(newPage, 60, y, 490, ROW_HEIGHT);
 			drawCenteredText(newPage, `${i + 1}`, 60, y, 40, ROW_HEIGHT, font, 14);
-			drawCenteredText(newPage, `${students[i].student_id}`, 100, y, 130, ROW_HEIGHT, font, 14);
-
+			drawCenteredText(newPage, `${students[i].student_id}`, 100, y, 70, ROW_HEIGHT, font, 14);
 			const nameParts = students[i].name ? students[i].name.split(/\s+/).filter(Boolean) : ["", ""];
 			const firstName = nameParts[0] || "";
 			const lastName = nameParts.slice(1).join(" ");
-			drawMiddleText(newPage, firstName, 260, y, ROW_HEIGHT, font, 14);
-			drawMiddleText(newPage, lastName, 350, y, ROW_HEIGHT, font, 14);
-
+			drawMiddleText(newPage, firstName, 190, y, ROW_HEIGHT, font, 14);
+			drawMiddleText(newPage, lastName, 290, y, ROW_HEIGHT, font, 14);
+			drawCenteredText(newPage, `${students[i].request_type.replace("ขอสอบ", "").trim()}`, 370, y, 100, ROW_HEIGHT, font, 14);
 			if (students[i].exam_results !== null && students[i].exam_results !== undefined) {
-				drawCenteredText(newPage, students[i].exam_results, 440, y, 110, ROW_HEIGHT, font, 14);
+				drawCenteredText(newPage, students[i].exam_results, 470, y, 80, ROW_HEIGHT, font, 14);
 			}
 		}
 		pageIndex++;

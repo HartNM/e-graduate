@@ -1,6 +1,6 @@
-//พิมพ์ใบรายชื่อผู้มีสิทธิสอบประมวลความรู้/วัดคุณสมบัติ
+//พิมพ์ใบรายชื่อผู้มีสิทธิสอบความรู้ทางภาษาอังกฤษ
 import { Box, Text, ScrollArea, Table, Group, Space, Select, Button, TextInput } from "@mantine/core";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import * as XLSX from "xlsx";
 import PdfPrintExam from "../../component/PDF/PdfPrintExam";
 import ModalInform from "../../component/Modal/ModalInform";
@@ -14,35 +14,23 @@ const PrintExam = () => {
 	const token = localStorage.getItem("token");
 
 	const [term, setTerm] = useState([]);
-
 	const [selectedTerm, setSelectedTerm] = useState("");
+	const [search, setSearch] = useState("");
+	const [request, setRequest] = useState([]);
+	const [filterLevel, setFilterLevel] = useState("");
 
 	useEffect(() => {
 		const getTerm = async () => {
 			try {
-				const termInfoReq = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
+				const termInfoReq = await fetch(`${BASE_URL}/api/allTerm`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
 				const termInfodata = await termInfoReq.json();
 				if (!termInfoReq.ok) throw new Error(termInfodata.message);
-				setTerm(termInfodata.map((item) => item.term));
-				console.log(termInfodata);
 
-				const today = new Date();
-				let currentTerm = termInfodata.find((item) => {
-					const open = new Date(item.term_open_date);
-					const close = new Date(item.term_close_date);
-					return today >= open && today <= close;
-				});
-				if (!currentTerm && termInfodata.length > 0) {
-					currentTerm = [...termInfodata].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
-				}
-				if (currentTerm) {
-					setSelectedTerm(currentTerm.term);
-				} else {
-					console.warn("ไม่พบข้อมูลเทอม");
-				}
+				setTerm(termInfodata.termList);
+				setSelectedTerm(termInfodata.currentTerm);
 			} catch (e) {
 				notify("error", e.message);
 				console.error("Error fetching allRequestExamInfo:", e);
@@ -51,11 +39,8 @@ const PrintExam = () => {
 		getTerm();
 	}, []);
 
-	const [request, setRequest] = useState([]);
-
 	useEffect(() => {
 		if (!selectedTerm) return;
-		console.log(selectedTerm);
 
 		const getRequest = async () => {
 			try {
@@ -67,8 +52,6 @@ const PrintExam = () => {
 				const requestData = await requestReq.json();
 				if (!requestReq.ok) throw new Error(requestData.message);
 				setRequest(requestData);
-
-				console.log("all request :", requestData);
 			} catch (e) {
 				notify("error", e.message);
 				console.error("Error fetching requestExamAll:", e);
@@ -77,29 +60,43 @@ const PrintExam = () => {
 		getRequest();
 	}, [selectedTerm]);
 
-	const [search, setSearch] = useState("");
+	const filteredData = useMemo(() => {
+		return request.filter((p) => {
+			const filterStatus = p.status === "5";
+			const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
 
-	const filteredData = request.filter((p) => {
-		const filterStatus = p.status === "5";
-		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
-		return filterStatus && matchesSearch ;
-	});
+			let matchesLevel = true;
+			if (filterLevel !== "") {
+				const groupId = String(p.study_group_id);
+				const subCode = groupId.substring(2, 5);
+
+				if (filterLevel === "ปริญญาเอก") {
+					matchesLevel = subCode === "427";
+				} else if (filterLevel === "ปริญญาโท") {
+					matchesLevel = subCode !== "427";
+				}
+			}
+
+			return filterStatus && matchesSearch && matchesLevel;
+		});
+	}, [request, search, filterLevel]);
 
 	const handleExport = () => {
-		const dataForExport = filteredData.map((item) => ({
-			รหัสนักศึกษา: item.student_id,
-			"ชื่อ-สกุล": item.student_name,
-			คำขอ: item.request_type,
-			สาขาวิชา: item.major_name,
-			ระดับการศึกษา: item.education_level,
-		}));
+		const mainHeader = [[`รายชื่อผู้มีสิทธิสอบความรู้ทางภาษาอังกฤษ ปีการศึกษา ${selectedTerm}`]];
+		const subHeader = [["รหัสนักศึกษา", "ชื่อ-สกุล", "คำขอ", "สาขาวิชา", "ระดับการศึกษา"]];
 
-		const ws = XLSX.utils.json_to_sheet(dataForExport);
+		const dataRows = filteredData.map((item) => [item.student_id, item.student_name, item.request_type, item.major_name, item.education_level]);
+
+		const ws = XLSX.utils.aoa_to_sheet([]);
+		XLSX.utils.sheet_add_aoa(ws, mainHeader, { origin: "A1" });
+		XLSX.utils.sheet_add_aoa(ws, subHeader, { origin: "A2" });
+		XLSX.utils.sheet_add_aoa(ws, dataRows, { origin: "A3" });
+
+		ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }];
+
+		const fileName = `รายชื่อผู้มีสิทธิสอบความรู้ทางภาษาอังกฤษ_${selectedTerm}.xlsx`;
 		const wb = XLSX.utils.book_new();
 		XLSX.utils.book_append_sheet(wb, ws, "StudentsData");
-
-		const fileName = `รายชื่อผู้มีสิทธิสอบประมวลความรู้_วัดคุณสมบัติ_${selectedTerm}.xlsx`;
-
 		XLSX.writeFile(wb, fileName);
 	};
 
@@ -111,14 +108,15 @@ const PrintExam = () => {
 			</Text>
 			<Group justify="space-between">
 				<Group>
-					<TextInput placeholder="ค้นหา ชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />
-					<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} allowDeselect={false} onChange={setSelectedTerm} />
+					<TextInput placeholder="ค้นหา ชื่่อ รหัสนักศึกษา" value={search} onChange={(e) => setSearch(e.target.value)} />
+					<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} allowDeselect={false} onChange={setSelectedTerm} style={{ width: 80 }}/>
+					<Select placeholder="ระดับการศึกษา" data={["ปริญญาโท", "ปริญญาเอก"]} value={filterLevel} onChange={setFilterLevel} clearable style={{ width: 150 }} />
 				</Group>
 				<Group>
 					<Button size="xs" color="green" onClick={handleExport} disabled={filteredData.length === 0}>
 						Export Excel
 					</Button>
-					<PdfPrintExam data={filteredData} typeRQ={"2"}/>
+					<PdfPrintExam data={filteredData} typeRQ={"2"} />
 				</Group>
 			</Group>
 

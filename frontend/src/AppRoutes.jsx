@@ -5,6 +5,7 @@ import LoadingScreen from "./component/LoadingScreen.jsx";
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AuthenticationForm = lazy(() => import("./pages/AuthenticationTitle/login.jsx"));
 const Personnel = lazy(() => import("./pages/personnel.jsx"));
+const Manual = lazy(() => import("./pages/Manual.jsx"));
 
 const RequestExam = lazy(() => import("./pages/RequestExam.jsx"));
 const RequestExamCancel = lazy(() => import("./pages/RequestExamCancel.jsx"));
@@ -59,9 +60,16 @@ function AppRoutes() {
 						<Route path="RequestThesisDefense" element={<RequestThesisDefense />} />
 						<Route path="ExamScheduleSetupPage" element={<ExamScheduleSetupPage />} />
 						<Route path="assign-major-officer" element={<AssignMajorOfficer />} />
+
+						<Route path="ExamResults" element={<ExamResults />} />
+						<Route path="ExamProposalResults" element={<ExamProposalResults />} />
+						<Route path="ExamDefenseResults" element={<ExamDefenseResults />} />
+
 						<Route path="ExamResultsPrint" element={<ExamResultsPrint />} />
 						<Route path="ExamProposalResultsPrint" element={<ExamProposalResultsPrint />} />
 						<Route path="ExamDefenseResultsPrint" element={<ExamDefenseResultsPrint />} />
+
+						<Route path="Manual" element={<Manual />} />
 					</Route>
 					<Route path="/student" element={<Student />}>
 						<Route path="RequestExam" element={<RequestExam />} />
@@ -69,15 +77,21 @@ function AppRoutes() {
 						<Route path="RequestEngTest" element={<RequestEngTest />} />
 						<Route path="RequestThesisProposal" element={<RequestThesisProposal />} />
 						<Route path="RequestThesisDefense" element={<RequestThesisDefense />} />
+
+						<Route path="Manual" element={<Manual />} />
 					</Route>
 					<Route path="/advisor" element={<Advisor />}>
 						<Route path="RequestExam" element={<RequestExam />} />
 						<Route path="RequestExamCancel" element={<RequestExamCancel />} />
 						<Route path="RequestEngTest" element={<RequestEngTest />} />
+
+						<Route path="Manual" element={<Manual />} />
 					</Route>
 					<Route path="/research_advisor" element={<Research_advisor />}>
 						<Route path="RequestThesisProposal" element={<RequestThesisProposal />} />
 						<Route path="RequestThesisDefense" element={<RequestThesisDefense />} />
+
+						<Route path="Manual" element={<Manual />} />
 					</Route>
 					<Route path="/chairpersons" element={<Chairpersons />}>
 						<Route path="RequestExam" element={<RequestExam />} />
@@ -85,9 +99,13 @@ function AppRoutes() {
 						<Route path="RequestEngTest" element={<RequestEngTest />} />
 						<Route path="RequestThesisProposal" element={<RequestThesisProposal />} />
 						<Route path="RequestThesisDefense" element={<RequestThesisDefense />} />
+
+						<Route path="Manual" element={<Manual />} />
 					</Route>
 					<Route path="/dean" element={<Dean />}>
 						<Route path="RequestExamCancel" element={<RequestExamCancel />} />
+
+						<Route path="Manual" element={<Manual />} />
 					</Route>
 					<Route path="/major-officer" element={<MajorOfficer />}>
 						<Route path="PrintExam" element={<PrintExam />} />
@@ -106,6 +124,8 @@ function AppRoutes() {
 
 						<Route path="CourseRegistration" element={<CourseRegistrationM />} />
 						<Route path="AssignChairpersons" element={<AssignChairpersons />} />
+
+						<Route path="Manual" element={<Manual />} />
 					</Route>
 				</Routes>
 			</Suspense>

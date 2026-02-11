@@ -1,4 +1,4 @@
-// คำร้องขอสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ 
+// คำร้องขอสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ
 import { useState, useEffect, useMemo } from "react";
 import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Select, Flex, Stepper, Pill } from "@mantine/core";
 import { useParams } from "react-router-dom";
@@ -6,10 +6,11 @@ import ModalAddRequestThesisProposal from "../component/Modal/ModalAddRequestThe
 import ModalApprove from "../component/Modal/ModalApprove";
 import ModalPay from "../component/Modal/ModalPay";
 import ModalInform from "../component/Modal/ModalInform";
-import Pdfg01 from "../component/PDF/Pdfg03-04";
+// import Pdfg01 from "../component/PDF/Pdfg03-04";
+import PdfButton from "../component/PDF/PdfButton";
 import { useForm } from "@mantine/form";
 import { jwtDecode } from "jwt-decode";
-import ModalCheckCourse from "../component/Modal/ModalCheckCourse";
+import ModalCheckCourse from "../component/Modal/ModalCheckCourseResearch";
 import PrintReceipt from "../component/button/printReceipt";
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -54,15 +55,10 @@ const RequestThesisProposal = () => {
 			request_type: "",
 			research_name: "",
 			thesis_advisor_id: "",
-			thesis_exam_date: null,
 		},
 		validate: {
-			request_type: (value) => (value === "" ? "กรุณาเลือกชนิดโครงร่างงานวิจัย" : null),
 			research_name: (value) => (value === "" ? "กรุณากรอกชื่องานวิจัย" : null),
 			thesis_advisor_id: (value) => (value === "" ? "กรุณาเลือกอาจารย์ที่ปรึกษางานวิจัย" : null),
-			/* thesis_exam_date: (v) => {
-				if (!v) return "กรุณาระบุวันที่สอบ";
-			}, */
 		},
 	});
 
@@ -72,53 +68,44 @@ const RequestThesisProposal = () => {
 	const [actualCurrentTerm, setActualCurrentTerm] = useState("");
 	const [paymentCloseDate, setPaymentCloseDate] = useState(null);
 
+	const [statusNew, setStatusNew] = useState(null);
+	const [statusOld, setStatusOld] = useState(null);
+
 	useEffect(() => {
 		const getTerm = async () => {
 			try {
-				const termInfoReq = await fetch(`${BASE_URL}/api/allRequestExamInfo`, {
+				const termInfoReq = await fetch(`${BASE_URL}/api/allTerm`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
 				const termInfodata = await termInfoReq.json();
 				if (!termInfoReq.ok) throw new Error(termInfodata.message);
-				setTerm(termInfodata.map((item) => item.term));
 
-				console.log(termInfodata);
+				setTerm(termInfodata.termList);
 
-				const today = new Date();
-				// หา term ที่อยู่ในช่วง open-close
-				let currentTerm = termInfodata.find((item) => {
-					const open = new Date(item.term_open_date);
-					const close = new Date(item.term_close_date);
-					return today >= open && today <= close;
-				});
+				setStatusNew(termInfodata.statusNew);
+				setStatusOld(termInfodata.statusOld);
 
-				if (currentTerm) {
-					setActualCurrentTerm(currentTerm.term);
-					console.log("เทอมปัจจุบัน", currentTerm.term);
+				if (role === "student" && user_id) {
+					const yearStr = String(user_id).substring(0, 2);
+					const yearInt = parseInt(yearStr, 10);
 
-					const options = {
-						day: "2-digit", // วันที่ 2 หลัก
-						month: "2-digit", // เดือน 2 หลัก
-						year: "numeric", // ปี
-						calendar: "buddhist", // ใช้ปฏิทินพุทธ (พ.ศ.)
-						numberingSystem: "latn", // ใช้เลขอารบิก
-						timeZone: "Asia/Bangkok", // ระบุไทม์โซนเพื่อให้ได้วันที่ถูกต้อง
-					};
+					let myStatus = null;
 
-					const formattedDate = new Intl.DateTimeFormat("th-TH", options).format(new Date(currentTerm.term_close_date));
+					if (yearInt >= 67) {
+						myStatus = termInfodata.statusNew;
+					} else {
+						myStatus = termInfodata.statusOld;
+					}
 
-					setPaymentCloseDate(formattedDate);
-					console.log("วันสุดท้ายชำระค่าธรรมเนียม", formattedDate);
+					// Set State ตามสถานะที่ได้
+					setActualCurrentTerm(myStatus.currentTerm);
+					setSelectedTerm(myStatus.currentTerm);
+					// setOpenKQ(myStatus.isOpen);
+					setPaymentCloseDate(myStatus.closeDate);
 				} else {
-					setActualCurrentTerm("");
+					setSelectedTerm(termInfodata.currentTerm);
 				}
-
-				if (!currentTerm && termInfodata.length > 0) {
-					// ถ้าไม่เจอ currentTerm → เลือกเทอมล่าสุดจาก close_date
-					currentTerm = [...termInfodata].sort((a, b) => new Date(b.term_close_date) - new Date(a.term_close_date))[0];
-				}
-				setSelectedTerm(currentTerm.term);
 			} catch (e) {
 				notify("error", e.message);
 				console.error("Error fetching allRequestExamInfo:", e);
@@ -134,8 +121,9 @@ const RequestThesisProposal = () => {
 	useEffect(() => {
 		if (!selectedTerm) return;
 		if (request != null && role === "student") return;
+		console.log(selectedTerm);
 
-		const fetchRequestExam = async () => {
+		const getRequest = async () => {
 			try {
 				const ThesisProposalRes = await fetch(`${BASE_URL}/api/allRequestThesisProposal`, {
 					method: "POST",
@@ -145,12 +133,23 @@ const RequestThesisProposal = () => {
 				const ThesisProposalData = await ThesisProposalRes.json();
 				if (!ThesisProposalRes.ok) throw new Error(ThesisProposalData.message);
 				setRequest(ThesisProposalData);
+				console.log("all request :", ThesisProposalData);
+			} catch (e) {
+				notify("error", e.message);
+				console.error("Error fetching requestExamAll:", e);
+			}
+		};
+		getRequest();
+	}, [selectedTerm]);
 
-				if (role === "student") {
-					/* if (user_id === "674140101") */
-					{
-						//use
-						/* const requestReq = await fetch(`${BASE_URL}/api/requestExamAll`, {
+	useEffect(() => {
+		if (request === null || role !== "student") return;
+		const fetchRequestExam = async () => {
+			try {
+				/* if (user_id === "674140101") */
+				{
+					//use
+					/* const requestReq = await fetch(`${BASE_URL}/api/requestExamAll`, {
 							method: "POST",
 							headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 							body: JSON.stringify({ term: selectedTerm }),
@@ -169,67 +168,82 @@ const RequestThesisProposal = () => {
 							throw new Error("ยังสอบประมวลความรู้/วัดคุณสมบัติ ไม่ผ่าน");
 						} */
 
-						const registrationRes = await fetch(`${BASE_URL}/api/allStudyGroupIdCourseRegistration`, {
-							method: "POST",
-							headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-							body: JSON.stringify({ usage: [2] }),
-						});
-						const registrationData = await registrationRes.json();
-						if (!registrationRes.ok) throw new Error(registrationData.message);
-						console.log("ที่ต้องลง :", registrationData);
+					const registrationRes = await fetch(`${BASE_URL}/api/allStudyGroupIdCourseRegistration`, {
+						method: "POST",
+						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+						body: JSON.stringify({ usage: [2] }),
+					});
+					const registrationData = await registrationRes.json();
+					if (!registrationRes.ok) throw new Error(registrationData.message);
+					console.log("ที่ต้องลง :", registrationData);
 
-						const response = await fetch(`${BASE_URL}/api/get-all-courses`, {
-							method: "POST",
-							headers: { "Content-Type": "application/json" },
-							body: JSON.stringify({ user_id: user_id }),
-						});
-						const result = await response.json();
+					const response = await fetch(`${BASE_URL}/api/get-all-courses`, {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({ user_id: user_id, term: actualCurrentTerm }),
+					});
+					const result = await response.json();
 
-						console.log("รายวิชาที่ลงทั้งหมด (ทุกเทอม):", result.data);
+					console.log("รายวิชาที่ลงทั้งหมด (ทุกเทอม):", result.data);
 
-						const allCodes = result.data.map((c) => c.SJCODE);
+					const allCodes = result.data.map((c) => c.SJCODE);
 
-						const missing = registrationData.course_first.filter((code) => !allCodes.includes(code));
-						console.log("ที่ขาด :", missing);
+					const missing = registrationData.course_first.filter((code) => !allCodes.includes(code));
+					console.log("ที่ขาด :", missing);
 
-						if (missing.length > 1) {
-							const res = await fetch(`${BASE_URL}/api/get-all-subjects`);
-							const subjects = await res.json();
+					const limit = education_level === "ปริญญาโท" ? 1 : 0;
 
-							const subjMap = new Map(subjects.map((s) => [s.SUBJCODE, s.SUBJNAME]));
-							const coursesData = missing.map((course_id) => ({
-								course_id,
-								course_name: subjMap.get(course_id) || "ไม่พบข้อมูล",
-							}));
-							console.log("รายวิชาที่ขาด :", coursesData);
+					if (missing.length > limit) {
+						const res = await fetch(`${BASE_URL}/api/get-all-subjects`);
+						const subjects = await res.json();
 
-							setMissingCoures(coursesData);
-							setOpenCheckCourse(true);
-							return;
-						}
-					}
+						const subjMap = new Map(subjects.map((s) => [s.SUBJCODE, s.SUBJNAME]));
+						const coursesData = missing.map((course_id) => ({
+							course_id,
+							course_name: subjMap.get(course_id) || "ไม่พบข้อมูล",
+						}));
 
-					if (!ThesisProposalData.length) {
-						console.log("ลำดับ : 1 ไม่มีคำร้อง (เปิด)");
-						setLatestRequest(false);
-					} else if (selectedTerm === ThesisProposalData[0].term) {
-						console.log("ลำดับ : 2 เทอมนี้ลงแล้ว (ปิด)");
-						setLatestRequest(true);
-					} else if (ThesisProposalData[0].exam_results === "ไม่ผ่าน" || ThesisProposalData[0].exam_results === "ขาดสอบ") {
-						console.log("ลำดับ : 3 รอบที่แล้วไม่ผ่าน (เปิด)");
-						setLatestRequest(false);
+						console.log("รายวิชาที่ขาด :", coursesData);
+
+						setMissingCoures(coursesData);
+						setOpenCheckCourse(true);
+						return;
 					} else {
-						console.log("ลำดับ : 4 (ปิด)");
-						setLatestRequest(true);
+						const taken = registrationData.course_first.filter((code) => allCodes.includes(code));
+						console.log("ที่ลง :", taken);
+
+						const hasIndependentStudy = result.data.some((course) => {
+							const courseName = course.COUSE_NAME || course.SUBJNAME || course.SJNAME || "";
+							return taken.includes(course.SJCODE) && courseName.includes("ค้นคว้าอิสระ");
+						});
+
+						const requestTypeResult = hasIndependentStudy ? "การค้นคว้าอิสระ" : "วิทยานิพนธ์";
+						console.log("Auto-setting request_type to:", requestTypeResult);
+
+						form.setFieldValue("request_type", requestTypeResult);
 					}
+				}
+
+				if (!request.length) {
+					console.log("ลำดับ : 1 ไม่มีคำร้อง (เปิด)");
+					setLatestRequest(false);
+				} else if (selectedTerm === request[0].term) {
+					console.log("ลำดับ : 2 เทอมนี้ลงแล้ว (ปิด)");
+					setLatestRequest(true);
+				} else if (request[0].exam_results === "ไม่ผ่าน" || request[0].exam_results === "ขาดสอบ") {
+					console.log("ลำดับ : 3 รอบที่แล้วไม่ผ่าน (เปิด)");
+					setLatestRequest(false);
+				} else {
+					console.log("ลำดับ : 4 (ปิด)");
+					setLatestRequest(true);
 				}
 			} catch (e) {
 				notify("error", e.message);
-				console.error("Error fetching allRequestThesisProposal:", e);
+				console.error(e);
 			}
 		};
 		fetchRequestExam();
-	}, [selectedTerm]);
+	}, [request]);
 
 	const handleOpenAdd = async () => {
 		try {
@@ -239,8 +253,8 @@ const RequestThesisProposal = () => {
 			});
 			const requestData = await requestRes.json();
 			if (!requestRes.ok) throw new Error(requestData.message);
-			form.setValues({ request_type: "", thesis_advisor_id: "", thesis_exam_date: null });
-			form.setValues(requestData);
+
+			form.setValues({ ...requestData, term: actualCurrentTerm });
 			setOpenAdd(true);
 		} catch (e) {
 			notify("error", e.message);
@@ -261,6 +275,7 @@ const RequestThesisProposal = () => {
 			setOpenAdd(false);
 			setRequest((prev) => [...prev, { ...requestData.data, ...form.values }]);
 			setLatestRequest(true);
+			setSelectedTerm(actualCurrentTerm);
 		} catch (e) {
 			notify("error", e.message);
 			console.error("Error fetching addRequestThesisProposal:", e);
@@ -330,93 +345,94 @@ const RequestThesisProposal = () => {
 		return matchesSearch && matchesTerm;
 	});
 
-	const rows = filteredData.map((item) => (
-		<Table.Tr key={item.request_thesis_proposal_id}>
-			<Table.Td>{item.student_name}</Table.Td>
-			<Table.Td>{item.request_type}</Table.Td>
-			<Table.Td style={{ textAlign: "center" }}>
-				{item.status <= 4 && item.status > 0 && (
-					<Stepper active={item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
-						{[...Array(4)].map((_, i) => (
-							<Stepper.Step key={i}>
-								<Pill>{item.status_text}</Pill>
-							</Stepper.Step>
-						))}
-					</Stepper>
-				)}
-				{(item.status == 0 || item.status > 6) && (
-					<Pill variant="filled" style={{ backgroundColor: "#ffcccc", color: "#b30000" }}>
-						{item.status_text}
-					</Pill>
-				)}
-				{item.status == 5 && (
-					<Pill variant="filled" style={{ backgroundColor: "#ccffcc", color: "#006600" }}>
-						{item.status_text}
-					</Pill>
-				)}
-				{item.status == 6 && (
-					<>
+	const rows = filteredData.map((item) => {
+		const studentYear = parseInt(String(item.student_id).substring(0, 2));
+		const targetStatus = studentYear >= 67 ? statusNew : statusOld;
+		const rowCurrentTerm = targetStatus?.currentTerm;
+
+		return (
+			<Table.Tr key={item.request_thesis_proposal_id}>
+				<Table.Td>{item.student_name}</Table.Td>
+				<Table.Td>{item.request_type}</Table.Td>
+				<Table.Td style={{ textAlign: "center" }}>
+					{item.status <= 4 && item.status > 0 && (
+						<Stepper active={item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
+							{[...Array(4)].map((_, i) => (
+								<Stepper.Step key={i}>
+									<Pill>{item.status_text}</Pill>
+								</Stepper.Step>
+							))}
+						</Stepper>
+					)}
+					{(item.status == 0 || item.status > 6) && (
 						<Pill variant="filled" style={{ backgroundColor: "#ffcccc", color: "#b30000" }}>
 							{item.status_text}
 						</Pill>
-						<br />
-						{!item.advisor_approvals && "อาจารย์ที่ปรึกษา"}
-						{item.advisor_approvals && !item.chairpersons_approvals && "ประธานหลักสูตร"}
-						{item.advisor_approvals && item.chairpersons_approvals && !item.registrar_approvals && "เจ้าหน้าที่ทะเบียน"}
-					</>
-				)}
-			</Table.Td>
-			<Table.Td style={{ maxWidth: "150px" }}>
-				<Group>
-					{role === "student" && (
+					)}
+					{item.status == 5 && (
+						<Pill variant="filled" style={{ backgroundColor: "#ccffcc", color: "#006600" }}>
+							{item.status_text}
+						</Pill>
+					)}
+					{item.status == 6 && (
 						<>
-							{item.status === "4" && (
-								<Button
-									size="xs"
-									color="green"
-									onClick={() => {
-										setSelectedRow(item);
-										setOpenPay(true);
-									}}
-									disabled={item.term !== actualCurrentTerm}
-								>
-									ชำระค่าธรรมเนียม
-								</Button>
-							)}
-							{item.receipt_vol != null && <PrintReceipt item={item} />}
-							{/* {(item.status == 5 || item.status == 0 || item.status > 6) && (
-								<Button size="xs" color="green">
-									พิมพ์ใบเสร็จ
-								</Button>
-							)} */}
+							<Pill variant="filled" style={{ backgroundColor: "#ffcccc", color: "#b30000" }}>
+								{item.status_text}
+							</Pill>
+							<br />
+							{!item.advisor_approvals && "อาจารย์ที่ปรึกษา"}
+							{item.advisor_approvals && !item.chairpersons_approvals && "ประธานหลักสูตร"}
+							{item.advisor_approvals && item.chairpersons_approvals && !item.registrar_approvals && "เจ้าหน้าที่ทะเบียน"}
 						</>
 					)}
-					<Pdfg01 data={item} showType={item.status == 0 ? undefined : (role === "advisor" && item.status <= 1) || (role === "chairpersons" && item.status <= 2) || (role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
-					{((role === "research_advisor" && item.status == 1) || (role === "chairpersons" && item.status == 2) || (role === "officer_registrar" && item.status == 3)) && (
-						<Button
-							size="xs"
-							color="green"
-							onClick={() => {
-								setSelectedRow(item);
-								setOpenApproveState("add");
-								setOpenApprove(true);
-							}}
-							disabled={item.term !== actualCurrentTerm}
-						>
-							{role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
-						</Button>
-					)}
-				</Group>
-			</Table.Td>
-			{item.exam_results !== null && (
-				<Table.Td style={{ textAlign: "center" }}>
-					{item.exam_results === "ผ่าน" && <Text c="green">ผ่าน</Text>}
-					{item.exam_results === "ไม่ผ่าน" && <Text c="red">ไม่ผ่าน</Text>}
-					{item.exam_results === "ขาดสอบ" && <Text c="gray">ขาดสอบ</Text>}
 				</Table.Td>
-			)}
-		</Table.Tr>
-	));
+				<Table.Td style={{ maxWidth: "150px" }}>
+					<Group style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+						{role === "student" && (
+							<>
+								{item.status === "4" && (
+									<Button
+										size="xs"
+										color="green"
+										onClick={() => {
+											setSelectedRow(item);
+											setOpenPay(true);
+										}}
+										disabled={item.term !== rowCurrentTerm}
+									>
+										ชำระค่าธรรมเนียม
+									</Button>
+								)}
+								{item.receipt_vol != null && <PrintReceipt item={item} />}
+							</>
+						)}
+						<PdfButton data={item} showType={item.status == 0 ? undefined : (role === "advisor" && item.status <= 1) || (role === "chairpersons" && item.status <= 2) || (role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
+						{((role === "research_advisor" && item.status == 1) || (role === "chairpersons" && item.status == 2) || (role === "officer_registrar" && item.status == 3)) && (
+							<Button
+								size="xs"
+								color="green"
+								onClick={() => {
+									setSelectedRow(item);
+									setOpenApproveState("add");
+									setOpenApprove(true);
+								}}
+								disabled={item.term !== rowCurrentTerm}
+							>
+								{role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
+							</Button>
+						)}
+					</Group>
+				</Table.Td>
+				{item.exam_results !== null && (
+					<Table.Td style={{ textAlign: "center" }}>
+						{item.exam_results === "ผ่าน" && <Text c="green">ผ่าน</Text>}
+						{item.exam_results === "ไม่ผ่าน" && <Text c="red">ไม่ผ่าน</Text>}
+						{item.exam_results === "ขาดสอบ" && <Text c="gray">ขาดสอบ</Text>}
+					</Table.Td>
+				)}
+			</Table.Tr>
+		);
+	});
 
 	return (
 		<Box>
@@ -436,16 +452,17 @@ const RequestThesisProposal = () => {
 				role={role}
 				title={`${role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}คำร้องขอสอบโครงร่าง${education_level === "ปริญญาโท" ? "วิทยานิพนธ์" : "การค้นคว้าอิสระ"}`}
 			/>
-			<ModalAddRequestThesisProposal opened={openAdd} onClose={() => setOpenAdd(false)} form={form} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`} />
+			<ModalAddRequestThesisProposal opened={openAdd} onClose={() => setOpenAdd(false)} form={form} handleAdd={handleAdd} title={`เพิ่มคำร้องขอสอบโครงร่าง${form.values.request_type || (education_level === "ปริญญาโท" ? "วิทยานิพนธ์/การค้นคว้าอิสระ" : "วิทยานิพนธ์")}`} />
 			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} MoneyRegis={education_level === "ปริญญาโท" ? 2000 : 5000} type={`คำร้องขอสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`} stop_date={paymentCloseDate} />
 			<Text size="1.5rem" fw={900} mb="md">
-				คำร้องขอสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ
+				คำร้องขอสอบ{role === "student" ? form?.values.request_type : "วิทยานิพนธ์/การค้นคว้าอิสระ"}
+				{/* คำร้องขอสอบโครงร่าง{form.values.request_type || (education_level === "ปริญญาโท" ? "วิทยานิพนธ์/การค้นคว้าอิสระ" : "วิทยานิพนธ์")} */}
 			</Text>
 			<Group justify="space-between">
 				<Box>
 					<Flex align="flex-end" gap="sm">
-						{role !== "student" && <TextInput placeholder="ค้นหาชื่่อ รหัส" value={search} onChange={(e) => setSearch(e.target.value)} />}
-						<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} allowDeselect={false} />
+						{role !== "student" && <TextInput placeholder="ค้นหา ชื่่อ รหัสนักศึกษา" value={search} onChange={(e) => setSearch(e.target.value)} />}
+						<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} allowDeselect={false} style={{ width: 80 }}/>
 					</Flex>
 				</Box>
 				<Box>

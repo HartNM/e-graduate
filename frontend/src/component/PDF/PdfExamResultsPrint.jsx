@@ -10,7 +10,7 @@ async function fillPdf(students) {
 
 	const font = await setDefaultFont(pdfDoc);
 
-	const logoBytes = await fetch("/icons/KPRU-LOGO-line2.png").then((res) => res.arrayBuffer());
+	const logoBytes = await fetch("/images/KPRU-LOGO-line2.png").then((res) => res.arrayBuffer());
 	const logoImage = await pdfDoc.embedPng(logoBytes);
 	const pngDims = logoImage.scale(0.125);
 

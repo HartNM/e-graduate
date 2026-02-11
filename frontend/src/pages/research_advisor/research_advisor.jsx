@@ -1,5 +1,5 @@
 //อาจารย์ที่ปรึกษา
-import { IconReport, IconCalendarClock, IconSchool } from "@tabler/icons-react";
+import { IconReport, IconCalendarClock, IconSchool, IconBook } from "@tabler/icons-react";
 import UserLayout from "../../layout/userLayout.jsx";
 
 const menu = [
@@ -7,6 +7,7 @@ const menu = [
 	/* { label: `คำร้องขอเลื่อนสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconCalendarClock, links: "/research_advisor/PostponeProposalExam" }, */
 	{ label: `คำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconReport, links: "/research_advisor/RequestThesisDefense" },
 	/* { label: `คำร้องขอเลื่อนสอบวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconCalendarClock, links: "/research_advisor/PostponeDefenseExam" }, */
+	{ label: `คู่มือ`, icon: IconBook, links: "/research_advisor/Manual" },
 ];
 
 const research_advisor = () => {
