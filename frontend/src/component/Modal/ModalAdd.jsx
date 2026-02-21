@@ -1,14 +1,26 @@
 import { useState, useEffect } from "react";
 import { Modal, Box, TextInput, Flex, Button, Space, Checkbox, Text } from "@mantine/core";
 
+// ลบ loading ออกจาก props ที่รับมา
 const ModalAdd = ({ opened, onClose, title, form, handleAdd }) => {
 	const [isConfirmed, setIsConfirmed] = useState(false);
+	const [submitting, setSubmitting] = useState(false);
 
 	useEffect(() => {
 		if (opened) {
 			setIsConfirmed(false);
+			setSubmitting(false);
 		}
 	}, [opened]);
+
+	const onSave = async () => {
+		setSubmitting(true);
+		try {
+			await handleAdd();
+		} finally {
+			setSubmitting(false);
+		}
+	};
 
 	return (
 		<Modal opened={opened} onClose={onClose} title={title} centered>
@@ -31,7 +43,7 @@ const ModalAdd = ({ opened, onClose, title, form, handleAdd }) => {
 				<Space h="lg" />
 
 				<Flex justify="flex-end">
-					<Button color="green" onClick={() => handleAdd()} disabled={!isConfirmed}>
+					<Button color="green" onClick={onSave} disabled={!isConfirmed || submitting} loading={submitting}>
 						บันทึก
 					</Button>
 				</Flex>

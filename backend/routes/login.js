@@ -34,14 +34,7 @@ router.post("/login", async (req, res) => {
 
 	if (username.length == 9) {
 		try {
-			/* const request = await axios.get(`${BASE_URL}/api/student/${username}`);
-			console.log(request); 
-			const result = request.data;
-			*/
 			const result = await getStudentData(username);
-
-			console.log(result);
-
 			if (
 				result.student_name === "undefined undefined" ||
 				(result.education_level !== "ปริญญาโท" && result.education_level !== "ปริญญาเอก") /* ||
@@ -79,6 +72,7 @@ router.post("/login", async (req, res) => {
 			}
 
 			let facultyName = null;
+			let name = null;
 			try {
 				const tabianReq = await fetch(`https://mis.kpru.ac.th/api/TabianAPI/${username}`);
 				const tabianData = await tabianReq.json();
@@ -88,13 +82,14 @@ router.post("/login", async (req, res) => {
 						if (!roles.includes("dean")) roles.push("dean");
 						facultyName = deanInfo.executive_org;
 					}
+					name = `${tabianData.AjDetail[0].prename_full_tha}${tabianData.AjDetail[0].first_name_tha} ${tabianData.AjDetail[0].last_name_tha}`;
 				}
 			} catch (apiErr) {
 				console.error("TabianAPI Error:", apiErr);
 			}
 
 			const db = await poolPromise;
-			const check_thesis = await db.request().input("user_id", loginData[0].employee_id).query("SELECT TOP 1 * FROM request_thesis_proposal WHERE thesis_advisor_id = @user_id");
+			const check_thesis = await db.request().input("user_id", loginData[0].employee_id).query("SELECT TOP 1 * FROM request_thesis_proposal WHERE thesis_advisor_id = @user_id OR thesis_advisor_id_second = @user_id");
 			if (check_thesis.recordset[0]) {
 				roles.push("research_advisor");
 			}
@@ -112,18 +107,18 @@ router.post("/login", async (req, res) => {
 			}
 
 			// test ---------------------------------------
-			if (username === "1629900598264") {
+			/* if (username === "1629900598264") {
 				if (!roles.includes("advisor")) roles.push("advisor");
 				if (!roles.includes("dean")) roles.push("dean");
 				if (!facultyName) facultyName = "คณะครุศาสตร์";
 				if (!roles.includes("research_advisor")) roles.push("research_advisor");
-			}
+			} */
 			// test ---------------------------------------
 
 			const jwtPayload = {
 				user_id: username,
 				roles: roles,
-				name: `${loginData[0].prefix_name}${loginData[0].frist_name} ${loginData[0].last_name}`,
+				name: name /* `${loginData[0].prefix_name}${loginData[0].frist_name} ${loginData[0].last_name}` */,
 				employee_id: loginData[0].employee_id,
 				major_ids: majorIds,
 				faculty: facultyName,

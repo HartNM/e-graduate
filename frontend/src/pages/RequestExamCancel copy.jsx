@@ -87,21 +87,10 @@ const RequestExamCancel = () => {
 
 	useEffect(() => {
 		if (!selectedTerm) return;
+		if (request != null && role === "student") return;
 
 		const getRequestCancel = async () => {
 			try {
-				if (role === "student") {
-					const requestReq = await fetch(`${BASE_URL}/api/requestExamAll`, {
-						method: "POST",
-						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-						body: JSON.stringify({ lastRequest: true }),
-					});
-					const requestData = await requestReq.json();
-					if (!requestReq.ok) throw new Error(requestData.message);
-					setRequest(requestData);
-					setLatestRequest(requestData[0]);
-				}
-
 				const requestExamReq = await fetch(`${BASE_URL}/api/AllRequestExamCancel`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -109,9 +98,7 @@ const RequestExamCancel = () => {
 				});
 				const requestExamData = await requestExamReq.json();
 				if (!requestExamReq.ok) throw new Error(requestExamData.message);
-				if (Array.isArray(requestExamData) && requestExamData.length > 0) {
-					setRequest(requestExamData);
-				}
+				setRequest(requestExamData);
 
 				console.log("คำร้องทังหมด", requestExamData);
 			} catch (e) {
@@ -127,6 +114,15 @@ const RequestExamCancel = () => {
 	useEffect(() => {
 		const fetchRequestExam = async () => {
 			try {
+				const requestReq = await fetch(`${BASE_URL}/api/requestExamAll`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+					body: JSON.stringify({ lastRequest: true }),
+				});
+				const requestData = await requestReq.json();
+				if (!requestReq.ok) throw new Error(requestData.message);
+				console.log(requestData[0]);
+
 				const CheckOpenRECRes = await fetch(`${BASE_URL}/api/CheckOpenREC`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -134,6 +130,7 @@ const RequestExamCancel = () => {
 				const CheckOpenRECData = await CheckOpenRECRes.json();
 				if (!CheckOpenRECRes.ok) throw new Error(CheckOpenRECData.message);
 				console.log("วันที่ :", CheckOpenRECData);
+				setLatestRequest(requestData[0]);
 			} catch (e) {
 				notify("error", e.message);
 				console.error("Error fetching requestExamAll:", e);
@@ -178,9 +175,7 @@ const RequestExamCancel = () => {
 			setLatestRequest(true);
 			notify("success", requestData.message || "สำเร็จ");
 			setOpenAddCancel(false);
-
-			setRequest([{ ...selectedRow, ...requestData.data }]);
-
+			setRequest((prev) => [...prev, { ...selectedRow, ...requestData.data }]);
 			refreshBadges();
 		} catch (e) {
 			notify("error", e.message);
@@ -221,7 +216,6 @@ const RequestExamCancel = () => {
 	};
 
 	function sortRequests(data, role) {
-		if (!Array.isArray(data)) return [];
 		if (role === "student") return data;
 		return data.sort((a, b) => {
 			const getOrder = (s) => {
@@ -237,28 +231,19 @@ const RequestExamCancel = () => {
 
 	const sortedData = sortRequests(request || [], role);
 
-	const filteredData = sortedData.filter((p) => {
+	const filteredData = sortedData?.filter((p) => {
 		const matchesSearch = [p.student_name, p.student_id].join(" ").toLowerCase().includes(search.toLowerCase());
 		const matchesType = selectedType ? p.request_type === selectedType : true;
 		const matchesTerm = selectedTerm ? p.term === selectedTerm : true;
 		return matchesSearch && matchesType && matchesTerm;
 	});
 
-	const rows = filteredData?.map((item, index) => (
-		<Table.Tr key={index}>
+	const rows = filteredData?.map((item) => (
+		<Table.Tr key={item.request_cancel_exam_id}>
 			<Table.Td>{item.student_name}</Table.Td>
 			<Table.Td>{item.term}</Table.Td>
 			<Table.Td>{role === "dean" ? `ขอยกเลิก${item.request_type.replace("ขอ", "")}` : item.request_type}</Table.Td>
 			<Table.Td style={{ textAlign: "center" }}>
-				{item.status <= 4 && item.status > 0 && (
-					<Stepper active={item.status - 1} iconSize={20} styles={{ separator: { marginLeft: -4, marginRight: -4 }, stepIcon: { fontSize: 10 } }}>
-						{[...Array(4)].map((_, i) => (
-							<Stepper.Step key={i}>
-								<Pill>{item.status_text}</Pill>
-							</Stepper.Step>
-						))}
-					</Stepper>
-				)}
 				{item.status == 0 && (
 					<Pill variant="filled" style={{ backgroundColor: "#ccffcc", color: "#006600" }}>
 						{item.status_text}

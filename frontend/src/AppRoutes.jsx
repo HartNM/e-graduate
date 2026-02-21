@@ -23,9 +23,6 @@ const RegistrarOfficer = lazy(() => import("./pages/RegistrarOfficer/RegistrarOf
 const CourseRegistrationR = lazy(() => import("./pages/RegistrarOfficer/CourseRegistrationR.jsx"));
 const ExamScheduleSetupPage = lazy(() => import("./pages/RegistrarOfficer/ExamScheduleSetupPage.jsx"));
 const AssignMajorOfficer = lazy(() => import("./pages/RegistrarOfficer/AssignMajorOfficer.jsx"));
-const ExamResultsPrint = lazy(() => import("./pages/RegistrarOfficer/ExamResultsPrint.jsx"));
-const ExamProposalResultsPrint = lazy(() => import("./pages/RegistrarOfficer/ExamProposalResultsPrint.jsx"));
-const ExamDefenseResultsPrint = lazy(() => import("./pages/RegistrarOfficer/ExamDefenseResultsPrint.jsx"));
 
 const Student = lazy(() => import("./pages/student/Student.jsx"));
 
@@ -64,10 +61,6 @@ function AppRoutes() {
 						<Route path="ExamResults" element={<ExamResults />} />
 						<Route path="ExamProposalResults" element={<ExamProposalResults />} />
 						<Route path="ExamDefenseResults" element={<ExamDefenseResults />} />
-
-						<Route path="ExamResultsPrint" element={<ExamResultsPrint />} />
-						<Route path="ExamProposalResultsPrint" element={<ExamProposalResultsPrint />} />
-						<Route path="ExamDefenseResultsPrint" element={<ExamDefenseResultsPrint />} />
 
 						<Route path="Manual" element={<Manual />} />
 					</Route>

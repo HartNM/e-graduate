@@ -47,15 +47,12 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 		const pool = await poolPromise;
 		const request = pool.request().input("user_id", user_id).input("term", term);
 		let query = "SELECT * FROM request_exam";
-		if (user_id === "1629900598264") {
-			query += ` WHERE term = @term`;
-		} else if (role === "student") {
+		if (role === "student") {
 			if (lastRequest) {
-				query = "SELECT TOP 1 * FROM request_exam";
+				query = "SELECT TOP 1 * FROM request_exam ";
 			}
 			query += " WHERE student_id = @user_id";
 		} else if (role === "advisor") {
-			// query += ` WHERE study_group_id IN (SELECT group_no FROM advisorGroup_no WHERE user_id = @user_id) AND term = @term`; //test
 			const apiResponse = await axios.post("https://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/FindGroup", {
 				ID_TEACHER: user_id,
 			});
@@ -63,21 +60,15 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 			if (groupNumbers.length === 0) {
 				query += ` WHERE 1=0`;
 			} else {
-				/* const groupListString = groupNumbers.map((group) => `'${group}'`).join(", ");
-				query += ` WHERE study_group_id IN (${groupListString}) AND term = @term`; */ //product
 				request.input("groupNumbers", groupNumbers.join(","));
 				query += ` WHERE study_group_id IN ((SELECT value FROM STRING_SPLIT(@groupNumbers, ','))) AND term = @term`;
 			}
 		} else if (role === "chairpersons") {
-			// query += ` WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND (status IN (0, 2, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL)) AND term = @term`; //test
-
 			request.input("major_ids_str", major_ids.join(","));
 			query += ` WHERE major_id IN ((SELECT value FROM STRING_SPLIT(@major_ids_str, ','))) AND (status IN (0, 2, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL)) AND term = @term`; //product
 		} else if (role === "officer_registrar") {
 			query += ` WHERE (status IN (0, 3, 4, 5, 7, 8, 9) OR (status = 6 AND advisor_approvals_id IS NOT NULL AND chairpersons_approvals_id IS NOT NULL AND registrar_approvals_id IS NOT NULL)) AND term = @term`;
 		} else if (role === "officer_major") {
-			// query += " WHERE major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND term = @term"; //test
-
 			request.input("major_ids_str", major_ids.join(","));
 			query += ` WHERE major_id IN ((SELECT value FROM STRING_SPLIT(@major_ids_str, ','))) AND term = @term`; //product
 		}
@@ -88,11 +79,9 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 				//---------------------------------------------------------------receipt--------------------------------------------------------------------------
 				if (item.status === "4" && role === "student") {
 					try {
-						// เรียก API e-payment
 						const paymentUrl = `https://e-payment.kpru.ac.th/pay/api/showlistcustomer/${item.student_id}/81914`;
 						const paymentRes = await axios.get(paymentUrl);
 						const paymentData = paymentRes.data;
-
 						if (Array.isArray(paymentData) && paymentData.length > 0) {
 							const payInfo = paymentData[0];
 							if (payInfo.success == 1) {
@@ -102,7 +91,6 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 									const engYear = parseInt(thaiYear) - 543;
 									dateForSQL = `${engYear}-${month}-${day} 00:00:00`;
 								}
-
 								const updateQuery = `
                                     UPDATE request_exam 
                                     SET status = @status, 
@@ -112,7 +100,6 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
                                     WHERE request_exam_id = @id
                                 `;
 								await pool.request().input("status", "5").input("vol", payInfo.receipt_book).input("no", payInfo.receipt_no).input("date", dateForSQL).input("id", item.request_exam_id).query(updateQuery);
-
 								item.status = 5;
 								item.receipt_vol = payInfo.receipt_book;
 								item.receipt_No = payInfo.receipt_no;
@@ -123,7 +110,6 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 						}
 					} catch (err) {
 						console.error(`Error checking payment for student ${item.student_id}:`, err.message);
-						// ไม่ throw error เพื่อให้ Loop ทำงานต่อได้กับ item อื่นๆ
 					}
 				}
 				//---------------------------------------------------------------receipt--------------------------------------------------------------------------
@@ -155,7 +141,7 @@ router.post("/requestExamAll", authenticateToken, async (req, res) => {
 		/* console.log(enrichedData); */
 		res.status(200).json(enrichedData);
 	} catch (err) {
-		console.error("requestExamAll:", err);	
+		console.error("requestExamAll:", err);
 		res.status(500).json({ message: "เกิดข้อผิดพลาดในการดึงข้อมูลคำร้อง" });
 	}
 });
@@ -167,16 +153,7 @@ router.post("/addRequestExam", authenticateToken, async (req, res) => {
 		const receipt_pay = education_level === "ปริญญาโท" ? 1000 : 1500;
 
 		const pool = await poolPromise;
-		const result = await pool
-			.request()
-			.input("student_id", student_id)
-			.input("study_group_id", study_group_id)
-			.input("major_id", major_id)
-			.input("faculty_name", faculty_name)
-			.input("request_type", requestType)
-			.input("term", term)
-			.input("status", "1")
-			.input("receipt_pay", receipt_pay).query(`
+		const result = await pool.request().input("student_id", student_id).input("study_group_id", study_group_id).input("major_id", major_id).input("faculty_name", faculty_name).input("request_type", requestType).input("term", term).input("status", "1").input("receipt_pay", receipt_pay).query(`
 				INSERT INTO request_exam (
 					student_id,
 					study_group_id,

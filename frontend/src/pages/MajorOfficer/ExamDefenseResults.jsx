@@ -169,16 +169,26 @@ const ExamResults = () => {
 		const major_name = firstRow.major_name || "-";
 
 		const mainHeader = [[`ผลการสอบ${docTitle} สาขา${major_name} หมู่เรียน ${studyGroup} ปีการศึกษา ${term}`]];
-		const subHeader = [["รหัสนักศึกษา", "ชื่อ-สกุล", "คำขอสอบ", "ผลสอบ"]];
-		const dataRows = studentsToExport.map((s) => [s.student_id, s.name, (s.request_type || "-").replace("ขอสอบ", ""), s.exam_results || "-"]);
+		const subHeader = [["รหัสนักศึกษา", "ชื่อ-สกุล", "คำขอสอบ", "ผลสอบ", "วันที่สอบ"]];
+		const dataRows = studentsToExport.map((s) => {
+			let dateStr = "-";
+			if (s.thesis_exam_date) {
+				const d = new Date(s.thesis_exam_date);
+				const day = String(d.getDate()).padStart(2, "0");
+				const month = String(d.getMonth() + 1).padStart(2, "0");
+				const year = d.getFullYear() + 543;
+				dateStr = `${day}/${month}/${year}`;
+			}
+			return [s.student_id, s.name, (s.request_type || "-").replace("ขอสอบ", ""), s.exam_results || "-", dateStr];
+		});
 
 		const ws = XLSX.utils.aoa_to_sheet([]);
 		XLSX.utils.sheet_add_aoa(ws, mainHeader, { origin: "A1" });
 		XLSX.utils.sheet_add_aoa(ws, subHeader, { origin: "A2" });
 		XLSX.utils.sheet_add_aoa(ws, dataRows, { origin: "A3" });
 
-		ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }];
-		ws["!cols"] = [{ wch: 15 }, { wch: 25 }, { wch: 25 }, { wch: 10 }];
+		ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }];
+		ws["!cols"] = [{ wch: 15 }, { wch: 25 }, { wch: 25 }, { wch: 10 }, { wch: 15 }];
 
 		const fileName = `ผลการสอบ${fileTitle}_${studyGroup}_${term}.xlsx`;
 		const wb = XLSX.utils.book_new();

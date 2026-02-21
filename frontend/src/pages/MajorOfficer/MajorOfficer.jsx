@@ -1,10 +1,9 @@
-//เจ้าหน้าที่ประจำคณะ
+// MajorOfficer.jsx
 import { IconFileText, IconEdit, IconBooks, IconUserCheck, IconCertificate, IconBook } from "@tabler/icons-react";
 import UserLayout from "../../layout/userLayout.jsx";
+import useMenuWithBadge from "../../hooks/useMenuWithBadge"; // Import Hook ที่สร้างตะกี้
 
-const menu = [
-	/* { label: "พิมพ์ใบรายชื่อผู้มีสิทธิสอบประมวลความรู้/สอบวัดคุณสมบัติ", icon: IconFileText, links: "/major-officer/ExamEligibleListPrint" }, */
-	/* { label: "พิมพ์ใบรายชื่อผู้มีสิทธิสอบประมวลความรู้/สอบวัดคุณสมบัติ2", icon: IconFileText, links: "/major-officer/PrintExam" }, */
+const initialMenu = [
 	{ label: "กรอกข้อมูลรายวิชาบังคับ", icon: IconBooks, links: "/major-officer/CourseRegistration" },
 	{ label: "กรอกข้อมูลประธานกรรมการบัณฑิตศึกษาประจำสาขาวิชา", icon: IconUserCheck, links: "/major-officer/AssignChairpersons" },
 	{
@@ -31,26 +30,18 @@ const menu = [
 		label: "กรอกผลการสอบ",
 		icon: IconEdit,
 		links: [
-			{ label: "ประมวลความรู้/วัดคุณสมบัติ", link: "/major-officer/ExamResults" },
-			{ label: "โครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ", link: "/major-officer/ExamProposalResults" },
-			{ label: "วิทยานิพนธ์/การค้นคว้าอิสระ", link: "/major-officer/ExamDefenseResults" },
+			{ label: "ประมวลความรู้/วัดคุณสมบัติ", link: "/major-officer/ExamResults", type: "request_exam", status: "5" },
+			{ label: "โครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ", link: "/major-officer/ExamProposalResults", type: "request_thesis_proposal", status: "5" },
+			{ label: "วิทยานิพนธ์/การค้นคว้าอิสระ", link: "/major-officer/ExamDefenseResults", type: "request_thesis_defense", status: "5" },
 		],
 	},
 	{ label: `คู่มือ`, icon: IconBook, links: "/major-officer/Manual" },
-	/* { label: "คำร้องขอสอบความรู้ทางภาษาอังกฤษ", icon: IconCertificate, links: "/major-officer/RequestEngTest" }, */
-	/* { label: "กรอกผลการสอบประมวลความรู้/สอบวัดคุณสมบัติ", icon: IconEdit, links: "/major-officer/ExamResults" },
-	{ label: "กรอกผลการสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ", icon: IconEdit, links: "/major-officer/ExamProposalResults" },
-	{ label: "กรอกผลการสอบวิทยานิพนธ์/การค้นคว้าอิสระ", icon: IconEdit, links: "/major-officer/ExamDefenseResults" }, */
-	/* { label: "กรอกข้อมูลรายวิชาสำหรับสอบประมวลความรู้/สอบวัดคุณสมบัติ", icon: IconBooks, links: "/major-officer/CourseRegistration" }, */
 ];
-/* data.education_level === "ปริญญาเอก" && newMenu.push({ label: "คำร้องขอสอบความรู้ทางภาษาอังกฤษ", icon: IconCertificate, links: "/student/RequestEngTest" }); */
 
 const MajorOfficer = () => {
-	return (
-		<>
-			<UserLayout item={menu} />
-		</>
-	);
+	const menuItems = useMenuWithBadge(initialMenu);
+
+	return <UserLayout item={menuItems} />;
 };
 
 export default MajorOfficer;

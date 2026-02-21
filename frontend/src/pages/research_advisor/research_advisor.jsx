@@ -1,21 +1,17 @@
 //อาจารย์ที่ปรึกษา
-import { IconReport, IconCalendarClock, IconSchool, IconBook } from "@tabler/icons-react";
+import { IconReport, IconBook } from "@tabler/icons-react";
 import UserLayout from "../../layout/userLayout.jsx";
+import useMenuWithBadge from "../../hooks/useMenuWithBadge";
 
-const menu = [
-	{ label: `คำร้องขอสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconReport, links: "/research_advisor/RequestThesisProposal" },
-	/* { label: `คำร้องขอเลื่อนสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconCalendarClock, links: "/research_advisor/PostponeProposalExam" }, */
-	{ label: `คำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconReport, links: "/research_advisor/RequestThesisDefense" },
-	/* { label: `คำร้องขอเลื่อนสอบวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconCalendarClock, links: "/research_advisor/PostponeDefenseExam" }, */
+const initialMenu = [
+	{ label: `คำร้องขอสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconReport, links: "/research_advisor/RequestThesisProposal", type: "request_thesis_proposal", status: "1" },
+	{ label: `คำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconReport, links: "/research_advisor/RequestThesisDefense", type: "request_thesis_defense", status: "1" },
 	{ label: `คู่มือ`, icon: IconBook, links: "/research_advisor/Manual" },
 ];
 
 const research_advisor = () => {
-	return (
-		<>
-			<UserLayout item={menu} />
-		</>
-	);
+	const menuItems = useMenuWithBadge(initialMenu);
+	return <UserLayout item={menuItems} />;
 };
 
 export default research_advisor;

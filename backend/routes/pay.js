@@ -1,8 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const { poolPromise } = require("../db");
-/* const axios = require("axios");
-const BASE_URL = process.env.VITE_API_URL; */
 const { getStudentData } = require("../services/studentService");
 
 router.get("/getPayData", async (req, res) => {
@@ -27,8 +25,6 @@ router.get("/getPayData", async (req, res) => {
 		const winner = candidates[0];
 		let student = {};
 		try {
-			/* const { data } = await axios.get(`${BASE_URL}/api/student/${student_id}`);
-			student = data; */
 			const result = await getStudentData(student_id);
 			student = result;
 		} catch (e) {

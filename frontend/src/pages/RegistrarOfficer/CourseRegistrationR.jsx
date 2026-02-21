@@ -34,7 +34,7 @@ const CourseRegistration = () => {
 			major_id: "",
 			study_group_id: "",
 			course_first: [],
-			course_last: [],
+			/* course_last: [], */
 		},
 		validate: {
 			study_group_id: (value) => {
@@ -44,7 +44,7 @@ const CourseRegistration = () => {
 			},
 
 			course_first: (value) => (value.length > 0 ? null : "กรุณาเลือกรหัสวิชา"),
-			course_last: (value) => (value.length > 0 ? null : "กรุณาเลือกรหัสวิชา"),
+			/* course_last: (value) => (value.length > 0 ? null : "กรุณาเลือกรหัสวิชา"), */
 		},
 	});
 
@@ -212,7 +212,7 @@ const CourseRegistration = () => {
 						<Select label="สาขา" data={majors} value={Form.values.major_id} onChange={(value) => Form.setFieldValue("major_id", value)} disabled={modalType === "add" ? false : true} />
 						<NumberInput label="หมู่เรียน" hideControls {...Form.getInputProps("study_group_id")} disabled={modalType === "add" ? false : true} />
 						<MultiSelect label="รหัสวิชาวิทยานิพนธ์และการค้นคว้าอิสระ ตัวแรก" searchable hidePickedOptions data={data} onSearchChange={handleSearchChange} {...Form.getInputProps("course_first")} disabled={modalType === "delete"} />
-						<MultiSelect label="รหัสวิชาวิทยานิพนธ์และการค้นคว้าอิสระ ตัวสุดท้าย" searchable hidePickedOptions data={data} onSearchChange={handleSearchChange} {...Form.getInputProps("course_last")} disabled={modalType === "delete"} />
+						{/* <MultiSelect label="รหัสวิชาวิทยานิพนธ์และการค้นคว้าอิสระ ตัวสุดท้าย" searchable hidePickedOptions data={data} onSearchChange={handleSearchChange} {...Form.getInputProps("course_last")} disabled={modalType === "delete"} /> */}
 						<Space h="md" />
 						<Button color={modalType === "delete" ? "red" : "green"} type="submit" fullWidth>
 							{modalType === "delete" ? "ลบ" : "บันทึก"}

@@ -1,13 +1,12 @@
-//นักศึกษา
-import { useEffect, useState, useMemo } from "react";
-import { IconClipboardText, IconCertificate, IconReport, IconFileText, IconSchool, IconSearch, IconCalendarClock, IconClipboardX, IconBook } from "@tabler/icons-react";
+import { useMemo } from "react";
+import { IconClipboardText, IconCertificate, IconReport, IconFileText, IconClipboardX, IconBook } from "@tabler/icons-react";
 import UserLayout from "../../layout/userLayout.jsx";
 import { jwtDecode } from "jwt-decode";
-const BASE_URL = import.meta.env.VITE_API_URL;
+import useMenuWithBadge from "../../hooks/useMenuWithBadge";
 
 const Student = () => {
-	const [menu, setMenu] = useState([]);
 	const token = localStorage.getItem("token");
+
 	const { education_level } = useMemo(() => {
 		if (!token) return { education_level: "" };
 		try {
@@ -17,40 +16,58 @@ const Student = () => {
 			return { education_level: "" };
 		}
 	}, [token]);
-	useEffect(() => {
-		(async () => {
-			try {
-				const newMenu = [];
-				/* const res = await fetch(`${BASE_URL}/api/checkStudent`, {
-					method: "GET",
-					headers: { Authorization: `Bearer ${token}` },
-				});
-				const data = await res.json();
-				newMenu.push({ label: `คำร้องขอสอบ${data.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, icon: IconClipboardText, links: "/student/RequestExam" });
-				if (data.RequestExamCancel) {
-					newMenu.push({ label: `คำร้องขอยกเลิกการเข้าสอบ${data.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, icon: IconClipboardX, links: "/student/RequestExamCancel" });
-				}
-				data.education_level === "ปริญญาเอก" && newMenu.push({ label: "คำร้องขอสอบความรู้ทางภาษาอังกฤษ", icon: IconCertificate, links: "/student/RequestEngTest" });
-				if (data.RequestThesisProposal) {
-					newMenu.push({ label: `คำร้องขอสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconReport, links: "/student/RequestThesisProposal" });
-				}
-				if (data.RequestThesisDefense) {
-					newMenu.push({ label: `คำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ`, icon: IconFileText, links: "/student/RequestThesisDefense" });
-				} */
-				newMenu.push({ label: `คำร้องขอสอบ${education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, icon: IconClipboardText, links: "/student/RequestExam" });
-				newMenu.push({ label: `คำร้องขอยกเลิกการเข้าสอบ${education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`, icon: IconClipboardX, links: "/student/RequestExamCancel" });
-				education_level === "ปริญญาเอก" ? newMenu.push({ label: "คำร้องขอสอบความรู้ทางภาษาอังกฤษ", icon: IconCertificate, links: "/student/RequestEngTest" }) : "";
-				newMenu.push({ label: education_level === "ปริญญาโท" ? `คำร้องขอสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ` : `คำร้องขอสอบโครงร่างวิทยานิพนธ์`, icon: IconReport, links: "/student/RequestThesisProposal" });
-				newMenu.push({ label: education_level === "ปริญญาโท" ? `คำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ` : `คำร้องขอสอบวิทยานิพนธ์`, icon: IconFileText, links: "/student/RequestThesisDefense" });
-				newMenu.push({ label: `คู่มือ`, icon: IconBook, links: "/student/Manual" });
-				setMenu(newMenu);
-			} catch (e) {
-				console.error("Error fetching checkStudent:", e);
-			}
-		})();
-	}, []);
 
-	return <UserLayout item={menu} />;
+	const initialMenu = useMemo(() => {
+		const menu = [];
+		const isMaster = education_level === "ปริญญาโท";
+
+		menu.push({
+			label: `คำร้องขอสอบ${isMaster ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`,
+			icon: IconClipboardText,
+			links: "/student/RequestExam",
+			type: "request_exam",
+			status: "4",
+		});
+
+		menu.push({
+			label: `คำร้องขอยกเลิกการเข้าสอบ${isMaster ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`,
+			icon: IconClipboardX,
+			links: "/student/RequestExamCancel",
+		});
+
+		if (education_level === "ปริญญาเอก") {
+			menu.push({
+				label: "คำร้องขอสอบความรู้ทางภาษาอังกฤษ",
+				icon: IconCertificate,
+				links: "/student/RequestEngTest",
+				type: "request_eng_test",
+				status: "4",
+			});
+		}
+
+		menu.push({
+			label: isMaster ? `คำร้องขอสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ` : `คำร้องขอสอบโครงร่างวิทยานิพนธ์`,
+			icon: IconReport,
+			links: "/student/RequestThesisProposal",
+			type: "request_thesis_proposal",
+			status: "4",
+		});
+
+		menu.push({
+			label: isMaster ? `คำร้องขอสอบวิทยานิพนธ์/การค้นคว้าอิสระ` : `คำร้องขอสอบวิทยานิพนธ์`,
+			icon: IconFileText,
+			links: "/student/RequestThesisDefense",
+			type: "request_thesis_defense",
+			status: "4",
+		});
+
+		menu.push({ label: `คู่มือ`, icon: IconBook, links: "/student/Manual" });
+
+		return menu;
+	}, [education_level]);
+	const menuItems = useMenuWithBadge(initialMenu);
+
+	return <UserLayout item={menuItems} />;
 };
 
 export default Student;

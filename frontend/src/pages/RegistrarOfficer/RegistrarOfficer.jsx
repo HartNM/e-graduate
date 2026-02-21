@@ -1,28 +1,20 @@
-//เจ้าหน้าที่งานทะเบียน
-import { IconClipboardText, IconCertificate, IconCalendar, IconUserCheck, IconReport, IconBooks, IconBook } from "@tabler/icons-react";
+// RegistrarOfficer.jsx
+import { IconClipboardText, IconCertificate, IconCalendar, IconUserCheck, IconBooks, IconBook } from "@tabler/icons-react";
 import UserLayout from "../../layout/userLayout.jsx";
+import useMenuWithBadge from "../../hooks/useMenuWithBadge";
 
-const menu = [
+const initialMenu = [
 	{
 		label: "คำร้องขอสอบ",
 		icon: IconClipboardText,
 		links: [
-			{ label: "ประมวลความรู้", link: "/registrar-officer/RequestExam/ขอสอบประมวลความรู้" },
-			{ label: "วัดคุณสมบัติ", link: "/registrar-officer/RequestExam/ขอสอบวัดคุณสมบัติ" },
-			{ label: "ความรู้ทางภาษาอังกฤษ", link: "/registrar-officer/RequestEngTest" },
-			{ label: "โครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ", link: "/registrar-officer/RequestThesisProposal" },
-			{ label: "วิทยานิพนธ์/การค้นคว้าอิสระ", link: "/registrar-officer/RequestThesisDefense" },
+			{ label: "ประมวลความรู้", link: "/registrar-officer/RequestExam/ขอสอบประมวลความรู้", type: "request_exam", status: "3" },
+			{ label: "วัดคุณสมบัติ", link: "/registrar-officer/RequestExam/ขอสอบวัดคุณสมบัติ", type: "request_exam", status: "3" },
+			{ label: "ความรู้ทางภาษาอังกฤษ", link: "/registrar-officer/RequestEngTest", type: "request_eng_test", status: "3" },
+			{ label: "โครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ", link: "/registrar-officer/RequestThesisProposal", type: "request_thesis_proposal", status: "3" },
+			{ label: "วิทยานิพนธ์/การค้นคว้าอิสระ", link: "/registrar-officer/RequestThesisDefense", type: "request_thesis_defense", status: "3" },
 		],
 	},
-	/* 	{
-		label: "พิมพ์ผลการสอบ",
-		icon: IconCertificate,
-		links: [
-			{ label: "ประมวลความรู้/สอบวัดคุณสมบัติ", link: "/registrar-officer/ExamResultsPrint" },
-			{ label: "โครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ", link: "/registrar-officer/ExamProposalResultsPrint" },
-			{ label: "วิทยานิพนธ์/การค้นคว้าอิสระ", link: "/registrar-officer/ExamDefenseResultsPrint" },
-		],
-	}, */
 	{
 		label: "พิมพ์ผลการสอบ",
 		icon: IconCertificate,
@@ -39,11 +31,8 @@ const menu = [
 ];
 
 const RegistrarOfficer = () => {
-	return (
-		<>
-			<UserLayout item={menu} />
-		</>
-	);
+	const menuItems = useMenuWithBadge(initialMenu);
+	return <UserLayout item={menuItems} />;
 };
 
 export default RegistrarOfficer;

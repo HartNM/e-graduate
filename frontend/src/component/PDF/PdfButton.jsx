@@ -79,16 +79,42 @@ export default function PdfButton({ data, showType }) {
 			const url = URL.createObjectURL(blob);
 
 			const iframe = document.createElement("iframe");
-			iframe.style.display = "none";
+			/* iframe.style.display = "none"; */
+			iframe.style.position = "fixed";
+			iframe.style.right = "0";
+			iframe.style.bottom = "0";
+			iframe.style.width = "0";
+			iframe.style.height = "0";
+			iframe.style.border = "0";
+
 			iframe.src = url;
 			document.body.appendChild(iframe);
 
 			iframe.onload = () => {
-				iframe.contentWindow.print();
+				/* iframe.contentWindow.print(); */
+				setTimeout(() => {
+					try {
+						iframe.contentWindow.focus(); // focus ก่อนสั่ง print เพื่อความชัวร์ในบาง browser
+						iframe.contentWindow.print();
+					} catch (e) {
+						console.error("Print error inside iframe:", e);
+					} /* finally {
+						// ลบ iframe และ url ออกหลังจากพิมพ์เสร็จ (หรือ user กด cancel)
+						// หมายเหตุ: การ remove iframe ทันทีอาจทำให้ print dialog หายในบาง browser
+						// อาจจะต้องรอ user action หรือปล่อยทิ้งไว้สักพัก
+
+						// ในทางปฏิบัติ เรามักจะปล่อย iframe ทิ้งไว้หรือลบออกหลังจากผ่านไปสักพักใหญ่ๆ
+						setTimeout(() => {
+							document.body.removeChild(iframe);
+							URL.revokeObjectURL(url);
+						}, 60000); // รอ 1 นาทีค่อยลบ
+					} */
+				}, 500); // รอ 0.5 วินาที
 			};
 		} catch (error) {
 			console.error("Error printing PDF:", error);
 			alert("เกิดข้อผิดพลาดในการพิมพ์");
+			if (url) URL.revokeObjectURL(url); // Clean up ถ้า error
 		} finally {
 			setLoading(false);
 		}

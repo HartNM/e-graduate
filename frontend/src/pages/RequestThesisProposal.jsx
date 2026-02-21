@@ -13,16 +13,18 @@ import { jwtDecode } from "jwt-decode";
 import ModalCheckCourse from "../component/Modal/ModalCheckCourseResearch";
 import PrintReceipt from "../component/button/printReceipt";
 const BASE_URL = import.meta.env.VITE_API_URL;
+import { useBadge } from "../context/BadgeContext";
 
 const RequestThesisProposal = () => {
+	const { refreshBadges } = useBadge();
 	const token = localStorage.getItem("token");
-	const { role, user_id, name, education_level } = useMemo(() => {
-		if (!token) return { role: "", user_id: "", name: "", education_level: "" };
+	const { role, user_id, name, education_level, employee_id } = useMemo(() => {
+		if (!token) return { role: "", user_id: "", name: "", education_level: "", employee_id: "" };
 		try {
 			return jwtDecode(token);
 		} catch (error) {
 			console.error("Invalid token:", error);
-			return { role: "", user_id: "", name: "", education_level: "" };
+			return { role: "", user_id: "", name: "", education_level: "", employee_id: "" };
 		}
 	}, [token]);
 	// Modal Info
@@ -55,6 +57,7 @@ const RequestThesisProposal = () => {
 			request_type: "",
 			research_name: "",
 			thesis_advisor_id: "",
+			thesis_advisor_id_second: "",
 		},
 		validate: {
 			research_name: (value) => (value === "" ? "กรุณากรอกชื่องานวิจัย" : null),
@@ -121,7 +124,6 @@ const RequestThesisProposal = () => {
 	useEffect(() => {
 		if (!selectedTerm) return;
 		if (request != null && role === "student") return;
-		console.log(selectedTerm);
 
 		const getRequest = async () => {
 			try {
@@ -146,82 +148,76 @@ const RequestThesisProposal = () => {
 		if (request === null || role !== "student") return;
 		const fetchRequestExam = async () => {
 			try {
-				/* if (user_id === "674140101") */
-				{
-					//use
-					/* const requestReq = await fetch(`${BASE_URL}/api/requestExamAll`, {
-							method: "POST",
-							headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-							body: JSON.stringify({ term: selectedTerm }),
-						});
-						const requestData = await requestReq.json();
-						if (!requestReq.ok) throw new Error(requestData.message);
-						console.log("requestData", requestData);
+				const requestReq = await fetch(`${BASE_URL}/api/requestExamAll`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+					body: JSON.stringify({ term: selectedTerm }),
+				});
+				const requestData = await requestReq.json();
+				if (!requestReq.ok) throw new Error(requestData.message);
+				console.log("requestData", requestData);
 
-						if (requestData.length > 0) {
-							const latestRequest = requestData.reduce((prev, current) => (Number(prev.request_exam_id) > Number(current.request_exam_id) ? prev : current));
-							console.log("ผลการสอบล่าสุด:", latestRequest.exam_results);
-							if (latestRequest.exam_results === "ไม่ผ่าน" || latestRequest.exam_results === "ขาดสอบ" || latestRequest.exam_results === null) {
-								throw new Error("ยังสอบประมวลความรู้/วัดคุณสมบัติ ไม่ผ่าน");
-							}
-						} else {
-							throw new Error("ยังสอบประมวลความรู้/วัดคุณสมบัติ ไม่ผ่าน");
-						} */
-
-					const registrationRes = await fetch(`${BASE_URL}/api/allStudyGroupIdCourseRegistration`, {
-						method: "POST",
-						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-						body: JSON.stringify({ usage: [2] }),
-					});
-					const registrationData = await registrationRes.json();
-					if (!registrationRes.ok) throw new Error(registrationData.message);
-					console.log("ที่ต้องลง :", registrationData);
-
-					const response = await fetch(`${BASE_URL}/api/get-all-courses`, {
-						method: "POST",
-						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify({ user_id: user_id, term: actualCurrentTerm }),
-					});
-					const result = await response.json();
-
-					console.log("รายวิชาที่ลงทั้งหมด (ทุกเทอม):", result.data);
-
-					const allCodes = result.data.map((c) => c.SJCODE);
-
-					const missing = registrationData.course_first.filter((code) => !allCodes.includes(code));
-					console.log("ที่ขาด :", missing);
-
-					const limit = education_level === "ปริญญาโท" ? 1 : 0;
-
-					if (missing.length > limit) {
-						const res = await fetch(`${BASE_URL}/api/get-all-subjects`);
-						const subjects = await res.json();
-
-						const subjMap = new Map(subjects.map((s) => [s.SUBJCODE, s.SUBJNAME]));
-						const coursesData = missing.map((course_id) => ({
-							course_id,
-							course_name: subjMap.get(course_id) || "ไม่พบข้อมูล",
-						}));
-
-						console.log("รายวิชาที่ขาด :", coursesData);
-
-						setMissingCoures(coursesData);
-						setOpenCheckCourse(true);
-						return;
-					} else {
-						const taken = registrationData.course_first.filter((code) => allCodes.includes(code));
-						console.log("ที่ลง :", taken);
-
-						const hasIndependentStudy = result.data.some((course) => {
-							const courseName = course.COUSE_NAME || course.SUBJNAME || course.SJNAME || "";
-							return taken.includes(course.SJCODE) && courseName.includes("ค้นคว้าอิสระ");
-						});
-
-						const requestTypeResult = hasIndependentStudy ? "การค้นคว้าอิสระ" : "วิทยานิพนธ์";
-						console.log("Auto-setting request_type to:", requestTypeResult);
-
-						form.setFieldValue("request_type", requestTypeResult);
+				if (requestData.length > 0) {
+					const latestRequest = requestData.reduce((prev, current) => (Number(prev.request_exam_id) > Number(current.request_exam_id) ? prev : current));
+					console.log("ผลการสอบล่าสุด:", latestRequest.exam_results);
+					if (latestRequest.exam_results === "ไม่ผ่าน" || latestRequest.exam_results === "ขาดสอบ" || latestRequest.exam_results === null) {
+						throw new Error("ยังสอบประมวลความรู้/วัดคุณสมบัติ ไม่ผ่าน");
 					}
+				} else {
+					throw new Error("ยังสอบประมวลความรู้/วัดคุณสมบัติ ไม่ผ่าน");
+				}
+
+				const registrationRes = await fetch(`${BASE_URL}/api/allStudyGroupIdCourseRegistration`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+					body: JSON.stringify({ usage: [2] }),
+				});
+				const registrationData = await registrationRes.json();
+				if (!registrationRes.ok) throw new Error(registrationData.message);
+				console.log("ที่ต้องลง :", registrationData);
+
+				const response = await fetch(`${BASE_URL}/api/get-all-courses`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ user_id: user_id, term: actualCurrentTerm }),
+				});
+				const result = await response.json();
+				console.log("รายวิชาที่ลงทั้งหมด (ทุกเทอม):", result.data);
+
+				const allCodes = result.data.map((c) => c.SJCODE);
+
+				const missing = registrationData.course_first.filter((code) => !allCodes.includes(code));
+				console.log("ที่ขาด :", missing);
+
+				const limit = education_level === "ปริญญาโท" ? 1 : 0;
+
+				if (missing.length > limit) {
+					const res = await fetch(`${BASE_URL}/api/get-all-subjects`);
+					const subjects = await res.json();
+
+					const subjMap = new Map(subjects.map((s) => [s.SUBJCODE, s.SUBJNAME]));
+					const coursesData = missing.map((course_id) => ({
+						course_id,
+						course_name: subjMap.get(course_id) || "ไม่พบข้อมูล",
+					}));
+					console.log("รายวิชาที่ขาด :", coursesData);
+
+					setMissingCoures(coursesData);
+					setOpenCheckCourse(true);
+					return;
+				} else {
+					const taken = registrationData.course_first.filter((code) => allCodes.includes(code));
+					console.log("ที่ลง :", taken);
+
+					const hasIndependentStudy = result.data.some((course) => {
+						const courseName = course.COUSE_NAME || course.SUBJNAME || course.SJNAME || "";
+						return taken.includes(course.SJCODE) && courseName.includes("ค้นคว้าอิสระ");
+					});
+
+					const requestTypeResult = hasIndependentStudy ? "การค้นคว้าอิสระ" : "วิทยานิพนธ์";
+					console.log("Auto-setting request_type to:", requestTypeResult);
+
+					form.setFieldValue("request_type", requestTypeResult);
 				}
 
 				if (!request.length) {
@@ -276,6 +272,7 @@ const RequestThesisProposal = () => {
 			setRequest((prev) => [...prev, { ...requestData.data, ...form.values }]);
 			setLatestRequest(true);
 			setSelectedTerm(actualCurrentTerm);
+			refreshBadges();
 		} catch (e) {
 			notify("error", e.message);
 			console.error("Error fetching addRequestThesisProposal:", e);
@@ -302,6 +299,7 @@ const RequestThesisProposal = () => {
 			setComment("");
 			setOpenApprove(false);
 			setRequest((prev) => prev.map((row) => (row.request_thesis_proposal_id === item.request_thesis_proposal_id ? { ...row, ...requestData.data } : row)));
+			refreshBadges();
 		} catch (e) {
 			notify("error", e.message);
 			console.error("Error fetching approveRequestThesisProposal:", e);
@@ -322,6 +320,7 @@ const RequestThesisProposal = () => {
 			notify("success", requestData.message || "สำเร็จ");
 			setOpenPay(false);
 			setRequest((prev) => prev.map((row) => (row.request_thesis_proposal_id === item.request_thesis_proposal_id ? { ...row, ...requestData.data } : row)));
+			refreshBadges();
 		} catch (e) {
 			notify("error", e.message);
 			console.error("Error fetching payRequestThesisProposal:", e);
@@ -349,6 +348,25 @@ const RequestThesisProposal = () => {
 		const studentYear = parseInt(String(item.student_id).substring(0, 2));
 		const targetStatus = studentYear >= 67 ? statusNew : statusOld;
 		const rowCurrentTerm = targetStatus?.currentTerm;
+
+		let isShowApproveButton = false;
+
+		if (role === "research_advisor" && item.status == 1) {
+			// เช็คว่าเป็น Main หรือ Second
+			const isMainAdvisor = String(item.thesis_advisor_id) === String(employee_id);
+			const isSecondAdvisor = String(item.thesis_advisor_id_second) === String(employee_id);
+
+			// แสดงปุ่มก็ต่อเมื่อ (เป็นตัวจริง และ ยังไม่อนุมัติ) หรือ (เป็นตัวรอง และ ยังไม่อนุมัติ)
+			if ((isMainAdvisor && !item.advisor_approvals) || (isSecondAdvisor && !item.advisor_approvals_second)) {
+				isShowApproveButton = true;
+			}
+		} else if (role === "chairpersons" && item.status == 2) {
+			// ประธานหลักสูตร (ปกติเช็คแค่ Status ก็พอ เพราะเปลี่ยนสถานะทันที)
+			isShowApproveButton = true;
+		} else if (role === "officer_registrar" && item.status == 3) {
+			// เจ้าหน้าที่ทะเบียน
+			isShowApproveButton = true;
+		}
 
 		return (
 			<Table.Tr key={item.request_thesis_proposal_id}>
@@ -380,9 +398,13 @@ const RequestThesisProposal = () => {
 								{item.status_text}
 							</Pill>
 							<br />
-							{!item.advisor_approvals && "อาจารย์ที่ปรึกษา"}
+							{!item.advisor_approvals && "อาจารย์ที่ปรึกษาหลัก"}
+							{item.advisor_approvals && item.advisor_approvals_id_second && !item.advisor_approvals_second && "อาจารย์ที่ปรึกษารอง"}
+							{item.advisor_approvals && (item.advisor_approvals_id_second ? item.advisor_approvals_second : true) && !item.chairpersons_approvals && "ประธานหลักสูตร"}
+							{item.advisor_approvals && (item.advisor_approvals_id_second ? item.advisor_approvals_second : true) && item.chairpersons_approvals && !item.registrar_approvals && "เจ้าหน้าที่ทะเบียน"}
+							{/* {!item.advisor_approvals && "อาจารย์ที่ปรึกษา"}
 							{item.advisor_approvals && !item.chairpersons_approvals && "ประธานหลักสูตร"}
-							{item.advisor_approvals && item.chairpersons_approvals && !item.registrar_approvals && "เจ้าหน้าที่ทะเบียน"}
+							{item.advisor_approvals && item.chairpersons_approvals && !item.registrar_approvals && "เจ้าหน้าที่ทะเบียน"} */}
 						</>
 					)}
 				</Table.Td>
@@ -406,8 +428,10 @@ const RequestThesisProposal = () => {
 								{item.receipt_vol != null && <PrintReceipt item={item} />}
 							</>
 						)}
+
 						<PdfButton data={item} showType={item.status == 0 ? undefined : (role === "advisor" && item.status <= 1) || (role === "chairpersons" && item.status <= 2) || (role === "officer_registrar" && item.status <= 3) ? "view" : undefined} />
-						{((role === "research_advisor" && item.status == 1) || (role === "chairpersons" && item.status == 2) || (role === "officer_registrar" && item.status == 3)) && (
+
+						{isShowApproveButton && (
 							<Button
 								size="xs"
 								color="green"
@@ -421,6 +445,20 @@ const RequestThesisProposal = () => {
 								{role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
 							</Button>
 						)}
+						{/* {((role === "research_advisor" && item.status == 1) || (role === "chairpersons" && item.status == 2) || (role === "officer_registrar" && item.status == 3)) && (
+							<Button
+								size="xs"
+								color="green"
+								onClick={() => {
+									setSelectedRow(item);
+									setOpenApproveState("add");
+									setOpenApprove(true);
+								}}
+								disabled={item.term !== rowCurrentTerm}
+							>
+								{role === "officer_registrar" ? "ตรวจสอบ" : "ลงความเห็น"}
+							</Button>
+						)} */}
 					</Group>
 				</Table.Td>
 				{item.exam_results !== null && (
@@ -456,13 +494,12 @@ const RequestThesisProposal = () => {
 			<ModalPay opened={openPay} onClose={() => setOpenPay(false)} selectedRow={selectedRow} handlePay={handlePay} MoneyRegis={education_level === "ปริญญาโท" ? 2000 : 5000} type={`คำร้องขอสอบโครงร่างวิทยานิพนธ์/การค้นคว้าอิสระ`} stop_date={paymentCloseDate} />
 			<Text size="1.5rem" fw={900} mb="md">
 				คำร้องขอสอบ{role === "student" ? form?.values.request_type : "วิทยานิพนธ์/การค้นคว้าอิสระ"}
-				{/* คำร้องขอสอบโครงร่าง{form.values.request_type || (education_level === "ปริญญาโท" ? "วิทยานิพนธ์/การค้นคว้าอิสระ" : "วิทยานิพนธ์")} */}
 			</Text>
 			<Group justify="space-between">
 				<Box>
 					<Flex align="flex-end" gap="sm">
 						{role !== "student" && <TextInput placeholder="ค้นหา ชื่่อ รหัสนักศึกษา" value={search} onChange={(e) => setSearch(e.target.value)} />}
-						<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} allowDeselect={false} style={{ width: 80 }}/>
+						<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} allowDeselect={false} style={{ width: 80 }} />
 					</Flex>
 				</Box>
 				<Box>

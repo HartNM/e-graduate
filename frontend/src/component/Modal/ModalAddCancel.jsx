@@ -1,28 +1,36 @@
-import { useState } from "react";
-import { Modal, Box, TextInput, Textarea, Flex, Button, Space, Checkbox, Text } from "@mantine/core";
+import { useState, useEffect } from "react";
+import { Modal, Box, TextInput, Flex, Button, Space, Checkbox, Text } from "@mantine/core";
 
-const ModalAddCancel = (props) => {
+const ModalAddCancel = ({ opened, onClose, selectedRow, reason, setReason, error, handleAddCancel }) => {
 	const [isConfirmed, setIsConfirmed] = useState(false);
+	const [submitting, setSubmitting] = useState(false);
+	useEffect(() => {
+		if (opened) {
+			setIsConfirmed(false);
+			setSubmitting(false);
+		}
+	}, [opened]);
+
+	const handleSave = async () => {
+		setSubmitting(true);
+		try {
+			await handleAddCancel(selectedRow);
+		} finally {
+			setSubmitting(false);
+		}
+	};
 
 	return (
-		<Modal opened={props.opened} onClose={props.onClose} title={`คำร้องขอยกเลิกสอบ${props.selectedRow?.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`} centered>
-			{props.selectedRow && (
+		<Modal opened={opened} onClose={onClose} title={`คำร้องขอยกเลิกสอบ${selectedRow?.education_level === "ปริญญาโท" ? "ประมวลความรู้" : "วัดคุณสมบัติ"}`} centered>
+			{selectedRow && (
 				<Box>
-					<TextInput label="ชื่อ" disabled value={props.selectedRow.student_name} />
-					<TextInput label="รหัสนักศึกษา" disabled value={props.selectedRow.student_id} />
-					<TextInput label="ระดับ" disabled value={props.selectedRow.education_level} />
-					<TextInput label="หลักสูตร" disabled value={props.selectedRow.program} />
-					<TextInput label="สาขา" disabled value={props.selectedRow.major_name} />
-					<TextInput label="คณะ" disabled value={props.selectedRow.faculty_name} />
-					<TextInput
-						label="เนื่องจาก"
-						required
-						maxLength={90} // จำกัด 80 ตัวอักษร
-						description={`${props.reason?.length || 0}/90 ตัวอักษร`}
-						value={props.reason}
-						onChange={(e) => props.setReason(e.currentTarget.value)}
-						error={props.error}
-					/>
+					<TextInput label="ชื่อ" disabled value={selectedRow.student_name} />
+					<TextInput label="รหัสนักศึกษา" disabled value={selectedRow.student_id} />
+					<TextInput label="ระดับ" disabled value={selectedRow.education_level} />
+					<TextInput label="หลักสูตร" disabled value={selectedRow.program} />
+					<TextInput label="สาขา" disabled value={selectedRow.major_name} />
+					<TextInput label="คณะ" disabled value={selectedRow.faculty_name} />
+					<TextInput label="เนื่องจาก" required maxLength={90} description={`${reason?.length || 0}/90 ตัวอักษร`} value={reason} onChange={(e) => setReason(e.currentTarget.value)} error={error} />
 
 					<Space h="lg" />
 
@@ -35,7 +43,7 @@ const ModalAddCancel = (props) => {
 					<Space h="lg" />
 
 					<Flex justify="flex-end">
-						<Button color="green" onClick={() => props.handleAddCancel(props.selectedRow)} disabled={!isConfirmed}>
+						<Button color="green" onClick={handleSave} disabled={!isConfirmed || submitting} loading={submitting}>
 							บันทึก
 						</Button>
 					</Flex>

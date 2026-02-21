@@ -1,11 +1,13 @@
 import { Modal, TextInput, Flex, Button, Space, Grid, Text, Checkbox, Select, Group, LoadingOverlay, Box } from "@mantine/core";
 import { useState, useEffect } from "react";
 import { DatePickerInput } from "@mantine/dates";
+
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 const ModalAddRequestThesisProposal = ({ opened, onClose, title, form, handleAdd }) => {
 	const token = localStorage.getItem("token");
-	const [loading, setLoading] = useState(false);
+	const [loading, setLoading] = useState(false); // ใช้ loading ตัวนี้คุม LoadingOverlay
+	const [submitting, setSubmitting] = useState(false); // เพิ่ม submitting คุมปุ่มบันทึก
 	const [advisors, setAdvisors] = useState([]);
 
 	useEffect(() => {
@@ -31,7 +33,7 @@ const ModalAddRequestThesisProposal = ({ opened, onClose, title, form, handleAdd
 						if (!facultyMembersRes.ok) throw new Error("ไม่สามารถดึงข้อมูลบุคลากรได้");
 
 						//------------------------------------------------------
-						let advisorOptions = facultyMembersData.map((member) => ({
+/* 						let advisorOptions = facultyMembersData.map((member) => ({
 							value: member.employee_id,
 							label: `${member.prename_full_tha}${member.first_name_tha} ${member.last_name_tha}`.trim(),
 						}));
@@ -47,14 +49,14 @@ const ModalAddRequestThesisProposal = ({ opened, onClose, title, form, handleAdd
 							advisorOptions = [...advisorOptions, specificAdvisor];
 						}
 
-						setAdvisors(advisorOptions);
+						setAdvisors(advisorOptions); */
 						//----------------------------------------------
-						/* setAdvisors(
+						setAdvisors(
 							facultyMembersData.map((member) => ({
 								value: member.employee_id,
 								label: `${member.prename_full_tha}${member.first_name_tha} ${member.last_name_tha}`.trim(),
 							})),
-						); */
+						);
 					}
 				} catch (e) {
 					console.error("Error fetching advisors:", e);
@@ -64,13 +66,24 @@ const ModalAddRequestThesisProposal = ({ opened, onClose, title, form, handleAdd
 			};
 			fetchAdvisors();
 		}
-	}, [opened, token]);
+	}, [opened, token, form.values.major_id]);
+
+	// ฟังก์ชันจัดการตอนกดบันทึก
+	const handleFormSubmit = async (values) => {
+		setSubmitting(true);
+		try {
+			await handleAdd(values);
+		} finally {
+			setSubmitting(false);
+		}
+	};
 
 	return (
 		<Modal opened={opened} onClose={onClose} title={title} centered size="800">
 			<Box pos="relative">
 				<LoadingOverlay visible={loading} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />
-				<form onSubmit={form.onSubmit(handleAdd)}>
+
+				<form onSubmit={form.onSubmit(handleFormSubmit)}>
 					<Grid breakpoints={{ md: "660px" }}>
 						<Grid.Col span={{ base: 12, md: 6 }}>
 							<TextInput label="ชื่อ-นามสกุล" disabled {...form.getInputProps("student_name")} />
@@ -81,15 +94,18 @@ const ModalAddRequestThesisProposal = ({ opened, onClose, title, form, handleAdd
 							<TextInput label="คณะ" disabled {...form.getInputProps("faculty_name")} />
 						</Grid.Col>
 						<Grid.Col span={{ base: 12, md: 6 }}>
-							<Text>ประเภทของโครงร่างงานวิจัย</Text>
+							<Text size="sm" fw={500}>
+								ประเภทของโครงร่างงานวิจัย
+							</Text>
 							<TextInput disabled {...form.getInputProps("request_type")} />
 							<TextInput label="ชื่องานวิจัย" placeholder="กรอกชื่องานวิจัย" {...form.getInputProps("research_name")} />
-							<Select label="เลือกอาจารย์ที่ปรึกษางานวิจัย" placeholder="เลือกอาจารย์" data={advisors} searchable {...form.getInputProps("thesis_advisor_id")} />
+							<Select label="เลือกอาจารย์ที่ปรึกษางานวิจัยหลัก" placeholder="เลือกอาจารย์" data={advisors} searchable {...form.getInputProps("thesis_advisor_id")} />
+							<Select label="เลือกอาจารย์ที่ปรึกษางานวิจัยรอง(ไม่บังคับ)" placeholder="เลือกอาจารย์" data={advisors} searchable {...form.getInputProps("thesis_advisor_id_second")} />
 						</Grid.Col>
 					</Grid>
 					<Space h="lg" />
 					<Flex justify="flex-end">
-						<Button type="submit" color="green">
+						<Button type="submit" color="green" disabled={loading || submitting} loading={submitting}>
 							บันทึก
 						</Button>
 					</Flex>

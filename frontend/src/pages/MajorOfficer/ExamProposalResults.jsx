@@ -167,8 +167,18 @@ const ExamResults = () => {
 		const major_name = firstRow.major_name || "-";
 
 		const mainHeader = [[`ผลการสอบโครงร่าง${docTitle} สาขา${major_name} หมู่เรียน ${studyGroup} ปีการศึกษา ${term}`]];
-		const subHeader = [["รหัสนักศึกษา", "ชื่อ-สกุล", "คำขอสอบ", "ผลสอบ"]];
-		const dataRows = studentsToExport.map((s) => [s.student_id, s.name, (s.request_type || "-").replace("ขอสอบ", ""), s.exam_results || "-"]);
+		const subHeader = [["รหัสนักศึกษา", "ชื่อ-สกุล", "คำขอสอบ", "ผลสอบ", "วันที่สอบ"]];
+		const dataRows = studentsToExport.map((s) => {
+			let dateStr = "-";
+			if (s.thesis_exam_date) {
+				const dateObj = new Date(s.thesis_exam_date);
+				const day = String(dateObj.getDate()).padStart(2, "0");
+				const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+				const year = dateObj.getFullYear() + 543;
+				dateStr = `${day}/${month}/${year}`;
+			}
+			return [s.student_id, s.name, (s.request_type || "-").replace("ขอสอบ", ""), s.exam_results || "-", dateStr];
+		});
 
 		const ws = XLSX.utils.aoa_to_sheet([]);
 
@@ -176,8 +186,8 @@ const ExamResults = () => {
 		XLSX.utils.sheet_add_aoa(ws, subHeader, { origin: "A2" });
 		XLSX.utils.sheet_add_aoa(ws, dataRows, { origin: "A3" });
 
-		ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }];
-		ws["!cols"] = [{ wch: 15 }, { wch: 25 }, { wch: 25 }, { wch: 10 }];
+		ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 4 } }];
+		ws["!cols"] = [{ wch: 15 }, { wch: 25 }, { wch: 25 }, { wch: 10 }, { wch: 15 }];
 
 		const fileName = `ผลการสอบโครงร่าง${fileTitle}_${studyGroup}_${term}.xlsx`;
 		const wb = XLSX.utils.book_new();
@@ -232,7 +242,7 @@ const ExamResults = () => {
 			{!selectedGroupId ? (
 				<Box>
 					<Group>
-						<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} allowDeselect={false} onChange={setSelectedTerm} style={{ width: 80 }}/>
+						<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} allowDeselect={false} onChange={setSelectedTerm} style={{ width: 80 }} />
 						{role === "officer_major" && <Select placeholder="ระดับการศึกษา" data={["ปริญญาโท", "ปริญญาเอก"]} value={filterLevel} onChange={setFilterLevel} clearable style={{ width: 150 }} />}
 					</Group>
 					<Space h="md" />

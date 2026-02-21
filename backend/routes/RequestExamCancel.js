@@ -65,7 +65,8 @@ router.post("/CheckOpenREC", authenticateToken, async (req, res) => {
 
 router.post("/AllRequestExamCancel", authenticateToken, async (req, res) => {
 	const { term } = req.body;
-	const { user_id, role, employee_id, major_ids, faculty } = req.user;
+	const { user_id, role, major_ids, faculty } = req.user;
+
 	try {
 		const pool = await poolPromise;
 		const request = pool.request().input("user_id", user_id).input("term", term);
@@ -95,32 +96,23 @@ router.post("/AllRequestExamCancel", authenticateToken, async (req, res) => {
 			INNER JOIN request_exam re
 					ON rce.request_exam_id = re.request_exam_id
 			`;
-		if (user_id === "1629900598264") {
-			query += ` WHERE term = @term`;
-		} else if (role === "student") {
-			query += " WHERE re.student_id = @user_id";
+		if (role === "student") {
+			query += " WHERE re.student_id = @user_id AND re.term = @term";
 		} else if (role === "advisor") {
-			// query += ` WHERE re.study_group_id IN (SELECT group_no FROM advisorGroup_no WHERE user_id = @user_id) AND re.term = @term`; //test
-
 			const apiResponse = await axios.post("https://mua.kpru.ac.th/FrontEnd_Tabian/apiforall/FindGroup", {
 				ID_TEACHER: user_id,
 			});
 			const groupNumbers = apiResponse.data.map((item) => item.GROUP_NO);
 			if (groupNumbers.length === 0) {
-				query += ` WHERE 1=0 AND term = @term`;
+				query += ` WHERE 1=0 AND re.term = @term`;
 			} else {
-				/* const groupListString = groupNumbers.map((group) => `'${group}'`).join(", ");
-				query += ` WHERE re.study_group_id IN (${groupListString}) AND re.term = @term`; */ //product
 				request.input("groupNumbers", groupNumbers.join(","));
 				query += ` WHERE re.study_group_id IN ((SELECT value FROM STRING_SPLIT(@groupNumbers, ','))) AND re.term = @term`;
 			}
 		} else if (role === "chairpersons") {
-			// query += ` WHERE re.major_id IN (SELECT major_id FROM users WHERE user_id = @user_id) AND (rce.status IN (0, 8, 9) OR (rce.status = 5 AND rce.advisor_approvals_id IS NOT NULL AND rce.chairpersons_approvals_id IS NOT NULL)) AND re.term = @term`; //test
-
 			request.input("major_ids_str", major_ids.join(","));
 			query += ` WHERE re.major_id IN ((SELECT value FROM STRING_SPLIT(@major_ids_str, ','))) AND (rce.status IN (0, 8, 9) OR (rce.status = 5 AND rce.advisor_approvals_id IS NOT NULL AND rce.chairpersons_approvals_id IS NOT NULL)) AND re.term = @term`;
 		} else if (role === "dean") {
-			/* query += ` WHERE re.faculty_name IN (SELECT faculty_name FROM users WHERE user_id = @user_id) AND (rce.status IN (0, 9) OR (rce.status = 5 AND rce.advisor_approvals_id IS NOT NULL AND rce.chairpersons_approvals_id IS NOT NULL AND rce.dean_approvals_id IS NOT NULL)) AND re.term = @term`; */
 			const majorListQuery = `
                 SELECT major_id 
                 FROM [dbRequestSubmission].[dbo].[majors] 
@@ -147,8 +139,6 @@ router.post("/AllRequestExamCancel", authenticateToken, async (req, res) => {
 			result.recordset.map(async (item) => {
 				let studentInfo = null;
 				try {
-					/* const studentRes = await axios.get(`${BASE_URL}/api/student/${item.student_id}`);
-					studentInfo = studentRes.data; */
 					// 1. เรียกฟังก์ชันตรงๆ (ไม่ต้อง axios.get หาตัวเอง)
 					const data = await getStudentData(item.student_id);
 

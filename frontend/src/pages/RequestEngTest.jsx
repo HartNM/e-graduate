@@ -1,6 +1,6 @@
 //คำร้องขอสอบความรู้ทางภาษาอังกฤษ
 import { useState, useEffect, useMemo } from "react";
-import { Box, Text, Table, Button, TextInput, Space, ScrollArea, Group, Flex, Stepper, Pill, Select } from "@mantine/core";
+import { Box, Text, Table, Button, TextInput, ScrollArea, Group, Flex, Stepper, Pill, Select, Space } from "@mantine/core";
 import ModalApprove from "../component/Modal/ModalApprove";
 import ModalAdd from "../component/Modal/ModalAddEngTest";
 import ModalPay from "../component/Modal/ModalPay";
@@ -9,19 +9,23 @@ import PdfButton from "../component/PDF/PdfButton";
 import { useForm } from "@mantine/form";
 import { jwtDecode } from "jwt-decode";
 import PrintReceipt from "../component/button/printReceipt";
+import { useBadge } from "../context/BadgeContext";
+
 const BASE_URL = import.meta.env.VITE_API_URL;
 
 const RequestEngTest = () => {
+	const { refreshBadges } = useBadge();
 	const token = localStorage.getItem("token");
+
 	const { role, user_id, name } = useMemo(() => {
 		if (!token) return { role: "", user_id: "", name: "" };
 		try {
 			return jwtDecode(token);
 		} catch (error) {
-			console.error("Invalid token:", error);
 			return { role: "", user_id: "", name: "" };
 		}
 	}, [token]);
+
 	// Modal notify
 	const [inform, setInform] = useState({ open: false, type: "", message: "" });
 	const notify = (type, message) => setInform({ open: true, type, message });
@@ -40,52 +44,37 @@ const RequestEngTest = () => {
 	const [request, setRequest] = useState(null);
 	const [term, setTerm] = useState([]);
 	const [selectedTerm, setSelectedTerm] = useState("");
-	const [openKQ, setOpenKQ] = useState(null);
 	const [actualCurrentTerm, setActualCurrentTerm] = useState("");
+	const [openKQ, setOpenKQ] = useState(null);
 	const [paymentCloseDate, setPaymentCloseDate] = useState(null);
-	//useForm
-	const form = useForm({});
-
 	const [statusNew, setStatusNew] = useState(null);
 	const [statusOld, setStatusOld] = useState(null);
+	//useForm
+	const form = useForm({});
 
 	useEffect(() => {
 		const getTerm = async () => {
 			try {
-				const termInfoReq = await fetch(`${BASE_URL}/api/allTerm`, {
+				const res = await fetch(`${BASE_URL}/api/allTerm`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 				});
-				const termInfodata = await termInfoReq.json();
-				if (!termInfoReq.ok) throw new Error(termInfodata.message);
-
-				setTerm(termInfodata.termList);
-
-				setStatusNew(termInfodata.statusNew);
-				setStatusOld(termInfodata.statusOld);
-
+				const data = await res.json();
+				if (!res.ok) throw new Error(data.message);
+				setTerm(data.termList);
+				setStatusNew(data.statusNew);
+				setStatusOld(data.statusOld);
 				if (role === "student" && user_id) {
-					const yearStr = String(user_id).substring(0, 2);
-					const yearInt = parseInt(yearStr, 10);
-
-					let myStatus = null;
-
-					if (yearInt >= 67) {
-						myStatus = termInfodata.statusNew;
-					} else {
-						myStatus = termInfodata.statusOld;
-					}
-
+					const myStatus = parseInt(String(user_id).substring(0, 2)) >= 67 ? data.statusNew : data.statusOld;
 					setActualCurrentTerm(myStatus.currentTerm);
 					setSelectedTerm(myStatus.currentTerm);
 					setOpenKQ(myStatus.isOpen);
 					setPaymentCloseDate(myStatus.closeDate);
 				} else {
-					setSelectedTerm(termInfodata.currentTerm);
+					setSelectedTerm(data.currentTerm);
 				}
 			} catch (e) {
 				notify("error", e.message);
-				console.error("Error fetching allRequestExamInfo:", e);
 			}
 		};
 		getTerm();
@@ -94,23 +83,18 @@ const RequestEngTest = () => {
 	useEffect(() => {
 		if (!selectedTerm) return;
 		if (request != null && role === "student") return;
-		console.log(selectedTerm);
-
+		
 		const getRequest = async () => {
 			try {
-				const requestReq = await fetch(`${BASE_URL}/api/allRequestEngTest`, {
+				const res = await fetch(`${BASE_URL}/api/allRequestEngTest`, {
 					method: "POST",
 					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
 					body: JSON.stringify({ term: selectedTerm }),
 				});
-				const requestData = await requestReq.json();
-				if (!requestReq.ok) throw new Error(requestData.message);
-				setRequest(requestData);
-
-				console.log(requestData);
+				const data = await res.json();
+				setRequest(data);
 			} catch (e) {
 				notify("error", e.message);
-				console.error("Error fetching allRequestEngTest:", e);
 			}
 		};
 		getRequest();
@@ -118,43 +102,18 @@ const RequestEngTest = () => {
 
 	useEffect(() => {
 		if (request === null || role !== "student" || openKQ === null) return;
-		console.log("student");
-
-		const fetchStudentData = async () => {
-			try {
-				if (openKQ === false) {
-					throw new Error("ยังไม่เปิดให้ยื่นคำร้องในขณะนี้");
-				}
-
-				if (!request.length) {
-					console.log("ลำดับ : 1 ไม่มีคำร้อง (เปิด)");
-					setLatestRequest(false);
-				} else {
-					console.log("ลำดับ : 2 มีคำร้อง (ปิด)");
-					setLatestRequest(true);
-				}
-			} catch (e) {
-				notify("error", e.message, 10000);
-				console.error(e);
-			}
-		};
-		fetchStudentData();
-	}, [request, openKQ, selectedTerm]);
+		if (openKQ === false) notify("error", "ยังไม่เปิดให้ยื่นคำร้องในขณะนี้");
+		setLatestRequest(request.length > 0);
+	}, [request, openKQ]);
 
 	const handleOpenAdd = async () => {
 		try {
-			const requestRes = await fetch(`${BASE_URL}/api/student/${user_id}`, {
-				method: "GET",
-				headers: { Authorization: `Bearer ${token}` },
-			});
-			const requestData = await requestRes.json();
-			if (!requestRes.ok) throw new Error(requestData.message);
-
-			form.setValues({ ...requestData, term: actualCurrentTerm });
+			const res = await fetch(`${BASE_URL}/api/student/${user_id}`, { headers: { Authorization: `Bearer ${token}` } });
+			const data = await res.json();
+			form.setValues({ ...data, term: actualCurrentTerm });
 			setOpenAdd(true);
 		} catch (e) {
-			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
-			console.error("Error fetching studentInfo:", e);
+			notify("error", e.message);
 		}
 	};
 
@@ -172,6 +131,7 @@ const RequestEngTest = () => {
 			setLatestRequest(true);
 			setRequest((prev) => [...prev, { ...form.values, ...requestData.data }]);
 			setSelectedTerm(actualCurrentTerm);
+			refreshBadges();
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching addRequestEngTest:", e);
@@ -196,6 +156,7 @@ const RequestEngTest = () => {
 			setComment("");
 			setOpenApprove(false);
 			setRequest((prev) => prev.map((row) => (row.request_eng_test_id === item.request_eng_test_id ? { ...row, ...requestData.data } : row)));
+			refreshBadges();
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching approveRequestEngTest:", e);
@@ -214,6 +175,7 @@ const RequestEngTest = () => {
 			notify("success", requestData.message || "สำเร็จ");
 			setOpenPay(false);
 			setRequest((prev) => prev.map((row) => (row.request_eng_test_id === item.request_eng_test_id ? { ...row, ...requestData.data } : row)));
+			refreshBadges();
 		} catch (e) {
 			notify("error", e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับระบบ");
 			console.error("Error fetching payRequestEngTest:", e);
@@ -346,7 +308,7 @@ const RequestEngTest = () => {
 				<Box>
 					<Flex align="flex-end" gap="sm">
 						{role !== "student" && <TextInput placeholder="ค้นหา ชื่่อ รหัสนักศึกษา" value={search} onChange={(e) => setSearch(e.target.value)} />}
-						<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} allowDeselect={false} style={{ width: 80 }}/>
+						<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} allowDeselect={false} style={{ width: 80 }} />
 					</Flex>
 				</Box>
 				<Box>

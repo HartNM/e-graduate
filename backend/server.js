@@ -5,7 +5,19 @@ const cors = require("cors");
 const app = express();
 const PORT = process.env.PORT || 5000;
 const helmet = require("helmet");
-app.use(helmet());
+app.use(
+	helmet({
+		contentSecurityPolicy: {
+			directives: {
+				...helmet.contentSecurityPolicy.getDefaultDirectives(),
+				"script-src": ["'self'", "'unsafe-inline'"], // อนุญาต script ในหน้าเว็บ
+				"frame-src": ["'self'", "blob:"], // เพิ่ม blob: ตรงนี้เพื่อให้เปิด PDF ใน iframe ได้
+				"object-src": ["'self'", "blob:"], // เพิ่ม blob: สำหรับพวกแท็ก <object> หรือ <embed>
+			},
+		},
+		crossOriginEmbedderPolicy: false, // ปิดตัวนี้เพื่อให้โหลด Resource ข้ามโดเมนได้ง่ายขึ้นในบางกรณี
+	}),
+);
 
 /* -------------------- Middleware -------------------- */
 app.use(cors({ credentials: true }));

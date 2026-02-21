@@ -12,8 +12,10 @@ import { useForm } from "@mantine/form";
 import { jwtDecode } from "jwt-decode";
 import PrintReceipt from "../component/button/printReceipt";
 const BASE_URL = import.meta.env.VITE_API_URL;
+import { useBadge } from "../context/BadgeContext";
 
 const RequestExam = () => {
+	const { refreshBadges } = useBadge();
 	const token = localStorage.getItem("token");
 	const { role, user_id, name, education_level } = useMemo(() => {
 		if (!token) return { role: "", user_id: "", name: "", education_level: "" };
@@ -109,34 +111,9 @@ const RequestExam = () => {
 		getTerm();
 	}, []);
 
-	/* useEffect(() => {	
-		if (role !== "student") return;
-		const fetchOpenStatus = async () => {
-			try {
-				const checkOpenKQRes = await fetch(`${BASE_URL}/api/checkKQStatus`, {
-					method: "POST",
-					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-					body: JSON.stringify({ student_id: user_id }),
-				});
-				const checkOpenKQData = await checkOpenKQRes.json();
-				if (!checkOpenKQRes.ok) throw new Error(checkOpenKQData.message);
-
-				setSelectedTerm(checkOpenKQData.currentTerm)
-				setActualCurrentTerm(checkOpenKQData.currentTerm);
-				setPaymentCloseDate(checkOpenKQData.KQ_close_date);
-				setOpenKQ(checkOpenKQData.isOpen);
-			} catch (e) {
-				notify("error", e.message);
-				console.error("Error fetching checkOpenKQ:", e);
-			}
-		};
-		fetchOpenStatus();
-	}, []); */
-
 	useEffect(() => {
 		if (!selectedTerm) return;
 		if (request != null && role === "student") return;
-		console.log(selectedTerm);
 
 		const getRequest = async () => {
 			try {
@@ -166,46 +143,44 @@ const RequestExam = () => {
 				if (openKQ === false) {
 					throw new Error("ยังไม่เปิดให้ยื่นคำร้องในขณะนี้");
 				}
-				/* if (user_id === "674140101") */
-				{
-					const registrationRes = await fetch(`${BASE_URL}/api/allStudyGroupIdCourseRegistration`, {
-						method: "POST",
-						headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-						body: JSON.stringify({ usage: [1] }),
-					});
-					const registrationData = await registrationRes.json();
-					if (!registrationRes.ok) throw new Error(registrationData.message);
-					console.log("ที่ต้องลง :", registrationData);
 
-					const registerCoursesRes = await fetch(`${BASE_URL}/api/get-passed-courses`, {
-						method: "POST",
-						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify({ user_id: user_id }),
-					});
+				const registrationRes = await fetch(`${BASE_URL}/api/allStudyGroupIdCourseRegistration`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+					body: JSON.stringify({ usage: [1] }),
+				});
+				const registrationData = await registrationRes.json();
+				if (!registrationRes.ok) throw new Error(registrationData.message);
+				console.log("ที่ต้องลง :", registrationData);
 
-					const registerCoursesData = await registerCoursesRes.json();
-					if (!registerCoursesRes.ok) throw new Error(registerCoursesData.message);
-					console.log("ที่ลง :", registerCoursesData);
+				const registerCoursesRes = await fetch(`${BASE_URL}/api/get-passed-courses`, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ user_id: user_id }),
+				});
 
-					const allCodes = registerCoursesData.map((c) => c.SJCODE);
-					const missing = registrationData.course_id.filter((code) => !allCodes.includes(code));
-					console.log("ที่ขาด :", missing);
+				const registerCoursesData = await registerCoursesRes.json();
+				if (!registerCoursesRes.ok) throw new Error(registerCoursesData.message);
+				console.log("ที่ลง :", registerCoursesData);
 
-					if (missing.length > 0) {
-						const res = await fetch(`${BASE_URL}/api/get-all-subjects`);
-						const subjects = await res.json();
+				const allCodes = registerCoursesData.map((c) => c.SJCODE);
+				const missing = registrationData.course_id.filter((code) => !allCodes.includes(code));
+				console.log("ที่ขาด :", missing);
 
-						const subjMap = new Map(subjects.map((s) => [s.SUBJCODE, s.SUBJNAME]));
-						const coursesData = missing.map((course_id) => ({
-							course_id,
-							course_name: subjMap.get(course_id) || "ไม่พบข้อมูล",
-						}));
-						console.log("รายวิชาที่ขาด :", coursesData);
+				if (missing.length > 0) {
+					const res = await fetch(`${BASE_URL}/api/get-all-subjects`);
+					const subjects = await res.json();
 
-						setMissingCoures(coursesData);
-						setOpenCheckCourse(true);
-						return;
-					}
+					const subjMap = new Map(subjects.map((s) => [s.SUBJCODE, s.SUBJNAME]));
+					const coursesData = missing.map((course_id) => ({
+						course_id,
+						course_name: subjMap.get(course_id) || "ไม่พบข้อมูล",
+					}));
+					console.log("รายวิชาที่ขาด :", coursesData);
+
+					setMissingCoures(coursesData);
+					setOpenCheckCourse(true);
+					return;
 				}
 
 				const countFailOrAbsent = request.filter((row) => row.exam_results === "ไม่ผ่าน" || row.exam_results === "ขาดสอบ").length;
@@ -267,7 +242,7 @@ const RequestExam = () => {
 			setOpenAdd(false);
 			setRequest((prev) => [...prev, { ...requestData.data, ...form.values }]);
 			setSelectedTerm(actualCurrentTerm);
-			/* setIsAddButtonDisabled(true); */
+			refreshBadges();
 		} catch (e) {
 			notify("error", e.message);
 			console.error("Error fetching addRequestExam:", e);
@@ -292,6 +267,7 @@ const RequestExam = () => {
 			setComment("");
 			setOpenApprove(false);
 			setRequest((prev) => prev.map((row) => (row.request_exam_id === item.request_exam_id ? { ...row, ...requestData.data } : row)));
+			refreshBadges();
 		} catch (e) {
 			notify("error", e.message);
 			console.error("Error fetching approveRequestExam:", e);
@@ -314,6 +290,7 @@ const RequestExam = () => {
 			console.log("ข้อมูลตอบกลับ ", requestData);
 
 			setRequest((prev) => prev.map((row) => (row.request_exam_id === item.request_exam_id ? { ...row, ...requestData.data } : row)));
+			refreshBadges();
 		} catch (e) {
 			notify("error", e.message);
 			console.error("Error fetching payRequestExam:", e);
@@ -464,7 +441,7 @@ const RequestExam = () => {
 					<Flex align="flex-end" gap="sm">
 						{role !== "student" && <TextInput placeholder="ค้นหา ชื่่อ รหัสนักศึกษา" value={search} onChange={(e) => setSearch(e.target.value)} />}
 						{!["student", "officer_registrar"].includes(role) && <Select placeholder="ชนิดคำขอ" data={["ขอสอบประมวลความรู้", "ขอสอบวัดคุณสมบัติ"]} value={selectedType} onChange={setSelectedType} />}
-						<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} allowDeselect={false} style={{ width: 80 }}/>
+						<Select placeholder="เทอมการศึกษา" data={term} value={selectedTerm} onChange={setSelectedTerm} allowDeselect={false} style={{ width: 80 }} />
 					</Flex>
 				</Box>
 				<Box>
